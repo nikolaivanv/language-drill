@@ -596,16 +596,31 @@ Create `packages/ai/scripts/tmp-gloss-validator-probe.mjs` (in `scripts/` so its
 // falls back to the in-repo (edited) template.
 import Anthropic from "@anthropic-ai/sdk";
 import { validateDraft } from "../src/validate.js";
+import { getGrammarPoint } from "../../db/src/curriculum/index.js";
+import { Language, CefrLevel, ExerciseType } from "../../shared/src/index.js";
 
 const client = new Anthropic({ apiKey: process.env["ANTHROPIC_API_KEY"] });
 
-// Build the spec the same shape validation-prompts.test.ts uses; read that file
-// and mirror its cloze GenerationSpec fixture exactly rather than inventing one.
-const spec = /* cloze GenerationSpec: language ES, cefrLevel A1, grammarPoint es-a1-locative-prepositions */ null;
+// Mirrors `baseSpec` in packages/ai/src/validation-prompts.test.ts:39, retargeted
+// to the ES A1 points under test.
+function specFor(pointKey) {
+  const grammarPoint = getGrammarPoint(pointKey);
+  if (!grammarPoint) throw new Error(`missing grammar point: ${pointKey}`);
+  return {
+    language: Language.ES,
+    cefrLevel: CefrLevel.A1,
+    exerciseType: ExerciseType.CLOZE,
+    grammarPoint,
+    topicDomain: null,
+    count: 1,
+    batchSeed: "gloss-probe",
+  };
+}
 
 const CASES = [
   {
     name: "contradictory-antonym (expect ambiguous=true)",
+    pointKey: "es-a1-locative-prepositions",
     contentJson: {
       type: "cloze",
       instructions: "Fill in the blank with the correct compound preposition to complete the location phrase.",
@@ -617,6 +632,7 @@ const CASES = [
   },
   {
     name: "inclusive-gloss control (expect ambiguous=false)",
+    pointKey: "es-a1-querer-poder-infinitive",
     contentJson: {
       type: "cloze",
       instructions: "Fill in the blank with the correct form of the verb.",
@@ -628,6 +644,7 @@ const CASES = [
   },
   {
     name: "unglossed control (expect ambiguous unchanged by this rule)",
+    pointKey: "es-a1-locative-prepositions",
     contentJson: {
       type: "cloze",
       instructions: "Fill in the blank with the correct compound preposition.",
@@ -638,12 +655,16 @@ const CASES = [
 ];
 
 for (const c of CASES) {
-  const res = await validateDraft(client, { contentJson: c.contentJson }, spec);
+  const res = await validateDraft(
+    client,
+    { id: "00000000-0000-0000-0000-000000000000", contentJson: c.contentJson, metadata: { grammarPointKey: c.pointKey } },
+    specFor(c.pointKey),
+  );
   console.log(JSON.stringify({ case: c.name, ambiguous: res.result?.ambiguous, qualityScore: res.result?.qualityScore, flagReasons: res.result?.flagReasons }));
 }
 ```
 
-Before running, replace the `spec` placeholder with the real fixture: open `packages/ai/src/validation-prompts.test.ts`, copy its cloze `GenerationSpec` literal, and adapt `grammarPoint` to `es-a1-locative-prepositions` for case 1/3 and `es-a1-querer-poder-infinitive` for case 2. The probe must not run with `spec = null`.
+Run each case three times (see Step 3). If `getGrammarPoint` or the `Language`/`CefrLevel`/`ExerciseType` import paths differ from the snippet, check how `packages/ai/src/validation-prompts.test.ts` imports them and mirror that — do not guess a path.
 
 - [ ] **Step 2: Run it with Langfuse keys unset, backgrounded**
 
