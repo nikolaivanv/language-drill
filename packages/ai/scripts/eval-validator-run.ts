@@ -85,8 +85,10 @@ import {
   ZERO_USAGE,
   addUsage,
   applyTemplate,
+  craftProbeAnswers,
   createClaudeClient,
   estimateCostUsd,
+  renderLearnerView,
   validateDraft,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
   type ClaudeUsageBreakdown,
@@ -228,18 +230,36 @@ export function loadValidatorCases(raw: string): ValidatorAmbiguityCase[] {
 // The four-arm matrix — prompt and model are never confounded
 // ---------------------------------------------------------------------------
 
-export type ValidatorArm = {
-  name: string;
-  modelOverride?: string;
-  /**
-   * Which in-repo template this arm renders — `"prior"` (pre-Task-4,
-   * `PRIOR_TEMPLATE`) or `"current"` (post-Task-4,
-   * `VALIDATION_SYSTEM_PROMPT_TEMPLATE`). Every arm has one; there is no
-   * "no override" arm and never a Langfuse fetch — see the module docstring's
-   * "Prompt source" section.
-   */
-  promptSource: "prior" | "current";
-};
+/** Which in-repo template a validator arm renders — `"prior"` (pre-Task-4,
+ *  `PRIOR_TEMPLATE`) or `"current"` (post-Task-4,
+ *  `VALIDATION_SYSTEM_PROMPT_TEMPLATE`). */
+export type ValidatorPromptSource = "prior" | "current";
+
+/**
+ * Two kinds of arm:
+ *
+ *   - `"validator"` — the four original arms. Judges a draft against the
+ *     stored answer via `validateDraft`, sourced from an in-repo prompt
+ *     template (never Langfuse — see the module docstring's "Prompt source"
+ *     section).
+ *   - `"solver"` — the blind-solver arm (Task 3). Judges ambiguity from ONLY
+ *     what a learner sees, via `craftProbeAnswers` + `blindSolverVerdict`,
+ *     and never sees `correctAnswer`. `modelOverride` is required (never
+ *     optional) so it can never silently inherit the crafter's Opus default —
+ *     that would confound blind-vs-sighted with a capability change.
+ */
+export type ValidatorArm =
+  | {
+      kind: "validator";
+      name: string;
+      modelOverride?: string;
+      promptSource: ValidatorPromptSource;
+    }
+  | {
+      kind: "solver";
+      name: string;
+      modelOverride: string;
+    };
 
 /**
  * The pre-Task-4 validator system-prompt template body, captured once (see
@@ -258,16 +278,20 @@ export const PRIOR_TEMPLATE = readFileSync(
  * `{{var}}` templates — `renderValidatorSystemPrompt` fills them in per case
  * — and both live entirely in this process; neither is ever fetched.
  */
-const PROMPT_TEMPLATES: Record<ValidatorArm["promptSource"], string> = {
+const PROMPT_TEMPLATES: Record<ValidatorPromptSource, string> = {
   prior: PRIOR_TEMPLATE,
   current: VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 };
 
 export const ARMS: ValidatorArm[] = [
-  { name: "baseline", modelOverride: "claude-sonnet-4-6", promptSource: "prior" },
-  { name: "prompt-only", modelOverride: "claude-sonnet-4-6", promptSource: "current" },
-  { name: "model-only", promptSource: "prior" },
-  { name: "both", promptSource: "current" },
+  { kind: "validator", name: "baseline", modelOverride: "claude-sonnet-4-6", promptSource: "prior" },
+  { kind: "validator", name: "prompt-only", modelOverride: "claude-sonnet-4-6", promptSource: "current" },
+  { kind: "validator", name: "model-only", promptSource: "prior" },
+  { kind: "validator", name: "both", promptSource: "current" },
+  // Blind: judges ambiguity from the learner view alone, never seeing
+  // `correctAnswer`. Pinned to sonnet-5 to match the `both` arm, so the
+  // variable under test is blind-vs-sighted and not capability.
+  { kind: "solver", name: "blind-solver", modelOverride: "claude-sonnet-5" },
 ];
 
 /**
@@ -412,8 +436,22 @@ export type ValidatorCaseExecutorParams = {
   signal?: AbortSignal;
 };
 
+/** What a solver arm can honestly report: the ambiguity verdict and the
+ *  observations that came free with the crafter call. It deliberately does NOT
+ *  carry qualityScore/levelMatch/grammarPointMatch — a blind solver never
+ *  judges those, and emitting neutral values would read as measurements. */
+export type SolverCaseResult = {
+  ambiguous: boolean;
+  flaggedReasons?: string[];
+  competitor: string | null;
+  /** Recorded, never used in the verdict — see blindSolverVerdict. */
+  correctConfidence: number;
+  /** The crafter's own flag. Recorded, never used in the verdict. */
+  crafterAmbiguous: boolean;
+};
+
 export type ValidatorCaseExecutorResult = {
-  result: ValidationResult;
+  result: ValidationResult | SolverCaseResult;
   usage: ClaudeUsageBreakdown;
 };
 
@@ -425,6 +463,34 @@ export function makeRealValidatorExecutor(
   client: Anthropic,
 ): ValidatorCaseExecutor {
   return async ({ case: c, arm, signal }) => {
+    if (arm.kind === "solver") {
+      const learnerView = renderLearnerView(c.content, { includeOptions: false });
+      const { probe, usage } = await craftProbeAnswers(
+        client,
+        {
+          learnerView,
+          language: c.language,
+          cefrLevel: c.cefrLevel,
+          exerciseType: "cloze",
+          model: arm.modelOverride,
+        },
+        signal,
+      );
+      const verdict = blindSolverVerdict(probe, c.content);
+      return {
+        result: {
+          ambiguous: verdict.ambiguous,
+          flaggedReasons: [],
+          competitor: verdict.competitor,
+          correctConfidence: probe.correctConfidence,
+          crafterAmbiguous: probe.ambiguous,
+        },
+        usage,
+      };
+    }
+
+    // `arm.kind` is narrowed to `"validator"` below — the branch above always
+    // returns, so `arm.promptSource` typechecks without a cast.
     const spec = specForCase(c);
     const draft = draftForCase(c);
 
@@ -471,7 +537,7 @@ export function makeRealValidatorExecutor(
 export type ValidatorCaseRecord = {
   caseId: string;
   label: "ambiguous" | "clean";
-  result?: ValidationResult;
+  result?: ValidationResult | SolverCaseResult;
   error?: string;
 };
 
@@ -590,15 +656,23 @@ export async function runValidatorEval(opts: {
 
 export type ValidatorArmSummary = {
   arm: string;
+  kind: ValidatorArm["kind"];
   modelOverride?: string;
   /** Which in-repo template fed this arm — `"prior"` or `"current"`. NEVER
-   *  Langfuse; see the module docstring's "Prompt source" section. */
-  promptSource: ValidatorArm["promptSource"];
+   *  Langfuse; see the module docstring's "Prompt source" section. Absent for
+   *  a solver arm — it never renders a validator system-prompt template. */
+  promptSource?: ValidatorPromptSource;
   /** `sha8` of the in-repo TEMPLATE body (`PROMPT_TEMPLATES[promptSource]`).
    *  Constant for the whole run — evidence that this arm's prompt came from
-   *  the repo, not a network fetch, independent of any per-case rendering. */
-  templateSha: string;
-  metrics: ArmMetrics;
+   *  the repo, not a network fetch, independent of any per-case rendering.
+   *  Absent for a solver arm (no template). */
+  templateSha?: string;
+  /** `selfInconsistentRate` is `null` for a solver arm — it never produces
+   *  `flaggedReasons` in the validator sense, so reporting a computed `0`
+   *  would misrepresent "not measured" as "measured, found none". */
+  metrics: Omit<ArmMetrics, "selfInconsistentRate"> & {
+    selfInconsistentRate: number | null;
+  };
   costUsd: number;
   errors: Array<{ caseId: string; error: string }>;
 };
@@ -649,16 +723,25 @@ export function computeValidatorSummary(
       cases,
       armResult,
     );
-    const metrics = computeArmMetrics(pairedCases, pairedResults);
+    const rawMetrics = computeArmMetrics(pairedCases, pairedResults);
     const errors = armResult.records
       .filter((r) => r.error !== undefined)
       .map((r) => ({ caseId: r.caseId, error: r.error! }));
+    const arm = armResult.arm;
     return {
-      arm: armResult.arm.name,
-      modelOverride: armResult.arm.modelOverride,
-      promptSource: armResult.arm.promptSource,
-      templateSha: sha8(PROMPT_TEMPLATES[armResult.arm.promptSource]),
-      metrics,
+      arm: arm.name,
+      kind: arm.kind,
+      modelOverride: arm.modelOverride,
+      promptSource: arm.kind === "validator" ? arm.promptSource : undefined,
+      templateSha: arm.kind === "validator" ? sha8(PROMPT_TEMPLATES[arm.promptSource]) : undefined,
+      metrics: {
+        ...rawMetrics,
+        // A solver arm's `flaggedReasons` is always `[]` by construction (it
+        // never judges self-consistency) — reporting the computed `0` would
+        // read as "measured, found none" rather than "not measured". See
+        // `ValidatorArmSummary.metrics`'s docstring.
+        selfInconsistentRate: arm.kind === "solver" ? null : rawMetrics.selfInconsistentRate,
+      },
       costUsd: estimateCostUsd(armResult.usage),
       errors,
     };
@@ -685,6 +768,9 @@ export function computeValidatorSummary(
 // ---------------------------------------------------------------------------
 
 const pct = (rate: number): string => `${(rate * 100).toFixed(1)}%`;
+/** Renders `null` (a solver arm's unmeasured `selfInconsistentRate`) as
+ *  `n/a` rather than a misleading `0.0%`. */
+const pctOrNA = (rate: number | null): string => (rate === null ? "n/a" : pct(rate));
 const usd = (value: number): string => `$${value.toFixed(4)}`;
 
 export function renderValidatorMarkdownSummary(
@@ -713,10 +799,12 @@ export function renderValidatorMarkdownSummary(
   );
   lines.push("|---|---|---|---|---|---|---|---|---|");
   for (const a of summary.arms) {
+    const promptCell = a.promptSource ? `repo:${a.promptSource}` : "n/a (blind)";
+    const templateCell = a.templateSha ?? "n/a";
     lines.push(
-      `| ${a.arm} | ${a.modelOverride ?? "production"} | repo:${a.promptSource} | ${a.templateSha} | ` +
+      `| ${a.arm} | ${a.modelOverride ?? "production"} | ${promptCell} | ${templateCell} | ` +
         `${pct(a.metrics.recallOnAmbiguous)} | ${pct(a.metrics.falseFlagRateOnClean)} | ` +
-        `${pct(a.metrics.selfInconsistentRate)} | ${a.metrics.n} | ${usd(a.costUsd)} |`,
+        `${pctOrNA(a.metrics.selfInconsistentRate)} | ${a.metrics.n} | ${usd(a.costUsd)} |`,
     );
   }
   lines.push("");
@@ -884,6 +972,13 @@ async function main(): Promise<void> {
   );
   console.log("[eval-validator] arms:");
   for (const arm of ARMS) {
+    if (arm.kind === "solver") {
+      console.log(
+        `  - ${arm.name}: model=${arm.modelOverride} (blind — judges from the ` +
+          `learner view only, never sees correctAnswer)`,
+      );
+      continue;
+    }
     const templateSha = sha8(PROMPT_TEMPLATES[arm.promptSource]);
     console.log(
       `  - ${arm.name}: model=${arm.modelOverride ?? "production default"}, ` +

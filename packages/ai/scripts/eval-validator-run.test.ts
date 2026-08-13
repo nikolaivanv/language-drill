@@ -20,6 +20,7 @@ import { fileURLToPath } from "node:url";
 import type Anthropic from "@anthropic-ai/sdk";
 
 import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import type { ClozeContent } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
 import {
@@ -43,6 +44,7 @@ import {
   runValidatorEval,
   writeValidatorSummaryJson,
   type ValidatorAmbiguityCase,
+  type ValidatorArm,
   type ValidatorCaseExecutor,
   type ValidatorEvalRunResult,
 } from "./eval-validator-run.js";
@@ -285,12 +287,13 @@ describe("loadValidatorCases", () => {
 // ---------------------------------------------------------------------------
 
 describe("ARMS", () => {
-  it("declares exactly the four documented arms", () => {
+  it("declares exactly the four documented validator arms plus the blind-solver arm", () => {
     expect(ARMS.map((a) => a.name)).toEqual([
       "baseline",
       "prompt-only",
       "model-only",
       "both",
+      "blind-solver",
     ]);
   });
 
@@ -308,26 +311,35 @@ describe("ARMS", () => {
     expect(both.modelOverride).toBeUndefined();
   });
 
+  /** Narrow a lookup to the validator variant — `promptSource` only exists
+   *  there. Throws (rather than returning `undefined`) if the name isn't
+   *  found or isn't a validator arm, so a typo fails loud in the test itself. */
+  function findValidatorArm(name: string): Extract<ValidatorArm, { kind: "validator" }> {
+    const arm = ARMS.find((a) => a.name === name);
+    if (!arm || arm.kind !== "validator") {
+      throw new Error(`expected a validator arm named '${name}'`);
+    }
+    return arm;
+  }
+
   it("sources baseline and model-only from the pre-Task-4 (prior) template", () => {
-    const baseline = ARMS.find((a) => a.name === "baseline")!;
-    const modelOnly = ARMS.find((a) => a.name === "model-only")!;
-    expect(baseline.promptSource).toBe("prior");
-    expect(modelOnly.promptSource).toBe("prior");
+    expect(findValidatorArm("baseline").promptSource).toBe("prior");
+    expect(findValidatorArm("model-only").promptSource).toBe("prior");
   });
 
   it("sources prompt-only and both from the current (post-Task-4) template", () => {
-    const promptOnly = ARMS.find((a) => a.name === "prompt-only")!;
-    const both = ARMS.find((a) => a.name === "both")!;
-    expect(promptOnly.promptSource).toBe("current");
-    expect(both.promptSource).toBe("current");
+    expect(findValidatorArm("prompt-only").promptSource).toBe("current");
+    expect(findValidatorArm("both").promptSource).toBe("current");
   });
 
-  it("every arm declares a promptSource — none is left to fall through to a network fetch", () => {
-    // The bug this guards: an arm with `promptSource` unset (or an optional
-    // `systemPromptOverride` left undefined) would fall through to
-    // `buildValidationSystemPrompt` -> Langfuse. Every arm must always
-    // resolve to an in-repo source.
-    for (const arm of ARMS) {
+  it("every validator arm declares a promptSource — none is left to fall through to a network fetch", () => {
+    // The bug this guards: a validator arm with `promptSource` unset (or an
+    // optional `systemPromptOverride` left undefined) would fall through to
+    // `buildValidationSystemPrompt` -> Langfuse. Every validator arm must
+    // always resolve to an in-repo source. The blind-solver arm never calls
+    // `validateDraft` at all, so it has no `promptSource` by design (see the
+    // "ARMS — the blind-solver arm" describe block below).
+    for (const arm of ARMS.filter((a) => a.kind === "validator")) {
       expect(["prior", "current"]).toContain(arm.promptSource);
     }
   });
@@ -338,6 +350,70 @@ describe("ARMS", () => {
       "utf8",
     );
     expect(PRIOR_TEMPLATE).toBe(expected);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ARMS — the blind-solver arm (Task 3)
+// ---------------------------------------------------------------------------
+
+describe("ARMS — the blind-solver arm", () => {
+  it("keeps the four validator arms unchanged and pinned", () => {
+    const v = ARMS.filter((a) => a.kind === "validator");
+    expect(v.map((a) => a.name)).toEqual(["baseline", "prompt-only", "model-only", "both"]);
+    expect(v.find((a) => a.name === "baseline")?.modelOverride).toBe("claude-sonnet-4-6");
+    expect(v.find((a) => a.name === "prompt-only")?.modelOverride).toBe("claude-sonnet-4-6");
+    expect(v.find((a) => a.name === "model-only")?.modelOverride).toBeUndefined();
+    expect(v.find((a) => a.name === "both")?.modelOverride).toBeUndefined();
+  });
+
+  it("adds exactly one solver arm, pinned to sonnet-5", () => {
+    const s = ARMS.filter((a) => a.kind === "solver");
+    expect(s).toHaveLength(1);
+    expect(s[0].name).toBe("blind-solver");
+    expect(s[0].modelOverride).toBe("claude-sonnet-5");
+  });
+});
+
+describe("solver executor", () => {
+  it("calls the crafter with an options-free learner view on sonnet-5", async () => {
+    const mockCreate = vi.fn().mockResolvedValue({
+      content: [{ type: "tool_use", name: "submit_probe_answers",
+        input: { correct: "de", correctConfidence: 0.9, wrong: "x", alt: "para",
+                 ambiguous: false, ambiguityNote: "" } }],
+      usage: { input_tokens: 10, output_tokens: 5 },
+      stop_reason: "tool_use",
+    });
+    const client = { messages: { create: mockCreate } } as unknown as Anthropic;
+    const exec = makeRealValidatorExecutor(client);
+    const c = clozeCaseWithOptions();   // fixture helper: options ["de","para","en"]
+    const out = await exec({ case: c, arm: ARMS.find((a) => a.kind === "solver")!, signal: undefined });
+
+    const req = mockCreate.mock.calls[0][0];
+    expect(req.model).toBe("claude-sonnet-5");
+    const userText = req.messages[0].content as string;
+    expect(userText).not.toContain("Options:");
+    expect(userText).toContain(c.content.instructions);
+    expect(out.result.ambiguous).toBe(true);   // alt "para" is unlisted
+  });
+
+  it("does not call validateDraft for a solver arm", async () => {
+    // validateDraft would build the VALIDATION tool; assert the request's tool
+    // is the crafter's, which is how we know we took the solver branch.
+    const mockCreate = vi.fn().mockResolvedValue({
+      content: [{ type: "tool_use", name: "submit_probe_answers",
+        input: { correct: "de", correctConfidence: 0.9, wrong: "x", alt: null,
+                 ambiguous: false, ambiguityNote: "" } }],
+      usage: { input_tokens: 10, output_tokens: 5 },
+      stop_reason: "tool_use",
+    });
+    const client = { messages: { create: mockCreate } } as unknown as Anthropic;
+    await makeRealValidatorExecutor(client)({
+      case: clozeCaseWithOptions(),
+      arm: ARMS.find((a) => a.kind === "solver")!,
+      signal: undefined,
+    });
+    expect(mockCreate.mock.calls[0][0].tools[0].name).toBe("submit_probe_answers");
   });
 });
 
@@ -405,6 +481,30 @@ function makeCase(
       sentence: "___ es la respuesta.",
       correctAnswer: "esta",
       acceptableAnswers: [],
+    },
+    why: "test",
+  };
+}
+
+/** A cloze case whose content carries `options` — the blind-solver arm must
+ *  render the learner view WITHOUT them (`includeOptions: false`); options
+ *  sit behind a toggle in production and the ambiguity fixture was labelled
+ *  under that rule (see `renderLearnerView`'s docstring). */
+function clozeCaseWithOptions(): ValidatorAmbiguityCase {
+  return {
+    id: "solver-options-1",
+    label: "clean",
+    provenance: "test fixture",
+    language: Language.ES,
+    cefrLevel: CefrLevel.B1,
+    grammarPointKey: "es-b1-nominalizers",
+    content: {
+      type: ExerciseType.CLOZE,
+      instructions: "Completa la frase.",
+      sentence: "Voy ___ casa.",
+      correctAnswer: "de",
+      acceptableAnswers: [],
+      options: ["de", "para", "en"],
     },
     why: "test",
   };
@@ -487,7 +587,9 @@ function makeMockAnthropicClient(): {
 }
 
 describe("prompt source — always in-repo, never Langfuse (Fix Round 1)", () => {
-  for (const arm of ARMS) {
+  // Validator arms only — the blind-solver arm never calls `validateDraft`
+  // or renders a system-prompt template (see "ARMS — the blind-solver arm").
+  for (const arm of ARMS.filter((a) => a.kind === "validator")) {
     it(`arm '${arm.name}' sends the LOCALLY rendered '${arm.promptSource}' template as the system prompt`, async () => {
       const { mockCreate, client } = makeMockAnthropicClient();
       const executor = makeRealValidatorExecutor(client);
@@ -616,9 +718,11 @@ describe("runValidatorEval", () => {
       datasetName: "test.json",
     });
 
-    // 2 cases x 4 arms
-    expect(executor).toHaveBeenCalledTimes(8);
-    expect(result.arms).toHaveLength(4);
+    // 2 cases x arms.length (currently 5: 4 validator + 1 solver) — not
+    // hardcoded, since `arms` is the real exported `ARMS` and this test is
+    // about the orchestrator's generic loop, not any one arm's identity.
+    expect(executor).toHaveBeenCalledTimes(cases.length * arms.length);
+    expect(result.arms).toHaveLength(arms.length);
     for (const arm of result.arms) {
       expect(arm.records).toHaveLength(2);
       expect(arm.records.every((r) => r.result !== undefined)).toBe(true);
@@ -683,15 +787,17 @@ describe("runValidatorEval", () => {
     const result = await runValidatorEval({
       executor,
       cases,
-      arms, // 4 arms
+      arms, // arms.length arms (real ARMS)
       runName: "test-run",
       datasetName: "test.json",
-      maxCostUsd: 5, // trips after 1 full case (4 x $1.50 = $6 >= $5)
+      // Trips after 1 full case: arms.length x $1.50 >= $5 (true for any
+      // arms.length >= 4, so this holds regardless of ARMS growing).
+      maxCostUsd: 5,
     });
 
     expect(result.costCapped).toBe(true);
-    // Exactly one case fully attempted across all 4 arms before stopping.
-    expect(executor).toHaveBeenCalledTimes(4);
+    // Exactly one case fully attempted across every arm before stopping.
+    expect(executor).toHaveBeenCalledTimes(arms.length);
     for (const arm of result.arms) {
       expect(arm.records).toHaveLength(1);
     }
@@ -715,13 +821,14 @@ describe("runValidatorEval", () => {
       arms,
       runName: "test-run",
       datasetName: "test.json",
-      maxCostUsd: 3, // trips after case 1 (4 arms x $1.50 = $6 >= $3), before case 2
+      // Trips after case 1 (arms.length x $1.50 >= $3), before case 2.
+      maxCostUsd: 3,
     });
 
     expect(result.costCapped).toBe(true);
     // Case 1's results are preserved, not discarded, even though the run capped.
-    expect(executor).toHaveBeenCalledTimes(4);
-    expect(result.arms).toHaveLength(4);
+    expect(executor).toHaveBeenCalledTimes(arms.length);
+    expect(result.arms).toHaveLength(arms.length);
     expect(result.arms.every((a) => a.records.length === 1)).toBe(true);
     expect(result.arms.every((a) => a.records[0].caseId === "c1")).toBe(true);
   });
