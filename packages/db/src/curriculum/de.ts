@@ -607,8 +607,8 @@ const deCurriculum: readonly GrammarPoint[] = [
       'zweitausendsechsundzwanzig',
       // -mal adverbs.
       'einmal', 'zweimal', 'dreimal', 'viermal',
-      // eins vs ein/eine before a noun.
-      'ein', 'eine',
+      // eins vs ein/eine/einen before a noun (case matters: "Ich habe einen Bruder").
+      'ein', 'eine', 'einen',
     ],
   },
   // ---------------------------------------------------------------------------

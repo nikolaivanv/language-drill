@@ -45,14 +45,32 @@ targets — is 5/5 in both arms.
 
 ## What this establishes, and what it does not
 
-**Establishes:** the pre-registered failure mode did not occur. The plan's
-decision rule was "if `ambiguous` flags rise on `es-a2-saber-poder-ability`, the
-clause is wrong as written and must narrow to banning only the trigger-naming
-parenthetical." No flag tags appeared in either arm. The validator's
-anti-rejection guard (a neutral gloss is not `ambiguous` when the L2 sentence
-forces the reading) is doing its job: the generator's new output is not being
-rejected by its mirror half. That was the real risk of the two-part contract
-and it is cleared.
+**Establishes — with a real caveat about which validator ran.** `eval:gen`'s
+`--baseline`/`--candidate` axis only swaps the GENERATION prompt. Validation
+always goes through `validateDraft` → `buildValidationSystemPrompt`
+(`packages/ai/src/validate.ts:395`) →
+`getPromptWithVarsOrFallback("validate-system-prompt")`
+(`validation-prompts.ts:238`), which fetches the LIVE Langfuse body — so both
+arms in this run validated against `validate@2026-08-12`, the OLD validator,
+without this branch's `contextSpoilsAnswer` field-list fix or the mirrored
+neutral-gloss guard.
+
+That means the new validator body was **not exercised** by this run at all.
+What the run does show is narrower but still useful: neutral-gloss drafts
+passed 5/5 against a validator that *lacked* the anti-rejection guard —
+i.e. the harsher configuration for the specific risk the plan's decision rule
+was watching for (spurious `ambiguous` flags on
+`es-a2-saber-poder-ability`). That direction is reassuring precisely because
+the safety net wasn't there and the drafts still passed.
+
+What is entirely unmeasured is the opposite direction: this branch's widened
+`contextSpoilsAnswer` is a HARD VETO (routes straight to
+REJECTED/dropped, not flagged), so if it over-fires on the new `glossEn`
+field-list entry or the neutral-gloss clause, the loss is silent — a rejected
+draft leaves no flag tag to notice. The only configuration in which the new
+validator body is reachable at all is the live Langfuse `production` label
+after `push-prompts` runs for an environment, so a post-merge `eval:gen`
+re-run against dev (once synced) is the way to close this gap.
 
 **Does not establish:** that the clause improves anything.
 
@@ -68,11 +86,13 @@ and it is cleared.
   have had no behavioural effect at all in this run and the numbers would look
   identical.
 
-The honest summary: this run rules out the catastrophic outcome and confirms
-generator/validator agreement. It is not evidence that the gloss policy works.
-The claim in the spec — that a neutral "can" gloss is non-ambiguous when the
-Spanish forces the contrast — remains reasoned from ~12 production rows, not
-measured.
+The honest summary: this run rules out the catastrophic outcome against the
+OLD validator, but it does not confirm generator/validator agreement under
+this branch's actual validator changes — that half is untested until a
+post-merge dev run exercises the pushed `validate@2026-08-13` body. It is not
+evidence that the gloss policy works. The claim in the spec — that a neutral
+"can" gloss is non-ambiguous when the Spanish forces the contrast — remains
+reasoned from ~12 production rows, not measured.
 
 ## Follow-up worth doing
 
@@ -163,3 +183,26 @@ with the #642 sweep artifact. Rollback is the `UPDATE` stored in that file.
 
 The cell stays empty until nightly pre-generation is un-paused
 (`infra/bin/app.ts:54`). That was the accepted trade.
+
+## Why the German pool was not demoted
+
+**Open decision — not yet acted on.** The spec calls German "the remaining
+live leak" (DE 1/17 digit cue vs TR 0/20) and disputes that the TR rows leak
+at all, yet this branch demotes only the TR ordinal pool and leaves
+`de-a1-numbers-ordinals` served as-is. That asymmetry is currently unstated
+anywhere else in this branch's record; it is recorded here so it does not
+read as an oversight.
+
+The DE cell's 16 non-compliant rows are now stale relative to a directive
+that this branch makes apply to them (the widened `contextSpoilsAnswer`
+field list and the digit-form gloss carve-out). Demoting them the same way
+the TR pool was demoted would empty a **second** cell while nightly
+pre-generation is paused (`infra/bin/app.ts:54` —
+`enableScheduledExerciseGeneration: false`), so there would be no refill
+until the pause lifts. That trade was judged worse than leaving a
+known-stale-but-served DE pool in place for now.
+
+This is a deliberate deferral, not an omission — but it is still an open
+decision, not a closed one. It should be revisited (either demote-and-wait,
+or demote-and-immediately-regenerate a small batch) once nightly generation
+resumes.

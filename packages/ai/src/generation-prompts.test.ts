@@ -449,7 +449,7 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-08-11", () => {
+  it("bumps the generation prompt version to 2026-08-13", () => {
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-13");
   });
 
