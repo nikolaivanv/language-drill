@@ -1,0 +1,64 @@
+{
+  "runName": "corrected",
+  "datasetName": "validator-ambiguity-cases.json",
+  "startedAt": "2026-08-12T23:37:54.182Z",
+  "caseCount": 82,
+  "costCapped": false,
+  "arms": [
+    {
+      "arm": "baseline",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "prior",
+      "templateSha": "343acb0d",
+      "metrics": {
+        "recallOnAmbiguous": 0.6037735849056604,
+        "falseFlagRateOnClean": 0.13793103448275862,
+        "selfInconsistentRate": 0.012195121951219513,
+        "n": 82
+      },
+      "costUsd": 2.0756,
+      "errors": []
+    },
+    {
+      "arm": "prompt-only",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "current",
+      "templateSha": "9b65c3e8",
+      "metrics": {
+        "recallOnAmbiguous": 0.6037735849056604,
+        "falseFlagRateOnClean": 0.10344827586206896,
+        "selfInconsistentRate": 0.06097560975609756,
+        "n": 82
+      },
+      "costUsd": 2.0736,
+      "errors": []
+    },
+    {
+      "arm": "model-only",
+      "promptSource": "prior",
+      "templateSha": "343acb0d",
+      "metrics": {
+        "recallOnAmbiguous": 0.6226415094339622,
+        "falseFlagRateOnClean": 0.10344827586206896,
+        "selfInconsistentRate": 0.04878048780487805,
+        "n": 82
+      },
+      "costUsd": 2.4916,
+      "errors": []
+    },
+    {
+      "arm": "both",
+      "promptSource": "current",
+      "templateSha": "9b65c3e8",
+      "metrics": {
+        "recallOnAmbiguous": 0.5660377358490566,
+        "falseFlagRateOnClean": 0.06896551724137931,
+        "selfInconsistentRate": 0.04878048780487805,
+        "n": 82
+      },
+      "costUsd": 2.5176,
+      "errors": []
+    }
+  ],
+  "totalCostUsd": 9.1584
+}

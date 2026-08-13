@@ -65,7 +65,14 @@ template locally — Langfuse is never consulted (see Traps, below).
 over the `ambiguous` bucket **without** raising the false-flag rate on `clean`. A recall
 gain bought with over-flagging is a #606 repeat and does not ship.
 
-## Results
+> **⚠️ Superseded.** The run below used a 31-case fixture that an independent audit
+> later found unsound (13 of 42 `clean` cases were actually ambiguous, all poisoning
+> in one direction). It also predates the discovery that `content.instructions` was
+> never rendered for cloze. **Read "Re-run on the corrected instrument" at the end of
+> this document for the numbers that stand.** The original run is kept because its
+> traps section is what led to both discoveries.
+
+## Results (superseded — see the re-run)
 
 124 calls, 0 errors, $3.27.
 
@@ -189,6 +196,84 @@ stem and instructions, ask it to fill the blank, and compare. If it answers `dej
 the row stores `deja`, the item is ambiguous — mechanically, with no rubric and no
 enumeration to trust. This is the same information-asymmetry insight #612 applied to the
 answer evaluator, and `qa:sample` already contains most of the machinery.
+
+---
+
+# Re-run on the corrected instrument (2026-08-13)
+
+**These are the numbers that stand.** Raw data:
+`docs/findings/2026-08-12-validator-alternative-enumeration-run-corrected.json`.
+
+Two things changed between the runs, both of which the first run's traps section
+caused:
+
+1. **`content.instructions` is now rendered for cloze** (commits `489953f0`,
+   `187c71a1`). It never was before, while the validator was shown it — so the
+   validator judged determinacy using text the learner could not see. Fixing that
+   changed the ground truth for every case whose disambiguating cue lived in that
+   field.
+2. **The fixture was widened 31 → 82 and then corrected** against an independent
+   audit and the new visibility rule. 33 cases edited, 13 relabelled (all
+   `clean` → `ambiguous`), 0 dropped. Buckets: **53 `ambiguous` / 29 `clean`**.
+
+Resolution improved ~2.6× on both axes: one ambiguous case is now 1.9pp (was 5pp),
+one clean case 3.4pp (was 9.1pp).
+
+## Results
+
+328 calls, 0 errors, $9.16.
+
+| Arm | Model | Prompt | Recall (n=53) | False-flag (n=29) | Self-inconsistent |
+|---|---|---|---|---|---|
+| `baseline` | sonnet-4-6 | prior | **60.4%** (32/53) | **13.8%** (4/29) | 1/82 |
+| `prompt-only` | sonnet-4-6 | new | 60.4% (32/53) | 10.3% (3/29) | 5/82 |
+| `model-only` | sonnet-5 | prior | 62.3% (33/53) | 10.3% (3/29) | 4/82 |
+| `both` | sonnet-5 | new | **56.6%** (30/53) | **6.9%** (2/29) | 4/82 |
+
+**The criterion fails again.** `both` recall 56.6% < baseline 60.4% (30/53 vs
+32/53). No recall gain to weigh against the false-flag improvement.
+
+## What the sharper instrument added
+
+**A consistent mechanism, where the first run had only scattered 1-case deltas.**
+Every intervention arm reduces false-flags (4→3, 4→3, 4→2) and none meaningfully
+improves recall (32, 32, 33, 30). That is a **threshold shift, not a discrimination
+improvement**: the enumeration prompt and the stronger model both make the validator
+more conservative, and it gives up true positives at the same rate it saves false
+positives.
+
+The pre-registered criterion does not capture this. On a balanced measure
+(recall − false-flag) every intervention edges baseline out — 50.1, 52.0, 49.7
+against 46.6. So the honest verdict is **"no discrimination gain"**, not "made it
+worse". The criterion asks specifically for a recall gain because recall is the
+failure this project exists to fix; by that standard, nothing here earns a merge.
+
+**Baseline got worse once the instrument got honest.** Recall fell from 70% on the
+unsound fixture to **60.4%**. The validator misses **2 in 5 known-ambiguous items in
+every configuration tested**. That is the headline finding, and neither prompt text
+nor a stronger model moves it.
+
+**False-flag is lower than the old fixture implied** (13.8% vs 18.2%), because the
+poisoned `clean` cases moved to the bucket they belonged in. The validator
+over-flags less than feared and under-detects more than feared.
+
+**Self-inconsistency rose from 1/82 to 4-5/82** on the new-prompt arms — expected,
+since `candidateFillers` is only populated there. At 5-6% it is a usable signal
+rather than the near-total misfire the pre-`correctAnswer`-fix version would have
+produced.
+
+## Where this points
+
+A ~40% miss rate that is invariant to both prompt and model is the signature of a
+problem that is not about effort or capability. It is about **access**: the reviewer
+can see the stored answer while judging it, so more instruction and more capability
+both get spent rationalising toward that answer rather than searching away from it.
+
+That is the one variable neither arm changed, and the one a **blind-solver pre-pass**
+removes: show a fresh call only the rendered learner view, ask it to fill the blank,
+and compare. `qa-sample`'s `renderLearnerView` + `craftProbeAnswers` already
+implement most of it — and as of this branch that learner view is finally accurate
+for cloze.
 
 ## Reproducing
 
