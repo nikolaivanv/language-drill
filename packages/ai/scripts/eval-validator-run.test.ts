@@ -832,6 +832,73 @@ describe("runValidatorEval", () => {
     expect(result.arms.every((a) => a.records.length === 1)).toBe(true);
     expect(result.arms.every((a) => a.records[0].caseId === "c1")).toBe(true);
   });
+
+  it("invokes onArmComplete after every (case, arm) pair, always the same partial path, with the run-so-far", async () => {
+    const cases = [makeCase("c1", "ambiguous"), makeCase("c2", "clean")];
+    const executor: ValidatorCaseExecutor = vi.fn(async () => ({
+      result: cleanResult(),
+      usage: {
+        inputTokens: 10,
+        cacheCreationInputTokens: 0,
+        cacheReadInputTokens: 0,
+        outputTokens: 5,
+      },
+    }));
+
+    const calls: Array<{ path: string; recordCounts: number[] }> = [];
+    const result = await runValidatorEval({
+      executor,
+      cases,
+      arms,
+      runName: "chk",
+      datasetName: "test.json",
+      onArmComplete: (partialPath, run) => {
+        calls.push({
+          path: partialPath,
+          recordCounts: run.arms.map((a) => a.records.length),
+        });
+      },
+    });
+
+    // Fires once per (case, arm) pair — the finest checkpoint granularity
+    // available without reordering the case-outer/arm-inner loop the
+    // case-boundary cost cap (tested above) depends on.
+    expect(calls).toHaveLength(cases.length * arms.length);
+    // Every checkpoint targets the SAME path, derived from runName — never
+    // the final (non-partial) summary path.
+    expect(calls.every((c) => c.path === calls[0].path)).toBe(true);
+    expect(calls[0].path).toMatch(/validator-chk\.partial\.json$/);
+    // Every checkpoint always carries every arm slot (never a half-arm
+    // structure) — record counts accumulate monotonically as cases
+    // complete, reaching cases.length for every arm on the final call.
+    expect(calls.at(-1)!.recordCounts).toEqual(arms.map(() => cases.length));
+    expect(result.arms).toHaveLength(arms.length);
+  });
+
+  it("never calls onArmComplete when it is omitted (optional hook)", async () => {
+    const cases = [makeCase("c1", "ambiguous")];
+    const executor: ValidatorCaseExecutor = vi.fn(async () => ({
+      result: cleanResult(),
+      usage: {
+        inputTokens: 10,
+        cacheCreationInputTokens: 0,
+        cacheReadInputTokens: 0,
+        outputTokens: 5,
+      },
+    }));
+
+    // No onArmComplete passed — existing call sites must keep compiling and
+    // behaving exactly as before.
+    const result = await runValidatorEval({
+      executor,
+      cases,
+      arms,
+      runName: "test-run",
+      datasetName: "test.json",
+    });
+
+    expect(result.arms).toHaveLength(arms.length);
+  });
 });
 
 // ---------------------------------------------------------------------------

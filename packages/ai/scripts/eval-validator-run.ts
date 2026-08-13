@@ -92,7 +92,7 @@
  * correct by construction instead of by network luck.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -605,6 +605,19 @@ export async function runValidatorEval(opts: {
   signal?: AbortSignal;
   now?: () => Date;
   log?: (...args: unknown[]) => void;
+  /**
+   * Optional per-(case, arm) checkpoint hook. Fired immediately after every
+   * executor call resolves — whether it produced a result or was
+   * fault-isolated as an error — the finest granularity available without
+   * reordering the case-outer/arm-inner loop the case-boundary cost cap
+   * (above) depends on. Receives the partial-checkpoint path
+   * (`<EVAL_RUNS_DIR>/validator-<runName>.partial.json`, constant for the
+   * whole run) and the run-so-far — every arm slot always present,
+   * `records` growing as cases complete — so a caller can persist it with
+   * the SAME serializer the final summary uses. `runValidatorEval` performs
+   * no file I/O itself; the caller decides how (or whether) to write.
+   */
+  onArmComplete?: (path: string, run: ValidatorEvalRunResult) => void;
 }): Promise<ValidatorEvalRunResult> {
   const {
     executor,
@@ -616,6 +629,7 @@ export async function runValidatorEval(opts: {
     signal,
     now = () => new Date(),
     log = (...a: unknown[]) => console.log(...a),
+    onArmComplete,
   } = opts;
 
   const startedAt = now().toISOString();
@@ -629,6 +643,11 @@ export async function runValidatorEval(opts: {
     records: [],
     usage: ZERO_USAGE,
   }));
+
+  const partialPath = path.join(
+    EVAL_RUNS_DIR,
+    `validator-${runName}.partial.json`,
+  );
 
   let accumulatedUsage: ClaudeUsageBreakdown = ZERO_USAGE;
   let costCapped = false;
@@ -660,6 +679,14 @@ export async function runValidatorEval(opts: {
           error: (e as Error).message,
         });
       }
+      onArmComplete?.(partialPath, {
+        runName,
+        datasetName,
+        startedAt,
+        caseCount: cases.length,
+        costCapped,
+        arms: armResults,
+      });
     }
   }
 
@@ -1034,6 +1061,14 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  // Same path `runValidatorEval` derives internally and hands back on every
+  // `onArmComplete` call — recomputed here (not captured from a callback
+  // arg) since it's needed after the run resolves too, to delete it.
+  const partialSummaryPath = path.join(
+    EVAL_RUNS_DIR,
+    `validator-${runName}.partial.json`,
+  );
+
   const client = createClaudeClient(apiKey);
   const result = await runValidatorEval({
     executor: makeRealValidatorExecutor(client),
@@ -1042,6 +1077,16 @@ async function main(): Promise<void> {
     runName,
     datasetName,
     maxCostUsd: args.maxCostUsd,
+    // Checkpoint after every (case, arm) pair so a killed run keeps
+    // whatever spend it already produced — same serializer
+    // (`computeValidatorSummary` + `JSON.stringify(..., null, 2)`) the
+    // final summary uses below, so the partial file is readable by the
+    // same tooling.
+    onArmComplete: (partialPath, run) => {
+      mkdirSync(EVAL_RUNS_DIR, { recursive: true });
+      const partialSummary = computeValidatorSummary(run, cases);
+      writeFileSync(partialPath, JSON.stringify(partialSummary, null, 2), "utf8");
+    },
   });
 
   const summary = computeValidatorSummary(result, cases);
@@ -1050,6 +1095,14 @@ async function main(): Promise<void> {
   const jsonPath = writeValidatorSummaryJson(summary);
   console.log("");
   console.log(`[eval-validator] summary written to ${jsonPath}`);
+
+  // The run finished on its own (whether or not it was cost-capped) — the
+  // canonical summary is safely on disk, so the partial checkpoint is no
+  // longer needed. A stale `.partial.json` left on disk after this point
+  // always means the run did NOT finish (killed/crashed before reaching
+  // here) — `force: true` so a run that never got far enough to checkpoint
+  // (e.g. --max-cost-usd 0) doesn't throw on a missing file.
+  rmSync(partialSummaryPath, { force: true });
 }
 
 const isMain =
