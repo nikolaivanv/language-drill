@@ -447,6 +447,31 @@ describe('self-revealing elicitation — flagged entries', () => {
       expect(entry?.elicitationSeedValues).not.toContain(alreadyPooled);
     }
   });
+
+  // de-a1-numbers-ordinals was never flagged while TR and ES were, so it kept
+  // generating written-word cues: 1/17 approved cloze rows carried a digit
+  // cue, against 19/19 for es-a1-numbers-ordinals post-directive.
+  it('de-a1-numbers-ordinals uses digit-form with a curated pool', () => {
+    const entry = getGrammarPoint('de-a1-numbers-ordinals');
+    expect(entry?.selfRevealingElicitation).toBe('digit-form');
+    // Floor matches the existing digit-form pools (ES 28, TR 24).
+    expect(entry?.elicitationSeedValues?.length ?? 0).toBeGreaterThanOrEqual(24);
+  });
+
+  it('the German pool seeds the forms the point actually gets wrong', () => {
+    const entry = getGrammarPoint('de-a1-numbers-ordinals');
+    const pool = entry?.elicitationSeedValues ?? [];
+    // Irregular ordinals and the -te/-ste boundary at 20 (commonErrors 1).
+    for (const hard of ['dritte', 'siebte', 'zwanzigste']) {
+      expect(pool).toContain(hard);
+    }
+    // Units-before-tens compounds written as one word (commonErrors 2).
+    expect(pool).toContain('einundzwanzig');
+    // The declined date form, am + ordinal (commonErrors 3).
+    expect(pool).toContain('achten');
+    // Hundred-based year-reading, not tausend (commonErrors 4).
+    expect(pool).toContain('neunzehnhundertachtundneunzig');
+  });
 });
 
 describe('constructionVariants invariants', () => {

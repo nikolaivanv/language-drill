@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-12");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -205,6 +205,26 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain('correctAnswer: "da"');
     expect(prompt).toContain("tr-a1-vowel-harmony");
     expect(prompt).toContain("tr-a1-locative");
+  });
+
+  it("contextSpoilsAnswer covers glossEn, not just instructions/context (2026-08-13)", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+    // #639 rendered `glossEn` to the validator; the veto's own field list was
+    // never extended, so the one production catch was the model generalising.
+    expect(prompt).toContain(
+      "does the draft's `instructions`, `context`, or `glossEn`",
+    );
+  });
+
+  it("carries the neutral-gloss rule for lexical-choice points (2026-08-13)", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+    expect(prompt).toContain("Neutral-gloss rule");
+    expect(prompt).toContain("saber");
+    expect(prompt).toContain("know how to");
+    // The anti-rejection guard: a neutral gloss must NOT be flagged ambiguous
+    // when the L2 sentence forces the reading, or the generator's new output
+    // gets rejected by the validator and the change nets to zero.
+    expect(prompt).toContain("is NOT `ambiguous` when the L2 sentence forces");
   });
 
   it("template raw size stays within the NFR token budget (+44 % raw cap)", () => {
@@ -264,6 +284,15 @@ describe("buildValidationSystemPrompt", () => {
     // carve-out where the point is a FORM and the alternates all realize it
     // (~1.0KB). Ceiling raised to 14,000.
     //
+    // validate@2026-08-13 extended `contextSpoilsAnswer` to name `glossEn`
+    // alongside `instructions`/`context` — #639 rendered the gloss to the
+    // validator and added the gloss-consistency rule, but never extended the
+    // spoil veto's own field list, so its one production catch was the model
+    // generalising past the written rule. Also adds the Neutral-gloss rule
+    // (cloze, lexical-choice points) mirroring the generator-side clause, with
+    // the guard that a neutral gloss is not `ambiguous` when the L2 sentence
+    // forces the reading (~0.5KB). Ceiling raised to 15,000.
+    //
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -271,7 +300,7 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(14000);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(15000);
   });
 });
 
@@ -925,7 +954,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-12');
+    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-13');
   });
 });
 

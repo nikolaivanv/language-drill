@@ -1,0 +1,40 @@
+{
+  "run": "tr-ordinals-pool-hygiene-2026-08-13",
+  "purpose": "Rollback record for the demote of the stale tr-a1-numbers-ordinals cloze pool. demote:pool writes NO rollback artifact of its own; this file is the only record of which rows were demoted and what their prior state was.",
+  "target": {
+    "neonProject": "twilight-smoke-01114337",
+    "neonBranch": "br-green-waterfall-ancrvpr5",
+    "branchName": "production",
+    "endpoint": "ep-withered-hall-an34g3y2-pooler"
+  },
+  "command": "pnpm --filter @language-drill/db demote:pool --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --reason pool-hygiene --apply",
+  "priorState": {
+    "review_status": "auto-approved",
+    "demotion_reason": null
+  },
+  "rollback": "UPDATE exercises SET review_status='auto-approved', demotion_reason=NULL WHERE id IN (<ids below>);",
+  "rationale": "All 20 rows generated 2026-05-30..06-16, weeks before the 2026-07-08 digit-form directive; 0/20 carry a digit cue. pool-hygiene leaves learner mastery untouched.",
+  "rowCount": 20,
+  "ids": [
+    "d412beaf-6614-5447-9a7e-232b6177bb9e",
+    "cf12b6d0-e96a-5d96-957e-1b1ade21e22b",
+    "dd12ccda-d9da-5cd0-9f7e-2b3cd7762f45",
+    "dc84f050-d4dc-5f72-8c77-0a8ed2ace02f",
+    "6d14a02a-7d7f-5380-91dc-d16c7133d245",
+    "c766b00f-e430-5b91-972b-896d817f848c",
+    "c866b1a2-654c-5956-982b-8b0a04d55dff",
+    "8a19de55-c8b2-565d-a234-7e914d346874",
+    "9119e95a-3eb1-5a70-a934-89dcd735f4cd",
+    "8d19e30e-4323-5184-a534-8368d2c37d89",
+    "239625aa-6be5-55e0-9218-974c6eeef6cd",
+    "21962284-6e1e-516a-9418-9a867128326f",
+    "ce207800-ea4a-514e-b380-ef622a3571ab",
+    "565b8bc5-aa43-59ed-91ea-1121fcff8d74",
+    "fb0b7356-36de-5bba-bf8f-b336dbd9b0db",
+    "fc0b74e9-b7fb-597f-808f-b4d35abd130a",
+    "f90b7030-34a5-5030-bd8f-affcd9a07539",
+    "77a2d65b-d707-5dc5-8c31-0b69c0cad568",
+    "79a2d981-d940-594f-8e31-0ea3c304110a",
+    "e6269b9e-b47e-54da-9ad1-98560f54f6db"
+  ]
+}

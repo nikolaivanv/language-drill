@@ -104,7 +104,12 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * distribution they have. At-target cloze/translation cells additionally need
  * demote:pool (see docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_DE = '2026-08-08';
+// 2026-08-13: de-a1-numbers-ordinals gains selfRevealingElicitation
+// 'digit-form' + a curated pool — it was the only numbers/ordinals point
+// never flagged, so it kept cueing the written word and leaking the answer
+// through glossEn. Bump also clears skip-low-yield suppression, so other DE
+// cells re-enqueue on the next generation run.
+export const CURRICULUM_VERSION_DE = '2026-08-13';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -586,6 +591,24 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Building number compounds tens-first, English-style ("*zwanzigundeins" instead of "einundzwanzig").',
       'Using the cardinal in dates ("*am acht Mai" instead of "am achten Mai").',
       'Reading years with tausend by English interference — 1998 is "neunzehnhundertachtundneunzig".',
+    ],
+    selfRevealingElicitation: 'digit-form',
+    elicitationSeedValues: [
+      // Irregular ordinals + the -te/-ste boundary at 20.
+      'erste', 'dritte', 'siebte', 'achte', 'neunzehnte',
+      'zwanzigste', 'einundzwanzigste', 'dreißigste', 'hundertste',
+      // Declined date form (am + ordinal, weak -en).
+      'ersten', 'dritten', 'siebten', 'achten', 'zwanzigsten',
+      // Units-before-tens cardinal compounds, written as one word.
+      'einundzwanzig', 'zweiundvierzig', 'siebenundsiebzig',
+      'neunundneunzig', 'zweihundertdreißig', 'tausendzweihundert',
+      // Year-reading: hundred-based, not tausend.
+      'neunzehnhundertachtundneunzig', 'neunzehnhundertsiebzig',
+      'zweitausendsechsundzwanzig',
+      // -mal adverbs.
+      'einmal', 'zweimal', 'dreimal', 'viermal',
+      // eins vs ein/eine/einen before a noun (case matters: "Ich habe einen Bruder").
+      'ein', 'eine', 'einen',
     ],
   },
   // ---------------------------------------------------------------------------
