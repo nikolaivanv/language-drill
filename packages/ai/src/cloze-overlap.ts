@@ -41,10 +41,17 @@
  * distributive/intensive reduplication ("ikişer ikişer", "yavaş yavaş") and
  * German relative-pronoun-then-article sequences ("die Frau, die die Tür
  * öffnete"). Those are `suspected` → flagged (kept for review, not discarded).
- * Empirically the tier is conservative rather than lossy: all 13 single-token
- * hits in the 2026-08-08 prod sweep of ~25k approved cloze rows were genuine
- * defects (zero-article / article-use cells restating the noun), zero were
- * reduplication.
+ * All 13 single-token hits in the 2026-08-08 prod sweep of ~25k approved cloze
+ * rows were genuine defects (zero-article / article-use cells restating the
+ * noun), zero were reduplication.
+ *
+ * That reading did not survive the next sweep. On 2026-08-13 the first
+ * `revalidate:cloze --deterministic-only` pass over the whole pool wanted to
+ * flag 7 approved rows, and **6 were false positives** — DE B1 Konjunktiv II
+ * conditionals ("Wenn ich mehr Zeit gehabt hätte, ___ ich …" / "hätte"), where
+ * the repetition spans the comma between the two clauses. Hence the
+ * `CLAUSE_BOUNDARY` guard below: punctuation before the blank means the two
+ * words are in different clauses, and the substitution is grammatical.
  */
 
 import { type ClozeContent } from "@language-drill/shared";
@@ -87,6 +94,20 @@ function normalizeToken(token: string): string {
     .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "")
     .toLocaleLowerCase();
 }
+
+/**
+ * Punctuation that closes a clause. When it trails the stem word immediately
+ * before the blank, that word and the answer sit in **different clauses**, so
+ * repeating it is not a duplication — German Konjunktiv II inverts the main
+ * clause after the subordinate one ("Wenn ich mehr Zeit gehabt hätte, hätte ich
+ * …"), and the substituted sentence is perfectly grammatical.
+ *
+ * Only the *before* side needs this. After the blank the punctuation belongs to
+ * the answer's own clause, so it arrives as its own token (", hätte") which
+ * normalizes to empty and never matches, or trails the duplicated word
+ * ("Bruder.") where it separates nothing.
+ */
+const CLAUSE_BOUNDARY = /[,;:.!?…—–]$/u;
 
 function words(text: string): string[] {
   const trimmed = text.trim();
@@ -151,6 +172,7 @@ export function checkClozeOverlap(content: ClozeContent): ClozeOverlapVerdict {
   if (
     prevToken !== undefined &&
     !prevToken.endsWith(")") &&
+    !CLAUSE_BOUNDARY.test(prevToken) &&
     normalizeToken(prevToken).length > 0 &&
     normalizeToken(prevToken) === normalizeToken(answerFirst)
   ) {

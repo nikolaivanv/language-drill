@@ -9,6 +9,7 @@ import type { ValidationResult } from '@language-drill/ai';
 
 import {
   decideDemotion,
+  decideDeterministicDemotion,
   decidePromotion,
   reconstructDraftAndSpec,
   type CandidateRow,
@@ -480,5 +481,133 @@ describe('decidePromotion', () => {
   it('backward-compat: bare 2-arg call skips the deterministic gate (pure LLM routing)', () => {
     const action = decidePromotion('flagged', passingResult);
     expect(action.kind).toBe('promote');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// decideDeterministicDemotion — the no-LLM sweep (`revalidate:cloze
+// --deterministic-only`). Same demote-only policy, but the baseline decision is
+// the row's CURRENT status rather than a fresh `ValidationResult`, so only the
+// pure checkers in `applyDeterministicChecks` can move it.
+// ---------------------------------------------------------------------------
+
+describe('decideDeterministicDemotion', () => {
+  // Multi-word answer whose last token restates the word after the blank →
+  // `certain` overlap ("Prefiero el del del escaparate"): a provable defect.
+  const ES_OVERLAP_CERTAIN = {
+    type: ExerciseType.CLOZE,
+    instructions: 'Rellena el hueco.',
+    sentence: 'Prefiero ___ del escaparate.',
+    correctAnswer: 'el del',
+  };
+  // Single-word answer restating the adjacent word → `suspected` (adjacent
+  // repetition can be a real construction), so flag rather than reject.
+  const ES_OVERLAP_SUSPECTED = {
+    type: ExerciseType.CLOZE,
+    instructions: 'Rellena el hueco.',
+    sentence: 'Mi padre es ___ profesor de historia.',
+    correctAnswer: 'profesor',
+  };
+  const ES_CLEAN = {
+    type: ExerciseType.CLOZE,
+    instructions: 'Rellena el hueco.',
+    sentence: 'Ayer no me ___ dormir el ruido.',
+    correctAnswer: 'dejó',
+  };
+
+  it('rejects an auto-approved row whose multi-word answer duplicates the adjacent stem word', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      ES_OVERLAP_CERTAIN,
+      Language.ES,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('rejected');
+    expect(action.reasons[0]?.code).toBe(GenerationReasonCode.AnswerStemOverlap);
+  });
+
+  it('only flags a single-word overlap (adjacent repetition can be real)', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      ES_OVERLAP_SUSPECTED,
+      Language.ES,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('flagged');
+    expect(action.reasons[0]?.code).toBe(
+      GenerationReasonCode.SuspectedAnswerStemOverlap,
+    );
+  });
+
+  it('leaves a clean cloze untouched — no LLM verdict can lower it here', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      ES_CLEAN,
+      Language.ES,
+    );
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('preserves the row’s existing flagged reasons when it demotes', () => {
+    const action = decideDeterministicDemotion(
+      'flagged',
+      ES_OVERLAP_CERTAIN,
+      Language.ES,
+      [{ code: GenerationReasonCode.Ambiguous }],
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('rejected');
+    expect(action.reasons).toEqual([
+      expect.objectContaining({ code: GenerationReasonCode.AnswerStemOverlap }),
+      { code: GenerationReasonCode.Ambiguous },
+    ]);
+  });
+
+  it('does not re-demote a flagged row whose only defect is `suspected`', () => {
+    const action = decideDeterministicDemotion(
+      'flagged',
+      ES_OVERLAP_SUSPECTED,
+      Language.ES,
+    );
+    expect(action.kind).toBe('no-change');
+  });
+
+  it('still applies the Turkish harmony checker', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      {
+        type: ExerciseType.CLOZE,
+        instructions: 'Boşluğu doldurun.',
+        // `domat` takes -lar; -ler is a provable harmony error.
+        sentence: 'Pazarda taze domat___ satıyorlar.',
+        correctAnswer: 'ler',
+      },
+      Language.TR,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') return;
+    expect(action.to).toBe('rejected');
+  });
+
+  it('skips human decisions and already-rejected rows', () => {
+    expect(
+      decideDeterministicDemotion('manual-approved', ES_OVERLAP_CERTAIN, Language.ES)
+        .kind,
+    ).toBe('skip');
+    expect(
+      decideDeterministicDemotion('rejected', ES_OVERLAP_CERTAIN, Language.ES).kind,
+    ).toBe('skip');
+  });
+
+  it('leaves non-cloze content unchanged (no deterministic checker applies)', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      baseTranslationContent,
+      Language.TR,
+    );
+    expect(action.kind).toBe('no-change');
   });
 });

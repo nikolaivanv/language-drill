@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { CefrLevel, Language } from '@language-drill/shared';
 
-import { parseRevalidateArgs } from './revalidate-cloze-pool';
+import {
+  idsFileCandidates,
+  parseIdsFile,
+  parseRevalidateArgs,
+} from './revalidate-cloze-pool';
 
 // ---------------------------------------------------------------------------
 // parseRevalidateArgs
@@ -64,5 +68,109 @@ describe('parseRevalidateArgs', () => {
     expect(() => parseRevalidateArgs(['--limit', '0'])).toThrow();
     expect(() => parseRevalidateArgs(['--limit', '-5'])).toThrow();
     expect(() => parseRevalidateArgs(['--limit', 'abc'])).toThrow();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Narrowing flags (--grammar-point / --ids-file / --deterministic-only).
+// A full pass is ~13k rows; these exist so a targeted worklist does not have to
+// pay for the whole pool.
+// ---------------------------------------------------------------------------
+
+describe('parseRevalidateArgs — narrowing flags', () => {
+  it('defaults to no point filter, no ids file, and the LLM pass', () => {
+    const args = parseRevalidateArgs([]);
+    expect(args.grammarPoints).toEqual([]);
+    expect(args.idsFile).toBeNull();
+    expect(args.deterministicOnly).toBe(false);
+  });
+
+  it('accumulates repeated --grammar-point into a worklist', () => {
+    const args = parseRevalidateArgs([
+      '--grammar-point',
+      'tr-a1-vowel-harmony',
+      '--grammar-point',
+      'tr-a1-plural-suffix',
+    ]);
+    expect(args.grammarPoints).toEqual([
+      'tr-a1-vowel-harmony',
+      'tr-a1-plural-suffix',
+    ]);
+  });
+
+  it('rejects a grammar point that does not resolve in the curriculum', () => {
+    // An unvalidated key silently selects zero rows, which reads as
+    // "nothing to do" rather than "you typo'd".
+    expect(() =>
+      parseRevalidateArgs(['--grammar-point', 'tr-a1-does-not-exist']),
+    ).toThrow(/unknown grammar point/);
+  });
+
+  it('parses --ids-file and --deterministic-only', () => {
+    const args = parseRevalidateArgs([
+      '--ids-file',
+      './worklist.txt',
+      '--deterministic-only',
+    ]);
+    expect(args.idsFile).toBe('./worklist.txt');
+    expect(args.deterministicOnly).toBe(true);
+  });
+});
+
+describe('parseIdsFile', () => {
+  it('reads one id per line, ignoring blanks and # comments', () => {
+    const ids = parseIdsFile(
+      [
+        '# context-carrying ES rows, 2026-08-13',
+        '9ffc33c1-0000-4000-8000-000000000001',
+        '',
+        '  9ffc33c1-0000-4000-8000-000000000002  ',
+      ].join('\n'),
+    );
+    expect(ids).toEqual([
+      '9ffc33c1-0000-4000-8000-000000000001',
+      '9ffc33c1-0000-4000-8000-000000000002',
+    ]);
+  });
+
+  it('dedupes repeated ids so a row is never validated twice', () => {
+    const ids = parseIdsFile(
+      '9ffc33c1-0000-4000-8000-000000000001\n9ffc33c1-0000-4000-8000-000000000001',
+    );
+    expect(ids).toHaveLength(1);
+  });
+
+  it('throws on a line that is not a UUID rather than silently selecting nothing', () => {
+    expect(() => parseIdsFile('not-a-uuid')).toThrow(/not a UUID/);
+  });
+
+  it('throws when the file yields no ids', () => {
+    expect(() => parseIdsFile('# only a comment\n')).toThrow(/no ids/);
+  });
+});
+
+describe('idsFileCandidates', () => {
+  const CWD = '/repo/packages/db';
+  const ROOT = '/repo';
+
+  it('tries a relative path against the package cwd first, then the repo root', () => {
+    // `pnpm --filter @language-drill/db` runs the script from packages/db, so a
+    // repo-relative path a human copied out of the docs would otherwise ENOENT.
+    expect(idsFileCandidates('docs/analysis/worklist.txt', CWD, ROOT)).toEqual([
+      '/repo/packages/db/docs/analysis/worklist.txt',
+      '/repo/docs/analysis/worklist.txt',
+    ]);
+  });
+
+  it('leaves an absolute path exactly as given', () => {
+    expect(idsFileCandidates('/tmp/worklist.txt', CWD, ROOT)).toEqual([
+      '/tmp/worklist.txt',
+    ]);
+  });
+
+  it('does not repeat a candidate when cwd is the repo root', () => {
+    expect(idsFileCandidates('worklist.txt', ROOT, ROOT)).toEqual([
+      '/repo/worklist.txt',
+    ]);
   });
 });

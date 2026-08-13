@@ -1,0 +1,55 @@
+# Answer/stem overlap worklist — prod, 2026-08-13
+#
+# Source: `revalidate:cloze --deterministic-only` over the whole prod cloze pool
+# (12,922 rows, $0). It proposed 38 demotions; this file is the 32 that are real.
+#
+# Excluded: the 6 DE B1 Konjunktiv II rows it wanted to flag
+# (6d5062e7, a0b53c5b, a6b545cd, d85349ef, d9534b82, dc57cd69) — the repetition
+# spans a clause comma and the sentences are grammatical. The CLAUSE_BOUNDARY
+# guard in `packages/ai/src/cloze-overlap.ts` now suppresses them, so re-running
+# the sweep on this branch yields exactly the ids below.
+#
+# Apply with:
+#   pnpm --filter @language-drill/db revalidate:cloze \
+#     --deterministic-only --ids-file docs/analysis/overlap-sweep-worklist-2026-08-13.txt --apply
+#
+# NOTE: rejections write `demotion_reason: 'quality'`, which revokes learner
+# credit for past attempts on these rows. The nightly `backfill:mastery`
+# (03:00 UTC) picks that up; run it manually for an immediate correction.
+
+# --- 31 certain-tier: flagged → rejected (already out of the served pool) -----
+0eff3882-0762-5bf6-9384-89daab640fdf
+13298b8f-2bac-5dc9-9728-8235b91ffa0c
+16ff451a-fe7d-5dce-9b84-96c2a27f2157
+1b401bc0-f20c-5704-bbd0-4fe8e34bfa8d
+1d401ee6-f445-528e-bdd0-5322e585362f
+1e402079-7561-5053-bed0-54bf6468985e
+1f40220c-ed99-5ff0-bfd0-565cded98349
+224026c5-70ef-593f-82d0-5b335ff6211a
+294031ca-f8b7-59a2-b9d0-4caed82dd063
+328838d8-1d59-51e2-9a57-51be40495a27
+351f9a8b-77e7-53af-888d-ca33c7b6aa26
+391a7019-a3dc-5187-8862-152b98d54d2a
+434c7afe-5dad-548e-9bda-34720b4cf737
+5099150c-8445-5bcc-a141-75c03f41b14d
+57a57229-c43c-5673-b965-aaaf1e66a816
+5c1a33bb-ae64-5e97-94ef-a35ba354c116
+5fdc22db-0941-5283-ace9-e49fc5a9ae52
+65dc2c4d-0296-5fe5-aee9-e7d9c7e2e9f4
+70493616-3f73-5c7c-92ef-ad70d4054b81
+8746b1f9-d65c-59cb-85d5-6a37aa5d7b2e
+956078ce-52eb-556a-84c1-ce66aeab5313
+be7be1c5-c89d-57d5-ab2e-66598b24b31c
+cf62af12-88d1-541a-b2da-dd36bb4c0a6b
+dc6860db-f6d3-5023-91b3-9d3f8c16c22a
+ddfd5089-c1a2-58ed-8f22-d711171910ec
+defd521c-4731-5dc6-8c22-d23a95fc731b
+df4e4d0e-8221-591c-81c1-f7500bab7819
+dffd53af-c84e-5b8b-8d22-d3d714dfd54a
+e0d021fb-195d-5381-99f1-4a9d8c9efb64
+e6d02b6d-1724-57f7-9ff1-544b8a65bfc2
+e76e1459-9c2d-5099-b42f-ec658475bb60
+
+# --- 1 suspected-tier: auto-approved → flagged (learner-visible today) -------
+# TR/A1 "Her gün evden çıkıp markete ___ yürüyorum. (market)" / "markete"
+542c00d5-f206-5b6f-8293-6ef384c9b522

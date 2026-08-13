@@ -177,3 +177,68 @@ describe("checkClozeOverlap", () => {
     });
   });
 });
+
+describe("clause boundary before the blank", () => {
+  // Found 2026-08-13 by the first `revalidate:cloze --deterministic-only` sweep
+  // of prod: 6 of the 7 auto-approved rows it wanted to flag were German
+  // Konjunktiv II conditionals, where the repetition spans a comma and the
+  // substituted sentence is perfectly grammatical. Punctuation between the two
+  // words means they sit in different clauses, so the repetition is not a
+  // duplication — whatever the answer's token count.
+  it.each([
+    [
+      "DE B1 Konjunktiv II — main-clause verb after the subordinate clause",
+      "Wenn ich mehr Zeit gehabt hätte, ___ ich einen besseren Plan entworfen.",
+      "hätte",
+    ],
+    [
+      "DE B1 Konjunktiv II — plural",
+      "Wenn die Kinder früher ins Bett gegangen wären, ___ sie heute Morgen nicht so müde gewesen.",
+      "wären",
+    ],
+    [
+      "DE B1 Konjunktiv II — 2nd person",
+      "Wenn du mehr Gemüse gegessen hättest, ___ du dich bestimmt besser gefühlt.",
+      "hättest",
+    ],
+  ])("%s", (_label, sentence, answer) => {
+    expect(checkClozeOverlap(cloze(sentence, answer))).toEqual({ kind: "ok" });
+  });
+
+  it("suppresses the certain tier too — a multi-token answer across a comma is still two clauses", () => {
+    expect(
+      checkClozeOverlap(
+        cloze("Wenn ich Zeit gehabt hätte, ___ einen Plan entworfen.", "hätte ich"),
+      ),
+    ).toEqual({ kind: "ok" });
+  });
+
+  it("suppresses across a sentence boundary as well", () => {
+    // The blank opens a NEW sentence, so restating the previous sentence's last
+    // word is ordinary German. (Had the duplicate sat *after* the blank it would
+    // be the real defect — see the regression case below.)
+    expect(
+      checkClozeOverlap(cloze("Ich habe einen Hund. ___ ist sehr süß.", "Hund")),
+    ).toEqual({ kind: "ok" });
+  });
+
+  it("still catches a genuine repetition with no boundary between the words", () => {
+    // TR A1, the one true positive in that same prod sweep.
+    const verdict = checkClozeOverlap(
+      cloze("Her gün evden çıkıp markete ___ yürüyorum. (market)", "markete"),
+    );
+    expect(verdict).toMatchObject({
+      kind: "answer-stem-overlap",
+      confidence: "suspected",
+      side: "before",
+    });
+  });
+
+  it("does not suppress an overlap AFTER the blank when the stem word carries a period", () => {
+    // Regression guard: "einen Bruder" / "Bruder." is the original defect class
+    // — the period trails the duplicated word, it does not separate the two.
+    expect(
+      checkClozeOverlap(cloze("Ich habe ___ Bruder.", "einen Bruder")),
+    ).toMatchObject({ kind: "answer-stem-overlap", side: "after" });
+  });
+});
