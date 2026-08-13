@@ -1,0 +1,5 @@
+[
+  { "language": "ES", "cefrLevel": "A2", "exerciseType": "cloze", "grammarPointKey": "es-a2-saber-poder-ability" },
+  { "language": "DE", "cefrLevel": "A1", "exerciseType": "cloze", "grammarPointKey": "de-a1-numbers-ordinals" },
+  { "language": "DE", "cefrLevel": "A1", "exerciseType": "translation", "grammarPointKey": "de-a1-numbers-ordinals" }
+]
