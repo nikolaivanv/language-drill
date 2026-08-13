@@ -1,0 +1,40 @@
+{
+  "run": "tr-ordinals-translation-pool-hygiene-2026-08-13",
+  "purpose": "Rollback record for the demote of the tr-a1-numbers-ordinals TRANSLATION pool. Companion to tr-ordinals-demote-2026-08-13.json (the cloze half). demote:pool writes NO rollback artifact of its own; this file is the only record of which rows were demoted and what their prior state was.",
+  "target": {
+    "neonProject": "twilight-smoke-01114337",
+    "neonBranch": "br-green-waterfall-ancrvpr5",
+    "branchName": "production",
+    "endpoint": "ep-withered-hall-an34g3y2-pooler"
+  },
+  "command": "pnpm --filter @language-drill/db demote:pool --language TR --cefr A1 --type translation --grammar-point tr-a1-numbers-ordinals --reason pool-hygiene --apply",
+  "priorState": {
+    "review_status": "auto-approved",
+    "demotion_reason": null
+  },
+  "rollback": "UPDATE exercises SET review_status='auto-approved', demotion_reason=NULL WHERE id IN (<ids below>);",
+  "rationale": "0 of 20 rows put the ordinal in digits in the English source, which the digit-form directive requires for translation as well as cloze. All generated 2026-05-30..06-08 — the same pre-directive window as the 20 cloze rows demoted earlier the same day. Demoting the cloze half only would have left the point half-fixed. pool-hygiene leaves learner mastery untouched.",
+  "rowCount": 20,
+  "ids": [
+    "ee5acf5b-f933-50a1-9fdd-102d3ec8281c",
+    "f25ad5a7-f4c0-598d-a3dd-16a13a55b0d8",
+    "ea5ac90f-ebdb-5b65-abdd-23893170c250",
+    "e95ac77c-6abf-5da0-aadd-21ecb28d6021",
+    "18fbf965-8a7b-5727-b5ab-39bb555e9dba",
+    "13fbf186-0dd1-5076-b0ab-31aadaedb2cf",
+    "14fbf319-8eed-5e3b-b1ab-334759d114fe",
+    "1dfc0144-fe40-5fb0-baab-41cccb5d1161",
+    "1efc02d7-7f5d-5d75-bbab-43694a407390",
+    "298ca1cc-abe2-55da-95d4-83669e11b6df",
+    "73c36f7c-c410-5978-92a1-7234532b50a9",
+    "70c36ac3-499f-5e51-8fa1-6d5dd6812a1c",
+    "72c36de9-4bd8-59db-91a1-7097d8ba65be",
+    "277ee60a-5485-56a6-b6d8-d7dadddc774f",
+    "aaadf1b7-1c76-5045-95a0-e0e97fa45e58",
+    "2465d759-c80f-5723-9fed-466f9404a2be",
+    "2765dc12-4280-524a-a2ed-4b4610aec94b",
+    "2265d433-c5d6-5b99-9ded-433591cb671c",
+    "c7818642-ecd0-5262-bf4e-d57e17b1fbab",
+    "b18746c7-4201-5b7d-bd55-9811288f35d0"
+  ]
+}

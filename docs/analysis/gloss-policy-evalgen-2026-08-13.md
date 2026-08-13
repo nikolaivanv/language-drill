@@ -244,3 +244,26 @@ pre-directive window as the 20 cloze rows already demoted, and the same defect.
 Demoting the TR cloze but not the TR translation leaves that point half-fixed.
 Not actioned: it was outside the requested scope. **Decide before generation
 resumes**, or the refill will land beside 20 stale rows.
+
+### TR translation demoted — closes the half-fixed point
+
+**20 rows**, `--reason pool-hygiene`, production. 0 of 20 put the ordinal in
+digits in the English source; all generated 2026-05-30 → 06-08, the same
+pre-directive window as the cloze half. Rollback IDs in
+`docs/analysis/tr-ordinals-translation-demote-2026-08-13.json`.
+
+### Final state of the three ordinals points
+
+| Point | Approved after | Note |
+|---|---|---|
+| `tr-a1-numbers-ordinals` | **0** (20 cloze + 20 translation demoted) | 34 + 18 pre-existing flagged rows untouched |
+| `de-a1-numbers-ordinals` | **0** (17 cloze + 5 translation demoted) | 3 pre-existing flagged cloze untouched |
+| `es-a1-numbers-ordinals` | **40** (20 cloze + 20 translation) | **Correctly left alone** — generated after the 2026-07-08 directive, 19/19 digit-cue compliant. The control case for the whole argument |
+
+Spanish being the one point that needed no intervention is the cleanest
+evidence that `digit-form` works when it is actually applied: same mechanism,
+same exercise types, generated after the flag landed rather than before.
+
+**62 rows demoted in total** across the two non-compliant points, all
+`pool-hygiene`, so no learner credit was revoked and no `backfill:mastery` run
+is needed. All three cells refill on the next generation pass.
