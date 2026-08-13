@@ -124,7 +124,7 @@ import {
 // Task 3; the latter composes the validator's template vars) — deep-relative
 // import, same pattern `eval-gen-run.ts` uses for `computeGenerationPromptVars`
 // / `sha8`.
-import { SELF_INCONSISTENT_REASON } from "../src/validate.js";
+import { listed, SELF_INCONSISTENT_REASON } from "../src/validate.js";
 import { computeValidationPromptVars } from "../src/validation-prompts.js";
 import { sha8 } from "../src/prompts-registry.js";
 
@@ -136,14 +136,6 @@ const EVAL_RUNS_DIR = "./eval-runs";
 // blindSolverVerdict — pure verdict function (Task 2)
 // ---------------------------------------------------------------------------
 
-/** Case/whitespace-insensitive membership — same contract as validate.ts's
- *  `listed`, duplicated here rather than exported because that one is module
- *  -private and this file is a script, not a consumer of that internal. */
-function listedIn(needle: string, haystack: readonly string[]): boolean {
-  const n = needle.trim().toLowerCase();
-  return haystack.some((h) => h.trim().toLowerCase() === n);
-}
-
 /**
  * The blind solver's ambiguity verdict: a crafted alternative that is fully
  * correct on the visible sentence, and is NOT already enumerated, IS the
@@ -153,6 +145,11 @@ function listedIn(needle: string, haystack: readonly string[]): boolean {
  * are recorded in the per-case output as free observations, but letting either
  * decide the verdict would introduce a threshold fitted on the same 82 cases
  * this arm is measured against.
+ *
+ * "Already enumerated" reuses `listed` from `validate.ts` (imported above)
+ * rather than a second copy — that function is what the real validator uses
+ * to decide the same question, so this arm's notion of "unlisted" cannot
+ * silently drift from the validator's.
  */
 export function blindSolverVerdict(
   probe: QaProbe,
@@ -163,7 +160,7 @@ export function blindSolverVerdict(
     return { ambiguous: false, competitor: null };
   }
   const accepted = [content.correctAnswer, ...(content.acceptableAnswers ?? [])];
-  if (listedIn(alt, accepted)) return { ambiguous: false, competitor: null };
+  if (listed(alt, accepted)) return { ambiguous: false, competitor: null };
   return { ambiguous: true, competitor: alt };
 }
 
@@ -249,7 +246,7 @@ export function loadValidatorCases(raw: string): ValidatorAmbiguityCase[] {
 }
 
 // ---------------------------------------------------------------------------
-// The four-arm matrix — prompt and model are never confounded
+// The five-arm matrix — prompt, model, and blindness are never confounded
 // ---------------------------------------------------------------------------
 
 /** Which in-repo template a validator arm renders — `"prior"` (pre-Task-4,
@@ -859,6 +856,19 @@ export function renderValidatorMarkdownSummary(
         `${pctOrNA(a.metrics.selfInconsistentRate)} | ${a.metrics.n} | ${usd(a.costUsd)} |`,
     );
   }
+  // Per-(case, arm) fault isolation means one arm can end with fewer scored
+  // rows than another — `n` is printed per-row above, but nothing calls out
+  // a divergence, and the pre-registered pass criterion is stated as
+  // fractions of fixed denominators (32/53 etc.), so a silent divergence
+  // would make recall/false-flag across arms look comparable when they
+  // aren't.
+  const distinctN = new Set(summary.arms.map((a) => a.metrics.n));
+  if (distinctN.size > 1) {
+    lines.push("");
+    lines.push(
+      "⚠️ arms scored different case counts — recall and false-flag are not directly comparable",
+    );
+  }
   lines.push("");
   lines.push(`**Total cost:** ${usd(summary.totalCostUsd)}`);
 
@@ -903,12 +913,45 @@ export function writeValidatorSummaryJson(
  * scratchpad in the output (~400-800 output tokens); the solver arm's call is
  * smaller (no template, just the learner view + the three-probe-answer tool).
  * Rough worst-case (no cache credit) blended across both call shapes: ≈
- * $0.022/call ≈ $9 for a full run at the current fixture size — above the
- * `--max-cost-usd` default below. That's not a failure mode: the
- * case-boundary cap (see `runValidatorEval`) just stops the run early with
- * partial results written. Pass `--max-cost-usd` explicitly for a full run.
+ * $0.022/call ≈ $9 for a full run at the current fixture size (see
+ * `ROUGH_PER_CALL_USD` below).
  */
-const DEFAULT_MAX_COST_USD = 6;
+const ROUGH_PER_CALL_USD = 0.022;
+
+/**
+ * Set above the `ROUGH_PER_CALL_USD`-based full-run estimate at the current
+ * fixture size (82 cases x 5 arms ≈ $9.02), so a run invoked without
+ * `--max-cost-usd` does NOT cost-cap partway through and report recall over
+ * a truncated denominator that isn't comparable to the pre-registered 32/53
+ * baseline. If the fixture grows enough to blow back through this margin,
+ * `computeCostCapWarning` (printed at startup by `main`, not only under
+ * `--dry-run`) catches it — raising this constant is a stopgap, the warning
+ * is the durable fix.
+ */
+const DEFAULT_MAX_COST_USD = 10;
+
+/**
+ * Pure so it's unit-testable without spawning a process. Returns the warning
+ * line to print at startup when the rough full-run estimate exceeds the cap
+ * that will actually apply (or `null` when the run is expected to fit) —
+ * naming both numbers, since a silent partial run reports a denominator that
+ * silently stops being comparable to the pre-registered baseline.
+ */
+export function computeCostCapWarning(
+  caseCount: number,
+  armCount: number,
+  maxCostUsd: number,
+): string | null {
+  const estTotal = caseCount * armCount * ROUGH_PER_CALL_USD;
+  if (estTotal <= maxCostUsd) return null;
+  return (
+    `[eval-validator] ⚠️ estimated full-run cost $${estTotal.toFixed(2)} ` +
+    `(${caseCount} cases x ${armCount} arms x ~$${ROUGH_PER_CALL_USD}/call) ` +
+    `exceeds --max-cost-usd $${maxCostUsd.toFixed(2)} — the run will stop ` +
+    `early at a case boundary and report a partial, non-comparable result. ` +
+    `Pass a higher --max-cost-usd for a full run.`
+  );
+}
 
 export type EvalValidatorArgs = {
   limit?: number;
@@ -1044,12 +1087,25 @@ async function main(): Promise<void> {
     );
   }
 
+  // Warn at startup — NOT only under `--dry-run` — whenever the rough
+  // full-run estimate exceeds the cap that will actually apply. A real run
+  // invoked without `--max-cost-usd` silently defaults to
+  // `DEFAULT_MAX_COST_USD`; if a future fixture growth pushes the estimate
+  // back above it, this is the only thing that catches it before the run
+  // cost-caps partway through and reports a non-comparable partial result.
+  const effectiveMaxCostUsd = args.maxCostUsd ?? DEFAULT_MAX_COST_USD;
+  const costCapWarning = computeCostCapWarning(
+    cases.length,
+    ARMS.length,
+    effectiveMaxCostUsd,
+  );
+  if (costCapWarning) console.warn(costCapWarning);
+
   if (args.dryRun) {
-    const roughPerCallUsd = 0.022;
-    const estTotal = cases.length * ARMS.length * roughPerCallUsd;
+    const estTotal = cases.length * ARMS.length * ROUGH_PER_CALL_USD;
     console.log(
       `[eval-validator] DRY RUN — no Claude calls. Rough cost estimate for a full run: ` +
-        `$${estTotal.toFixed(2)} (${cases.length} cases x ${ARMS.length} arms x ~$${roughPerCallUsd}/call). ` +
+        `$${estTotal.toFixed(2)} (${cases.length} cases x ${ARMS.length} arms x ~$${ROUGH_PER_CALL_USD}/call). ` +
         `--max-cost-usd default is $${DEFAULT_MAX_COST_USD}.`,
     );
     return;

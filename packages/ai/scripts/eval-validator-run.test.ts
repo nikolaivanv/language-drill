@@ -35,6 +35,7 @@ import {
   PRIOR_TEMPLATE,
   blindSolverVerdict,
   computeArmMetrics,
+  computeCostCapWarning,
   computeValidatorSummary,
   loadValidatorCases,
   makeRealValidatorExecutor,
@@ -391,6 +392,11 @@ describe("solver executor", () => {
 
     const req = mockCreate.mock.calls[0][0];
     expect(req.model).toBe("claude-sonnet-5");
+    // Sonnet 5 runs ADAPTIVE thinking when `thinking` is omitted — the four
+    // sighted arms (validate.ts:591-610) always send an explicit `disabled`
+    // for exactly this reason, so the blind arm must too or blind-vs-sighted
+    // would be confounded with a thinking-on-vs-off capability change.
+    expect(req.thinking).toEqual({ type: "disabled" });
     const userText = req.messages[0].content as string;
     expect(userText).not.toContain("Options:");
     expect(userText).toContain(c.content.instructions);
@@ -1128,6 +1134,108 @@ describe("renderValidatorMarkdownSummary", () => {
     // Recall WAS measured for the solver arm (unlike self-inconsistent), so
     // that column is still a real percentage, not "n/a".
     expect(cells[4]).toBe("100.0%");
+  });
+
+  it("flags divergent per-arm case counts — recall/false-flag would not be directly comparable", () => {
+    // baseline scores both cases; blind-solver errors on one of them, so its
+    // `n` (1) diverges from baseline's `n` (2) — exactly the fault-isolation
+    // scenario the pre-registered 32/53 and 29-of-N criteria assume can't
+    // happen silently.
+    const cases = [makeCase("c1", "ambiguous"), makeCase("c2", "clean")];
+    const solverArm = ARMS.find((a) => a.kind === "solver")!;
+    const zeroUsage = {
+      inputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      outputTokens: 0,
+    };
+    const run: ValidatorEvalRunResult = {
+      runName: "r1",
+      datasetName: "test.json",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      caseCount: 2,
+      costCapped: false,
+      arms: [
+        {
+          arm: ARMS[0],
+          usage: zeroUsage,
+          records: [
+            { caseId: "c1", label: "ambiguous", result: cleanResult() },
+            { caseId: "c2", label: "clean", result: cleanResult() },
+          ],
+        },
+        {
+          arm: solverArm,
+          usage: zeroUsage,
+          records: [
+            { caseId: "c1", label: "ambiguous", error: "boom" },
+            {
+              caseId: "c2",
+              label: "clean",
+              result: {
+                ambiguous: false,
+                flaggedReasons: [],
+                competitor: null,
+                correctConfidence: 0.95,
+                crafterAmbiguous: false,
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const summary = computeValidatorSummary(run, cases);
+    const md = renderValidatorMarkdownSummary(summary);
+    expect(md).toContain(
+      "⚠️ arms scored different case counts — recall and false-flag are not directly comparable",
+    );
+  });
+
+  it("does NOT flag divergence when every arm shares the same n", () => {
+    const cases = [makeCase("c1", "ambiguous")];
+    const run: ValidatorEvalRunResult = {
+      runName: "r1",
+      datasetName: "test.json",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      caseCount: 1,
+      costCapped: false,
+      arms: [
+        {
+          arm: ARMS[0],
+          usage: {
+            inputTokens: 0,
+            cacheCreationInputTokens: 0,
+            cacheReadInputTokens: 0,
+            outputTokens: 0,
+          },
+          records: [{ caseId: "c1", label: "ambiguous", result: cleanResult() }],
+        },
+      ],
+    };
+    const summary = computeValidatorSummary(run, cases);
+    const md = renderValidatorMarkdownSummary(summary);
+    expect(md).not.toContain("arms scored different case counts");
+  });
+});
+
+describe("computeCostCapWarning", () => {
+  it("returns null when the rough estimate fits under the cap", () => {
+    expect(computeCostCapWarning(10, 5, 10)).toBeNull();
+  });
+
+  it("warns naming both numbers when the estimate exceeds the cap", () => {
+    const warning = computeCostCapWarning(82, 5, 6);
+    expect(warning).not.toBeNull();
+    expect(warning).toContain("82 cases x 5 arms");
+    expect(warning).toContain("$6.00");
+  });
+
+  it("the default max-cost-usd covers the current fixture's full-run estimate (no warning at defaults)", () => {
+    const cases = loadValidatorCases(readFileSync(FIXTURE_PATH, "utf8"));
+    const defaultArgs = parseEvalValidatorArgs([]);
+    expect(
+      computeCostCapWarning(cases.length, ARMS.length, defaultArgs.maxCostUsd!),
+    ).toBeNull();
   });
 });
 

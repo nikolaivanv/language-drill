@@ -471,8 +471,11 @@ export function parseValidationResult(input: unknown): ValidationResult {
 export const SELF_INCONSISTENT_REASON = "validator-self-inconsistent";
 
 /** Case/whitespace-insensitive membership, matching how a learner's answer
- *  would be compared against the stored list. */
-function listed(needle: string, haystack: readonly string[]): boolean {
+ *  would be compared against the stored list. Exported for
+ *  `eval-validator-run.ts`'s blind-solver arm, which needs the identical
+ *  "already enumerated" notion this module uses — see that file's
+ *  `blindSolverVerdict`. */
+export function listed(needle: string, haystack: readonly string[]): boolean {
   const n = needle.trim().toLowerCase();
   return haystack.some((h) => h.trim().toLowerCase() === n);
 }

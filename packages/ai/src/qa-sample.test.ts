@@ -282,4 +282,56 @@ describe("craftProbeAnswers", () => {
       craftProbeAnswers(client, { learnerView: "x", language: "TR", cefrLevel: "A1", exerciseType: "cloze" }),
     ).rejects.toThrow();
   });
+
+  it("does not set `thinking` on the default Opus crafter model (production path stays inert)", async () => {
+    // Omitting `thinking` on Opus 4.8 (QA_CRAFTER_MODEL) means "no thinking",
+    // unlike Sonnet 5 where it means adaptive — so `qa:sample`'s production
+    // path must NOT gain a `thinking` field from the guard added for callers
+    // (e.g. eval-validator-run.ts) that pin this crafter to Sonnet 5.
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      content: [{
+        type: "tool_use",
+        name: QA_CRAFTER_TOOL_NAME,
+        input: { correct: "x", correctConfidence: 0.9, wrong: "y", alt: null, ambiguous: false, ambiguityNote: "" },
+      }],
+      usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    await craftProbeAnswers(client, {
+      learnerView: "x",
+      language: "TR",
+      cefrLevel: "A1",
+      exerciseType: "cloze",
+    });
+
+    const callArg = create.mock.calls[0][0];
+    expect(callArg.model).toBe("claude-opus-4-8");
+    expect(callArg.thinking).toBeUndefined();
+  });
+
+  it("sets `thinking: disabled` when pinned to a Sonnet 5 model", async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      content: [{
+        type: "tool_use",
+        name: QA_CRAFTER_TOOL_NAME,
+        input: { correct: "x", correctConfidence: 0.9, wrong: "y", alt: null, ambiguous: false, ambiguityNote: "" },
+      }],
+      usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    await craftProbeAnswers(client, {
+      learnerView: "x",
+      language: "TR",
+      cefrLevel: "A1",
+      exerciseType: "cloze",
+      model: "claude-sonnet-5",
+    });
+
+    const callArg = create.mock.calls[0][0];
+    expect(callArg.thinking).toEqual({ type: "disabled" });
+  });
 });
