@@ -833,7 +833,7 @@ describe("runValidatorEval", () => {
     expect(result.arms.every((a) => a.records[0].caseId === "c1")).toBe(true);
   });
 
-  it("invokes onArmComplete after every (case, arm) pair, always the same partial path, with the run-so-far", async () => {
+  it("invokes onCaseComplete once per case, at the SAME boundary the cost cap breaks at, with every arm balanced", async () => {
     const cases = [makeCase("c1", "ambiguous"), makeCase("c2", "clean")];
     const executor: ValidatorCaseExecutor = vi.fn(async () => ({
       result: cleanResult(),
@@ -852,7 +852,7 @@ describe("runValidatorEval", () => {
       arms,
       runName: "chk",
       datasetName: "test.json",
-      onArmComplete: (partialPath, run) => {
+      onCaseComplete: (partialPath, run) => {
         calls.push({
           path: partialPath,
           recordCounts: run.arms.map((a) => a.records.length),
@@ -860,22 +860,25 @@ describe("runValidatorEval", () => {
       },
     });
 
-    // Fires once per (case, arm) pair — the finest checkpoint granularity
-    // available without reordering the case-outer/arm-inner loop the
-    // case-boundary cost cap (tested above) depends on.
-    expect(calls).toHaveLength(cases.length * arms.length);
+    // Fires once per case — the SAME boundary the case-boundary cost cap
+    // (tested above) already breaks at, not once per (case, arm) pair.
+    expect(calls).toHaveLength(cases.length);
     // Every checkpoint targets the SAME path, derived from runName — never
     // the final (non-partial) summary path.
     expect(calls.every((c) => c.path === calls[0].path)).toBe(true);
     expect(calls[0].path).toMatch(/validator-chk\.partial\.json$/);
-    // Every checkpoint always carries every arm slot (never a half-arm
-    // structure) — record counts accumulate monotonically as cases
-    // complete, reaching cases.length for every arm on the final call.
+    // The load-bearing property: at the FIRST checkpoint (after case 1),
+    // every arm has exactly ONE record — never a mix of 1 and 0. A bare
+    // call-count assertion would also pass if the hook still fired inside
+    // the inner loop and someone divided the count by arms.length; this
+    // pins that every arm actually saw the same cases at every checkpoint.
+    expect(calls[0].recordCounts).toEqual(arms.map(() => 1));
+    // By the final checkpoint (after case 2), every arm has both cases.
     expect(calls.at(-1)!.recordCounts).toEqual(arms.map(() => cases.length));
     expect(result.arms).toHaveLength(arms.length);
   });
 
-  it("never calls onArmComplete when it is omitted (optional hook)", async () => {
+  it("never calls onCaseComplete when it is omitted (optional hook)", async () => {
     const cases = [makeCase("c1", "ambiguous")];
     const executor: ValidatorCaseExecutor = vi.fn(async () => ({
       result: cleanResult(),
@@ -887,7 +890,7 @@ describe("runValidatorEval", () => {
       },
     }));
 
-    // No onArmComplete passed — existing call sites must keep compiling and
+    // No onCaseComplete passed — existing call sites must keep compiling and
     // behaving exactly as before.
     const result = await runValidatorEval({
       executor,

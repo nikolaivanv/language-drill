@@ -606,18 +606,19 @@ export async function runValidatorEval(opts: {
   now?: () => Date;
   log?: (...args: unknown[]) => void;
   /**
-   * Optional per-(case, arm) checkpoint hook. Fired immediately after every
-   * executor call resolves — whether it produced a result or was
-   * fault-isolated as an error — the finest granularity available without
-   * reordering the case-outer/arm-inner loop the case-boundary cost cap
-   * (above) depends on. Receives the partial-checkpoint path
+   * Optional case-boundary checkpoint hook. Fired once per case, after the
+   * inner arm loop has run every arm for that case — the SAME boundary the
+   * cost cap above already breaks at, so a checkpoint written after case N
+   * means every arm has completed cases 1..N and their record counts are
+   * always equal (never a mid-case, unbalanced state where one arm is ahead
+   * of another). Receives the partial-checkpoint path
    * (`<EVAL_RUNS_DIR>/validator-<runName>.partial.json`, constant for the
-   * whole run) and the run-so-far — every arm slot always present,
-   * `records` growing as cases complete — so a caller can persist it with
-   * the SAME serializer the final summary uses. `runValidatorEval` performs
-   * no file I/O itself; the caller decides how (or whether) to write.
+   * whole run) and the run-so-far — every arm slot always present — so a
+   * caller can persist it with the SAME serializer the final summary uses.
+   * `runValidatorEval` performs no file I/O itself; the caller decides how
+   * (or whether) to write.
    */
-  onArmComplete?: (path: string, run: ValidatorEvalRunResult) => void;
+  onCaseComplete?: (path: string, run: ValidatorEvalRunResult) => void;
 }): Promise<ValidatorEvalRunResult> {
   const {
     executor,
@@ -629,7 +630,7 @@ export async function runValidatorEval(opts: {
     signal,
     now = () => new Date(),
     log = (...a: unknown[]) => console.log(...a),
-    onArmComplete,
+    onCaseComplete,
   } = opts;
 
   const startedAt = now().toISOString();
@@ -679,15 +680,16 @@ export async function runValidatorEval(opts: {
           error: (e as Error).message,
         });
       }
-      onArmComplete?.(partialPath, {
-        runName,
-        datasetName,
-        startedAt,
-        caseCount: cases.length,
-        costCapped,
-        arms: armResults,
-      });
     }
+
+    onCaseComplete?.(partialPath, {
+      runName,
+      datasetName,
+      startedAt,
+      caseCount: cases.length,
+      costCapped,
+      arms: armResults,
+    });
   }
 
   return {
@@ -1062,7 +1064,7 @@ async function main(): Promise<void> {
   }
 
   // Same path `runValidatorEval` derives internally and hands back on every
-  // `onArmComplete` call — recomputed here (not captured from a callback
+  // `onCaseComplete` call — recomputed here (not captured from a callback
   // arg) since it's needed after the run resolves too, to delete it.
   const partialSummaryPath = path.join(
     EVAL_RUNS_DIR,
@@ -1077,12 +1079,13 @@ async function main(): Promise<void> {
     runName,
     datasetName,
     maxCostUsd: args.maxCostUsd,
-    // Checkpoint after every (case, arm) pair so a killed run keeps
-    // whatever spend it already produced — same serializer
+    // Checkpoint after every case (every arm has run it) so a killed run
+    // keeps whatever spend it already produced, without ever capturing a
+    // mid-case, unbalanced state — same serializer
     // (`computeValidatorSummary` + `JSON.stringify(..., null, 2)`) the
     // final summary uses below, so the partial file is readable by the
     // same tooling.
-    onArmComplete: (partialPath, run) => {
+    onCaseComplete: (partialPath, run) => {
       mkdirSync(EVAL_RUNS_DIR, { recursive: true });
       const partialSummary = computeValidatorSummary(run, cases);
       writeFileSync(partialPath, JSON.stringify(partialSummary, null, 2), "utf8");
