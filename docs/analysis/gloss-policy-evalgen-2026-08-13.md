@@ -206,3 +206,41 @@ This is a deliberate deferral, not an omission — but it is still an open
 decision, not a closed one. It should be revisited (either demote-and-wait,
 or demote-and-immediately-regenerate a small batch) once nightly generation
 resumes.
+
+---
+
+## German pool demoted after all — 2026-08-13 (supersedes the deferral above)
+
+The deferral recorded in "Why the German pool was not demoted" is **closed**:
+generation is being un-paused the same day, so the reason for holding
+(a second cell sitting empty) no longer applied.
+
+**22 rows demoted** across both types, `--reason pool-hygiene`, against
+production. Two runs, since `demote:pool` takes one `--type` per invocation.
+
+Inspecting the pool first showed the cell was worse than the digit-cue count
+suggested — three overlapping defects, not one:
+
+| Defect | Evidence |
+|---|---|
+| `digit-form` non-compliance | 1 of 17 cloze rows carries a digit cue; **0 of 5 translations** put the ordinal in digits in the English source ("Today is the third of May.") |
+| Distributional collapse | **13 of 17** cloze rows use the frame `Heute ist der ___ [month]`; **11 of 17** answer `erste` |
+| Gloss spoilage | 8 cloze rows carry a `glossEn`, most naming the ordinal outright ("Today is the first of January." → `erste`) |
+
+Translations were included because `digit-form` governs cloze **and**
+translation ("Write the number/order as DIGITS in the source text — never
+spelled out in the source language"), and all five violate it.
+
+Verified after: `de-a1-numbers-ordinals` has **zero approved rows**
+(17 cloze + 5 translation now `rejected`/`pool-hygiene`; 3 pre-existing flagged
+cloze untouched). Rollback IDs, split by type, in
+`docs/analysis/de-ordinals-demote-2026-08-13.json`.
+
+### Still open: TR translation
+
+`tr-a1-numbers-ordinals` **translation** has 20 approved rows, **0/20 with
+digits in the English source**, all generated 2026-05-30 → 06-08 — the same
+pre-directive window as the 20 cloze rows already demoted, and the same defect.
+Demoting the TR cloze but not the TR translation leaves that point half-fixed.
+Not actioned: it was outside the requested scope. **Decide before generation
+resumes**, or the refill will land beside 20 stale rows.

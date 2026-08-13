@@ -1,0 +1,55 @@
+{
+  "run": "de-ordinals-pool-hygiene-2026-08-13",
+  "purpose": "Rollback record for the demote of the non-compliant de-a1-numbers-ordinals pool. demote:pool writes NO rollback artifact of its own; this file is the only record of which rows were demoted and what their prior state was.",
+  "target": {
+    "neonProject": "twilight-smoke-01114337",
+    "neonBranch": "br-green-waterfall-ancrvpr5",
+    "branchName": "production",
+    "endpoint": "ep-withered-hall-an34g3y2-pooler"
+  },
+  "commands": [
+    "pnpm --filter @language-drill/db demote:pool --language DE --cefr A1 --type cloze --grammar-point de-a1-numbers-ordinals --reason pool-hygiene --apply",
+    "pnpm --filter @language-drill/db demote:pool --language DE --cefr A1 --type translation --grammar-point de-a1-numbers-ordinals --reason pool-hygiene --apply"
+  ],
+  "priorState": {
+    "review_status": "auto-approved",
+    "demotion_reason": null
+  },
+  "rollback": "UPDATE exercises SET review_status='auto-approved', demotion_reason=NULL WHERE id IN (<ids below>);",
+  "rationale": [
+    "digit-form non-compliance: 1 of 17 approved cloze rows carries a digit cue; 0 of 5 translations put the ordinal in digits in the English source ('Today is the third of May.'), which the directive requires.",
+    "Distributional collapse: 13 of 17 cloze rows use the frame 'Heute ist der ___ [month]', and 11 of 17 answer 'erste'.",
+    "Gloss spoilage: 8 cloze rows carry a glossEn, most naming the ordinal outright ('Today is the first of January.' -> erste).",
+    "pool-hygiene leaves learner mastery untouched; these are stale relative to a directive, not defective enough to revoke credit."
+  ],
+  "rowCount": 22,
+  "byType": { "cloze": 17, "translation": 5 },
+  "ids": {
+    "cloze": [
+      "e86a8874-c1fd-5824-8491-8c483e261cbd",
+      "e96a8a07-431a-55e9-8591-8de5bd097eec",
+      "ea6a8b9a-c436-53ae-8691-8f82405f585f",
+      "e56a83bb-3ea7-5ed5-8991-9459b89707a8",
+      "e16a7d6f-4bff-5411-bd91-80fdb4249064",
+      "4c124be4-f6c5-5330-8544-006caadec919",
+      "a5b78e49-8b18-5c11-8cd1-ca2ddf2b0658",
+      "a3b78b23-8d51-579b-8ed1-cd67e16441fa",
+      "a2b78990-0c35-59d6-8dd1-cbca6280dfcb",
+      "e021a170-f566-5a90-b564-0bbc90f0fef9",
+      "e221a496-f79f-561a-b764-0ef6932a3a9b",
+      "e421a7bc-f9d8-51a4-b164-05489563763d",
+      "e721ac75-7d2e-5af3-b464-0a1f1680140e",
+      "e521a94f-7af5-5f69-b264-06e51446d86c",
+      "eb21b2c1-81a1-5207-b064-03ab0928ae42",
+      "74cf1012-c8fd-5e56-ac2e-ec0a142b039f",
+      "064b4acf-eb85-5741-9d8d-909dc5a0e22c"
+    ],
+    "translation": [
+      "340d904a-af24-5858-aeb0-3c142cd2a89d",
+      "2e0d86d8-b5d0-5af6-acb0-38da2a996cfb",
+      "330d8eb7-327a-51a7-b1b0-40ebadef466e",
+      "290d7ef9-2bce-5f09-b3b0-44259e5ea500",
+      "d852cce0-d2ce-5100-8748-ce5c61000f09"
+    ]
+  }
+}
