@@ -46,6 +46,7 @@ import {
   type ValidatorCaseExecutor,
   type ValidatorEvalRunResult,
 } from "./eval-validator-run.js";
+import type { QaProbe } from "../src/index.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = path.join(
@@ -123,15 +124,6 @@ describe("computeArmMetrics", () => {
 // blindSolverVerdict — pure, no mocking (Task 2)
 // ---------------------------------------------------------------------------
 
-type QaProbe = {
-  correct: string;
-  correctConfidence: number;
-  wrong: string;
-  alt: string | null;
-  ambiguous: boolean;
-  ambiguityNote: string;
-};
-
 const probe = (over: Partial<QaProbe> = {}): QaProbe => ({
   correct: "de", correctConfidence: 0.9, wrong: "xx",
   alt: null, ambiguous: false, ambiguityNote: "", ...over,
@@ -166,16 +158,50 @@ describe("blindSolverVerdict", () => {
     expect(r.ambiguous).toBe(false);
   });
 
-  it("ignores correctConfidence entirely", () => {
-    // A very low confidence must NOT by itself produce an ambiguous verdict —
-    // the spec forbids a tunable threshold.
-    const r = blindSolverVerdict(probe({ alt: null, correctConfidence: 0.01 }), content());
+  it("treats empty-string alt as no alternative", () => {
+    const r = blindSolverVerdict(probe({ alt: "" }), content());
+    expect(r.ambiguous).toBe(false);
+    expect(r.competitor).toBeNull();
+  });
+
+  it("correctConfidence does not affect the verdict when an alt is present and listed", () => {
+    // Low confidence with alt=listed must stay false; catches wiring
+    // correctConfidence into the alt-present branch.
+    const r = blindSolverVerdict(
+      probe({ alt: "de", correctConfidence: 0.01 }),
+      content(),
+    );
     expect(r.ambiguous).toBe(false);
   });
 
-  it("ignores the crafter's own ambiguous flag entirely", () => {
-    const r = blindSolverVerdict(probe({ alt: null, ambiguous: true }), content());
+  it("correctConfidence does not affect the verdict when an alt is present and unlisted", () => {
+    // Low confidence with alt=unlisted must stay true; catches wiring
+    // correctConfidence to suppress an ambiguity flag.
+    const r = blindSolverVerdict(
+      probe({ alt: "para", correctConfidence: 0.01 }),
+      content(),
+    );
+    expect(r.ambiguous).toBe(true);
+  });
+
+  it("probe.ambiguous does not affect the verdict when an alt is present and listed", () => {
+    // probe.ambiguous=true with alt=listed must stay false; catches wiring
+    // the crafter's own flag into the decision.
+    const r = blindSolverVerdict(
+      probe({ alt: "de", ambiguous: true }),
+      content(),
+    );
     expect(r.ambiguous).toBe(false);
+  });
+
+  it("probe.ambiguous does not affect the verdict when an alt is present and unlisted", () => {
+    // probe.ambiguous=false with alt=unlisted must stay true; catches wiring
+    // the crafter's own flag to override the verdict.
+    const r = blindSolverVerdict(
+      probe({ alt: "para", ambiguous: false }),
+      content(),
+    );
+    expect(r.ambiguous).toBe(true);
   });
 
   it("treats a missing acceptableAnswers as an empty list", () => {

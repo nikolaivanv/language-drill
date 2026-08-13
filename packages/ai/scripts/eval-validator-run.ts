@@ -92,6 +92,7 @@ import {
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
   type GenerationSpec,
+  type QaProbe,
   type ValidationResult,
 } from "../src/index.js";
 // `SELF_INCONSISTENT_REASON` and `computeValidationPromptVars` are not on the
@@ -130,8 +131,8 @@ function listedIn(needle: string, haystack: readonly string[]): boolean {
  * this arm is measured against.
  */
 export function blindSolverVerdict(
-  probe: { alt: string | null; correctConfidence?: number; ambiguous?: boolean },
-  content: { correctAnswer: string; acceptableAnswers?: string[] },
+  probe: QaProbe,
+  content: ClozeContent,
 ): { ambiguous: boolean; competitor: string | null } {
   const alt = probe.alt;
   if (alt === null || alt.trim() === "") {
