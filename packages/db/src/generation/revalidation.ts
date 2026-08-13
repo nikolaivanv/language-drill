@@ -177,18 +177,38 @@ export type DemotionAction =
   | { kind: 'demote'; from: ReviewStatus; to: ReviewStatus; reasons: GenerationReason[] }
   | { kind: 'skip'; from: ReviewStatus; reason: 'manual-approved' | 'rejected' };
 
-export function decideDemotion(
+/** Demote-only ranking: rejected < flagged < auto-approved < manual-approved. */
+const STATUS_RANK: Record<ReviewStatus, number> = {
+  rejected: 0,
+  flagged: 1,
+  'auto-approved': 2,
+  'manual-approved': 3,
+};
+
+/**
+ * Shared entry guard: `manual-approved` is a human decision and `rejected` is
+ * already out of the pool, so neither pass reconsiders them.
+ */
+function skipUnreviewable(
   currentStatus: ReviewStatus,
-  result: ValidationResult,
-  content?: ExerciseContent,
-  language?: Language,
-): DemotionAction {
+): Extract<DemotionAction, { kind: 'skip' }> | null {
   if (currentStatus === 'manual-approved') {
     return { kind: 'skip', from: currentStatus, reason: 'manual-approved' };
   }
   if (currentStatus === 'rejected') {
     return { kind: 'skip', from: currentStatus, reason: 'rejected' };
   }
+  return null;
+}
+
+export function decideDemotion(
+  currentStatus: ReviewStatus,
+  result: ValidationResult,
+  content?: ExerciseContent,
+  language?: Language,
+): DemotionAction {
+  const unreviewable = skipUnreviewable(currentStatus);
+  if (unreviewable) return unreviewable;
 
   // Same deterministic gate the live generation path uses (R3.1
   // single-source-of-truth). Optional content/language keep the bare
@@ -198,19 +218,58 @@ export function decideDemotion(
       ? applyDeterministicChecks(routeValidationResult(result), content, language)
       : routeValidationResult(result);
 
-  // Demote-only ranking: rejected < flagged < auto-approved.
-  const rank: Record<ReviewStatus, number> = {
-    rejected: 0,
-    flagged: 1,
-    'auto-approved': 2,
-    'manual-approved': 3,
-  };
   const newStatus = routed.reviewStatus;
-  if (rank[newStatus] < rank[currentStatus]) {
+  if (STATUS_RANK[newStatus] < STATUS_RANK[currentStatus]) {
     return {
       kind: 'demote',
       from: currentStatus,
       to: newStatus,
+      reasons: routed.flaggedReasons,
+    };
+  }
+  return { kind: 'no-change', from: currentStatus, to: currentStatus };
+}
+
+/**
+ * The **no-LLM** sibling of `decideDemotion`, powering `revalidate:cloze
+ * --deterministic-only`.
+ *
+ * `applyDeterministicChecks` is a pure function, so the checkers it owns
+ * (answer/stem overlap for every language, Turkish vowel harmony) can re-score
+ * the stored pool for **zero token spend** — the LLM rubric is what costs
+ * ~$0.008/row, and a full cloze pass is ~13k rows. The baseline decision here
+ * is therefore the row's CURRENT status rather than a fresh `ValidationResult`:
+ * only a deterministic checker can move it, and the demote-only rank guarantees
+ * a checker that stays silent leaves the row exactly as it was.
+ *
+ * `existingReasons` are the row's stored `flagged_reasons`. They seed the
+ * baseline so a demotion **appends to** rather than erases the record of why a
+ * row was already flagged — the LLM path can regenerate its reasons from the
+ * fresh verdict, this one cannot.
+ *
+ * Because no verdict is produced, callers must NOT write a `qualityScore` from
+ * a deterministic demotion; the stored score is still the last real measurement.
+ */
+export function decideDeterministicDemotion(
+  currentStatus: ReviewStatus,
+  content: ExerciseContent,
+  language: Language,
+  existingReasons: readonly GenerationReason[] = [],
+): DemotionAction {
+  const unreviewable = skipUnreviewable(currentStatus);
+  if (unreviewable) return unreviewable;
+
+  const routed = applyDeterministicChecks(
+    { reviewStatus: currentStatus, flaggedReasons: [...existingReasons] },
+    content,
+    language,
+  );
+
+  if (STATUS_RANK[routed.reviewStatus] < STATUS_RANK[currentStatus]) {
+    return {
+      kind: 'demote',
+      from: currentStatus,
+      to: routed.reviewStatus,
       reasons: routed.flaggedReasons,
     };
   }
