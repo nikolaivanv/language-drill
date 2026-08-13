@@ -60,7 +60,9 @@
  * `--deterministic-only` is set.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { and, eq, inArray } from 'drizzle-orm';
 
@@ -134,6 +136,48 @@ const UUID_RE =
  * the worklist is not what the operator thinks it is. Silently selecting fewer
  * rows would read as "nothing to do".
  */
+/**
+ * Where to look for an `--ids-file`, in order.
+ *
+ * `pnpm --filter @language-drill/db revalidate:cloze` runs the script with cwd
+ * `packages/db`, so a path copied from the docs (`docs/analysis/…`) is
+ * repo-relative and would ENOENT. Try the literal (cwd-relative) path first,
+ * then the same path from the repo root; an absolute path is used as given.
+ */
+export function idsFileCandidates(
+  rawPath: string,
+  cwd: string,
+  repoRoot: string,
+): string[] {
+  if (path.isAbsolute(rawPath)) return [rawPath];
+  const fromCwd = path.resolve(cwd, rawPath);
+  const fromRoot = path.resolve(repoRoot, rawPath);
+  return fromCwd === fromRoot ? [fromCwd] : [fromCwd, fromRoot];
+}
+
+/** Repo root, from `<root>/packages/db/scripts/` — three levels up. */
+const REPO_ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../..',
+);
+
+/**
+ * Read an `--ids-file` from the first candidate that exists, or fail naming
+ * every path tried — a bare ENOENT stack does not tell the operator that the
+ * script's cwd is `packages/db`, not the repo root.
+ */
+function readIdsFile(rawPath: string): string {
+  const candidates = idsFileCandidates(rawPath, process.cwd(), REPO_ROOT);
+  const found = candidates.find((candidate) => existsSync(candidate));
+  if (!found) {
+    throw new Error(
+      `--ids-file '${rawPath}' not found. Tried:\n` +
+        candidates.map((candidate) => `  ${candidate}`).join('\n'),
+    );
+  }
+  return readFileSync(found, 'utf8');
+}
+
 export function parseIdsFile(text: string): string[] {
   const ids: string[] = [];
   const seen = new Set<string>();
@@ -439,9 +483,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const ids = args.idsFile
-    ? parseIdsFile(readFileSync(args.idsFile, 'utf8'))
-    : null;
+  const ids = args.idsFile ? parseIdsFile(readIdsFile(args.idsFile)) : null;
 
   const db = createDb(databaseUrl);
   const client = anthropicKey ? createClaudeClient(anthropicKey) : null;

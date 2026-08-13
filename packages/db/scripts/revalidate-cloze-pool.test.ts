@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { CefrLevel, Language } from '@language-drill/shared';
 
-import { parseIdsFile, parseRevalidateArgs } from './revalidate-cloze-pool';
+import {
+  idsFileCandidates,
+  parseIdsFile,
+  parseRevalidateArgs,
+} from './revalidate-cloze-pool';
 
 // ---------------------------------------------------------------------------
 // parseRevalidateArgs
@@ -142,5 +146,31 @@ describe('parseIdsFile', () => {
 
   it('throws when the file yields no ids', () => {
     expect(() => parseIdsFile('# only a comment\n')).toThrow(/no ids/);
+  });
+});
+
+describe('idsFileCandidates', () => {
+  const CWD = '/repo/packages/db';
+  const ROOT = '/repo';
+
+  it('tries a relative path against the package cwd first, then the repo root', () => {
+    // `pnpm --filter @language-drill/db` runs the script from packages/db, so a
+    // repo-relative path a human copied out of the docs would otherwise ENOENT.
+    expect(idsFileCandidates('docs/analysis/worklist.txt', CWD, ROOT)).toEqual([
+      '/repo/packages/db/docs/analysis/worklist.txt',
+      '/repo/docs/analysis/worklist.txt',
+    ]);
+  });
+
+  it('leaves an absolute path exactly as given', () => {
+    expect(idsFileCandidates('/tmp/worklist.txt', CWD, ROOT)).toEqual([
+      '/tmp/worklist.txt',
+    ]);
+  });
+
+  it('does not repeat a candidate when cwd is the repo root', () => {
+    expect(idsFileCandidates('worklist.txt', ROOT, ROOT)).toEqual([
+      '/repo/worklist.txt',
+    ]);
   });
 });
