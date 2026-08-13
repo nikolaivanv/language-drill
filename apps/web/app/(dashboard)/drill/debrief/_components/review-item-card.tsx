@@ -231,6 +231,18 @@ function ClozeBody({ item, content }: ClozeBodyProps) {
 
   return (
     <>
+      {/* the task the learner saw before answering; must be readable here too,
+          because for ~13% of the pool the constraint lives only in this text
+          (e.g. "either 'de' or nothing"). Rendered unconditionally: a
+          heuristic that suppressed "generic" instructions would silently hide
+          a load-bearing one. Uses this card's own secondary-caption class
+          (t-small + text-ink-mute), matching the constraintLabel caption in
+          the paraphrase branch below — the card renders its cloze sentence at
+          17px, not the drill's t-display-m hero, so that hero-scaled
+          treatment would read too loud here. */}
+      {content.instructions && content.instructions.length > 0 && (
+        <p className="t-small mb-s-2 text-ink-mute">{content.instructions}</p>
+      )}
       <div
         className={`grid ${isCorrect ? 'grid-cols-1' : 'grid-cols-2'} mobile:grid-cols-1 gap-s-3`}
       >
