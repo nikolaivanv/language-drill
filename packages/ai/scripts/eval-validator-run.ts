@@ -6,31 +6,50 @@
  * labelled fixture built in Task 7
  * (`packages/ai/scripts/fixtures/validator-ambiguity-cases.json`).
  *
- * Four arms replay every fixture case so PROMPT and MODEL are never
- * confounded — the branch changed both, and a naive baseline-vs-production
- * comparison couldn't tell which one moved the needle:
+ * Five arms replay every fixture case, on two separate axes:
  *
- *   baseline     modelOverride: claude-sonnet-4-6, systemPromptOverride: the
- *                pre-Task-4 prompt (captured once into a fixture — see
- *                `PRIOR_TEMPLATE` below)
- *   prompt-only  modelOverride: claude-sonnet-4-6 (new prompt, old model)
- *   model-only   systemPromptOverride: the pre-Task-4 prompt (old prompt, new
- *                model)
- *   both         no overrides — pure production config
+ *   Axis 1 — sighted, prompt vs. model (four arms). Both the prompt and the
+ *   model changed in this branch, and a naive baseline-vs-production
+ *   comparison couldn't tell which one moved the needle, so PROMPT and MODEL
+ *   are never confounded:
  *
- * Both baseline arms pin `modelOverride` explicitly because Task 5 already
- * moved the production default off claude-sonnet-4-6.
+ *     baseline     modelOverride: claude-sonnet-4-6, systemPromptOverride: the
+ *                  pre-Task-4 prompt (captured once into a fixture — see
+ *                  `PRIOR_TEMPLATE` below)
+ *     prompt-only  modelOverride: claude-sonnet-4-6 (new prompt, old model)
+ *     model-only   systemPromptOverride: the pre-Task-4 prompt (old prompt, new
+ *                  model)
+ *     both         no overrides — pure production config
  *
- * For each arm, three metrics roll up from `computeArmMetrics` (pure — no
- * network calls, so its tests need no mocking):
+ *   Both baseline arms pin `modelOverride` explicitly because Task 5 already
+ *   moved the production default off claude-sonnet-4-6.
+ *
+ *   Axis 2 — blind vs. sighted (one arm). All four arms above call
+ *   `validateDraft`, which is shown the stored `correctAnswer` while judging.
+ *   The fifth arm, `blind-solver`, judges ambiguity from ONLY what a learner
+ *   sees (`renderLearnerView(content, { includeOptions: false })`) via
+ *   `craftProbeAnswers` + the pure `blindSolverVerdict` — it never sees the
+ *   answer. It is pinned to `claude-sonnet-5` (the same model as `both`) so
+ *   the variable under test is blind-vs-sighted, not a capability difference.
+ *   See `ValidatorArm`'s `kind` discriminator and `SolverCaseResult`.
+ *
+ * For every arm (including `blind-solver`), `recallOnAmbiguous` and
+ * `falseFlagRateOnClean` roll up from `computeArmMetrics` (pure — no network
+ * calls, so its tests need no mocking):
  *   - recallOnAmbiguous:    of the fixture's `ambiguous` cases, the fraction
  *                           the arm actually flagged `ambiguous: true`
  *   - falseFlagRateOnClean: of the fixture's `clean` cases, the fraction the
  *                           arm wrongly flagged — the over-flagging control,
  *                           and the merge gate (lower is better)
  *   - selfInconsistentRate: fraction of ALL results whose `flaggedReasons`
- *                           contains SELF_INCONSISTENT_REASON (Task 3's
- *                           report-only self-consistency check)
+ *                           contains SELF_INCONSISTENT_REASON (Task 3 of the
+ *                           parent branch's report-only self-consistency
+ *                           check). Validator-arm-only: `blind-solver` never
+ *                           populates `flaggedReasons` (it isn't a second
+ *                           attempt to compare against), so its summary
+ *                           reports `null` here, not a computed `0` — a `0`
+ *                           would misrepresent "not measured" as "measured,
+ *                           found none".
  *
  * Invocation (see CLAUDE.md — `pnpm <script> -- --flag` throws for every CLI
  * in this package; always `pnpm eval:validator --flag`):
@@ -40,9 +59,12 @@
  * `--dry-run` prints the arm matrix + case counts and makes ZERO Anthropic
  * calls — always verify a new run shape this way before spending real budget.
  *
- * 31 cases x 4 arms = 124 real Anthropic calls for a full run. Cost is
+ * Each case is replayed through all `ARMS.length` (currently 5) arms —
+ * `cases.length x ARMS.length` real Anthropic calls for a full run (the
+ * fixture has grown before and is expected to again; see `loadValidatorCases`'
+ * tests, which deliberately don't pin an exact case count). Cost is
  * enforced by accumulating actual `tokenUsage` (not case counting) and
- * stopping at a CASE boundary (all 4 arms for a case, or none) once
+ * stopping at a CASE boundary (every arm for a case, or none) once
  * `--max-cost-usd` is reached — partial results are written, never discarded.
  *
  * ## Prompt source: ALWAYS in-repo, NEVER Langfuse (Fix Round 1)
@@ -558,7 +580,8 @@ export type ValidatorEvalRunResult = {
 };
 
 /**
- * Drive all four arms over every case with two guarantees:
+ * Drive every arm (generically, whatever `arms` is passed — currently the
+ * five-entry `ARMS`) over every case with two guarantees:
  *
  *   - **Fault isolation:** a (case, arm) pair whose executor throws is
  *     recorded on that arm as an errored record; the loop continues — one bad
@@ -566,7 +589,7 @@ export type ValidatorEvalRunResult = {
  *   - **Case-boundary cost cap:** before starting a new case, the
  *     accumulated `estimateCostUsd` (across every arm so far) is checked
  *     against `maxCostUsd`; if reached, `costCapped` is set and the loop
- *     stops — so every case that DID run has all 4 arms represented (no
+ *     stops — so every case that DID run has every arm represented (no
  *     half-compared case), and partial results are always written, never
  *     thrown away.
  *
@@ -844,13 +867,17 @@ export function writeValidatorSummaryJson(
 // ---------------------------------------------------------------------------
 
 /**
- * 31 cases x 4 arms = 124 calls. Each call's system prompt is ~3-3.5k tokens
- * (cache-writable, but cases span multiple grammar points so cross-case
- * cache hits aren't guaranteed) plus a small per-case user prompt, with a
- * `candidateFillers` scratchpad in the output (~400-800 output tokens). Rough
- * worst-case (no cache credit): ~4k input + ~700 output tokens/call ≈
- * $0.022/call ≈ $2.70 for a full run. Default leaves real headroom for
- * caching working out worse than hoped, or a retried/slow run.
+ * `cases.length x ARMS.length` calls (currently ~82 x 5 ≈ 410). Each
+ * validator-arm call's system prompt is ~3-3.5k tokens (cache-writable, but
+ * cases span multiple grammar points so cross-case cache hits aren't
+ * guaranteed) plus a small per-case user prompt, with a `candidateFillers`
+ * scratchpad in the output (~400-800 output tokens); the solver arm's call is
+ * smaller (no template, just the learner view + the three-probe-answer tool).
+ * Rough worst-case (no cache credit) blended across both call shapes: ≈
+ * $0.022/call ≈ $9 for a full run at the current fixture size — above the
+ * `--max-cost-usd` default below. That's not a failure mode: the
+ * case-boundary cap (see `runValidatorEval`) just stops the run early with
+ * partial results written. Pass `--max-cost-usd` explicitly for a full run.
  */
 const DEFAULT_MAX_COST_USD = 6;
 
@@ -918,10 +945,12 @@ function printUsage(): void {
       "Usage: pnpm eval:validator [--limit <n>] [--max-cost-usd <n>]",
       "                           [--dry-run] [--run-name <name>]",
       "",
-      "Replays the validator-ambiguity-cases.json fixture through 4 arms",
-      "(baseline / prompt-only / model-only / both) so prompt and model",
-      "effects are never confounded. Writes a markdown summary to stdout and",
-      "a JSON summary to ./eval-runs/validator-<runName>.json.",
+      "Replays the validator-ambiguity-cases.json fixture through 5 arms:",
+      "four sighted validator arms (baseline / prompt-only / model-only / both)",
+      "so prompt and model effects are never confounded, plus one blind",
+      "solver arm (blind-solver) that judges ambiguity from the learner view",
+      "alone, never seeing the stored answer. Writes a markdown summary to",
+      "stdout and a JSON summary to ./eval-runs/validator-<runName>.json.",
       "",
       "  --limit <n>          Cap the number of fixture cases replayed.",
       `  --max-cost-usd <n>   Hard cost ceiling; default ${DEFAULT_MAX_COST_USD}. Stops at a case boundary.`,

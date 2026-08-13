@@ -899,6 +899,84 @@ describe("computeValidatorSummary", () => {
     expect(summary.arms[0].errors).toEqual([{ caseId: "c1", error: "boom" }]);
     expect(summary.arms[0].metrics.n).toBe(0);
   });
+
+  it("reports the solver arm's selfInconsistentRate as null (not 0) while a validator arm in the same summary still reports a number", () => {
+    // `flaggedReasons: []` is what the real solver executor always emits
+    // (SolverCaseResult never populates it) — if computeValidatorSummary
+    // regressed to running the solver arm's metrics through unmodified, this
+    // would compute `0`, not `null`, and the assertion below (`toBe(null)`,
+    // not a falsy check) would catch it.
+    const cases = [makeCase("c1", "ambiguous"), makeCase("c2", "clean")];
+    const validatorArm = ARMS[0]; // baseline
+    const solverArm = ARMS.find((a) => a.kind === "solver")!;
+    const zeroUsage = {
+      inputTokens: 0,
+      cacheCreationInputTokens: 0,
+      cacheReadInputTokens: 0,
+      outputTokens: 0,
+    };
+    const run: ValidatorEvalRunResult = {
+      runName: "r1",
+      datasetName: "test.json",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      caseCount: 2,
+      costCapped: false,
+      arms: [
+        {
+          arm: validatorArm,
+          usage: zeroUsage,
+          records: [
+            { caseId: "c1", label: "ambiguous", result: cleanResult() },
+            { caseId: "c2", label: "clean", result: cleanResult() },
+          ],
+        },
+        {
+          arm: solverArm,
+          usage: zeroUsage,
+          records: [
+            {
+              caseId: "c1",
+              label: "ambiguous",
+              result: {
+                ambiguous: true,
+                flaggedReasons: [],
+                competitor: "para",
+                correctConfidence: 0.9,
+                crafterAmbiguous: false,
+              },
+            },
+            {
+              caseId: "c2",
+              label: "clean",
+              result: {
+                ambiguous: false,
+                flaggedReasons: [],
+                competitor: null,
+                correctConfidence: 0.95,
+                crafterAmbiguous: false,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const summary = computeValidatorSummary(run, cases);
+    const validatorSummary = summary.arms.find((a) => a.arm === validatorArm.name)!;
+    const solverSummary = summary.arms.find((a) => a.arm === "blind-solver")!;
+
+    expect(solverSummary.metrics.selfInconsistentRate).toBe(null);
+    expect(solverSummary.promptSource).toBeUndefined();
+    expect(solverSummary.templateSha).toBeUndefined();
+    // The solver arm's ambiguity verdict WAS measured — recall/false-flag are
+    // still real numbers, only selfInconsistentRate is unmeasured.
+    expect(solverSummary.metrics.recallOnAmbiguous).toBe(1);
+    expect(solverSummary.metrics.falseFlagRateOnClean).toBe(0);
+    // Pins the distinction: a validator arm's selfInconsistentRate is a real
+    // (measured) number, never null.
+    expect(validatorSummary.metrics.selfInconsistentRate).not.toBeNull();
+    expect(typeof validatorSummary.metrics.selfInconsistentRate).toBe("number");
+  });
 });
 
 describe("renderValidatorMarkdownSummary", () => {
@@ -927,6 +1005,59 @@ describe("renderValidatorMarkdownSummary", () => {
     const md = renderValidatorMarkdownSummary(summary);
     expect(md).toContain("baseline");
     expect(md).toContain("r1");
+  });
+
+  it("renders 'n/a' (not a numeric percentage) for the solver arm's prompt-source/template/self-inconsistent cells", () => {
+    const cases = [makeCase("c1", "ambiguous")];
+    const solverArm = ARMS.find((a) => a.kind === "solver")!;
+    const run: ValidatorEvalRunResult = {
+      runName: "r1",
+      datasetName: "test.json",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      caseCount: 1,
+      costCapped: false,
+      arms: [
+        {
+          arm: solverArm,
+          usage: {
+            inputTokens: 0,
+            cacheCreationInputTokens: 0,
+            cacheReadInputTokens: 0,
+            outputTokens: 0,
+          },
+          records: [
+            {
+              caseId: "c1",
+              label: "ambiguous",
+              result: {
+                ambiguous: true,
+                flaggedReasons: [],
+                competitor: "para",
+                correctConfidence: 0.9,
+                crafterAmbiguous: false,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const summary = computeValidatorSummary(run, cases);
+    const md = renderValidatorMarkdownSummary(summary);
+    const row = md.split("\n").find((l) => l.startsWith("| blind-solver "));
+    expect(row).toBeDefined();
+    // Columns: Arm | Model | Prompt source | Template sha | Recall |
+    //          False-flag | Self-inconsistent | n | Cost
+    const cells = row!
+      .split("|")
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0);
+    expect(cells[2]).toBe("n/a (blind)"); // prompt source
+    expect(cells[3]).toBe("n/a"); // template sha
+    expect(cells[6]).toBe("n/a"); // self-inconsistent — NOT "0.0%"
+    // Recall WAS measured for the solver arm (unlike self-inconsistent), so
+    // that column is still a real percentage, not "n/a".
+    expect(cells[4]).toBe("100.0%");
   });
 });
 
