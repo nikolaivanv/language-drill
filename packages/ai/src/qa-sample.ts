@@ -10,7 +10,15 @@ import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
  * modelAnswers, targetForm/acceptableForms, breakdown, exampleSentences,
  * referenceParaphrases) so the crafter solves blind, as a user would.
  */
-export function renderLearnerView(content: ExerciseContent): string {
+export function renderLearnerView(
+  content: ExerciseContent,
+  opts: { includeOptions?: boolean } = {},
+): string {
+  const includeOptions = opts.includeOptions ?? true;
+  // `includeOptions: false` is for the blind-solver arm. In production
+  // `showOptions` defaults to false (cloze-exercise.tsx) — options sit behind a
+  // toggle — and the ambiguity fixture was labelled under that rule. A solver
+  // shown options would answer a different question than the labels encode.
   const lines: string[] = [];
   switch (content.type) {
     case ExerciseType.CLOZE: {
@@ -18,7 +26,9 @@ export function renderLearnerView(content: ExerciseContent): string {
       if (content.context) lines.push(`Context: ${content.context}`);
       if (content.glossEn) lines.push(`Meaning: ${content.glossEn}`);
       lines.push(content.sentence);
-      if (content.options?.length) lines.push(`Options: ${content.options.join(", ")}`);
+      if (includeOptions && content.options?.length) {
+        lines.push(`Options: ${content.options.join(", ")}`);
+      }
       break;
     }
     case ExerciseType.TRANSLATION: {
@@ -229,19 +239,29 @@ export async function craftProbeAnswers(
   },
   signal?: AbortSignal,
 ): Promise<{ probe: QaProbe; usage: ClaudeUsageBreakdown }> {
-  const response = await client.messages.create(
-    {
-      model: params.model ?? QA_CRAFTER_MODEL,
-      max_tokens: QA_CRAFTER_MAX_TOKENS,
-      system: [
-        { type: "text" as const, text: QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE, cache_control: { type: "ephemeral" as const } },
-      ],
-      messages: [{ role: "user" as const, content: buildQaCrafterUserPrompt(params) }],
-      tools: [QA_CRAFTER_TOOL],
-      tool_choice: { type: "tool" as const, name: QA_CRAFTER_TOOL_NAME },
-    },
-    { signal },
-  );
+  const effectiveModel = params.model ?? QA_CRAFTER_MODEL;
+  // Same per-model guard as validate.ts:591-593 (kept in sync manually — no
+  // shared constant, see that file's comment for the full rationale): Sonnet
+  // 5 (and Opus 5 / Fable) run ADAPTIVE thinking when `thinking` is omitted,
+  // unlike this function's default (Opus 4.8), where omitting it means no
+  // thinking at all. Without this guard, a caller that pins `model` to
+  // Sonnet 5 (e.g. eval-validator-run.ts's blind-solver arm, which must match
+  // the sighted arms' explicit `thinking: disabled`) would silently run WITH
+  // adaptive thinking — a capability confound, and a smaller `max_tokens`
+  // budget shared between thinking and the tool_use output.
+  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(effectiveModel);
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: effectiveModel,
+    max_tokens: QA_CRAFTER_MAX_TOKENS,
+    system: [
+      { type: "text" as const, text: QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE, cache_control: { type: "ephemeral" as const } },
+    ],
+    messages: [{ role: "user" as const, content: buildQaCrafterUserPrompt(params) }],
+    tools: [QA_CRAFTER_TOOL],
+    tool_choice: { type: "tool" as const, name: QA_CRAFTER_TOOL_NAME },
+  };
+  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
+  const response = await client.messages.create(request, { signal });
   const usage = response.usage ? readUsage(response) : ZERO_USAGE;
   const toolUse = response.content.find(
     (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",

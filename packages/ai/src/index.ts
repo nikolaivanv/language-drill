@@ -221,16 +221,23 @@ export {
 export type { ClaudeUsageBreakdown } from "./cost-model.js";
 
 export {
+  buildValidationTool,
+  CANDIDATE_FILLER_VERDICTS,
   validateDraft,
   parseValidationResult,
   ValidationParseError,
-  VALIDATION_TOOL,
   VALIDATION_TOOL_NAME,
   VALIDATION_MODEL,
   VALIDATION_MAX_TOKENS,
   VALIDATION_TEMPERATURE,
 } from "./validate.js";
-export type { ValidationResult, ValidateDraftResult } from "./validate.js";
+export type {
+  CandidateFiller,
+  CandidateFillerVerdict,
+  ValidationResult,
+  ValidateDraftResult,
+  ValidateDraftOptions,
+} from "./validate.js";
 
 export {
   buildValidationSystemPrompt,

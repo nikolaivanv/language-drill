@@ -15,13 +15,16 @@ import {
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
 } from "./validation-prompts.js";
 import {
+  applyCandidateFillerConsistency,
+  buildValidationTool,
+  CANDIDATE_FILLER_VERDICTS,
   parseValidationResult,
+  SELF_INCONSISTENT_REASON,
   validateDraft,
   ValidationParseError,
   VALIDATION_MAX_TOKENS,
   VALIDATION_MODEL,
   VALIDATION_TEMPERATURE,
-  VALIDATION_TOOL,
   VALIDATION_TOOL_NAME,
   type ValidationResult,
 } from "./validate.js";
@@ -80,6 +83,7 @@ const validValidationInput: ValidationResult = {
   culturalIssues: [],
   flaggedReasons: [],
   coverage: {},
+  candidateFillers: [],
 };
 
 // ---------------------------------------------------------------------------
@@ -87,43 +91,94 @@ const validValidationInput: ValidationResult = {
 // ---------------------------------------------------------------------------
 
 describe("VALIDATION_MODEL", () => {
-  it("matches GENERATION_MODEL (cross-file invariant)", () => {
-    expect(VALIDATION_MODEL).toBe(GENERATION_MODEL);
+  // Held at sonnet-4-6 ON PURPOSE. The sonnet-5 upgrade was built and measured;
+  // the five-arm run showed its recall gain is superadditive with the prompt
+  // change (39/53 together, 31/53 and 32/53 alone), so the model half was not
+  // shipped — it is the costlier one to unwind, needing a deploy where the
+  // prompt needs only a Langfuse label re-point. See the constant's docstring
+  // for the full table.
+  it("is pinned to claude-sonnet-4-6", () => {
+    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
   });
 
-  it("matches the literal evaluator model pin (three-way invariant)", () => {
-    // evaluate.test.ts:320 asserts the evaluator's call args use this exact
-    // literal. Together with the GENERATION_MODEL assertion above, this pins
-    // all three Claude paths (generator, validator, evaluator) to one model.
-    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
+  // Guards the request shaping: sonnet-4-6 ACCEPTS sampling params and does not
+  // default to adaptive thinking, so `validateDraft` must send `temperature`
+  // and omit `thinking` for it. Those two guards are keyed off the model
+  // string, so this pin is what keeps them on the correct branch.
+  it("is a model that accepts temperature and does not imply adaptive thinking", () => {
+    expect(/sonnet-5|opus-4-[7-9]|opus-5|fable/.test(VALIDATION_MODEL)).toBe(
+      false,
+    );
   });
 });
 
 // ---------------------------------------------------------------------------
-// VALIDATION_TOOL schema
+// buildValidationTool
 // ---------------------------------------------------------------------------
 
-describe("VALIDATION_TOOL", () => {
+describe("buildValidationTool", () => {
+  it("puts candidateFillers FIRST in properties and required for cloze", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    const schema = tool.input_schema as {
+      properties: Record<string, unknown>;
+      required: string[];
+    };
+    expect(Object.keys(schema.properties)[0]).toBe("candidateFillers");
+    expect(schema.required[0]).toBe("candidateFillers");
+  });
+
+  it("omits candidateFillers for sentence_construction (guards #606)", () => {
+    const tool = buildValidationTool(ExerciseType.SENTENCE_CONSTRUCTION);
+    const schema = tool.input_schema as {
+      properties: Record<string, unknown>;
+      required: string[];
+    };
+    expect(schema.properties).not.toHaveProperty("candidateFillers");
+    expect(schema.required).not.toContain("candidateFillers");
+  });
+
+  it("keeps the seven pre-existing required fields for every type", () => {
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
+      const schema = buildValidationTool(type).input_schema as {
+        required: string[];
+      };
+      for (const f of [
+        "qualityScore",
+        "ambiguous",
+        "contextSpoilsAnswer",
+        "levelMatch",
+        "grammarPointMatch",
+        "culturalIssues",
+        "flaggedReasons",
+      ]) {
+        expect(schema.required).toContain(f);
+      }
+    }
+  });
+
+  it("constrains verdict to the two-value enum", () => {
+    const schema = buildValidationTool(ExerciseType.CLOZE).input_schema as {
+      properties: { candidateFillers: { items: { properties: { verdict: { enum: string[] } } } } };
+    };
+    expect(schema.properties.candidateFillers.items.properties.verdict.enum).toEqual([
+      ...CANDIDATE_FILLER_VERDICTS,
+    ]);
+  });
+
   it("has the correct tool name", () => {
-    expect(VALIDATION_TOOL.name).toBe(VALIDATION_TOOL_NAME);
+    const tool = buildValidationTool(ExerciseType.CLOZE);
+    expect(tool.name).toBe(VALIDATION_TOOL_NAME);
     expect(VALIDATION_TOOL_NAME).toBe("submit_validation_result");
   });
 
-  it("declares all required fields", () => {
-    const required = (VALIDATION_TOOL.input_schema as { required: string[] })
-      .required;
-    expect(required).toContain("qualityScore");
-    expect(required).toContain("ambiguous");
-    expect(required).toContain("contextSpoilsAnswer");
-    expect(required).toContain("levelMatch");
-    expect(required).toContain("grammarPointMatch");
-    expect(required).toContain("culturalIssues");
-    expect(required).toContain("flaggedReasons");
-  });
-
   it("coverage properties include case and number axes", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
     const coverageProps = (
-      VALIDATION_TOOL.input_schema as {
+      tool.input_schema as {
         properties: {
           coverage: { properties: Record<string, unknown> };
         };
@@ -134,8 +189,9 @@ describe("VALIDATION_TOOL", () => {
   });
 
   it("coverage properties include the comparison axis", () => {
+    const tool = buildValidationTool(ExerciseType.CLOZE);
     const coverageProps = (
-      VALIDATION_TOOL.input_schema as {
+      tool.input_schema as {
         properties: {
           coverage: { properties: Record<string, unknown> };
         };
@@ -265,6 +321,64 @@ describe("parseValidationResult", () => {
 });
 
 // ---------------------------------------------------------------------------
+// parseValidationResult — candidateFillers leniency
+// ---------------------------------------------------------------------------
+
+describe("parseValidationResult — candidateFillers leniency", () => {
+  const base = {
+    qualityScore: 0.8,
+    ambiguous: false,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: [],
+  };
+
+  it("defaults to [] when the field is absent", () => {
+    expect(parseValidationResult(base).candidateFillers).toEqual([]);
+  });
+
+  it("coerces a non-array to [] without throwing", () => {
+    expect(
+      parseValidationResult({ ...base, candidateFillers: "nope" }).candidateFillers,
+    ).toEqual([]);
+  });
+
+  it("drops entries with a missing or non-string filler", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [
+        { filler: "el menos", verdict: "also-correct", reason: "fits" },
+        { verdict: "ruled-out", reason: "no filler key" },
+        { filler: 42, verdict: "ruled-out", reason: "non-string" },
+      ],
+    });
+    expect(r.candidateFillers).toEqual([
+      { filler: "el menos", verdict: "also-correct", reason: "fits" },
+    ]);
+  });
+
+  it("drops entries whose verdict is outside the enum", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [{ filler: "x", verdict: "maybe", reason: "r" }],
+    });
+    expect(r.candidateFillers).toEqual([]);
+  });
+
+  it("defaults a missing reason to the empty string rather than dropping", () => {
+    const r = parseValidationResult({
+      ...base,
+      candidateFillers: [{ filler: "x", verdict: "ruled-out" }],
+    });
+    expect(r.candidateFillers).toEqual([
+      { filler: "x", verdict: "ruled-out", reason: "" },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // validateDraft (mocked SDK)
 // ---------------------------------------------------------------------------
 
@@ -314,9 +428,10 @@ describe("validateDraft", () => {
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.model).toBe(VALIDATION_MODEL);
-    expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
+    // Sonnet 5 rejects non-default sampling params — see the "request shaping
+    // for Sonnet 5" describe block below for the dedicated coverage.
     expect(callArgs.max_tokens).toBe(VALIDATION_MAX_TOKENS);
-    expect(callArgs.tools).toEqual([VALIDATION_TOOL]);
+    expect(callArgs.tools).toEqual([buildValidationTool(ExerciseType.CLOZE)]);
     expect(callArgs.tool_choice).toEqual({
       type: "tool",
       name: VALIDATION_TOOL_NAME,
@@ -331,6 +446,103 @@ describe("validateDraft", () => {
     expect(callArgs.messages[0].content).toContain(
       "Validate this Cloze exercise",
     );
+  });
+
+  describe("validateDraft request shaping for Sonnet 5", () => {
+    it("omits temperature (Sonnet 5 rejects non-default sampling params)", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_1",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+        modelOverride: "claude-sonnet-5",
+      });
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty("temperature");
+    });
+
+    it("sends an explicit thinking: disabled so adaptive does not silently engage", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_2",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+        modelOverride: "claude-sonnet-5",
+      });
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.thinking).toEqual({ type: "disabled" });
+    });
+
+    it("budgets 2048 max_tokens so candidateFillers cannot truncate the tool call", () => {
+      expect(VALIDATION_MAX_TOKENS).toBe(2048);
+    });
+
+    it("keeps VALIDATION_TEMPERATURE exported at 0.0", () => {
+      expect(VALIDATION_TEMPERATURE).toBe(0.0);
+    });
+  });
+
+  // The production model is sonnet-4-6, which ACCEPTS sampling params and does
+  // not default to adaptive thinking — so the two guards above must take their
+  // other branch by default. Without these, reverting the model would silently
+  // leave the request shaped for a model we no longer call.
+  describe("validateDraft request shaping for the production model", () => {
+    it("sends temperature and omits thinking on sonnet-4-6", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_prod",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.model).toBe("claude-sonnet-4-6");
+      expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
+      expect(callArgs.thinking).toBeUndefined();
+    });
   });
 
   it("defaults missing usage fields to 0", async () => {
@@ -600,6 +812,69 @@ describe("validateDraft", () => {
     expect(capturedSystem).toContain("free-writing PROMPTS");
     expect(result.result.qualityScore).toBe(0.9);
   });
+
+  it("uses modelOverride when supplied", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_model",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-4-6",
+    });
+
+    expect(mockCreate.mock.calls[0][0].model).toBe("claude-sonnet-4-6");
+  });
+
+  it("sends temperature again when the override model accepts it", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_temp",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-4-6",
+    });
+
+    expect(mockCreate.mock.calls[0][0].temperature).toBe(0);
+  });
+
+  it("uses systemPromptOverride verbatim, bypassing Langfuse", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_override_prompt",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, output_tokens: 200 },
+    });
+
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      systemPromptOverride: "OVERRIDDEN",
+    });
+
+    expect(mockCreate.mock.calls[0][0].system[0].text).toBe("OVERRIDDEN");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -714,5 +989,76 @@ describe("sentence_construction validation prompt", () => {
   it("does not leak the SC scoring note into a cloze user prompt", () => {
     const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseSpec);
     expect(prompt).not.toContain("**Scoring note for sentence_construction:**");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// applyCandidateFillerConsistency
+// ---------------------------------------------------------------------------
+
+describe("applyCandidateFillerConsistency", () => {
+  const result = (over: Partial<ValidationResult>): ValidationResult => ({
+    qualityScore: 0.85, ambiguous: false, contextSpoilsAnswer: false,
+    levelMatch: true, grammarPointMatch: true, culturalIssues: [],
+    flaggedReasons: [], coverage: {}, candidateFillers: [], ...over,
+  });
+
+  it("flags an unlisted also-correct filler when ambiguous is false", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "fits" }] }),
+      "el más",
+      [],
+    );
+    expect(out.flaggedReasons).toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("NEVER mutates ambiguous", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      "el más",
+      [],
+    );
+    expect(out.ambiguous).toBe(false);
+  });
+
+  it("stays silent when the filler is enumerated in acceptableAnswers", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el menos", verdict: "also-correct", reason: "f" }] }),
+      "el más",
+      ["el menos"],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("stays silent when the also-correct filler IS correctAnswer (regression: correctAnswer is always listed as a candidate and always adjudicated also-correct)", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "el más", verdict: "also-correct", reason: "it is the correct answer" }] }),
+      "el más",
+      [],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("stays silent when ambiguous is already true", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ ambiguous: true, candidateFillers: [{ filler: "x", verdict: "also-correct", reason: "f" }] }),
+      "correct",
+      [],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("ignores ruled-out fillers", () => {
+    const out = applyCandidateFillerConsistency(
+      result({ candidateFillers: [{ filler: "x", verdict: "ruled-out", reason: "'ayer' forbids it" }] }),
+      "correct",
+      [],
+    );
+    expect(out.flaggedReasons).not.toContain(SELF_INCONSISTENT_REASON);
+  });
+
+  it("is a no-op on an empty candidateFillers array", () => {
+    const out = applyCandidateFillerConsistency(result({}), "correct", []);
+    expect(out.flaggedReasons).toEqual([]);
   });
 });

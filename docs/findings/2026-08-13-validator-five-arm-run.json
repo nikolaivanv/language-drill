@@ -1,0 +1,81 @@
+{
+  "runName": "blind",
+  "datasetName": "validator-ambiguity-cases.json",
+  "startedAt": "2026-08-13T17:14:25.437Z",
+  "caseCount": 82,
+  "costCapped": false,
+  "arms": [
+    {
+      "arm": "baseline",
+      "kind": "validator",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "prior",
+      "templateSha": "22f5bfb9",
+      "metrics": {
+        "recallOnAmbiguous": 0.6037735849056604,
+        "falseFlagRateOnClean": 0.1724137931034483,
+        "selfInconsistentRate": 0.036585365853658534,
+        "n": 82
+      },
+      "costUsd": 2.1371,
+      "errors": []
+    },
+    {
+      "arm": "prompt-only",
+      "kind": "validator",
+      "modelOverride": "claude-sonnet-4-6",
+      "promptSource": "current",
+      "templateSha": "ec4f15ed",
+      "metrics": {
+        "recallOnAmbiguous": 0.6037735849056604,
+        "falseFlagRateOnClean": 0.06896551724137931,
+        "selfInconsistentRate": 0.04878048780487805,
+        "n": 82
+      },
+      "costUsd": 2.1189,
+      "errors": []
+    },
+    {
+      "arm": "model-only",
+      "kind": "validator",
+      "promptSource": "prior",
+      "templateSha": "22f5bfb9",
+      "metrics": {
+        "recallOnAmbiguous": 0.5849056603773585,
+        "falseFlagRateOnClean": 0.13793103448275862,
+        "selfInconsistentRate": 0.06097560975609756,
+        "n": 82
+      },
+      "costUsd": 2.5955,
+      "errors": []
+    },
+    {
+      "arm": "both",
+      "kind": "validator",
+      "promptSource": "current",
+      "templateSha": "ec4f15ed",
+      "metrics": {
+        "recallOnAmbiguous": 0.7358490566037735,
+        "falseFlagRateOnClean": 0.20689655172413793,
+        "selfInconsistentRate": 0.036585365853658534,
+        "n": 82
+      },
+      "costUsd": 2.6504,
+      "errors": []
+    },
+    {
+      "arm": "blind-solver",
+      "kind": "solver",
+      "modelOverride": "claude-sonnet-5",
+      "metrics": {
+        "recallOnAmbiguous": 0.7169811320754716,
+        "falseFlagRateOnClean": 0.41379310344827586,
+        "selfInconsistentRate": null,
+        "n": 82
+      },
+      "costUsd": 0.5924,
+      "errors": []
+    }
+  ],
+  "totalCostUsd": 10.0942
+}

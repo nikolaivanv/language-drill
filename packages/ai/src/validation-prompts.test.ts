@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -300,7 +300,28 @@ describe("buildValidationSystemPrompt", () => {
     //     (descriptions, examples, common errors, CEFR descriptors) which
     //     varies by language/level and is not what the NFR budgets — those
     //     substitutions are already counted against the API per-call.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(15000);
+    // NOTE ON THIS CEILING: it has now been breached twice by CONCURRENT edits,
+    // not by any single one. Two branches each add a rule and each raise the
+    // ceiling just enough for their own addition, so the merge lands over both.
+    // First merge: 14500 (candidateFillers) + 14000 (gloss rule) -> body 14,729.
+    // Second merge: 16000 (this branch) + 15000 (main's #644) -> body 15,550.
+    // Raised to 17000 (~1.4KB headroom) rather than the minimum that passes, so
+    // the next concurrent pair does not re-trip it. The ceiling exists to catch
+    // unbounded prompt growth, not to be re-tuned on every merge.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(17000);
+  });
+
+  it("instructs cloze validation to fill candidateFillers before deciding ambiguous", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "fill `candidateFillers` before deciding this field",
+    );
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain(
+      "quote the span of the visible sentence that forbids it",
+    );
+  });
+
+  it("pins the bumped validation prompt version", () => {
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
   });
 });
 
@@ -954,7 +975,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe('validate@2026-08-13');
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
   });
 });
 

@@ -6,11 +6,11 @@
  * `parseValidationResult` lands in Task 7; `validateDraft` lands in Task 8.
  *
  * Mirrors `evaluate.ts` structurally — same `Anthropic.Tool` shape, same
- * `tool_choice` form (Task 8), same cached `system` block (Task 8). The model
- * id is intentionally pinned to the same `claude-sonnet-4-6` constant the
- * generator and evaluator use today (resolved decision #1 in
- * `docs/exercise-generation-plan.md`); the cross-file invariant is asserted in
- * `validate.test.ts` (Task 9).
+ * `tool_choice` form, same cached `system` block, same per-model request
+ * shaping for sampling params and thinking. As of 2026-08-11 the model is
+ * deliberately DECOUPLED from `GENERATION_MODEL` (see `VALIDATION_MODEL`'s
+ * doc comment below) — the old three-way generator/validator/evaluator pin
+ * asserted in `validate.test.ts` no longer holds.
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
@@ -46,14 +46,34 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Authoritative model id for the validator. Asserted equal to
- * `GENERATION_MODEL` (and to evaluate.ts's pinned literal) in
- * `validate.test.ts` so the three Claude paths (generator, validator,
- * evaluator) cannot drift independently.
+ * Validator model. Deliberately still `claude-sonnet-4-6` — the sonnet-5
+ * upgrade was built, measured, and NOT shipped.
+ *
+ * The five-arm run on 2026-08-13 (82 audited cases, 53 ambiguous / 29 clean,
+ * `docs/findings/2026-08-12-validator-alternative-enumeration-experiment.md`):
+ *
+ *   arm           recall        false-flag
+ *   baseline      32/53 60.4%   5/29 17.2%   sonnet-4-6, prior prompt
+ *   prompt-only   32/53 60.4%   2/29  6.9%   sonnet-4-6, THIS prompt  <- shipped
+ *   model-only    31/53 58.5%   4/29 13.8%   sonnet-5,   prior prompt
+ *   both          39/53 73.6%   6/29 20.7%   sonnet-5,   this prompt
+ *
+ * The recall gain is superadditive — it appears ONLY with both changes, and
+ * neither alone moves recall at all. Shipping the prompt without the model
+ * therefore buys precision (false-flags 5 -> 2, the best discrimination of any
+ * arm) and NOT the +7-case recall gain.
+ *
+ * The model was held back because it is the costlier half of that bet: reverting
+ * `VALIDATION_MODEL` needs a deploy, whereas the prompt reverts by re-pointing a
+ * Langfuse label. Revisit `both` once the interaction is confirmed on a second
+ * run — `pnpm eval:validator` reproduces the table above.
  */
 export const VALIDATION_MODEL = "claude-sonnet-4-6" as const;
 
-export const VALIDATION_MAX_TOKENS = 1024;
+/** Sized for `candidateFillers` (~150-250 tokens) plus the seven verdict
+ *  fields; 1024 was the pre-enumeration budget and risks truncating the
+ *  forced tool call mid-JSON. Mirrors evaluate.ts's bump for the same reason. */
+export const VALIDATION_MAX_TOKENS = 2048;
 
 /** Strict reviewer: zero diversity, deterministic output. */
 export const VALIDATION_TEMPERATURE = 0.0;
@@ -64,121 +84,196 @@ export const VALIDATION_TEMPERATURE = 0.0;
 
 export const VALIDATION_TOOL_NAME = "submit_validation_result";
 
+// ---------------------------------------------------------------------------
+// Candidate fillers — working-out for the ambiguous verdict
+// ---------------------------------------------------------------------------
+
+export const CANDIDATE_FILLER_VERDICTS = ["also-correct", "ruled-out"] as const;
+
+export type CandidateFillerVerdict = (typeof CANDIDATE_FILLER_VERDICTS)[number];
+
+/** One adjudicated candidate fill. Non-load-bearing: never gates routing. */
+export type CandidateFiller = {
+  filler: string;
+  verdict: CandidateFillerVerdict;
+  reason: string;
+};
+
+const CANDIDATE_FILLERS_PROPERTY = {
+  type: "array" as const,
+  description:
+    "Fill this FIRST, before any other field. List 2-4 distinct fillers a " +
+    "competent speaker might write in the blank — including `correctAnswer` " +
+    "itself — and adjudicate each against the VISIBLE sentence alone, never " +
+    "against `correctAnswer`. This is your working-out for `ambiguous`, not a " +
+    "verdict.",
+  items: {
+    type: "object" as const,
+    properties: {
+      filler: { type: "string" as const, description: "The candidate fill." },
+      verdict: {
+        type: "string" as const,
+        enum: [...CANDIDATE_FILLER_VERDICTS],
+        description:
+          "`also-correct`: fully correct on the visible sentence AND satisfies " +
+          "the grammar point. `ruled-out`: something in the visible sentence " +
+          "forbids it.",
+      },
+      reason: {
+        type: "string" as const,
+        description:
+          "For `ruled-out`, quote the span of the visible sentence that forbids " +
+          "it. For `also-correct`, one clause on why it fits.",
+      },
+    },
+    required: ["filler", "verdict", "reason"],
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Existing validation properties (preserved byte-identical for prompt stability)
+// ---------------------------------------------------------------------------
+
 /**
  * Per-property descriptions restate the routing implication from plan §3.1
  * so Claude can self-calibrate while filling the tool input. The actual
  * routing happens in `routeValidationResult`
  * (packages/db/scripts/generate-exercises-validate.ts), not here.
  */
-export const VALIDATION_TOOL: Anthropic.Tool = {
-  name: VALIDATION_TOOL_NAME,
-  description:
-    "Submit the structured validation result for a generated language exercise.",
-  input_schema: {
-    type: "object" as const,
+const EXISTING_VALIDATION_PROPERTIES = {
+  qualityScore: {
+    type: "number",
+    description:
+      "Overall quality from 0.0 to 1.0. Below 0.5 will reject the draft; 0.5–0.7 will flag it for human review; >= 0.7 (with no other failures) auto-approves.",
+  },
+  ambiguous: {
+    type: "boolean",
+    description:
+      "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's `acceptableAnswers` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no `acceptableAnswers`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
+  },
+  contextSpoilsAnswer: {
+    type: "boolean",
+    description:
+      "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false. Exception: when the user prompt carries a scoring note declaring a digit-form or definition-based elicitation as intended for this cell, that declared cue is NOT spoilage.",
+  },
+  levelMatch: {
+    type: "boolean",
+    description:
+      "True if the exercise sits at the requested CEFR level. False if vocabulary or grammar drifts above or below the target level.",
+  },
+  grammarPointMatch: {
+    type: "boolean",
+    description:
+      "True if the exercise actually tests the target grammar point. False if the targeting is incidental or absent.",
+  },
+  culturalIssues: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      'Free-text descriptions of cultural concerns: stereotyping, sensitive content, exclusion. A single non-empty entry routes the draft to "rejected" regardless of qualityScore — this is intentional. Use sparingly.',
+  },
+  flaggedReasons: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
+  },
+  coverage: {
+    type: "object",
+    description:
+      "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
     properties: {
-      qualityScore: {
-        type: "number",
+      person: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.person],
         description:
-          "Overall quality from 0.0 to 1.0. Below 0.5 will reject the draft; 0.5–0.7 will flag it for human review; >= 0.7 (with no other failures) auto-approves.",
+          "Grammatical person/number realized by the target answer (the form the learner must produce).",
       },
-      ambiguous: {
-        type: "boolean",
+      wordClass: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.wordClass],
         description:
-          "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's `acceptableAnswers` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no `acceptableAnswers`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
+          "Part of speech of the target word (vocab_recall `expectedWord`).",
       },
-      contextSpoilsAnswer: {
-        type: "boolean",
+      polarity: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.polarity],
         description:
-          "True if the draft's `instructions` or `context` field gives away the answer — names the required suffix/form, states the rule's outcome, or otherwise lets the learner write the answer without engaging with the blank. Naming the rule category (e.g. 'vowel harmony', 'plural agreement after a numeral') is acceptable; stating the outcome (e.g. 'front vowel (e) requires -ler suffix' for a blank that takes -ler) is not. Auto-approval requires this to be false. Exception: when the user prompt carries a scoring note declaring a digit-form or definition-based elicitation as intended for this cell, that declared cue is NOT spoilage.",
+          "Whether the target sentence is affirmative or negative.",
       },
-      levelMatch: {
-        type: "boolean",
+      sentenceType: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.sentenceType],
         description:
-          "True if the exercise sits at the requested CEFR level. False if vocabulary or grammar drifts above or below the target level.",
+          "Clause type of the target sentence: declarative, interrogative, or imperative.",
       },
-      grammarPointMatch: {
-        type: "boolean",
+      number: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.number],
         description:
-          "True if the exercise actually tests the target grammar point. False if the targeting is incidental or absent.",
+          "Grammatical number realized by the target form (singular/plural).",
       },
-      culturalIssues: {
-        type: "array",
-        items: { type: "string" },
+      case: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.case],
         description:
-          'Free-text descriptions of cultural concerns: stereotyping, sensitive content, exclusion. A single non-empty entry routes the draft to "rejected" regardless of qualityScore — this is intentional. Use sparingly.',
+          "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
       },
-      flaggedReasons: {
-        type: "array",
-        items: { type: "string" },
+      comparison: {
+        type: "string",
+        enum: [...COVERAGE_AXIS_VALUES.comparison],
         description:
-          'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
-      },
-      coverage: {
-        type: "object",
-        description:
-          "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
-        properties: {
-          person: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.person],
-            description:
-              "Grammatical person/number realized by the target answer (the form the learner must produce).",
-          },
-          wordClass: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.wordClass],
-            description:
-              "Part of speech of the target word (vocab_recall `expectedWord`).",
-          },
-          polarity: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.polarity],
-            description:
-              "Whether the target sentence is affirmative or negative.",
-          },
-          sentenceType: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.sentenceType],
-            description:
-              "Clause type of the target sentence: declarative, interrogative, or imperative.",
-          },
-          number: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.number],
-            description:
-              "Grammatical number realized by the target form (singular/plural).",
-          },
-          case: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.case],
-            description:
-              "Grammatical case realized by the target form (nominative/accusative/dative/locative/ablative/genitive).",
-          },
-          comparison: {
-            type: "string",
-            enum: [...COVERAGE_AXIS_VALUES.comparison],
-            description:
-              "Comparison construction realized by the target: comparative (superiority), superlative, equative (equality), or less (inferiority).",
-          },
-        },
+          "Comparison construction realized by the target: comparative (superiority), superlative, equative (equality), or less (inferiority).",
       },
     },
-    required: [
-      "qualityScore",
-      "ambiguous",
-      "contextSpoilsAnswer",
-      "levelMatch",
-      "grammarPointMatch",
-      "culturalIssues",
-      "flaggedReasons",
-    ],
   },
 };
 
 // ---------------------------------------------------------------------------
+// Validation tool builder
+// ---------------------------------------------------------------------------
+
+export function buildValidationTool(exerciseType: ExerciseType): Anthropic.Tool {
+  const isCloze = exerciseType === ExerciseType.CLOZE;
+  return {
+    name: VALIDATION_TOOL_NAME,
+    description:
+      "Submit the structured validation result for a generated language exercise.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        // Ordering is the mechanism: the model emits its candidate search
+        // before the `ambiguous` verdict, so the verdict is conditioned on the
+        // search rather than replacing it. Mirrors evaluate.ts's required
+        // `reasoning` scratchpad as first tool field.
+        ...(isCloze ? { candidateFillers: CANDIDATE_FILLERS_PROPERTY } : {}),
+        ...EXISTING_VALIDATION_PROPERTIES,
+      },
+      required: [
+        ...(isCloze ? ["candidateFillers"] : []),
+        "qualityScore",
+        "ambiguous",
+        "contextSpoilsAnswer",
+        "levelMatch",
+        "grammarPointMatch",
+        "culturalIssues",
+        "flaggedReasons",
+      ],
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
+
+/** Eval-harness escape hatch. Production never sets these — the no-override
+ *  path is byte-identical to before. Mirrors generate.ts's
+ *  `spec.systemPromptOverride` and evaluate.ts's `modelOverride`. */
+export type ValidateDraftOptions = {
+  modelOverride?: string;
+  systemPromptOverride?: string;
+};
 
 export type ValidationResult = {
   /** 0..1 inclusive. */
@@ -213,6 +308,13 @@ export type ValidationResult = {
    * values present in `COVERAGE_AXIS_VALUES` survive parsing.
    */
   coverage: CoverageTags;
+  /**
+   * The validator's adjudicated candidate fills (cloze only). Strictly
+   * non-load-bearing: `routeValidationResult` ignores it and
+   * `parseValidationResult` coerces anything malformed to `[]`. Present so the
+   * `ambiguous` verdict is conditioned on a search rather than replacing one.
+   */
+  candidateFillers: CandidateFiller[];
 };
 
 export type ValidateDraftResult = {
@@ -293,6 +395,37 @@ function coerceCoverage(raw: Record<string, unknown>): CoverageTags {
   return out as CoverageTags;
 }
 
+/**
+ * Lenient reader for the non-load-bearing `candidateFillers` array. A missing
+ * or non-array value yields `[]`; entries lacking a string `filler` or a
+ * known `verdict` are dropped individually; a missing `reason` defaults to "".
+ * Never throws — a malformed scratchpad must never cost the draft (R8.2).
+ */
+function coerceCandidateFillers(
+  raw: Record<string, unknown>,
+): CandidateFiller[] {
+  const v = raw.candidateFillers;
+  if (!Array.isArray(v)) return [];
+  const out: CandidateFiller[] = [];
+  for (const entry of v) {
+    if (!isObject(entry)) continue;
+    const { filler, verdict, reason } = entry;
+    if (typeof filler !== "string") continue;
+    if (
+      typeof verdict !== "string" ||
+      !(CANDIDATE_FILLER_VERDICTS as readonly string[]).includes(verdict)
+    ) {
+      continue;
+    }
+    out.push({
+      filler,
+      verdict: verdict as CandidateFillerVerdict,
+      reason: typeof reason === "string" ? reason : "",
+    });
+  }
+  return out;
+}
+
 export function parseValidationResult(input: unknown): ValidationResult {
   if (!isObject(input)) {
     throw new ValidationParseError("Validation result must be an object");
@@ -330,6 +463,9 @@ export function parseValidationResult(input: unknown): ValidationResult {
   // Non-load-bearing coverage object — coerced leniently, never throws.
   const coverage = coerceCoverage(raw);
 
+  // Non-load-bearing candidateFillers array — coerced leniently, never throws.
+  const candidateFillers = coerceCandidateFillers(raw);
+
   return {
     qualityScore,
     ambiguous: raw.ambiguous as boolean,
@@ -339,6 +475,59 @@ export function parseValidationResult(input: unknown): ValidationResult {
     culturalIssues,
     flaggedReasons,
     coverage,
+    candidateFillers,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// applyCandidateFillerConsistency — self-consistency check (report-only)
+// ---------------------------------------------------------------------------
+
+export const SELF_INCONSISTENT_REASON = "validator-self-inconsistent";
+
+/** Case/whitespace-insensitive membership, matching how a learner's answer
+ *  would be compared against the stored list. Exported for
+ *  `eval-validator-run.ts`'s blind-solver arm, which needs the identical
+ *  "already enumerated" notion this module uses — see that file's
+ *  `blindSolverVerdict`. */
+export function listed(needle: string, haystack: readonly string[]): boolean {
+  const n = needle.trim().toLowerCase();
+  return haystack.some((h) => h.trim().toLowerCase() === n);
+}
+
+/**
+ * `candidateFillers` makes `ambiguous` derivable: an `also-correct` filler that
+ * is not `correctAnswer` and not in `acceptableAnswers` contradicts
+ * `ambiguous: false`.
+ *
+ * `correctAnswer` is passed explicitly (not read off a draft) so the accepted
+ * set mirrors the contract in `fluency.ts:90`
+ * (`[correctAnswer, ...(acceptableAnswers ?? [])]`) — `acceptableAnswers` is
+ * only the ADDITIONAL answers, and the tool schema always has the model list
+ * `correctAnswer` itself as a candidate (marked `also-correct` by
+ * definition), so omitting it here made the signal fire on nearly every
+ * cloze.
+ *
+ * REPORT-ONLY BY DESIGN. This appends a `flaggedReasons` entry and returns a
+ * new result; it must never mutate `ambiguous` or change routing. Flipping
+ * verdicts from an unvetted scratchpad is how #606's over-flagging happened.
+ * Promote to enforcement only once the replay harness shows the enumeration is
+ * trustworthy.
+ */
+export function applyCandidateFillerConsistency(
+  result: ValidationResult,
+  correctAnswer: string,
+  acceptableAnswers: readonly string[] | undefined,
+): ValidationResult {
+  if (result.ambiguous) return result;
+  const accepted = [correctAnswer, ...(acceptableAnswers ?? [])];
+  const contradiction = result.candidateFillers.some(
+    (c) => c.verdict === "also-correct" && !listed(c.filler, accepted),
+  );
+  if (!contradiction) return result;
+  return {
+    ...result,
+    flaggedReasons: [...result.flaggedReasons, SELF_INCONSISTENT_REASON],
   };
 }
 
@@ -374,6 +563,7 @@ export async function validateDraft(
   draft: ExerciseDraft,
   spec: GenerationSpec,
   signal?: AbortSignal,
+  options?: ValidateDraftOptions,
 ): Promise<ValidateDraftResult> {
   // Top-of-function guard. Keys off `draft.contentJson.type` (not
   // `spec.exerciseType`) so a caller that hands the validator a draft whose
@@ -388,11 +578,13 @@ export async function validateDraft(
 
   const isDictation = draft.contentJson.type === ExerciseType.DICTATION;
   const isFreeWriting = draft.contentJson.type === ExerciseType.FREE_WRITING;
-  const systemText = isDictation
-    ? await buildDictationValidationSystemPrompt(spec)
-    : isFreeWriting
-      ? await buildFreeWritingValidationSystemPrompt(spec)
-      : await buildValidationSystemPrompt(spec);
+  const systemText =
+    options?.systemPromptOverride ??
+    (isDictation
+      ? await buildDictationValidationSystemPrompt(spec)
+      : isFreeWriting
+        ? await buildFreeWritingValidationSystemPrompt(spec)
+        : await buildValidationSystemPrompt(spec));
   // The user-prompt builders take the NARROWED content, so the discriminant
   // must be inlined here — TypeScript cannot narrow a union through a boolean
   // alias (the `isDictation` / `isFreeWriting` consts above only gate the
@@ -404,24 +596,38 @@ export async function validateDraft(
         ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
         : buildValidationUserPrompt(draft, spec);
 
-  const response = await client.messages.create(
-    {
-      model: VALIDATION_MODEL,
-      max_tokens: VALIDATION_MAX_TOKENS,
-      system: [
-        {
-          type: "text" as const,
-          text: systemText,
-          cache_control: { type: "ephemeral" as const },
-        },
-      ],
-      messages: [{ role: "user" as const, content: userText }],
-      tools: [VALIDATION_TOOL],
-      tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
-      temperature: VALIDATION_TEMPERATURE,
-    },
-    { signal },
+  // Per-model request shaping (see evaluate.ts:399-411 for the same guards):
+  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
+  //    (`temperature: 0` → 400), so temperature only goes to models that take it.
+  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when `thinking` is omitted —
+  //    send an explicit `disabled` so this stays a model change and not a
+  //    silent thinking change (which would also spend against max_tokens).
+  const effectiveModel = options?.modelOverride ?? VALIDATION_MODEL;
+  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(
+    effectiveModel,
   );
+  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(
+    effectiveModel,
+  );
+
+  const request: Anthropic.MessageCreateParamsNonStreaming = {
+    model: effectiveModel,
+    max_tokens: VALIDATION_MAX_TOKENS,
+    system: [
+      {
+        type: "text" as const,
+        text: systemText,
+        cache_control: { type: "ephemeral" as const },
+      },
+    ],
+    messages: [{ role: "user" as const, content: userText }],
+    tools: [buildValidationTool(draft.contentJson.type)],
+    tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
+  };
+  if (!rejectsSamplingParams) request.temperature = VALIDATION_TEMPERATURE;
+  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
+
+  const response = await client.messages.create(request, { signal });
 
   const toolUseBlock = response.content.find(
     (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
@@ -441,7 +647,15 @@ export async function validateDraft(
     );
   }
 
-  const result = parseValidationResult(toolUseBlock.input);
+  const parsed = parseValidationResult(toolUseBlock.input);
+  const result =
+    draft.contentJson.type === ExerciseType.CLOZE
+      ? applyCandidateFillerConsistency(
+          parsed,
+          draft.contentJson.correctAnswer,
+          draft.contentJson.acceptableAnswers,
+        )
+      : parsed;
   const tokenUsage = readUsage(response);
   return { result, tokenUsage };
 }
