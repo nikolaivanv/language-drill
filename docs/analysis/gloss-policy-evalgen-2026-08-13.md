@@ -128,3 +128,38 @@ work in this repo — the root `test` script already passes `--concurrency=4`
 and turbo rejects the duplicate argument. Piping that failure through `tail`
 masks it as exit 0. Run plain `pnpm test` from the **repo root** and check the
 real exit code.
+
+---
+
+## TR ordinal demote — applied 2026-08-13
+
+`pnpm demote:pool --language TR --cefr A1 --type cloze
+--grammar-point tr-a1-numbers-ordinals --reason pool-hygiene --apply`, run
+against **production** (`br-green-waterfall-ancrvpr5`, endpoint
+`ep-withered-hall-an34g3y2`) with an explicit `DATABASE_URL` override — the
+local `.env` points at the **dev** branch (`ep-holy-union-anhivmbh`), so the
+default invocation would have hit the wrong database.
+
+**20 rows demoted** to `review_status='rejected'`,
+`demotion_reason='pool-hygiene'`. Verified after:
+
+| type | review_status | demotion_reason | rows |
+|---|---|---|---:|
+| cloze | flagged | — | 34 |
+| cloze | rejected | pool-hygiene | **20** |
+| translation | auto-approved | — | 20 |
+| translation | flagged | — | 18 |
+
+Zero approved cloze remain in the cell; the point keeps its 20 approved
+translations. No mastery-stale reminder was printed, which is correct —
+`pool-hygiene` does not revoke learner credit, so no `backfill:mastery` run is
+needed.
+
+**`demote:pool` writes no rollback artifact of its own.** The 20 row IDs and
+their prior state are recorded in
+`docs/analysis/tr-ordinals-demote-2026-08-13.json`, committed to the repo
+rather than a gitignored directory — the same class of record that was lost
+with the #642 sweep artifact. Rollback is the `UPDATE` stored in that file.
+
+The cell stays empty until nightly pre-generation is un-paused
+(`infra/bin/app.ts:54`). That was the accepted trade.
