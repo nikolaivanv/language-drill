@@ -108,6 +108,41 @@ const FIXTURES_DIR = path.join(__dirname, "fixtures");
 const EVAL_RUNS_DIR = "./eval-runs";
 
 // ---------------------------------------------------------------------------
+// blindSolverVerdict — pure verdict function (Task 2)
+// ---------------------------------------------------------------------------
+
+/** Case/whitespace-insensitive membership — same contract as validate.ts's
+ *  `listed`, duplicated here rather than exported because that one is module
+ *  -private and this file is a script, not a consumer of that internal. */
+function listedIn(needle: string, haystack: readonly string[]): boolean {
+  const n = needle.trim().toLowerCase();
+  return haystack.some((h) => h.trim().toLowerCase() === n);
+}
+
+/**
+ * The blind solver's ambiguity verdict: a crafted alternative that is fully
+ * correct on the visible sentence, and is NOT already enumerated, IS the
+ * fixture's definition of an ambiguous item.
+ *
+ * Deliberately ignores `probe.correctConfidence` and `probe.ambiguous`. Both
+ * are recorded in the per-case output as free observations, but letting either
+ * decide the verdict would introduce a threshold fitted on the same 82 cases
+ * this arm is measured against.
+ */
+export function blindSolverVerdict(
+  probe: { alt: string | null; correctConfidence?: number; ambiguous?: boolean },
+  content: { correctAnswer: string; acceptableAnswers?: string[] },
+): { ambiguous: boolean; competitor: string | null } {
+  const alt = probe.alt;
+  if (alt === null || alt.trim() === "") {
+    return { ambiguous: false, competitor: null };
+  }
+  const accepted = [content.correctAnswer, ...(content.acceptableAnswers ?? [])];
+  if (listedIn(alt, accepted)) return { ambiguous: false, competitor: null };
+  return { ambiguous: true, competitor: alt };
+}
+
+// ---------------------------------------------------------------------------
 // Fixture case — one row of `validator-ambiguity-cases.json`
 // ---------------------------------------------------------------------------
 

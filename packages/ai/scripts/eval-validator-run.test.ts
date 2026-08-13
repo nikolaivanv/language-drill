@@ -32,6 +32,7 @@ import { SELF_INCONSISTENT_REASON } from "../src/validate.js";
 import {
   ARMS,
   PRIOR_TEMPLATE,
+  blindSolverVerdict,
   computeArmMetrics,
   computeValidatorSummary,
   loadValidatorCases,
@@ -115,6 +116,71 @@ describe("computeArmMetrics", () => {
       [{ ambiguous: true }, { ambiguous: false }],
     );
     expect(m.n).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// blindSolverVerdict — pure, no mocking (Task 2)
+// ---------------------------------------------------------------------------
+
+type QaProbe = {
+  correct: string;
+  correctConfidence: number;
+  wrong: string;
+  alt: string | null;
+  ambiguous: boolean;
+  ambiguityNote: string;
+};
+
+const probe = (over: Partial<QaProbe> = {}): QaProbe => ({
+  correct: "de", correctConfidence: 0.9, wrong: "xx",
+  alt: null, ambiguous: false, ambiguityNote: "", ...over,
+});
+const content = (over: Partial<ClozeContent> = {}): ClozeContent => ({
+  type: ExerciseType.CLOZE, instructions: "i", sentence: "s ___ e",
+  correctAnswer: "de", acceptableAnswers: [], ...over,
+});
+
+describe("blindSolverVerdict", () => {
+  it("is not ambiguous when the solver crafted no alternative", () => {
+    expect(blindSolverVerdict(probe({ alt: null }), content()).ambiguous).toBe(false);
+  });
+
+  it("is not ambiguous when the alt equals correctAnswer", () => {
+    expect(blindSolverVerdict(probe({ alt: "de" }), content()).ambiguous).toBe(false);
+  });
+
+  it("is not ambiguous when the alt is enumerated in acceptableAnswers", () => {
+    const r = blindSolverVerdict(probe({ alt: "para" }), content({ acceptableAnswers: ["para"] }));
+    expect(r.ambiguous).toBe(false);
+  });
+
+  it("is ambiguous when the alt is unlisted, and names the competitor", () => {
+    const r = blindSolverVerdict(probe({ alt: "para" }), content());
+    expect(r.ambiguous).toBe(true);
+    expect(r.competitor).toBe("para");
+  });
+
+  it("matches case- and whitespace-insensitively", () => {
+    const r = blindSolverVerdict(probe({ alt: "  DE " }), content());
+    expect(r.ambiguous).toBe(false);
+  });
+
+  it("ignores correctConfidence entirely", () => {
+    // A very low confidence must NOT by itself produce an ambiguous verdict —
+    // the spec forbids a tunable threshold.
+    const r = blindSolverVerdict(probe({ alt: null, correctConfidence: 0.01 }), content());
+    expect(r.ambiguous).toBe(false);
+  });
+
+  it("ignores the crafter's own ambiguous flag entirely", () => {
+    const r = blindSolverVerdict(probe({ alt: null, ambiguous: true }), content());
+    expect(r.ambiguous).toBe(false);
+  });
+
+  it("treats a missing acceptableAnswers as an empty list", () => {
+    const c = content(); delete (c as { acceptableAnswers?: string[] }).acceptableAnswers;
+    expect(blindSolverVerdict(probe({ alt: "para" }), c).ambiguous).toBe(true);
   });
 });
 
