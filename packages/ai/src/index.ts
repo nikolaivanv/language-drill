@@ -469,3 +469,39 @@ export type {
   CollapseVerdictName,
   CollapseConfidence,
 } from "./collapse-triage.js";
+
+export {
+  GLOSS_SPOILAGE_PROMPT_VERSION,
+  GLOSS_SPOILAGE_TOOL_NAME,
+  GLOSS_ROW_TOOL_NAME,
+  GLOSS_SPOILAGE_MODEL,
+  GLOSS_SPOILAGE_MAX_TOKENS,
+  GLOSS_SPOILAGE_TEMPERATURE,
+  parsePointTriageVerdict,
+  parseGlossVerdict,
+  triageGlossPoint,
+  judgeGlossRow,
+} from "./gloss-spoilage.js";
+export type {
+  PointTriageVerdict,
+  GlossVerdict,
+  PointTriageInput,
+  GlossRowInput,
+} from "./gloss-spoilage.js";
+
+export {
+  VARIANT_SEED_CLASSIFIER_PROMPT_VERSION,
+  VARIANT_SEED_CLASSIFIER_TOOL_NAME,
+  VARIANT_SEED_CLASSIFIER_MODEL,
+  VARIANT_SEED_CLASSIFIER_TOOL,
+  buildClassifierSystemPrompt,
+  buildClassifierUserPrompt,
+  parseClassifierResult,
+  classifyVariantSeeds,
+  ClassifierResultError,
+} from "./variant-seed-classifier.js";
+export type {
+  ClassifierRow,
+  ClassifierAssignment,
+  ClassifierConfidence,
+} from "./variant-seed-classifier.js";

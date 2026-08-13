@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "language": "ES",
+    "cefr": "B1",
+    "perPoint": 2,
+    "sampledCount": 20,
+    "seed": 1,
+    "model": "claude-opus-4-8",
+    "costUsd": 1.0279,
+    "startedAt": "2026-07-22T22:48:02.048Z",
+    "costCapped": false
+  },
+  "summary": {
+    "sampled": 20,
+    "flagged": 3,
+    "byReason": {
+      "acceptable_answers_gap": 3
+    },
+    "byType": {
+      "cloze": 3
+    },
+    "ambiguityNotes": 0,
+    "lowConfidenceSolves": 0
+  },
+  "flags": [
+    {
+      "exerciseId": "42183fad-caa9-5d8d-b95f-c04104ca2f74",
+      "grammarPointKey": "es-b1-adjective-de-infinitive",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "B1",
+      "flags": [
+        "acceptable_answers_gap"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "La instrucción pide elegir entre \"de\" o nada, aunque las opciones incluyan \"que\" y \"para\"; la estructura \"es difícil de + infinitivo\" es la natural.",
+      "answers": {
+        "correct": "de",
+        "wrong": "para",
+        "alt": "(nothing)"
+      },
+      "confidence": 0.9,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0,
+          "band": "fail"
+        },
+        "alt": {
+          "score": 0,
+          "band": "fail"
+        }
+      },
+      "promptSeen": "Fill in the blank with either \"de\" or nothing (leave it out) to complete the sentence correctly.\nEsa canción es difícil ___ olvidar.\nOptions: de, que, para, (nothing)"
+    },
+    {
+      "exerciseId": "ca70d729-2619-5421-8c5f-16cdd77d4e60",
+      "grammarPointKey": "es-b1-collective-agreement",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "B1",
+      "flags": [
+        "acceptable_answers_gap"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "\"La gente\" es singular colectivo, así que el presente \"interpreta\" es la respuesta natural; el error típico es la concordancia plural \"interpretan\".",
+      "answers": {
+        "correct": "interpreta",
+        "wrong": "interpretan",
+        "alt": "interpretó"
+      },
+      "confidence": 0.9,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0.3,
+          "band": "fail"
+        },
+        "alt": {
+          "score": 0.3,
+          "band": "fail"
+        }
+      },
+      "promptSeen": "Fill in the blank with the correct form of the verb in parentheses.\nLa gente del barrio ___ la nueva señal de tráfico de manera diferente. (interpretar)"
+    },
+    {
+      "exerciseId": "1c8afa03-50f9-566b-9adc-f8578e7b606a",
+      "grammarPointKey": "es-b1-deber-obligation-probability",
+      "type": "cloze",
+      "language": "ES",
+      "cefr": "B1",
+      "flags": [
+        "acceptable_answers_gap"
+      ],
+      "ambiguous": false,
+      "ambiguityNote": "La tarea distingue \"deber\" (obligación) de \"deber de\" (probabilidad); aquí se expresa obligación/consejo, no suposición.",
+      "answers": {
+        "correct": "Debería",
+        "wrong": "Debo de",
+        "alt": "Debo"
+      },
+      "confidence": 0.78,
+      "verdicts": {
+        "correct": {
+          "score": 1,
+          "band": "pass"
+        },
+        "wrong": {
+          "score": 0.15,
+          "band": "fail"
+        },
+        "alt": {
+          "score": 0.35,
+          "band": "fail"
+        }
+      },
+      "promptSeen": "Fill in the blank with the correct form of \"deber\" or \"deber de\" to complete the sentence naturally.\nContext: Deber + infinitivo vs. deber de + infinitivo\nAyer rompí el vaso sin querer. ___ tener más cuidado la próxima vez.\nOptions: Debo, Debo de, Debería, Debo de tener"
+    }
+  ],
+  "ambiguity": [],
+  "errors": []
+}

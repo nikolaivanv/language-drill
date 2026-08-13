@@ -30,6 +30,7 @@
     "backfill:conjugation": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:conjugation",
     "backfill:mastery": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:mastery",
     "backfill:demotion-reason": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:demotion-reason",
+    "backfill:variant-seeds": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:variant-seeds",
     "bootstrap-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai bootstrap-prompts",
     "push-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai push-prompts",
     "eval:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:export",
@@ -38,7 +39,8 @@
     "eval:gen:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen:export",
     "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen",
     "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample",
-    "audit:collapse": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:collapse"
+    "audit:collapse": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:collapse",
+    "audit:gloss": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:gloss"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",

@@ -20,6 +20,7 @@
     "qa:sample": "tsx scripts/qa-sample-run.ts",
     "audit:collapse": "tsx scripts/audit-collapse.ts",
     "eval:validator": "tsx scripts/eval-validator-run.ts",
+    "audit:gloss": "tsx scripts/audit-gloss.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
