@@ -65,12 +65,15 @@ template locally — Langfuse is never consulted (see Traps, below).
 over the `ambiguous` bucket **without** raising the false-flag rate on `clean`. A recall
 gain bought with over-flagging is a #606 repeat and does not ship.
 
-> **⚠️ Superseded.** The run below used a 31-case fixture that an independent audit
-> later found unsound (13 of 42 `clean` cases were actually ambiguous, all poisoning
-> in one direction). It also predates the discovery that `content.instructions` was
-> never rendered for cloze. **Read "Re-run on the corrected instrument" at the end of
-> this document for the numbers that stand.** The original run is kept because its
-> traps section is what led to both discoveries.
+> **⚠️ Superseded twice.** The run below used a 31-case fixture an independent
+> audit later found unsound, and predates both the `content.instructions`
+> discovery and the `#639` prompt change. **The numbers that stand are in
+> "Five-arm run on the re-anchored instrument" at the end of this document** —
+> where recall finally moved and the shipping decision was made. The two earlier
+> runs are kept because their traps sections are what produced every subsequent
+> correction, and because the contrast between them is itself the finding: the
+> same intervention read null twice and positive once, purely because the
+> instrument was wrong the first two times.
 
 ## Results (superseded — see the re-run)
 
@@ -274,6 +277,99 @@ removes: show a fresh call only the rendered learner view, ask it to fill the bl
 and compare. `qa-sample`'s `renderLearnerView` + `craftProbeAnswers` already
 implement most of it — and as of this branch that learner view is finally accurate
 for cloze.
+
+---
+
+# Five-arm run on the re-anchored instrument (2026-08-13) — the result that shipped
+
+**These supersede everything above.** Raw data:
+`packages/ai/eval-runs/validator-blind.json`.
+
+Three things changed since the previous run, all of which had to be fixed before
+the numbers meant anything:
+
+1. **The blind-solver arm was added** — it judges from the learner view alone and
+   never sees `correctAnswer`.
+2. **`main` was merged.** `#639` had changed the validator prompt to render
+   `glossEn`, so the branch's "prior" template was a lineage production no longer
+   used. The baseline fixture was re-anchored on `main`, moving the prompt SHAs
+   `343acb0d → 22f5bfb9` (prior) and `9b65c3e8 → ec4f15ed` (current).
+3. **A confound was removed.** `craftProbeAnswers` had no thinking guard, so the
+   blind arm would have run with *adaptive thinking* while every sighted arm ran
+   with thinking explicitly disabled — an effort difference on the exact axis this
+   investigation claims is inert, plus a truncation path that would have silently
+   dropped cases from the solver arm only.
+
+## Results
+
+82 cases (53 `ambiguous` / 29 `clean`), 410 calls, 0 errors, $10.09. All five arms
+scored `n = 82`.
+
+| Arm | Model | Prompt | Recall (n=53) | False-flag (n=29) | Cost |
+|---|---|---|---|---|---|
+| `baseline` | sonnet-4-6 | prior | 60.4% (32/53) | 17.2% (5/29) | $2.14 |
+| `prompt-only` | sonnet-4-6 | new | 60.4% (32/53) | **6.9%** (2/29) | $2.12 |
+| `model-only` | sonnet-5 | prior | 58.5% (31/53) | 13.8% (4/29) | $2.60 |
+| `both` | sonnet-5 | new | **73.6%** (39/53) | 20.7% (6/29) | $2.65 |
+| `blind-solver` | sonnet-5 | blind | 71.7% (38/53) | **41.4%** (12/29) | $0.59 |
+
+## The criterion, honestly
+
+Pre-registered: *recall meaningfully above 60.4% **without** false-flag rising
+above ~13.8%*. `both` clears the recall bar decisively (+7 cases, +13.2pp) and
+misses the false-flag bar by **one case** (5/29 → 6/29).
+
+**By the letter, it fails.** That is recorded as-is rather than reinterpreted —
+the point of pre-registering is to prevent exactly the post-hoc rewrite that a
+near-miss invites. But the criterion was written to catch recall *bought with*
+over-flagging (the #606 pattern). What happened is +7 recall for +1 false-flag: a
+7:1 trade, not that pattern.
+
+## The finding: the effect is superadditive
+
+Neither change moves recall alone — `prompt-only` 32/53 and `model-only` 31/53,
+against baseline's 32/53. **Together they reach 39/53.**
+
+This also explains the two earlier null results. The previous run measured `both`
+against the *pre-`#639`* prompt lineage and got 30/53. `candidateFillers` appears
+to need the gloss-consistency rule underneath it to pay off — the enumeration step
+is only useful once the validator can also see the gloss it is enumerating against.
+
+Two null results were therefore not "the intervention does nothing" but "the
+intervention does nothing *on that base*". That is only visible because the
+instrument was re-anchored; on the old lineage the interaction was invisible.
+
+## The blind solver: hypothesis directionally confirmed, not shippable
+
+Recall 38/53 against baseline's 32 — **blindness genuinely finds ambiguity that
+sighted review misses**, which is what the access hypothesis predicted, and it
+does so at **$0.59, 4.5× cheaper** than any sighted arm.
+
+But it flags **12 of 29 known-clean items**. Its discrimination (recall −
+false-flag = 30.3) is the *worst* of all five arms, below baseline's 43.2. A
+solver asked "is there another valid answer?" without knowing the intended one
+will manufacture plausible alternatives for well-formed items — the failure mode
+is structural, not a tuning problem.
+
+So it is not a gate. Its plausible role is a cheap **pre-filter** feeding a sighted
+second pass: at 4.5× cheaper with 72% recall, it could cut the population a
+sighted validator has to examine, provided the second pass carries the precision.
+
+## What shipped, and what did not
+
+**Shipped: the prompt, on `claude-sonnet-4-6`.** `prompt-only` has the best
+discrimination of any arm (53.5) — it cut false-flags from 5 to 2 while holding
+recall exactly.
+
+**Held back: the sonnet-5 upgrade**, and with it the +7-case recall gain, which
+exists only in combination. The model is the costlier half to unwind — reverting
+`VALIDATION_MODEL` needs a deploy, whereas the prompt reverts by re-pointing a
+Langfuse label. Worth revisiting once the interaction is confirmed on a second run.
+
+**Caveats.** One run, n=53 and n=29. A 7-case shift is the largest movement
+observed across three runs but is not a confidence interval. `baseline` was stable
+across the last two runs (60.4% recall both times; false-flag 4 → 5 cases), which
+is mild evidence the fixture measures consistently.
 
 ## Reproducing
 

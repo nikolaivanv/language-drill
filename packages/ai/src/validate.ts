@@ -46,14 +46,29 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Validator model. DECOUPLED from `GENERATION_MODEL` as of 2026-08-11: a
- * validator miss ships a defect to learners and costs a demote-plus-backfill
- * repass, whereas a generator miss wastes one draft — so the validator is the
- * cheaper place to spend capability. Same $3/$15 list price as sonnet-4-6.
- * Gated by `pnpm eval:validator` against the labelled ambiguity fixture;
- * revert by restoring this one constant.
+ * Validator model. Deliberately still `claude-sonnet-4-6` — the sonnet-5
+ * upgrade was built, measured, and NOT shipped.
+ *
+ * The five-arm run on 2026-08-13 (82 audited cases, 53 ambiguous / 29 clean,
+ * `docs/findings/2026-08-12-validator-alternative-enumeration-experiment.md`):
+ *
+ *   arm           recall        false-flag
+ *   baseline      32/53 60.4%   5/29 17.2%   sonnet-4-6, prior prompt
+ *   prompt-only   32/53 60.4%   2/29  6.9%   sonnet-4-6, THIS prompt  <- shipped
+ *   model-only    31/53 58.5%   4/29 13.8%   sonnet-5,   prior prompt
+ *   both          39/53 73.6%   6/29 20.7%   sonnet-5,   this prompt
+ *
+ * The recall gain is superadditive — it appears ONLY with both changes, and
+ * neither alone moves recall at all. Shipping the prompt without the model
+ * therefore buys precision (false-flags 5 -> 2, the best discrimination of any
+ * arm) and NOT the +7-case recall gain.
+ *
+ * The model was held back because it is the costlier half of that bet: reverting
+ * `VALIDATION_MODEL` needs a deploy, whereas the prompt reverts by re-pointing a
+ * Langfuse label. Revisit `both` once the interaction is confirmed on a second
+ * run — `pnpm eval:validator` reproduces the table above.
  */
-export const VALIDATION_MODEL = "claude-sonnet-5" as const;
+export const VALIDATION_MODEL = "claude-sonnet-4-6" as const;
 
 /** Sized for `candidateFillers` (~150-250 tokens) plus the seven verdict
  *  fields; 1024 was the pre-enumeration budget and risks truncating the

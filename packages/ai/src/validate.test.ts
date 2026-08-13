@@ -91,12 +91,24 @@ const validValidationInput: ValidationResult = {
 // ---------------------------------------------------------------------------
 
 describe("VALIDATION_MODEL", () => {
-  // Deliberately DECOUPLED from GENERATION_MODEL. A validator miss ships a
-  // defect to learners and costs a demote-plus-backfill repass; a generator
-  // miss wastes one draft. Precedent: theory-generate.test.ts:219.
-  it("is pinned to claude-sonnet-5 and decoupled from GENERATION_MODEL", () => {
-    expect(VALIDATION_MODEL).toBe("claude-sonnet-5");
-    expect(VALIDATION_MODEL).not.toBe(GENERATION_MODEL);
+  // Held at sonnet-4-6 ON PURPOSE. The sonnet-5 upgrade was built and measured;
+  // the five-arm run showed its recall gain is superadditive with the prompt
+  // change (39/53 together, 31/53 and 32/53 alone), so the model half was not
+  // shipped — it is the costlier one to unwind, needing a deploy where the
+  // prompt needs only a Langfuse label re-point. See the constant's docstring
+  // for the full table.
+  it("is pinned to claude-sonnet-4-6", () => {
+    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
+  });
+
+  // Guards the request shaping: sonnet-4-6 ACCEPTS sampling params and does not
+  // default to adaptive thinking, so `validateDraft` must send `temperature`
+  // and omit `thinking` for it. Those two guards are keyed off the model
+  // string, so this pin is what keeps them on the correct branch.
+  it("is a model that accepts temperature and does not imply adaptive thinking", () => {
+    expect(/sonnet-5|opus-4-[7-9]|opus-5|fable/.test(VALIDATION_MODEL)).toBe(
+      false,
+    );
   });
 });
 
@@ -456,7 +468,9 @@ describe("validateDraft", () => {
         },
       });
 
-      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+        modelOverride: "claude-sonnet-5",
+      });
 
       const callArgs = mockCreate.mock.calls[0][0];
       expect(callArgs).not.toHaveProperty("temperature");
@@ -481,7 +495,9 @@ describe("validateDraft", () => {
         },
       });
 
-      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+        modelOverride: "claude-sonnet-5",
+      });
 
       const callArgs = mockCreate.mock.calls[0][0];
       expect(callArgs.thinking).toEqual({ type: "disabled" });
@@ -491,8 +507,41 @@ describe("validateDraft", () => {
       expect(VALIDATION_MAX_TOKENS).toBe(2048);
     });
 
-    it("keeps VALIDATION_TEMPERATURE exported at 0.0 even though sonnet-5 doesn't receive it", () => {
+    it("keeps VALIDATION_TEMPERATURE exported at 0.0", () => {
       expect(VALIDATION_TEMPERATURE).toBe(0.0);
+    });
+  });
+
+  // The production model is sonnet-4-6, which ACCEPTS sampling params and does
+  // not default to adaptive thinking — so the two guards above must take their
+  // other branch by default. Without these, reverting the model would silently
+  // leave the request shaped for a model we no longer call.
+  describe("validateDraft request shaping for the production model", () => {
+    it("sends temperature and omits thinking on sonnet-4-6", async () => {
+      mockCreate.mockResolvedValue({
+        content: [
+          {
+            type: "tool_use",
+            id: "toolu_v_shaping_prod",
+            name: VALIDATION_TOOL_NAME,
+            input: validValidationInput,
+          },
+        ],
+        stop_reason: "tool_use",
+        usage: {
+          input_tokens: 1000,
+          cache_creation_input_tokens: 0,
+          cache_read_input_tokens: 0,
+          output_tokens: 200,
+        },
+      });
+
+      await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.model).toBe("claude-sonnet-4-6");
+      expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
+      expect(callArgs.thinking).toBeUndefined();
     });
   });
 
