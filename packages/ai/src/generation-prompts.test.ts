@@ -248,6 +248,16 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("One correct fill, or enumerate them");
   });
 
+  it("anti-leak carries the neutral-gloss clause for lexical-choice points (2026-08-13)", async () => {
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+    expect(prompt).toContain("NEUTRAL English term");
+    expect(prompt).toContain("saber/poder");
+    expect(prompt).toContain("know how to");
+    // The escape hatch matters: without it the generator pads a gloss it
+    // cannot make safe rather than dropping it.
+    expect(prompt).toContain("OMIT the gloss rather than leak it");
+  });
+
   it("pins the Turkish personal/copular-suffix cloze rule (lemma hint, person + animacy)", async () => {
     // Grammar-point-specific rule for tr-a1-personal-suffixes: the cell that
     // rejected 12/17 drafts on `low quality`. Lemma-only hint (not the
@@ -347,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-11");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-13");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -440,7 +450,7 @@ describe("buildGenerationSystemPrompt", () => {
   });
 
   it("bumps the generation prompt version to 2026-08-11", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-11");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-13");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
