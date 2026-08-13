@@ -10,7 +10,15 @@ import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
  * modelAnswers, targetForm/acceptableForms, breakdown, exampleSentences,
  * referenceParaphrases) so the crafter solves blind, as a user would.
  */
-export function renderLearnerView(content: ExerciseContent): string {
+export function renderLearnerView(
+  content: ExerciseContent,
+  opts: { includeOptions?: boolean } = {},
+): string {
+  const includeOptions = opts.includeOptions ?? true;
+  // `includeOptions: false` is for the blind-solver arm. In production
+  // `showOptions` defaults to false (cloze-exercise.tsx) — options sit behind a
+  // toggle — and the ambiguity fixture was labelled under that rule. A solver
+  // shown options would answer a different question than the labels encode.
   const lines: string[] = [];
   switch (content.type) {
     case ExerciseType.CLOZE: {
@@ -18,7 +26,9 @@ export function renderLearnerView(content: ExerciseContent): string {
       if (content.context) lines.push(`Context: ${content.context}`);
       if (content.glossEn) lines.push(`Meaning: ${content.glossEn}`);
       lines.push(content.sentence);
-      if (content.options?.length) lines.push(`Options: ${content.options.join(", ")}`);
+      if (includeOptions && content.options?.length) {
+        lines.push(`Options: ${content.options.join(", ")}`);
+      }
       break;
     }
     case ExerciseType.TRANSLATION: {

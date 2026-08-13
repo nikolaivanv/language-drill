@@ -117,6 +117,43 @@ describe("renderLearnerView", () => {
   });
 });
 
+describe("renderLearnerView — options visibility", () => {
+  const cloze: ClozeContent = {
+    type: ExerciseType.CLOZE,
+    instructions: "Fill in the blank with either 'de' or nothing.",
+    sentence: "Las instrucciones son difíciles ___ entender.",
+    correctAnswer: "de",
+    options: ["de", "para", "en"],
+    context: "adjective + de + infinitive",
+    glossEn: "The instructions are hard to understand.",
+  };
+
+  it("includes options by default (unchanged for qa:sample)", () => {
+    expect(renderLearnerView(cloze)).toContain("para");
+  });
+
+  it("omits options when includeOptions is false", () => {
+    const v = renderLearnerView(cloze, { includeOptions: false });
+    expect(v).not.toContain("para");
+    expect(v).not.toMatch(/Options:/);
+  });
+
+  it("still includes instructions, context, gloss and sentence when options are omitted", () => {
+    const v = renderLearnerView(cloze, { includeOptions: false });
+    expect(v).toContain("either 'de' or nothing");
+    expect(v).toContain("adjective + de + infinitive");
+    expect(v).toContain("The instructions are hard to understand.");
+    expect(v).toContain("difíciles ___ entender");
+  });
+
+  it("never leaks the stored answer field itself", () => {
+    // `de` appears inside the instructions legitimately; assert the view
+    // carries no answer-bearing label rather than no substring.
+    const v = renderLearnerView(cloze, { includeOptions: false });
+    expect(v).not.toMatch(/correctAnswer|Correct answer|Answer:/i);
+  });
+});
+
 describe("classifyVerdicts", () => {
   const HIGH = 0.9; // PASS band
   const LOW = 0.2; // FAIL band
