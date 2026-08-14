@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { useSearchParams } from 'next/navigation';
 import { createAuthenticatedFetch, useDiversity } from '@language-drill/api-client';
 
 import { FilterSelect } from '../../../../components/admin/filter-select';
@@ -12,12 +13,18 @@ const LANGUAGES = ['ES', 'DE', 'TR'];
 const LEVELS = ['A1', 'A2', 'B1', 'B2'];
 const MECHANISMS = ['variants', 'curated-seeds', 'frequency-band', 'coverage-spec', 'none'];
 
-export default function DiversityPage() {
+function DiversityPageInner() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  const searchParams = useSearchParams();
   const [params, setParams] = useState<{
     language?: string; level?: string; mechanism?: string; issuesOnly?: boolean;
-  }>({});
+  }>(() => ({
+    language: searchParams.get('language') ?? undefined,
+    level: searchParams.get('level') ?? undefined,
+    mechanism: searchParams.get('mechanism') ?? undefined,
+    issuesOnly: searchParams.get('issuesOnly') === 'true' || undefined,
+  }));
   const diversity = useDiversity({ fetchFn, params });
 
   const setParam = (k: 'language' | 'level' | 'mechanism', v: string) =>
@@ -71,5 +78,13 @@ export default function DiversityPage() {
         </ul>
       )}
     </div>
+  );
+}
+
+export default function DiversityPage() {
+  return (
+    <Suspense fallback={<div className="p-s-6" />}>
+      <DiversityPageInner />
+    </Suspense>
   );
 }

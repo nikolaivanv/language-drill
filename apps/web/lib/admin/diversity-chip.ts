@@ -43,11 +43,60 @@ export const DIVERSITY_CHIP_SUFFIX: Record<DiversityChipClass, string> = {
  * PROVEN (denominator is zero — no rows remain that could still supply the
  * missing value) or merely UNMEASURED (rows exist that haven't been tagged
  * or labelled yet, so the zero may just be a measurement gap).
+ *
+ * `unmeasuredRows: undefined` means the denominator itself is unknown (the
+ * diversity fetch is still loading, errored, or the cell/point is absent
+ * from the response) — that must NEVER be read as "zero rows unmeasured".
+ * Absence of evidence is not evidence of absence, so it classifies the same
+ * as a nonzero unmeasured count: 'unknown'.
  */
 export function classifyDiversityDefect(params: {
   isDeficient: boolean;
-  unmeasuredRows: number;
+  unmeasuredRows: number | undefined;
 }): DiversityChipClass {
   if (!params.isDeficient) return 'ok';
   return params.unmeasuredRows === 0 ? 'bad' : 'unknown';
+}
+
+/**
+ * The single below-floor predicate for a coverage-axis value. Both the
+ * diversity hub (`diversity-point-row.tsx`) and the pool-cell drawer
+ * (`pool-cell-detail.tsx`) must call this rather than restating "deficient"
+ * themselves — that restatement is exactly how the two surfaces drifted
+ * (one read "deficient" as `count === 0`, the other as `count < floor`).
+ *
+ * A value with no declared floor has nothing to be deficient against, so
+ * this returns `null` — the caller renders it as a plain count with no
+ * ✓/✗/⚠ suffix, never a claimed pass.
+ *
+ * `untagged: undefined` means the cell's tag denominator is unknown at this
+ * call site (e.g. the pool-cell drawer's diversity fetch hasn't resolved, or
+ * the cell isn't in the response) — never collapse that into "0 untagged".
+ */
+export function classifyAxisValue(
+  value: { count: number; floor: number | null },
+  untagged: number | undefined,
+): DiversityChipClass | null {
+  if (value.floor === null) return null;
+  return classifyDiversityDefect({
+    isDeficient: value.count < value.floor,
+    unmeasuredRows: untagged,
+  });
+}
+
+/**
+ * The single "deficient" predicate for a construction variant: realized zero
+ * times in the approved pool. `unlabelledRows` is the count of approved rows
+ * in the cell that carry no `seedWord` at all (pre-#640 rows) — those could
+ * still turn out to realize the variant once labelled, so a zero is only
+ * PROVEN once that count is zero too.
+ */
+export function classifyVariant(
+  variant: { count: number },
+  unlabelledRows: number | undefined,
+): DiversityChipClass {
+  return classifyDiversityDefect({
+    isDeficient: variant.count === 0,
+    unmeasuredRows: unlabelledRows,
+  });
 }

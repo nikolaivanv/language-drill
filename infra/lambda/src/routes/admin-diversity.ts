@@ -287,9 +287,16 @@ adminDiversity.get('/admin/diversity', async (c) => {
     targetOverride: number | null; provenIssues: number; unknowns: number; cells: BuiltCell[];
   }> = [];
 
+  // Points that matched the (language, level, kind) query scope, before the
+  // `mechanism`/`issuesOnly` filters narrow `items` further — the page's
+  // "N of total" line needs this, not `items.length` again, or the count
+  // is trivially always "N of N" whenever a filter is active.
+  let totalInScope = 0;
+
   for (const point of ALL_CURRICULA) {
     const cells = cellsByPoint.get(point.key);
     if (!cells || cells.length === 0) continue;
+    totalInScope += 1;
 
     let provenIssues = 0;
     let unknowns = 0;
@@ -302,9 +309,10 @@ adminDiversity.get('/admin/diversity', async (c) => {
         }
       }
       if (cell.seed.kind === 'curated' && cell.seed.poolSize > 0
-          && cell.seed.usedCount >= cell.seed.poolSize) {
+          && cell.seed.usedCount >= cell.seed.poolSize && !cell.atTarget) {
         // Bounded pool fully covered — pickSeeds returns nulls and the cell
-        // silently stops generating.
+        // silently stops generating. A cell already at target isn't trying
+        // to generate anyway, so exhaustion there isn't a live issue.
         provenIssues += 1;
       }
       for (const s of cell.shortfalls) {
@@ -333,5 +341,5 @@ adminDiversity.get('/admin/diversity', async (c) => {
     });
   }
 
-  return c.json({ items, total: items.length });
+  return c.json({ items, total: totalInScope });
 });

@@ -107,16 +107,21 @@ cell drawer) distinguishes two kinds of zero, and the distinction is
 load-bearing rather than cosmetic:
 
 - **✗ (red)** — the denominator *proves* absence. Every approved row in the
-  cell carries that coverage axis (or a declared variant id) and the value
-  still has none.
-- **⚠ (neutral)** — rows remain untagged or unlabelled, so the zero may be a
-  **measurement gap** rather than missing content.
+  cell carries that coverage axis (or a declared variant id) and the value is
+  still below its declared floor (zero, for a construction variant).
+- **⚠ (neutral)** — rows remain untagged or unlabelled, so a below-floor value
+  may be a **measurement gap** rather than missing content.
 
-An axis reading 0 across a whole cell far more often means missing *tags* than
-missing *content*; treating one as the other is how sound exercises get
-demoted. The single shared implementation lives in
-`apps/web/lib/admin/diversity-chip.ts` (`classifyDiversityDefect`) so the two
-surfaces cannot drift.
+A below-floor value far more often means missing *tags* than missing
+*content*; treating one as the other is how sound exercises get demoted. The
+predicates that decide "deficient" (`classifyAxisValue`, `classifyVariant`)
+and the shared proven-vs-unknown classifier (`classifyDiversityDefect`) all
+live in `apps/web/lib/admin/diversity-chip.ts`, and both surfaces call them
+rather than restating the rule — a prior drift where the diversity hub read
+"deficient" as `count === 0` while the pool drawer read it as `count < floor`
+is exactly the kind of bug that recurs if a call site restates the predicate
+instead of importing it, so treat any new "deficient" check outside that
+module as a regression.
 
 ### 2. Pool & curriculum health
 

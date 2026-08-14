@@ -106,6 +106,71 @@ describe('DiversityPointRow', () => {
     expect(screen.getByText(/demote:pool/i)).toBeInTheDocument();
   });
 
+  it('marks a proven zero (count 0, below its floor, no untagged rows) as ✗ with the failure class', () => {
+    const cell = {
+      ...variantCell(0),
+      axes: [
+        {
+          name: 'person',
+          role: 'controlled' as const,
+          values: [{ value: '2pl', count: 0, floor: 2 }],
+          untagged: 0,
+        },
+      ],
+      shortfalls: [{ axis: 'person', value: '2pl', floor: 2, actual: 0 }],
+    };
+    render(<DiversityPointRow point={pointWith({ cells: [cell], provenIssues: 1 })} />);
+    fireEvent.click(screen.getByRole('button', { name: /impersonal plural/i }));
+    const chip = screen.getByTestId('axis-person-2pl');
+    expect(chip).toHaveTextContent('✗');
+    expect(chip.className).toMatch(/red/);
+  });
+
+  // C1 regression: the axis chip predicate must read "below floor", not just
+  // "count === 0" — a nonzero value that still falls short of its declared
+  // floor is exactly what the row-level "provenIssues"/shortfalls badge
+  // already flags in red at the top of the row; the per-value chip must not
+  // contradict it with a green ✓.
+  it('marks a nonzero below-floor value (count 4, floor 5, no untagged rows) as ✗ — C1 regression', () => {
+    const cell = {
+      ...variantCell(0),
+      axes: [
+        {
+          name: 'person',
+          role: 'controlled' as const,
+          values: [{ value: '3sg', count: 4, floor: 5 }],
+          untagged: 0,
+        },
+      ],
+      shortfalls: [{ axis: 'person', value: '3sg', floor: 5, actual: 4 }],
+    };
+    render(<DiversityPointRow point={pointWith({ cells: [cell], provenIssues: 1 })} />);
+    fireEvent.click(screen.getByRole('button', { name: /impersonal plural/i }));
+    const chip = screen.getByTestId('axis-person-3sg');
+    expect(chip).toHaveTextContent('✗');
+    expect(chip.className).toMatch(/red/);
+  });
+
+  it('marks the SAME nonzero below-floor value as ⚠, not ✗, while rows remain untagged', () => {
+    const cell = {
+      ...variantCell(0),
+      axes: [
+        {
+          name: 'person',
+          role: 'controlled' as const,
+          values: [{ value: '3sg', count: 4, floor: 5 }],
+          untagged: 3,
+        },
+      ],
+      shortfalls: [{ axis: 'person', value: '3sg', floor: 5, actual: 4 }],
+    };
+    render(<DiversityPointRow point={pointWith({ cells: [cell], unknowns: 1 })} />);
+    fireEvent.click(screen.getByRole('button', { name: /impersonal plural/i }));
+    const chip = screen.getByTestId('axis-person-3sg');
+    expect(chip).toHaveTextContent('⚠');
+    expect(chip).not.toHaveTextContent('✗');
+  });
+
   it('shows curated pool burn-down', () => {
     const cell = {
       ...variantCell(0),

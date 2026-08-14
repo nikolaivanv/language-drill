@@ -18,7 +18,8 @@ import {
   DIVERSITY_CHIP_BASE,
   DIVERSITY_CHIP_CLASSNAMES,
   DIVERSITY_CHIP_SUFFIX,
-  classifyDiversityDefect,
+  classifyAxisValue,
+  classifyVariant,
 } from '../../../../../lib/admin/diversity-chip';
 
 const sectionLabel = 'text-[11px] font-semibold uppercase tracking-wide text-ink-mute';
@@ -135,7 +136,12 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
                 const axisDist = dist[axis] ?? {};
                 const axisFloors = floors[axis] ?? {};
                 const values = Array.from(new Set([...Object.keys(axisFloors), ...Object.keys(axisDist)])).sort();
-                const untaggedForAxis = diversityCell?.axes.find((a) => a.name === axis)?.untagged ?? 0;
+                // `undefined` here means the diversity denominator is UNKNOWN
+                // (still loading, errored, or this cell/axis is absent from
+                // the response) — never coerce that to 0, which would let a
+                // below-floor value render as PROVEN on no evidence at all.
+                const axisDenom = diversityCell?.axes.find((a) => a.name === axis);
+                const untaggedForAxis = axisDenom?.untagged;
                 return (
                   <li key={axis} className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-ink min-w-[88px]">{axis}</span>
@@ -143,10 +149,10 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
                       const actual = axisDist[v] ?? 0;
                       const floor = axisFloors[v];
                       const hasFloor = floor !== undefined;
-                      const below = hasFloor && actual < floor;
-                      const cls = hasFloor
-                        ? classifyDiversityDefect({ isDeficient: below, unmeasuredRows: untaggedForAxis })
-                        : null;
+                      const cls = classifyAxisValue(
+                        { count: actual, floor: hasFloor ? floor : null },
+                        untaggedForAxis,
+                      );
                       return (
                         <span
                           key={v}
@@ -162,7 +168,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
                         </span>
                       );
                     })}
-                    {untaggedForAxis > 0 && (
+                    {untaggedForAxis !== undefined && untaggedForAxis > 0 && (
                       <span className="text-ink-soft">
                         {untaggedForAxis} rows untagged — a zero here may be a tagging gap
                       </span>
@@ -314,7 +320,7 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
           href={`/admin/diversity?language=${item.language}&level=${item.level}`}
           className="text-[13px] font-medium text-accent-2 hover:underline"
         >
-          Diversity for this point →
+          Diversity for {item.language} {item.level} →
         </a>
       </div>
     </div>
@@ -330,10 +336,7 @@ function ConstructionVariantsPanel({
     <>
       <div className="flex flex-wrap items-center gap-2">
         {seed.variants.map((v) => {
-          const cls = classifyDiversityDefect({
-            isDeficient: v.count === 0,
-            unmeasuredRows: seed.unlabelledRows,
-          });
+          const cls = classifyVariant(v, seed.unlabelledRows);
           return (
             <span
               key={v.id}

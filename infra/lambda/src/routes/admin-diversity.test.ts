@@ -186,6 +186,24 @@ const VARIANT_CELL_KEY = buildCellKey({
 const VARIANT_ID_1 = variantPoint.constructionVariants![0].id;
 const VARIANT_ID_2 = variantPoint.constructionVariants![1].id;
 
+// A curated-seed point with no coverageSpec, so exhaustion is the only
+// possible source of provenIssues on it — isolates the atTarget guard.
+const curatedPoint = ALL_CURRICULA.find(
+  (p) =>
+    p.language === 'ES' &&
+    !p.clozeUnsuitable &&
+    !p.coverageSpec &&
+    (p.elicitationSeedValues?.length ?? 0) > 0,
+)!;
+const CURATED_POINT_KEY = curatedPoint.key;
+const CURATED_CELL_KEY = buildCellKey({
+  language: curatedPoint.language,
+  cefrLevel: curatedPoint.cefrLevel,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPointKey: curatedPoint.key,
+});
+const CURATED_SEED_VALUES = curatedPoint.elicitationSeedValues!;
+
 const specPoint = ALL_CURRICULA.find(
   (p) =>
     p.language === 'ES' &&
@@ -312,5 +330,71 @@ describe('GET /admin/diversity', () => {
     expect(
       body.items.every((p: AnyJson) => p.provenIssues > 0 || p.unknowns > 0),
     ).toBe(true);
+  });
+
+  it('flags an exhausted curated pool as a proven issue when the cell is NOT at target', async () => {
+    queryQueue.push([]); // no coverage tags
+    queryQueue.push(CURATED_SEED_VALUES.map((v) => ({ cellKey: CURATED_CELL_KEY, seed: v, n: 1 })));
+    // approved deliberately below whatever target this point resolves to,
+    // so atTarget is false regardless of level or pool size.
+    queryQueue.push([
+      { cellKey: CURATED_CELL_KEY, approved: 1, untaggedRows: 0, unlabelledRows: 0 },
+    ]);
+
+    const res = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    const point = body.items.find((p: AnyJson) => p.key === CURATED_POINT_KEY);
+    const cell = point.cells.find((c: AnyJson) => c.cellKey === CURATED_CELL_KEY);
+
+    expect(cell.seed.kind).toBe('curated');
+    expect(cell.seed.usedCount).toBe(cell.seed.poolSize);
+    expect(cell.atTarget).toBe(false);
+    expect(point.provenIssues).toBeGreaterThan(0);
+  });
+
+  // Regression: a curated pool can exhaust on a cell that's already sitting
+  // at target — that cell isn't trying to generate, so exhaustion there
+  // isn't a live issue and must not inflate provenIssues.
+  it('does NOT flag an exhausted curated pool as a proven issue when the cell IS at target', async () => {
+    queryQueue.push([]);
+    queryQueue.push(CURATED_SEED_VALUES.map((v) => ({ cellKey: CURATED_CELL_KEY, seed: v, n: 1 })));
+    // A big approved total so this cell clears whatever target it resolves
+    // to, regardless of level — same trick as the at-target floors test.
+    queryQueue.push([
+      { cellKey: CURATED_CELL_KEY, approved: 500, untaggedRows: 0, unlabelledRows: 0 },
+    ]);
+
+    const res = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    const point = body.items.find((p: AnyJson) => p.key === CURATED_POINT_KEY);
+    const cell = point.cells.find((c: AnyJson) => c.cellKey === CURATED_CELL_KEY);
+
+    expect(cell.seed.kind).toBe('curated');
+    expect(cell.seed.usedCount).toBe(cell.seed.poolSize);
+    expect(cell.atTarget).toBe(true);
+    expect(point.provenIssues).toBe(0);
+    expect(point.unknowns).toBe(0);
+  });
+
+  it('reports "total" as the pre-filter point count, not the post-issuesOnly item count', async () => {
+    // All-empty aggregates: cells with a coverageSpec floor > 0 report a
+    // proven shortfall (approved=0 < any positive floor), so issuesOnly=true
+    // trims the list while `total` (language-scoped, pre-issuesOnly) must
+    // stay the same across both requests.
+    queryQueue.push([]);
+    queryQueue.push([]);
+    queryQueue.push([]);
+    const unfiltered = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
+    const unfilteredBody = (await unfiltered.json()) as AnyJson;
+    expect(unfilteredBody.total).toBe(unfilteredBody.items.length);
+
+    queryQueue.push([]);
+    queryQueue.push([]);
+    queryQueue.push([]);
+    const filtered = await app.request('/admin/diversity?language=ES&issuesOnly=true', undefined, adminEnv);
+    const filteredBody = (await filtered.json()) as AnyJson;
+
+    expect(filteredBody.items.length).toBeLessThan(unfilteredBody.items.length);
+    expect(filteredBody.total).toBe(unfilteredBody.total);
   });
 });

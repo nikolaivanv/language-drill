@@ -65,9 +65,10 @@ export function DiversityGlossary() {
             <dd>
               <strong>✗</strong> means the denominator proves absence: every row
               in the cell is tagged (or carries a declared variant id) and the
-              value still has none. <strong>⚠</strong> means rows remain untagged
-              or unlabelled, so the zero may be a measurement gap rather than
-              missing content. Demoting on a ⚠ destroys sound rows.
+              value is still below its declared floor (zero, for a construction
+              variant). <strong>⚠</strong> means rows remain untagged or
+              unlabelled, so a below-floor value may be a measurement gap rather
+              than missing content. Demoting on a ⚠ destroys sound rows.
             </dd>
           </div>
         </dl>

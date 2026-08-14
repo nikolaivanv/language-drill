@@ -114,16 +114,71 @@ describe('PoolCellDetail', () => {
     mockUseRevalidateCell.mockReturnValue({ mutateAsync: mockRevalidateMutateAsync, isPending: false });
   });
 
-  it('renders diversity vs floors, flagging below-floor values', () => {
+  it('renders diversity vs floors, flagging below-floor values (denominator known via useDiversity)', () => {
     mockUsePoolCell.mockReturnValue({
       isLoading: false, isError: false,
       data: { floors: { person: { '3sg': 5, '2pl': 2 } }, rejectionReasonCounts: {} },
     });
+    const provenPointFixture = diversityPointWith({
+      provenIssues: 1,
+      cells: [
+        {
+          cellKey: 'ES:B1:cloze:es-b1-present-subjunctive',
+          type: 'cloze',
+          level: 'B1',
+          approved: 9,
+          target: 50,
+          atTarget: false,
+          axes: [
+            {
+              name: 'person',
+              role: 'controlled',
+              values: [
+                { value: '3sg', count: 8, floor: 5 },
+                { value: '2pl', count: 1, floor: 2 },
+              ],
+              untagged: 0,
+            },
+          ],
+          seed: { kind: 'none' },
+          shortfalls: [{ axis: 'person', value: '2pl', floor: 2, actual: 1 }],
+        },
+      ],
+    });
+    mockUseDiversity.mockReturnValue({ isLoading: false, isError: false, data: { total: 1, items: [provenPointFixture] } });
     render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
     expect(screen.getByTestId('axis-person-3sg').textContent).toMatch(/3sg 8\/5/);
     const belowFloor = screen.getByTestId('axis-person-2pl');
     expect(belowFloor.textContent).toMatch(/2pl 1\/2/);
     expect(belowFloor.textContent).toMatch(/✗/);
+  });
+
+  // C2 regression: while the diversity denominator is unresolved (still
+  // loading, errored, or the cell absent from the response), a below-floor
+  // value must render as UNKNOWN, never as a proven ✗ on no evidence.
+  it('does NOT render ✗ for a below-floor value while useDiversity is still loading', () => {
+    mockUsePoolCell.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { floors: { person: { '3sg': 5, '2pl': 2 } }, rejectionReasonCounts: {} },
+    });
+    mockUseDiversity.mockReturnValue({ isLoading: true, isError: false, data: undefined });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    const belowFloor = screen.getByTestId('axis-person-2pl');
+    expect(belowFloor.textContent).toMatch(/2pl 1\/2/);
+    expect(belowFloor).not.toHaveTextContent('✗');
+    expect(belowFloor).toHaveTextContent('⚠');
+  });
+
+  it('does NOT render ✗ for a below-floor value when the cell is absent from a loaded diversity response', () => {
+    mockUsePoolCell.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { floors: { person: { '3sg': 5, '2pl': 2 } }, rejectionReasonCounts: {} },
+    });
+    mockUseDiversity.mockReturnValue({ isLoading: false, isError: false, data: { total: 0, items: [] } });
+    render(<PoolCellDetail item={item} fetchFn={fetchFn} />);
+    const belowFloor = screen.getByTestId('axis-person-2pl');
+    expect(belowFloor).not.toHaveTextContent('✗');
+    expect(belowFloor).toHaveTextContent('⚠');
   });
 
   it('renders rejection-reason chips and the numbers line', () => {

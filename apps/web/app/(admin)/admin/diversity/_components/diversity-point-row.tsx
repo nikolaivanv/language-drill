@@ -8,7 +8,8 @@ import {
   DIVERSITY_CHIP_BASE,
   DIVERSITY_CHIP_CLASSNAMES,
   DIVERSITY_CHIP_SUFFIX,
-  classifyDiversityDefect,
+  classifyAxisValue,
+  classifyVariant,
 } from '../../../../../lib/admin/diversity-chip';
 
 export function DiversityPointRow({ point }: { point: DiversityPoint }) {
@@ -70,19 +71,19 @@ function CellPanel({ cell }: { cell: DiversityCell }) {
             {axis.role === 'controlled' ? '*' : ''}
           </span>
           {axis.values.map((v) => {
-            const cls = classifyDiversityDefect({
-              isDeficient: v.count === 0 && v.floor !== null,
-              unmeasuredRows: axis.untagged,
-            });
+            const cls = classifyAxisValue(v, axis.untagged);
             return (
               <span
                 key={v.value}
                 data-testid={`axis-${axis.name}-${v.value}`}
-                className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES[cls])}
+                className={cn(
+                  DIVERSITY_CHIP_BASE,
+                  cls ? DIVERSITY_CHIP_CLASSNAMES[cls] : 'border-rule bg-card text-ink-soft',
+                )}
               >
                 {v.value} {v.count}
                 {v.floor !== null ? `/${v.floor}` : ''}
-                {` ${DIVERSITY_CHIP_SUFFIX[cls]}`}
+                {cls ? ` ${DIVERSITY_CHIP_SUFFIX[cls]}` : ''}
               </span>
             );
           })}
@@ -105,10 +106,7 @@ function SeedPanel({ seed }: { seed: DiversityCell['seed'] }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-[88px] font-medium text-ink">variants</span>
         {seed.variants.map((v) => {
-          const cls = classifyDiversityDefect({
-            isDeficient: v.count === 0,
-            unmeasuredRows: seed.unlabelledRows,
-          });
+          const cls = classifyVariant(v, seed.unlabelledRows);
           return (
             <span
               key={v.id}
