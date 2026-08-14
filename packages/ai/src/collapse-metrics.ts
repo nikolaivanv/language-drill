@@ -166,6 +166,44 @@ export type SpecShortfall = {
 };
 
 /**
+ * Counts-based core. `countsByAxis[axis][value]` is the number of approved
+ * rows whose `coverage_tags` carry that value; a value absent from the map is
+ * zero. `approved` is ALL rows in the cell, tagged or not — untagged rows are
+ * not evidence that a floor is met, so they inflate `approved` (and therefore
+ * `atTarget`) without contributing to any value's count.
+ *
+ * Exists so callers holding SQL aggregates — the admin diversity endpoint —
+ * get the identical verdict to the CLI without loading every row's blob.
+ */
+export function computeSpecShortfallFromCounts(
+  gp: GrammarPoint,
+  countsByAxis: Record<string, Record<string, number>>,
+  approved: number,
+  target: number,
+): SpecShortfall | null {
+  const spec = gp.coverageSpec;
+  if (!spec) return null;
+
+  const shortfalls: FloorShortfall[] = [];
+  for (const axis of spec.axes) {
+    const counts = countsByAxis[axis.name] ?? {};
+    for (const [value, floor] of Object.entries(axis.floors)) {
+      const actual = counts[value] ?? 0;
+      if (actual < (floor as number)) {
+        shortfalls.push({
+          axis: axis.name,
+          value,
+          floor: floor as number,
+          actual,
+        });
+      }
+    }
+  }
+
+  return { shortfalls, approved, target, atTarget: approved >= target };
+}
+
+/**
  * Declared `coverageSpec` floors vs. the realized `coverage_tags` distribution.
  * Deterministic, no LLM: the declared floor is ground truth, so there is nothing
  * to triage. Returns null for a point without a spec.
@@ -178,26 +216,18 @@ export function computeSpecShortfall(
   rows: readonly AuditRow[],
   target: number,
 ): SpecShortfall | null {
-  const spec = gp.coverageSpec;
-  if (!spec) return null;
-
-  const shortfalls: FloorShortfall[] = [];
-  for (const axis of spec.axes) {
-    const counts = new Map<string, number>();
+  if (!gp.coverageSpec) return null;
+  const countsByAxis: Record<string, Record<string, number>> = {};
+  for (const axis of gp.coverageSpec.axes) {
+    const counts: Record<string, number> = {};
     for (const r of rows) {
       const value = r.coverageTags?.[axis.name];
       if (typeof value !== 'string') continue;
-      counts.set(value, (counts.get(value) ?? 0) + 1);
+      counts[value] = (counts[value] ?? 0) + 1;
     }
-    for (const [value, floor] of Object.entries(axis.floors)) {
-      const actual = counts.get(value) ?? 0;
-      if (actual < (floor as number)) {
-        shortfalls.push({ axis: axis.name, value, floor: floor as number, actual });
-      }
-    }
+    countsByAxis[axis.name] = counts;
   }
-
-  return { shortfalls, approved: rows.length, target, atTarget: rows.length >= target };
+  return computeSpecShortfallFromCounts(gp, countsByAxis, rows.length, target);
 }
 
 export type VariantCoverage = {
@@ -232,6 +262,49 @@ export type VariantSkew = {
   declaredRows: number;
 };
 
+/**
+ * Counts-based core. `countsById` holds only DECLARED variant ids;
+ * `unrecognizedSeedCount` is every other approved row (null seedWord, or a
+ * legacy frequency word). Keeping the two separate is the whole point: an
+ * unlabelled row occupies an approved slot while contributing to no variant's
+ * quota, so it is the denominator that decides whether a variant at 0 is a
+ * proven absence or merely unmeasured.
+ */
+export function computeVariantSkewFromCounts(
+  gp: GrammarPoint,
+  countsById: Record<string, number>,
+  unrecognizedSeedCount: number,
+): VariantSkew | null {
+  const variants = gp.constructionVariants;
+  if (!variants || variants.length === 0) return null;
+
+  const declaredRows = variants.reduce(
+    (sum, v) => sum + (countsById[v.id] ?? 0),
+    0,
+  );
+  const totalShare = variants.reduce((sum, v) => sum + (v.share ?? 1), 0);
+
+  const perVariant: VariantCoverage[] = variants.map((v) => {
+    const share = v.share ?? 1;
+    return {
+      id: v.id,
+      count: countsById[v.id] ?? 0,
+      share,
+      quota: (declaredRows * share) / totalShare,
+    };
+  });
+
+  return {
+    perVariant,
+    overQuota: perVariant.filter((v) => v.count > v.quota).map((v) => v.id),
+    underMin: perVariant
+      .filter((v) => v.count < MIN_PER_VARIANT)
+      .map((v) => v.id),
+    unrecognizedSeedCount,
+    declaredRows,
+  };
+}
+
 /** Declared `constructionVariants` vs. the realized `seedWord` distribution.
  *  Deterministic. Returns null for a point without variants. */
 export function computeVariantSkew(
@@ -242,39 +315,17 @@ export function computeVariantSkew(
   if (!variants || variants.length === 0) return null;
 
   const declared = new Set(variants.map((v) => v.id));
-  const counts = new Map<string, number>();
+  const countsById: Record<string, number> = {};
   let unrecognizedSeedCount = 0;
   for (const r of rows) {
     const seed = r.content.seedWord;
     if (typeof seed === 'string' && declared.has(seed)) {
-      counts.set(seed, (counts.get(seed) ?? 0) + 1);
+      countsById[seed] = (countsById[seed] ?? 0) + 1;
     } else {
       unrecognizedSeedCount += 1;
     }
   }
-
-  // Only declared variants count toward the pool — a legacy frequency-word seed
-  // is not evidence that any variant is covered. Same rule as `pickVariantSeeds`.
-  const declaredRows = variants.reduce((sum, v) => sum + (counts.get(v.id) ?? 0), 0);
-  const totalShare = variants.reduce((sum, v) => sum + (v.share ?? 1), 0);
-
-  const perVariant: VariantCoverage[] = variants.map((v) => {
-    const share = v.share ?? 1;
-    return {
-      id: v.id,
-      count: counts.get(v.id) ?? 0,
-      share,
-      quota: (declaredRows * share) / totalShare,
-    };
-  });
-
-  return {
-    perVariant,
-    overQuota: perVariant.filter((v) => v.count > v.quota).map((v) => v.id),
-    underMin: perVariant.filter((v) => v.count < MIN_PER_VARIANT).map((v) => v.id),
-    unrecognizedSeedCount,
-    declaredRows,
-  };
+  return computeVariantSkewFromCounts(gp, countsById, unrecognizedSeedCount);
 }
 
 /**
