@@ -329,15 +329,141 @@ headroom that is a material fraction, and it likely brought the exhaustion point
 forward. **Check available credit before discretionary AI spend on this
 account** — a $7 backfill is not free if it displaces a night of generation.
 
+## Pass 3 — the held cell, and why it was never a labelling problem
+
+`ES:A1:translation:es-a1-quantifiers-muy-mucho` was held out of both passes
+because 18 of its 20 rows carried no recognized variant id. The assumption was
+that the #640 classifier had simply failed on them. It had not.
+
+**The rows realize TWO variants at once.** Nearly every source sentence pairs
+`muy` + adjective with post-verbal `mucho`: "This museum is very old **and I
+like it a lot**". The classifier must return one variant id, so it correctly
+declined. Worse, **15 of 20 rows sit on that single frame** — "[X] is very [ADJ]
+and I like it a lot" — which the audit had already flagged
+(`monotonyFlagged: true`, top lemma "very" at **95%**). The unlabelled rows were
+a symptom; the monotony was the harm.
+
+**The cloze cell needed nothing.** It is fully labelled (`unrecog 0`) with one
+clean gap (`mucho-after-verb` at 0) and sits *below* target, so rotation seeds
+the starved variant on the next run. A cloze has one blank and can therefore
+only realize one construction — that structural difference is the whole story.
+
+### The fix is point-level, not prompt-level
+
+The translation variant directive says "use exactly this sub-construction; **do
+not substitute another**" — which forbids swapping constructions but not
+*stacking* them. The `sentence_construction` branch got a stronger clause in
+#648 ("do not offer it as one option among several: a single scorable target");
+translation has no equivalent.
+
+Widening that globally was considered and **rejected on the evidence**: other
+contrast points label at ~90% under the same wording (`por/para` 5/29,
+`de-b1-es-expressions` 5/48, `que-vs-cual` 6/39). This point is the outlier at
+90% unlabelled because its three constructions are natural collocates in one
+English sentence in a way `por`/`para` are not.
+
+So each of its three variant directives now carries an explicit **sibling
+exclusion** ("The sentence must realize ONLY this construction: no muy
+anywhere, and no post-verbal mucho…"). Blast radius: one point. No
+`GENERATION_PROMPT_VERSION` bump, no Langfuse push — directives are curriculum
+data interpolated into the user prompt. Four tests pin the exclusions;
+discrimination verified by stripping a clause and confirming three fail.
+
+No `CURRICULUM_VERSION_ES` bump either: the demote puts both cells below target,
+so the scheduler enumerates them anyway, and a bump would needlessly clear
+suppression across every other ES cell.
+
+### The demote had to pin rows by id
+
+18 rows demoted — but **not** oldest-first. The two correctly-labelled rows sat
+at age ranks **2 and 16**, so an oldest-first cut of 18 would have destroyed
+both and kept two unlabelled ones: the exact inverse of the intent. The runner
+now accepts an `ids` array per worklist cell, resolved *through* that cell's own
+approved-row set so a stray id cannot widen the selection — it throws rather
+than guessing.
+
+Verified after: the only two survivors are "My sister is very happy today."
+(`muy-intensifier`) and "There are many trees in the park."
+(`quantifier-agreeing-with-noun`) — both single-construction, neither carrying
+the trailing clause. Cell is 2/20; `mucho-after-verb` at 0 will be the first
+variant the deficit-ranked picker targets.
+
+**Generalizable:** oldest-first is the right default only when age correlates
+with quality. When the rows worth keeping are the *correctly-shaped* ones rather
+than the newest, pin by id.
+
+## Pass 4 — the first demote driven by a signal that did not previously exist
+
+`ES:B1:sentence_construction:es-b1-relative-clauses` became visible only after
+#651 pointed signal 1 at `modelAnswers` instead of the task prompt: **78% of
+model answers opened "el café"**. Nothing had measured SC answers before.
+
+### The rows were fine; the generator had no diversity mechanism
+
+An SC cell declaring no `constructionVariants` was seeded by **nothing** —
+`priorPoolSurfaces` covers only vocab_recall / free_writing /
+contextual_paraphrase, frequency seeding covered cloze / translation /
+dictation, and this point declares no `coverageSpec` either. Identical prompt
+every batch.
+
+The controlled comparison is the same point's other cells:
+
+| cell of `es-b1-relative-clauses` | rows | mentions café |
+|---|---|---|
+| cloze (frequency-seeded) | 50 | **1** |
+| translation (frequency-seeded) | 50 | 2 |
+| **sentence_construction (unseeded)** | 46 | **41** |
+
+Same point, same curriculum, same template — only the seed differs. 31 of 33 SC
+cells were unseeded, and the pattern repeated (`de-a2-perfekt-with-haben` 59%
+"ich habe", `de-a2-weil-deshalb` 56% "ich bin").
+
+**So the demote was staged behind the fix.** #652 added SC to the frequency-seed
+branch (precedent: dictation joined it for the identical "everything is about
+reading a book" collapse), and the demote waited for **merge AND CDK deploy** —
+the generation Lambda runs deployed code, so demoting first would have burned 41
+rows and refilled them from the same unanchored prompt. Same conclusion #648
+recorded: *"the right fix is seeding, not demotion."*
+
+### The demote
+
+41 rows (the café ones) pinned by id, keeping the 5 non-café rows — not
+oldest-first, because age does not correlate with which rows are collapsed.
+3 of the 41 were `manual-approved`; prior status is recorded per row.
+
+Verified after: **46 → 5 approved, café 41 → 0.** 45 slots now refill under
+frequency seeding.
+
+### What this does NOT fix
+
+**All 46 rows used `donde`, and the 5 survivors still do.** A frequency seed is
+a content word, not a relative pronoun; nothing in this point pins relative-word
+choice. Expect the next audit to clear the answer-surface flag while the ~91%
+`donde` monotony flag persists.
+
+The residual fix is `constructionVariants` on the point (`que` / `a quien` /
+`donde` / noun + `que` + infinitive — the description already enumerates them),
+which pins rotation but retroactively unlabels ~146 healthy cloze and
+translation rows, recreating the labelling debt #640 cost $2.33 to clear. Worth
+deciding once café is gone and `donde` is the only remaining defect.
+
 ## Still outstanding
 
 - **Credits topped up 2026-08-14.** Confirm the next 04:00 UTC run clears the
   83-job backlog *and* fills the 910 rows now freed (831 + 79).
-- **Expect a pass 3.** Convergence takes two or three cycles per cell, so
-  re-audit after the next run rather than assuming the deficits closed. Cells
-  that refill to target while still under floor silently re-enter the stuck set
-  — they are invisible unless the audit is re-run.
-- Classify `es-a1-quantifiers-muy-mucho`'s 18 unlabelled rows so it can be sized.
+- **Re-audit after each run.** Convergence takes two or three cycles per cell.
+  Cells that refill to target while still under floor silently re-enter the
+  stuck set — invisible unless the audit is re-run. Passes 2, 3 and 4 each found
+  work the previous pass's worklist did not contain.
+- **Check the SC seeding fix empirically.** After the next 04:00 UTC run,
+  confirm the refilled `es-b1-relative-clauses` SC rows are NOT about cafés.
+  That is the test of #652; if they still are, frequency seeding is too loose an
+  anchor for open production and the fallback is `constructionVariants`.
+- `es-a1-quantifiers-muy-mucho` is resolved (pass 3 above). **Check its refill
+  specifically**: the sibling-exclusion directives are unproven until rows
+  generate under them. If new rows still pair `muy` with post-verbal `mucho`,
+  the exclusion wording is not strong enough and the prompt-level clause becomes
+  the fallback.
 - Re-run `audit:collapse` once cells refill, to confirm the deficits closed.
 - The 168 below-target cells need no action; they self-heal.
 - Deferred #634 calibration items are unchanged: stem-monotony measures each

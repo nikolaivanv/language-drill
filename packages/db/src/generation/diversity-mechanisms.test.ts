@@ -87,6 +87,21 @@ describe('resolveCellMechanisms — seed source', () => {
     expect(m.seed.kind).toBe('construction-variants');
   });
 
+  // #652 gave variant-less sentence_construction cells a frequency seed (they
+  // previously had NO diversity mechanism at all). Because this resolver
+  // delegates to `seedKindFor` rather than restating its precedence, that change
+  // reaches the panel for free — this test pins that it actually does, and that
+  // the variant branch above still wins when both could apply.
+  it('reports the frequency band for a sentence_construction cell with no variants', () => {
+    const gp: GrammarPoint = { ...basePoint, sentenceConstructionSuitable: true };
+    const m = resolveCellMechanisms(
+      cellOf(gp, ExerciseType.SENTENCE_CONSTRUCTION),
+    );
+    expect(m.seed.kind).toBe('frequency-band');
+    if (m.seed.kind !== 'frequency-band') throw new Error('narrowing');
+    expect(m.seed.band).toBe('content-word');
+  });
+
   it('reports the curated predicate pool for a predicate-nominal conjugation cell', () => {
     const gp: GrammarPoint = {
       ...basePoint,

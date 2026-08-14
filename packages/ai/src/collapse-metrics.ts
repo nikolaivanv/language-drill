@@ -46,9 +46,16 @@ const SURFACE_FIELD: Partial<Record<`${ExerciseType}`, string>> = {
   // The lexical head the cell collapses onto despite satisfied person floors —
   // the failure `conjugationSeedWords` exists to fix.
   conjugation: 'lemma',
-  // Free production, so there is no single correct answer: the TASK FRAMING is
-  // what collapses (`de-b2-mittelfeld-word-order`, 91% "Sie hat…").
-  sentence_construction: 'prompt',
+  // The FIRST model answer, not the prompt. Signal 1 measures the answer side
+  // on every other type, and until 2026-08-14 SC was the exception: it read
+  // `prompt`, on the reasoning that free production has no single correct
+  // answer. The consequence was that nothing measured what an SC cell actually
+  // produces — a cell whose every model answer used one construction was
+  // invisible. #648's rotation removed the original objection by binding every
+  // model answer to one construction, so there is now a single scorable target.
+  // Prompt-side (scene) collapse did not go unmeasured: it moved to signal 3,
+  // which is where the scene is read for every other type.
+  sentence_construction: 'modelAnswers',
 };
 
 /** Raw surface string for a row, or null when this type has no defined surface
@@ -60,6 +67,13 @@ export function surfaceOf(
   const field = SURFACE_FIELD[type];
   if (field === undefined) return null;
   const value = content[field];
+  // `modelAnswers` is an array of alternatives (3 in practice). The FIRST is
+  // the canonical one; pooling all three would triple-count each row and blur
+  // the very concentration being measured.
+  if (Array.isArray(value)) {
+    const first = value[0];
+    return typeof first === 'string' ? first : null;
+  }
   return typeof value === 'string' ? value : null;
 }
 
@@ -389,6 +403,40 @@ export function stemOf(type: ExerciseType, content: Record<string, unknown>): st
   return typeof value === 'string' ? value : null;
 }
 
+/**
+ * Per-row vocabulary that is TASK FRAMING rather than scene, and so must not
+ * count toward monotony.
+ *
+ * Only `sentence_construction` has any: its `prompt` interleaves the scene with
+ * the task specification ("Use all four words below in one sentence…"), and the
+ * specification's words recur in essentially every row by construction. Measured
+ * on prod 2026-08-14, that made the signal useless — **26 of 33 SC cells
+ * flagged**, with top lemmas `one` (5 cells), `sentence` (3), `use` (2),
+ * `passive` (2), `causative` (2). Exactly one of the 33 (`friend`) was real
+ * scene repetition.
+ *
+ * The row's own `instructions` field is pure boilerplate — the same task
+ * specification, minus the scene — so subtracting its vocabulary strips the
+ * noise without a hand-maintained stoplist that would drift as prompts evolve.
+ * It also removes the point's own target term (`passive`, `causative`), which is
+ * the #634 calibration weakness ("stem monotony mostly measures each point's OWN
+ * target lexeme") solved for this type as a side effect.
+ *
+ * Scene words survive because they do not appear in the instructions:
+ * `de-a1-questions`' "your friend" frame is still detected.
+ */
+export function stemNoiseOf(
+  type: ExerciseType,
+  content: Record<string, unknown>,
+): ReadonlySet<string> {
+  if (type !== ExerciseType.SENTENCE_CONSTRUCTION) return EMPTY_NOISE;
+  const instructions = content['instructions'];
+  if (typeof instructions !== 'string') return EMPTY_NOISE;
+  return new Set(tokens(instructions));
+}
+
+const EMPTY_NOISE: ReadonlySet<string> = new Set<string>();
+
 export type StemMonotony = {
   topLemma: string;
   /** Stems CONTAINING the lemma — counted once per stem, not per occurrence. */
@@ -412,11 +460,15 @@ export function computeStemMonotony(
     const stem = stemOf(type, r.content);
     if (stem === null) continue;
     total += 1;
+    const noise = stemNoiseOf(type, r.content);
     const content = new Set(
-      // Drop stopwords and pure digits. The cloze blank marker needs no clause of
-      // its own: `_` is U+005F, category `Pc` ⊂ `\p{P}`, so `EDGE_PUNCT` already
-      // strips `___` down to the empty string and `tokens` drops it.
-      tokens(stem).filter((t) => !STOPWORDS.has(t) && !/^\d+$/u.test(t)),
+      // Drop stopwords, pure digits, and this row's task-framing vocabulary. The
+      // cloze blank marker needs no clause of its own: `_` is U+005F, category
+      // `Pc` ⊂ `\p{P}`, so `EDGE_PUNCT` already strips `___` down to the empty
+      // string and `tokens` drops it.
+      tokens(stem).filter(
+        (t) => !STOPWORDS.has(t) && !/^\d+$/u.test(t) && !noise.has(t),
+      ),
     );
     for (const lemma of content) {
       docFrequency.set(lemma, (docFrequency.get(lemma) ?? 0) + 1);

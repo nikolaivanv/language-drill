@@ -1335,3 +1335,59 @@ describe('es-b1-que-vs-cual covers cuál + ser + noun phrase', () => {
     expect(point?.commonErrors?.join(' ')).toMatch(/¿Qué es tu nombre\?/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// es-a1-quantifiers-muy-mucho — sibling exclusion in every variant directive.
+//
+// Its three constructions are natural collocates in one English sentence, so
+// the generic prompt wording ("use exactly this sub-construction; do not
+// substitute another") forbids SWAPPING one for another but not STACKING two.
+// Measured on prod 2026-08-14: 18 of 20 translation rows realized two variants
+// at once and 15 of 20 sat on the single frame "[X] is very [ADJ] and I like it
+// a lot", leaving 90% of the cell unlabelled and therefore unmeasurable by the
+// rotation. Deleting an exclusion silently re-opens that, and nothing else
+// would fail — hence this test.
+// ---------------------------------------------------------------------------
+
+describe('es-a1-quantifiers-muy-mucho variants exclude their siblings', () => {
+  const point = ALL_CURRICULA.find(
+    (p) => p.key === 'es-a1-quantifiers-muy-mucho',
+  );
+
+  it('still declares exactly the three constructions', () => {
+    expect(point?.constructionVariants?.map((v) => v.id)).toEqual([
+      'quantifier-agreeing-with-noun',
+      'muy-intensifier',
+      'mucho-after-verb',
+    ]);
+  });
+
+  it('restricts every directive to a single construction', () => {
+    for (const variant of point?.constructionVariants ?? []) {
+      expect(
+        variant.directive,
+        `variant '${variant.id}' must restrict the sentence to one construction`,
+      ).toMatch(/must realize ONLY this construction/);
+    }
+  });
+
+  it('bans post-verbal mucho on the two variants it would collide with', () => {
+    // The observed collapse was specifically the trailing "and I like it a lot"
+    // clause riding along on quantifier and muy sentences. `mucho-after-verb`
+    // is exempt because post-verbal mucho IS its target.
+    const byId = new Map(
+      (point?.constructionVariants ?? []).map((v) => [v.id, v.directive]),
+    );
+    expect(byId.get('quantifier-agreeing-with-noun')).toMatch(/post-verbal mucho/);
+    expect(byId.get('muy-intensifier')).toMatch(/post-verbal mucho/);
+    expect(byId.get('mucho-after-verb')).not.toMatch(/post-verbal mucho/);
+  });
+
+  it('bans muy on the variants where it is not the target', () => {
+    const byId = new Map(
+      (point?.constructionVariants ?? []).map((v) => [v.id, v.directive]),
+    );
+    expect(byId.get('quantifier-agreeing-with-noun')).toMatch(/no muy anywhere/);
+    expect(byId.get('mucho-after-verb')).toMatch(/no muy anywhere/);
+  });
+});

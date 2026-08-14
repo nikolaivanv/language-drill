@@ -725,21 +725,34 @@ const esCurriculum: readonly GrammarPoint[] = [
     // would be lexical variation dressed up as a construction. Uniform shares
     // — all three are comparably frequent, and this point exists to hold them
     // apart, so weighting one to 3 would recreate the collapse being fixed.
+    //
+    // Each directive carries an explicit EXCLUSION of its siblings. Unique to
+    // this point among the variant-bearing set, because its three constructions
+    // are natural collocates of one another in a single English sentence, so
+    // the generic "use exactly this sub-construction; do not substitute
+    // another" forbids swapping one for another but not stacking two. Measured
+    // on prod 2026-08-14: the translation cell had 18 of 20 rows realizing two
+    // variants at once and 15 of 20 on ONE frame — "[X] is very [ADJ] and I
+    // like it a lot" — which the collapse audit flagged as stem monotony
+    // ("very" at 95%) and which left the rotation unable to label, and so
+    // unable to measure, 90% of the cell. Sibling cells with contrast pairs
+    // that do not co-occur (por/para, que/cuál) label at ~90% under the generic
+    // wording, so this is a point-level fix, not a prompt-level one.
     constructionVariants: [
       {
         id: 'quantifier-agreeing-with-noun',
         directive:
-          'mucho, poco or bastante used as an adjective before a noun, agreeing with it in gender and number (Tengo mucha hambre; Quedan pocos días)',
+          'mucho, poco or bastante used as an adjective before a noun, agreeing with it in gender and number (Tengo mucha hambre; Quedan pocos días). The sentence must realize ONLY this construction: no muy anywhere, and no post-verbal mucho (in particular no "…and I like it a lot" clause)',
       },
       {
         id: 'muy-intensifier',
         directive:
-          'invariable muy immediately before an adjective or an adverb (Este libro es muy interesante; Habla muy despacio)',
+          'invariable muy immediately before an adjective or an adverb (Este libro es muy interesante; Habla muy despacio). The sentence must realize ONLY this construction: no quantifier before a noun, and no post-verbal mucho (in particular no "…and I like it a lot" clause)',
       },
       {
         id: 'mucho-after-verb',
         directive:
-          'invariable mucho used adverbially AFTER a verb, where muy is impossible (Me gusta mucho; Trabaja mucho)',
+          'invariable mucho used adverbially AFTER a verb, where muy is impossible (Me gusta mucho; Trabaja mucho). The sentence must realize ONLY this construction: no muy anywhere, and no quantifier before a noun',
       },
     ],
   },
