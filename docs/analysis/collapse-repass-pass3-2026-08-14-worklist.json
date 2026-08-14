@@ -1,0 +1,42 @@
+{
+  "source": "audit-runs/prod-pass2-2026-08-14.json + direct row inspection",
+  "generated": "2026-08-14",
+  "reason": "pool-hygiene",
+  "note": "Rows PINNED by id, not oldest-first: the two correctly-labelled rows sit at age ranks 2 and 16, so an oldest-first cut of 18 would destroy both and keep two unlabelled ones.",
+  "keeps": "the 2 rows already carrying a recognized variant id",
+  "cells": 1,
+  "rows": 18,
+  "work": [
+    {
+      "cellKey": "ES:A1:translation:es-a1-quantifiers-muy-mucho",
+      "language": "ES",
+      "cefr": "A1",
+      "type": "translation",
+      "grammarPoint": "es-a1-quantifiers-muy-mucho",
+      "approved": 20,
+      "target": 20,
+      "limit": 18,
+      "mechanism": "construction-variants",
+      "ids": [
+        "bc69e2ed-4869-5ef9-a253-d30574b445c0",
+        "b669d97b-4630-536f-a853-dcb37b5ff8a6",
+        "b769db0e-c2da-5a20-a553-d7dcfa435ad5",
+        "b869dca1-43f7-57e5-a653-d9797926bd04",
+        "b269d32f-5387-58ab-9c53-c9577fd26fea",
+        "6bab91d5-01be-52bf-aa40-5633372dddf2",
+        "6aab9042-80a2-54fa-a940-5496b84a7bc3",
+        "66ab89f6-8514-5c0e-a540-4e22bcbcf307",
+        "65ab8863-03f7-5e49-a440-4c8539671994",
+        "64ab86d0-82db-5084-a340-4ae8ba83b765",
+        "73ab9e6d-0aa3-50e7-a240-494b4012cc7a",
+        "72ab9cda-8987-5322-a140-47aec12f6a4b",
+        "4f0c07f5-5f43-516d-aa1b-8281c0f96e04",
+        "e08842b2-bce1-53d8-9b7a-2714dbd3aed5",
+        "4ee61f3d-1c41-5ef1-bdbc-efed451a10c8",
+        "48e615cb-1a08-5367-83bc-f99b4bc5c3ae",
+        "41ec089c-703c-54f0-bd9e-380caa4d41c1",
+        "42ec0a2f-f158-52b5-be9e-39a92930a3f0"
+      ]
+    }
+  ]
+}

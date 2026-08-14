@@ -79,6 +79,14 @@ type WorkCell = {
   target: number;
   limit: number;
   mechanism: string;
+  /**
+   * Exact rows to demote, overriding the oldest-first `limit`. Needed when the
+   * rows worth keeping are NOT the newest: on
+   * `es-a1-quantifiers-muy-mucho` the only two correctly-labelled rows sat at
+   * age ranks 2 and 16, so an oldest-first cut of 18 would have destroyed both
+   * and kept two unlabelled ones — the exact inverse of the intent.
+   */
+  ids?: string[];
 };
 
 type CapturedCell = {
@@ -198,14 +206,38 @@ async function main(): Promise<void> {
   const priorStatusById: Record<string, string> = {};
 
   for (const cell of worklist.work) {
-    const rows = await selectRowsToDemote(db, {
-      language: cell.language,
-      cefr: cell.cefr,
-      type: cell.type,
-      grammarPoint: cell.grammarPoint,
-      contentIlike: null,
-      limit: cell.limit,
-    });
+    // Pinned ids are still resolved THROUGH the cell's own approved-row set, so
+    // an id belonging to another cell (or already demoted) cannot slip in —
+    // the worklist can narrow the selection, never widen it past the cell.
+    const pinned = cell.ids;
+    const rows = pinned
+      ? await (async () => {
+          const all = await selectRowsToDemote(db, {
+            language: cell.language,
+            cefr: cell.cefr,
+            type: cell.type,
+            grammarPoint: cell.grammarPoint,
+            contentIlike: null,
+            limit: null,
+          });
+          const inCell = new Set(all.map((r) => r.id));
+          const unknown = pinned.filter((id) => !inCell.has(id));
+          if (unknown.length > 0) {
+            throw new Error(
+              `${cell.cellKey}: ${unknown.length} pinned id(s) are not approved rows of this cell — refusing to guess. First: ${unknown[0]}`,
+            );
+          }
+          const want = new Set(pinned);
+          return all.filter((r) => want.has(r.id));
+        })()
+      : await selectRowsToDemote(db, {
+          language: cell.language,
+          cefr: cell.cefr,
+          type: cell.type,
+          grammarPoint: cell.grammarPoint,
+          contentIlike: null,
+          limit: cell.limit,
+        });
     if (rows.length !== cell.limit) {
       console.warn(
         `[repass] WARN ${cell.cellKey}: expected ${cell.limit} rows, selected ${rows.length}`,
