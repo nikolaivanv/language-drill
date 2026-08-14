@@ -27,6 +27,11 @@ import vocab from './routes/vocab';
 import read from './routes/read';
 import theory from './routes/theory';
 import admin from './routes/admin';
+// The web app's admin layout gates on `GET /me`'s `isAdmin`, so without this
+// router every /admin/* page redirects to `/` locally and no admin surface can
+// be verified in a browser at all. `index.ts` (the Lambda handler) has always
+// mounted it; only this dev server was missing it.
+import me from './routes/me';
 import emailRoutes from './routes/email';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
@@ -83,6 +88,7 @@ app.route('/', vocab);
 app.route('/', read);
 app.route('/', theory);
 app.route('/', admin);
+app.route('/', me);
 app.route('/', emailRoutes);
 
 ensureDevUser()
