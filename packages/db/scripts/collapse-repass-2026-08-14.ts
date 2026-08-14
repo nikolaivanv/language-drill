@@ -43,13 +43,30 @@ import { exercises } from '../src/schema';
 import { selectRowsToDemote } from './demote-cell-pool';
 
 const REASON = 'pool-hygiene' as const;
+const ANALYSIS = path.join(import.meta.dirname, '../../../docs/analysis');
+
+/**
+ * `--pass <n>` selects the worklist/artifact pair, so a follow-up pass reuses
+ * this runner instead of cloning it. Each pass gets its OWN artifact: pass 1's
+ * file is the only fine-grained record of the rows it demoted, and a shared
+ * path would let pass 2 overwrite it.
+ */
+function passSuffix(argv: readonly string[]): string {
+  const i = argv.indexOf('--pass');
+  const n = i >= 0 ? argv[i + 1] : null;
+  if (n === null || n === '1') return '';
+  if (!/^[0-9]+$/.test(n)) throw new Error(`--pass must be a positive integer (got '${n}')`);
+  return `-pass${n}`;
+}
+
+const SUFFIX = passSuffix(process.argv);
 const WORKLIST = path.join(
-  import.meta.dirname,
-  '../../../docs/analysis/collapse-repass-2026-08-14-worklist.json',
+  ANALYSIS,
+  `collapse-repass${SUFFIX}-2026-08-14-worklist.json`,
 );
 const ARTIFACT = path.join(
-  import.meta.dirname,
-  '../../../docs/analysis/collapse-repass-2026-08-14-rollback.json',
+  ANALYSIS,
+  `collapse-repass${SUFFIX}-2026-08-14-rollback.json`,
 );
 
 type WorkCell = {
