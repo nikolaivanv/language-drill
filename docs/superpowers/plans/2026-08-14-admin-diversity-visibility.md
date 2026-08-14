@@ -1188,7 +1188,12 @@ adminDiversity.get('/admin/diversity', async (c) => {
   const { language, level, kind, mechanism, issuesOnly } = parsed.data;
 
   const APPROVED = sql`review_status IN ('auto-approved', 'manual-approved')`;
-  const CELL_KEY = sql`language || ':' || difficulty || ':' || type || ':' || grammar_point_key`;
+  // MUST be lowercased. `buildCellKey` lowercases every part, so the canonical
+  // key is `es:a1:cloze:<point>`, while `exercises.language` and `difficulty`
+  // store 'ES' and 'A1'. Concatenating raw yields `ES:A1:cloze:<point>`, which
+  // matches no cell in the curriculum map — every cell would silently report
+  // zero approved rows, zero coverage, and zero realized variants.
+  const CELL_KEY = sql`LOWER(language || ':' || difficulty || ':' || type || ':' || grammar_point_key)`;
 
   const [tagResult, seedResult, totalResult] = await Promise.all([
     db.execute(sql`
