@@ -231,16 +231,65 @@ so its variant counts remain meaningless. Label before demoting.
 
 **Do this only after the refill loop is proven** — see below.
 
+## The refill loop is CONFIRMED working — and the run ran out of credits
+
+The first post-resume nightly run fired **2026-08-14 04:00 UTC**. Two checks,
+both clean:
+
+**1. The scheduler targeted exactly the cells the demote freed.**
+`requested_count` matches the per-cell demote counts one-for-one — not
+approximately:
+
+| cell | demoted | requested |
+|---|---|---|
+| `es:b2:translation:es-b2-compound-tenses` | 27 | 27 |
+| `es:b1:translation:es-b1-conditional` | 30 | 30 |
+| `es:b2:cloze:es-b2-complex-conditionals` | 23 | 23 |
+| `es:b1:translation:es-b1-present-subjunctive` | 26 | 26 |
+| `es:a2:translation:es-a2-por-para` | 14 | 14 |
+
+**2. New rows went to the starved values, not the concentrated ones.** For
+`es-b1-conditional` cloze, all 19 new rows landed on the three under-floor
+persons and **zero** on the two over-represented ones:
+
+| person | before | now | new |
+|---|---|---|---|
+| 1sg | 32 | 24 | **0** |
+| 3sg | 17 | 14 | **0** |
+| 2sg | 12 | 13 | +7 |
+| 3pl | 7 | 12 | +6 |
+| 1pl | 7 | 12 | +6 |
+
+This validates the entire basis for partial demotion. It also shows convergence
+takes **more than one pass**: floors are 15 and the cell sits at 12/13/12,
+because oldest-first demotion also removed rows *from* the starved buckets.
+Expect two or three cycles per cell, not one.
+
+### Credit exhaustion cut the run 69% short
+
+Of 120 jobs: **37 succeeded, 83 failed**, every failure the same —
+`Your credit balance is too low to access the Anthropic API`. The run spent
+**$17.00 in 16 minutes** (04:00 → 04:16), hit zero at 04:17, and the remaining
+83 jobs failed instantly.
+
+So only **511 of the 831** freed slots refilled; the pool is still ~320 rows
+below its pre-repass size. The failed jobs are not lost — they self-recover on
+the next 04:00 UTC run once the balance is topped up. **Nothing alarms on
+this**, so it is invisible unless `generation_jobs.status` is checked directly.
+
+Contributing factor worth recording: the coverage-tag backfill on this branch
+spent **$6.09** (plus $0.82 for the pilot) about 90 minutes earlier, on the same
+account that funds nightly generation. Against a balance with roughly $17 of
+headroom that is a material fraction, and it likely brought the exhaustion point
+forward. **Check available credit before discretionary AI spend on this
+account** — a $7 backfill is not free if it displaces a night of generation.
+
 ## Still outstanding
 
-- **Confirm generation actually resumed.** As of 2026-08-14 ~02:20 UTC the last
-  `generation_jobs` row was still `2026-07-25T04:23Z`, zero jobs in 48h. #646
-  flipped the cron on 2026-08-13 but no post-resume run had fired yet (next
-  attempt 04:00 UTC). Until it does, the pool is 831 rows smaller with nothing
-  replacing them. Check that the run fires **and** that new rows carry the
-  starved variant ids / axis values rather than refilling the same concentrated
-  surfaces.
-- Then the 64-row second pass above.
+- **Top up Anthropic credits**, then confirm the next run clears the 83-job
+  backlog.
+- Then the 64-row second pass above — but let one *uninterrupted* run complete
+  first, now that we know a run can stop a third of the way through in silence.
 - Re-run `audit:collapse` once cells refill, to confirm the deficits closed.
 - The 168 below-target cells need no action; they self-heal.
 - Deferred #634 calibration items are unchanged: stem-monotony measures each
