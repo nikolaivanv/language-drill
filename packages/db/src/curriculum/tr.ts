@@ -233,12 +233,13 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * fronted `diye` alone, and the pool followed it), and tr-b1-olarak (old gloss
  * "as / in the capacity of" named only the noun-complement half).
  * Bump clears target-reached / low-yield suppression so the touched CLOZE and
- * TRANSLATION cells re-run under the rotation. Note the limit: `seedKindFor`
- * (packages/db/src/generation/run-one-cell.ts) gates variant seeding to those
- * two exercise types, so tr-a2-reported-speech's 26 approved
- * sentence_construction rows are untouched by this mechanism. At-target
- * cloze/translation cells additionally need demote:pool (see
- * docs/curriculum-authoring.md retrofit section).
+ * TRANSLATION cells re-run under the rotation. `seedKindFor` also seeds
+ * SENTENCE_CONSTRUCTION from the variants as of 2026-08-14, but that does not
+ * reach tr-a2-reported-speech: the point carries `sentenceConstructionSuitable:
+ * false`, so no SC cell is enumerated for it and its 26 legacy SC rows keep
+ * whatever distribution they have. At-target cloze/translation cells
+ * additionally need demote:pool (see docs/curriculum-authoring.md retrofit
+ * section).
  */
 export const CURRICULUM_VERSION_TR = '2026-08-08';
 
@@ -2094,9 +2095,13 @@ const trCurriculum: readonly GrammarPoint[] = [
     // Uniform shares: four genuinely distinct constructions plus one
     // marker-sharing but structurally separate use (diye-thought-reason);
     // none is a prototype the others are variations of.
-    // NOTE the mechanism's reach: variant seeding is gated to CLOZE and
-    // TRANSLATION (seedKindFor), so this point's 26 approved
-    // sentence_construction rows keep whatever distribution they have.
+    // NOTE the mechanism's reach: variant seeding covers SENTENCE_CONSTRUCTION
+    // as of 2026-08-14, but this point sets `sentenceConstructionSuitable:
+    // false` (SC failed here at ~1/20 approval), so no SC cell is enumerated
+    // and its 26 legacy SC rows keep whatever distribution they have. Rotation
+    // is the documented cure for that failure — one mandated construction per
+    // draft instead of an either/or prompt — so re-enabling SC here is a real
+    // option once the de-b1-um-zu-damit cell shows what rotation does for it.
     // TWO variants here deliberately pin a person and stop there, because a B2
     // point owns the full paradigm and carries its own six-person coverageSpec:
     //   - `integrated-digini-soyledi` → reported subject 3sg. The

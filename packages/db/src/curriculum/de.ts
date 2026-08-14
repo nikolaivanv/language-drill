@@ -97,12 +97,12 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * moves into the causative/permissive directives, which now pin the subject to
  * du / 3sg so the lässt stem change is still exercised.
  * Bump clears target-reached / low-yield suppression so the touched CLOZE and
- * TRANSLATION cells re-run under the rotation. Note the limit: `seedKindFor`
- * (packages/db/src/generation/run-one-cell.ts) gates variant seeding to those
- * two exercise types, so SENTENCE_CONSTRUCTION cells are untouched by this
- * mechanism — de-b1-um-zu-damit's 47 approved SC rows keep whatever
- * distribution they have. At-target cloze/translation cells additionally need
- * demote:pool (see docs/curriculum-authoring.md retrofit section).
+ * TRANSLATION cells re-run under the rotation. (That limit was lifted on
+ * 2026-08-14: `seedKindFor` now seeds SENTENCE_CONSTRUCTION from the variants
+ * too, so de-b1-um-zu-damit's 47 approved SC rows are reachable — they still
+ * need a demote to free slots, since a cell at target generates nothing.)
+ * At-target cloze/translation cells additionally need demote:pool (see
+ * docs/curriculum-authoring.md retrofit section).
  */
 // 2026-08-13: de-a1-numbers-ordinals gains selfRevealingElicitation
 // 'digit-form' + a curated pool — it was the only numbers/ordinals point

@@ -623,7 +623,17 @@ export function seedKindFor(
   }
   if (
     (cell.exerciseType === ExerciseType.CLOZE ||
-      cell.exerciseType === ExerciseType.TRANSLATION) &&
+      cell.exerciseType === ExerciseType.TRANSLATION ||
+      // sentence_construction joined 2026-08-14. It was excluded when variants
+      // shipped (#631), which stranded `de-b1-um-zu-damit` — the only point
+      // declaring both — with a collapsed SC cell no repass could reach:
+      // demoting its rows frees slots the rotation could not refill, so the
+      // right fix is seeding, not demotion. Rotation is also the documented
+      // remedy for "multi-construction points are a poor fit for SC" (proven
+      // on tr-a2-reported-speech): the failure there was an either/or prompt
+      // with no single scorable target, and one mandated construction per
+      // draft is exactly the "force a single construction" cure.
+      cell.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION) &&
     cell.grammarPoint.constructionVariants &&
     cell.grammarPoint.constructionVariants.length > 0
   ) {
