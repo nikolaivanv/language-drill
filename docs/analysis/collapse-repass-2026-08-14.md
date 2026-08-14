@@ -213,7 +213,52 @@ cells, not 80.
 
 Any future worklist built this way must use `approved - target + deficit`.
 
-## Remaining worklist — 8 at-target cells, 64 rows
+## Pass 2 — DONE (79 rows, 10 cells)
+
+Run after the 04:00 UTC generation, against a **fresh** audit
+(`prod-pass2-2026-08-14`, $0.00). Re-auditing was not optional: the pass-1
+worklist below was computed at ~02:20 UTC, before the run added 511 rows, and
+acting on it would have been wrong in both directions.
+
+**It came out as 10 cells / 79 rows, not the 8 / 64 predicted below.** Three
+cells the 04:00 run refilled to target came back **still short of their floors**
+and re-entered the stuck set:
+
+| cell | approved | deficit |
+|---|---|---|
+| `ES:B1:cloze:es-b1-conditional` | 75/75 | 9 |
+| `ES:B1:sentence_construction:es-b1-conditional` | 75/75 | 3 |
+| `ES:B2:translation:es-b2-compound-tenses` | 75/75 | 3 |
+
+This is the multi-pass convergence predicted above, now observed: oldest-first
+demotion removes rows from the starved buckets too, so a cell needs two or three
+cycles. **A repass is a loop, not a one-shot.**
+
+Sized with the corrected `max(0, approved - target) + deficit`. Verified after:
+
+| cell | before | after | target |
+|---|---|---|---|
+| `de-a1-vocab-food-drink` | 20 | **6** | 10 |
+| `es-a2-comparatives-superlatives` cloze | 50 | 20 | 30 |
+| `es-b1-conditional` cloze | 75 | 66 | 75 |
+| `es-b1-reciprocal-se` cloze | 50 | 48 | 50 |
+| `tr-a1-accusative-definite-object` cloze | 20 | 14 | 20 |
+
+`de-a1-vocab-food-drink` is the proof the formula fix mattered: pass 1 demoted 4
+and left it at 20/10 — still above target, still stuck. Pass 2 demoted 14 and it
+is finally below target at 6/10.
+
+Artifact: `collapse-repass-pass2-2026-08-14-rollback.json` (79 ids, all
+`auto-approved`, zero overlap with pass 1's 831). The runner takes `--pass <n>`
+so each pass writes its own worklist/artifact pair — a shared path would let
+pass 2 clobber the only fine-grained record of pass 1's rows.
+
+`ES:A1:translation:es-a1-quantifiers-muy-mucho` remains **held**: 18 of 20 rows
+carry no recognized variant id, so its `underMin` counts cannot be sized
+honestly until they are classified. Recorded in the worklist's `held` field
+rather than silently dropped.
+
+## Pass-1 remaining worklist (superseded by Pass 2 above)
 
 | cell | now | need | demote |
 |---|---|---|---|
@@ -286,10 +331,13 @@ account** — a $7 backfill is not free if it displaces a night of generation.
 
 ## Still outstanding
 
-- **Top up Anthropic credits**, then confirm the next run clears the 83-job
-  backlog.
-- Then the 64-row second pass above — but let one *uninterrupted* run complete
-  first, now that we know a run can stop a third of the way through in silence.
+- **Credits topped up 2026-08-14.** Confirm the next 04:00 UTC run clears the
+  83-job backlog *and* fills the 910 rows now freed (831 + 79).
+- **Expect a pass 3.** Convergence takes two or three cycles per cell, so
+  re-audit after the next run rather than assuming the deficits closed. Cells
+  that refill to target while still under floor silently re-enter the stuck set
+  — they are invisible unless the audit is re-run.
+- Classify `es-a1-quantifiers-muy-mucho`'s 18 unlabelled rows so it can be sized.
 - Re-run `audit:collapse` once cells refill, to confirm the deficits closed.
 - The 168 below-target cells need no action; they self-heal.
 - Deferred #634 calibration items are unchanged: stem-monotony measures each

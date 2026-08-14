@@ -1,0 +1,237 @@
+{
+  "generated": "2026-08-14",
+  "reason": "pool-hygiene",
+  "applied": true,
+  "cells": [
+    {
+      "cellKey": "DE:A1:vocab_recall:de-a1-vocab-food-drink",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 20,
+      "ids": [
+        "338acd32-249a-5d40-8293-cd9c0f4a5bcd",
+        "308ac879-aa29-5219-bf93-c8c589bb46b8",
+        "2f8ac6e6-290d-5454-be93-c7280ad7e489",
+        "397c5c74-4c4b-5a62-8878-030e6da7d78f",
+        "3a7c5e07-cd68-5827-8978-04abec8b39be",
+        "3b7c5f9a-4a12-5ed8-8677-ffd46b6e9bed",
+        "3c7c612d-cb2e-5c9d-8778-0171ea51fe1c",
+        "357c5628-50be-5176-8477-fc9a6935604b",
+        "387c5ae1-cfa1-53b1-8377-fafde5df86d8",
+        "327c516f-c483-59ff-9178-1193e3a64b36",
+        "aa83ca1c-5cdb-5304-8d74-ffe8302aad5d",
+        "ab83cbaf-ddf8-50c9-8e75-0185af0e0f8c",
+        "ad83ced5-e031-5c53-9075-04bfb1474b2e",
+        "ac83cd42-5f14-5e8e-8f75-03223263e8ff"
+      ]
+    },
+    {
+      "cellKey": "ES:A2:cloze:es-a2-comparatives-superlatives",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 50,
+      "ids": [
+        "11bc4314-8e23-5220-99ae-095c5615dcf1",
+        "12bc44a7-0f40-5fe5-9aae-0af9d4f93f20",
+        "10bc4181-15ec-5283-98ae-07bfdba4f206",
+        "0dbc3cc8-9296-5934-95ae-02e85a885435",
+        "0ebc3e5b-13b2-56f9-96ae-0485d96bb664",
+        "0bbc39a2-9941-5bd2-93ad-ffae6134071b",
+        "a365566d-e208-5791-85cc-979d07db8df0",
+        "a26554da-60eb-59cc-84cc-960088f82bc1",
+        "9f655021-dd96-507d-89cc-9e110c4e0534",
+        "9e654e8e-5c79-52b8-88cc-9c748d6aa305",
+        "996546af-db5c-54f3-8fcc-a7bf12f9b81a",
+        "9865451c-5a40-572e-8ecc-a622941655eb",
+        "0f5db1ac-9948-5650-99c5-333c16579691",
+        "115db4d2-9b81-51da-9bc5-36761890d233",
+        "0b5dab60-9dba-5d64-95c5-2cc81aca0dd5",
+        "0d5dae86-9ff3-58ee-97c5-30021d034977",
+        "175dbe44-a22d-5478-91c5-26541f3c8519",
+        "185dbfd7-2349-523d-92c5-27f19e1fe748",
+        "135ff68f-09d4-5b73-95c7-697fb32287b2",
+        "125ff4fc-88b7-5dae-94c7-67e2343f2583",
+        "115ff369-0328-58d5-97c7-6cb9b55bc354",
+        "105ff1d6-820c-5b10-96c7-6b1c36786125",
+        "0f5ff043-0562-545f-99c7-6ff3b794fef6",
+        "0e5feeb0-8445-569a-98c7-6e5638b19cc7",
+        "1d60064d-1080-5e11-8bc7-595db9ce3a98",
+        "a3588a7a-0ba7-5746-85bf-cb0a938b2697",
+        "a4588c0d-8cc4-550b-86bf-cca7126e88c6",
+        "a25888e7-8a8b-5981-84bf-c96d10354d24",
+        "a05885c1-8851-5df7-8abf-d31b0dfc1182",
+        "9d588108-04fc-54a8-87bf-ce448cdf73b1"
+      ]
+    },
+    {
+      "cellKey": "ES:A2:cloze:es-a2-direct-object-pronouns",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 30,
+      "ids": [
+        "99c74414-0c40-52b0-9554-f43c12103379",
+        "9ac745a7-8d5c-5075-9654-f5d990f395a8",
+        "97c740ee-12eb-554e-9354-f10218bbe65f"
+      ]
+    },
+    {
+      "cellKey": "ES:A2:translation:es-a2-direct-object-pronouns",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 30,
+      "ids": [
+        "8558ad9e-37bd-5fc0-be58-144ce9e6fffd",
+        "8758b0c4-3e69-525e-bc58-1112e7adc45b",
+        "8658af31-b8da-5d85-bf58-15e968ca622c"
+      ]
+    },
+    {
+      "cellKey": "ES:B1:cloze:es-b1-conditional",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 75,
+      "ids": [
+        "10e6c06d-91cf-5a31-b5ba-9f3d78f57688",
+        "0de6bbb4-12eb-57f6-b6ba-a0dafc4b4ffb",
+        "0ee6bd47-9408-55bb-b7ba-a2777b2eb22a",
+        "03e6abf6-035b-5730-80ba-b0fcf59f9d15",
+        "11e90097-7a93-5ef1-b2bc-d71d9916411c",
+        "10e8ff04-f976-512c-b1bc-d5801a32deed",
+        "13e903bd-7ccc-5a7b-b4bc-da579b4f7cbe",
+        "12e9022a-fbb0-5cb6-b3bc-d8ba1c6c1a8f",
+        "0de8fa4b-7620-57dd-b6bc-dd9194a3c9d8"
+      ]
+    },
+    {
+      "cellKey": "ES:B1:cloze:es-b1-reciprocal-se",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 50,
+      "ids": [
+        "51196809-c2ba-5e5b-910f-da4760d29e4e",
+        "4f1964e3-c081-52d1-8f0f-d70d5e9962ac"
+      ]
+    },
+    {
+      "cellKey": "ES:B1:sentence_construction:es-b1-conditional",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 75,
+      "ids": [
+        "906c2223-9c00-5601-a010-9a1dd1c689c4",
+        "916c23b6-1d1d-53c6-a110-9bba551c6337",
+        "926c2549-9e39-518b-a210-9d57d3ffc566"
+      ]
+    },
+    {
+      "cellKey": "ES:B2:translation:es-b2-compound-tenses",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 75,
+      "ids": [
+        "59847e31-2d02-532b-bee2-8d27fffb3f46",
+        "5284732c-9c54-54a0-87e2-9bac835118b9",
+        "538474bf-1d71-5265-88e2-9d4902347ae8"
+      ]
+    },
+    {
+      "cellKey": "TR:A1:cloze:tr-a1-accusative-definite-object",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 20,
+      "ids": [
+        "c8d8d179-1bba-5fe9-bd73-33051b04c7a0",
+        "c5d8ccc0-9cd7-5dae-be73-34a29e5aa113",
+        "e658e200-3ff8-5b2a-a7e1-3af6ecb9d537",
+        "de55dc02-e697-58c0-b2d2-ac8c384cdeb5",
+        "da55d5b6-eb09-5fd4-aed2-a61833da6771",
+        "dc55d8dc-e8d0-544a-b4d2-afc63a861a57"
+      ]
+    },
+    {
+      "cellKey": "TR:A1:translation:tr-a1-accusative-definite-object",
+      "mechanism": "coverage-spec",
+      "approvedBefore": 20,
+      "ids": [
+        "89950a3c-9032-5b00-81ec-5b6c5f74ec91",
+        "859503f0-94a5-5214-bdec-54f863e763d5",
+        "86950583-15c1-5fd9-beec-5695e2cac604",
+        "8b950d62-926c-568a-83ec-5ea661ae2833",
+        "919516d4-9917-5928-b9ec-4e846859db19",
+        "92951867-1a34-56ed-baec-5021e73d3d48"
+      ]
+    }
+  ],
+  "priorStatusById": {
+    "10e6c06d-91cf-5a31-b5ba-9f3d78f57688": "auto-approved",
+    "0de6bbb4-12eb-57f6-b6ba-a0dafc4b4ffb": "auto-approved",
+    "0ee6bd47-9408-55bb-b7ba-a2777b2eb22a": "auto-approved",
+    "11e90097-7a93-5ef1-b2bc-d71d9916411c": "auto-approved",
+    "13e903bd-7ccc-5a7b-b4bc-da579b4f7cbe": "auto-approved",
+    "12e9022a-fbb0-5cb6-b3bc-d8ba1c6c1a8f": "auto-approved",
+    "0de8fa4b-7620-57dd-b6bc-dd9194a3c9d8": "auto-approved",
+    "5284732c-9c54-54a0-87e2-9bac835118b9": "auto-approved",
+    "59847e31-2d02-532b-bee2-8d27fffb3f46": "auto-approved",
+    "538474bf-1d71-5265-88e2-9d4902347ae8": "auto-approved",
+    "0b5dab60-9dba-5d64-95c5-2cc81aca0dd5": "auto-approved",
+    "86950583-15c1-5fd9-beec-5695e2cac604": "auto-approved",
+    "89950a3c-9032-5b00-81ec-5b6c5f74ec91": "auto-approved",
+    "92951867-1a34-56ed-baec-5021e73d3d48": "auto-approved",
+    "da55d5b6-eb09-5fd4-aed2-a61833da6771": "auto-approved",
+    "de55dc02-e697-58c0-b2d2-ac8c384cdeb5": "auto-approved",
+    "916c23b6-1d1d-53c6-a110-9bba551c6337": "auto-approved",
+    "0bbc39a2-9941-5bd2-93ad-ffae6134071b": "auto-approved",
+    "185dbfd7-2349-523d-92c5-27f19e1fe748": "auto-approved",
+    "996546af-db5c-54f3-8fcc-a7bf12f9b81a": "auto-approved",
+    "a25888e7-8a8b-5981-84bf-c96d10354d24": "auto-approved",
+    "a05885c1-8851-5df7-8abf-d31b0dfc1182": "auto-approved",
+    "a3588a7a-0ba7-5746-85bf-cb0a938b2697": "auto-approved",
+    "926c2549-9e39-518b-a210-9d57d3ffc566": "auto-approved",
+    "4f1964e3-c081-52d1-8f0f-d70d5e9962ac": "auto-approved",
+    "51196809-c2ba-5e5b-910f-da4760d29e4e": "auto-approved",
+    "8758b0c4-3e69-525e-bc58-1112e7adc45b": "auto-approved",
+    "8658af31-b8da-5d85-bf58-15e968ca622c": "auto-approved",
+    "859503f0-94a5-5214-bdec-54f863e763d5": "auto-approved",
+    "e658e200-3ff8-5b2a-a7e1-3af6ecb9d537": "auto-approved",
+    "8b950d62-926c-568a-83ec-5ea661ae2833": "auto-approved",
+    "919516d4-9917-5928-b9ec-4e846859db19": "auto-approved",
+    "c5d8ccc0-9cd7-5dae-be73-34a29e5aa113": "auto-approved",
+    "c8d8d179-1bba-5fe9-bd73-33051b04c7a0": "auto-approved",
+    "dc55d8dc-e8d0-544a-b4d2-afc63a861a57": "auto-approved",
+    "03e6abf6-035b-5730-80ba-b0fcf59f9d15": "auto-approved",
+    "10e8ff04-f976-512c-b1bc-d5801a32deed": "auto-approved",
+    "99c74414-0c40-52b0-9554-f43c12103379": "auto-approved",
+    "97c740ee-12eb-554e-9354-f10218bbe65f": "auto-approved",
+    "9ac745a7-8d5c-5075-9654-f5d990f395a8": "auto-approved",
+    "0dbc3cc8-9296-5934-95ae-02e85a885435": "auto-approved",
+    "0ebc3e5b-13b2-56f9-96ae-0485d96bb664": "auto-approved",
+    "10bc4181-15ec-5283-98ae-07bfdba4f206": "auto-approved",
+    "11bc4314-8e23-5220-99ae-095c5615dcf1": "auto-approved",
+    "12bc44a7-0f40-5fe5-9aae-0af9d4f93f20": "auto-approved",
+    "9865451c-5a40-572e-8ecc-a622941655eb": "auto-approved",
+    "115db4d2-9b81-51da-9bc5-36761890d233": "auto-approved",
+    "9e654e8e-5c79-52b8-88cc-9c748d6aa305": "auto-approved",
+    "9f655021-dd96-507d-89cc-9e110c4e0534": "auto-approved",
+    "a26554da-60eb-59cc-84cc-960088f82bc1": "auto-approved",
+    "105ff1d6-820c-5b10-96c7-6b1c36786125": "auto-approved",
+    "115ff369-0328-58d5-97c7-6cb9b55bc354": "auto-approved",
+    "125ff4fc-88b7-5dae-94c7-67e2343f2583": "auto-approved",
+    "135ff68f-09d4-5b73-95c7-697fb32287b2": "auto-approved",
+    "175dbe44-a22d-5478-91c5-26541f3c8519": "auto-approved",
+    "a4588c0d-8cc4-550b-86bf-cca7126e88c6": "auto-approved",
+    "0e5feeb0-8445-569a-98c7-6e5638b19cc7": "auto-approved",
+    "0f5ff043-0562-545f-99c7-6ff3b794fef6": "auto-approved",
+    "1d60064d-1080-5e11-8bc7-595db9ce3a98": "auto-approved",
+    "9d588108-04fc-54a8-87bf-ce448cdf73b1": "auto-approved",
+    "a365566d-e208-5791-85cc-979d07db8df0": "auto-approved",
+    "0d5dae86-9ff3-58ee-97c5-30021d034977": "auto-approved",
+    "0f5db1ac-9948-5650-99c5-333c16579691": "auto-approved",
+    "8558ad9e-37bd-5fc0-be58-144ce9e6fffd": "auto-approved",
+    "357c5628-50be-5176-8477-fc9a6935604b": "auto-approved",
+    "aa83ca1c-5cdb-5304-8d74-ffe8302aad5d": "auto-approved",
+    "ab83cbaf-ddf8-50c9-8e75-0185af0e0f8c": "auto-approved",
+    "338acd32-249a-5d40-8293-cd9c0f4a5bcd": "auto-approved",
+    "2f8ac6e6-290d-5454-be93-c7280ad7e489": "auto-approved",
+    "397c5c74-4c4b-5a62-8878-030e6da7d78f": "auto-approved",
+    "3a7c5e07-cd68-5827-8978-04abec8b39be": "auto-approved",
+    "3c7c612d-cb2e-5c9d-8778-0171ea51fe1c": "auto-approved",
+    "308ac879-aa29-5219-bf93-c8c589bb46b8": "auto-approved",
+    "3b7c5f9a-4a12-5ed8-8677-ffd46b6e9bed": "auto-approved",
+    "387c5ae1-cfa1-53b1-8377-fafde5df86d8": "auto-approved",
+    "327c516f-c483-59ff-9178-1193e3a64b36": "auto-approved",
+    "ad83ced5-e031-5c53-9075-04bfb1474b2e": "auto-approved",
+    "ac83cd42-5f14-5e8e-8f75-03223263e8ff": "auto-approved",
+    "906c2223-9c00-5601-a010-9a1dd1c689c4": "auto-approved"
+  }
+}

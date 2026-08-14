@@ -1,0 +1,133 @@
+{
+  "source": "audit-runs/prod-pass2-2026-08-14.json",
+  "generated": "2026-08-14",
+  "reason": "pool-hygiene",
+  "formula": "max(0, approved - target) + deficit",
+  "held": [
+    "ES:A1:translation:es-a1-quantifiers-muy-mucho (18/20 rows carry no recognized variant id)"
+  ],
+  "cells": 10,
+  "rows": 79,
+  "work": [
+    {
+      "cellKey": "DE:A1:vocab_recall:de-a1-vocab-food-drink",
+      "language": "DE",
+      "cefr": "A1",
+      "type": "vocab_recall",
+      "grammarPoint": "de-a1-vocab-food-drink",
+      "approved": 20,
+      "target": 10,
+      "deficit": 4,
+      "limit": 14,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:A2:cloze:es-a2-comparatives-superlatives",
+      "language": "ES",
+      "cefr": "A2",
+      "type": "cloze",
+      "grammarPoint": "es-a2-comparatives-superlatives",
+      "approved": 50,
+      "target": 30,
+      "deficit": 10,
+      "limit": 30,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:A2:cloze:es-a2-direct-object-pronouns",
+      "language": "ES",
+      "cefr": "A2",
+      "type": "cloze",
+      "grammarPoint": "es-a2-direct-object-pronouns",
+      "approved": 30,
+      "target": 30,
+      "deficit": 3,
+      "limit": 3,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:A2:translation:es-a2-direct-object-pronouns",
+      "language": "ES",
+      "cefr": "A2",
+      "type": "translation",
+      "grammarPoint": "es-a2-direct-object-pronouns",
+      "approved": 30,
+      "target": 30,
+      "deficit": 3,
+      "limit": 3,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:B1:cloze:es-b1-conditional",
+      "language": "ES",
+      "cefr": "B1",
+      "type": "cloze",
+      "grammarPoint": "es-b1-conditional",
+      "approved": 75,
+      "target": 75,
+      "deficit": 9,
+      "limit": 9,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:B1:cloze:es-b1-reciprocal-se",
+      "language": "ES",
+      "cefr": "B1",
+      "type": "cloze",
+      "grammarPoint": "es-b1-reciprocal-se",
+      "approved": 50,
+      "target": 50,
+      "deficit": 2,
+      "limit": 2,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:B1:sentence_construction:es-b1-conditional",
+      "language": "ES",
+      "cefr": "B1",
+      "type": "sentence_construction",
+      "grammarPoint": "es-b1-conditional",
+      "approved": 75,
+      "target": 75,
+      "deficit": 3,
+      "limit": 3,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "ES:B2:translation:es-b2-compound-tenses",
+      "language": "ES",
+      "cefr": "B2",
+      "type": "translation",
+      "grammarPoint": "es-b2-compound-tenses",
+      "approved": 75,
+      "target": 75,
+      "deficit": 3,
+      "limit": 3,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "TR:A1:cloze:tr-a1-accusative-definite-object",
+      "language": "TR",
+      "cefr": "A1",
+      "type": "cloze",
+      "grammarPoint": "tr-a1-accusative-definite-object",
+      "approved": 20,
+      "target": 20,
+      "deficit": 6,
+      "limit": 6,
+      "mechanism": "coverage-spec"
+    },
+    {
+      "cellKey": "TR:A1:translation:tr-a1-accusative-definite-object",
+      "language": "TR",
+      "cefr": "A1",
+      "type": "translation",
+      "grammarPoint": "tr-a1-accusative-definite-object",
+      "approved": 20,
+      "target": 20,
+      "deficit": 6,
+      "limit": 6,
+      "mechanism": "coverage-spec"
+    }
+  ]
+}
