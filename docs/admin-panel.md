@@ -100,6 +100,24 @@ or **mutating** (mutating ⇒ must write to `admin_audit_log`).
 Reason codes are a bounded enum (`packages/shared/src/generation-reasons.ts`)
 with display labels in `REASON_LABELS` — the queue can render them directly.
 
+### Reading a zero: ✗ versus ⚠
+
+Every surface that reports diversity (`/admin/diversity`, the `/admin/pool`
+cell drawer) distinguishes two kinds of zero, and the distinction is
+load-bearing rather than cosmetic:
+
+- **✗ (red)** — the denominator *proves* absence. Every approved row in the
+  cell carries that coverage axis (or a declared variant id) and the value
+  still has none.
+- **⚠ (neutral)** — rows remain untagged or unlabelled, so the zero may be a
+  **measurement gap** rather than missing content.
+
+An axis reading 0 across a whole cell far more often means missing *tags* than
+missing *content*; treating one as the other is how sound exercises get
+demoted. The single shared implementation lives in
+`apps/web/lib/admin/diversity-chip.ts` (`classifyDiversityDefect`) so the two
+surfaces cannot drift.
+
 ### 2. Pool & curriculum health
 
 | Surface | What it shows / does | Backing data | Mode |
@@ -107,6 +125,7 @@ with display labels in `REASON_LABELS` — the queue can render them directly.
 | **Pool health drill-down** | Extends today's pool-coverage table: click a cell to see its exercises, **per-axis diversity vs. floors** (person / polarity / wordClass / sentenceType), depletion rate, target vs. actual, and a **rejection-reason breakdown** (`rejectionReasonCounts`) to spot systematic generation failures. | `exercises.coverageTags`, `generation_jobs.coverageOutcome` / `rejectionReasonCounts`, `GET /admin/pool-status` | Read-only |
 | **On-demand generation trigger** | Refill an underfilled cell from the UI. The job model already reserves `trigger = 'admin'`; no endpoint exists yet. | new `POST /admin/generate` → SQS, `generation_jobs` | Mutating |
 | **Curriculum / grammar-point reference** | Grammar points per language/level, CEFR mapping, which have coverage specs, suitability flags (e.g. `sentenceConstructionSuitable`). Mostly read-only reference. | curriculum source, `skill_topics` | Read-only |
+| **Diversity** (`/admin/diversity`) | Every grammar point's *declared* diversity machinery — coverage axes and floors, `constructionVariants`, curated seed pools vs. frequency bands — against what the approved pool actually realizes. One row per point, expandable per cell. Flags the two failures nothing else surfaces: a cell **at target with unmet floors** (the scheduler has no deficit, so it never revisits it and the floors never fire — needs `demote:pool`), and a **bounded seed pool fully consumed** (seeding returns nothing and the cell silently stops generating). Deterministic, no LLM calls. Links out to `/admin/pool` for actions. | `exercises.coverage_tags`, `exercises.content_json->>'seedWord'`, curriculum source, `GET /admin/diversity` | Read-only |
 
 ### 3. Ops & cost
 
