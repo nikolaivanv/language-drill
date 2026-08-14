@@ -10,6 +10,7 @@ import {
   computeVariantSkew,
   computeStemMonotony,
   stemOf,
+  stemNoiseOf,
   type AuditRow,
 } from './collapse-metrics.js';
 
@@ -38,10 +39,21 @@ describe('surfaceOf', () => {
     expect(surfaceOf(ExerciseType.CONJUGATION, { lemma: 'ir' })).toBe('ir');
   });
 
-  it('reads prompt for sentence_construction', () => {
-    expect(surfaceOf(ExerciseType.SENTENCE_CONSTRUCTION, { prompt: 'Sie hat gestern...' })).toBe(
-      'Sie hat gestern...',
-    );
+  it('reads the FIRST modelAnswer for sentence_construction, not the prompt', () => {
+    // Signal 1 measures the answer side on every other type. SC read `prompt`
+    // until 2026-08-14, which left what an SC cell actually produces unmeasured.
+    expect(
+      surfaceOf(ExerciseType.SENTENCE_CONSTRUCTION, {
+        prompt: 'Use all four words below in one sentence.',
+        modelAnswers: ['Jeden Tag werden viele Briefe geschrieben.', 'Briefe werden geschrieben.'],
+      }),
+    ).toBe('Jeden Tag werden viele Briefe geschrieben.');
+  });
+
+  it('returns null for sentence_construction when modelAnswers is empty or not strings', () => {
+    expect(surfaceOf(ExerciseType.SENTENCE_CONSTRUCTION, { modelAnswers: [] })).toBeNull();
+    expect(surfaceOf(ExerciseType.SENTENCE_CONSTRUCTION, { modelAnswers: [42] })).toBeNull();
+    expect(surfaceOf(ExerciseType.SENTENCE_CONSTRUCTION, { prompt: 'x' })).toBeNull();
   });
 
   it('returns null for a type with no defined surface', () => {
@@ -377,5 +389,87 @@ describe('computeStemMonotony', () => {
       { id: 'a', type: ExerciseType.CONJUGATION, content: { lemma: 'ir' }, coverageTags: null },
     ];
     expect(computeStemMonotony(ExerciseType.CONJUGATION, rows)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// stemNoiseOf — the SC task-framing subtraction.
+//
+// Measured on prod 2026-08-14, monotony flagged 26 of 33 SC cells, with top
+// lemmas `one` (5 cells), `sentence` (3), `use` (2), `passive` (2),
+// `causative` (2) — all task vocabulary. Exactly one of the 33 (`friend`) was
+// genuine scene repetition. Subtracting the row's own `instructions` strips the
+// noise without a hand-maintained stoplist.
+// ---------------------------------------------------------------------------
+
+describe('stemNoiseOf', () => {
+  it('returns the instructions vocabulary for sentence_construction', () => {
+    const noise = stemNoiseOf(ExerciseType.SENTENCE_CONSTRUCTION, {
+      instructions: 'Write one sentence in German using the present passive.',
+    });
+    expect(noise.has('sentence')).toBe(true);
+    expect(noise.has('one')).toBe(true);
+    expect(noise.has('passive')).toBe(true);
+  });
+
+  it('is empty for every other type', () => {
+    expect(
+      stemNoiseOf(ExerciseType.CLOZE, { instructions: 'Fill the blank.' }).size,
+    ).toBe(0);
+    expect(
+      stemNoiseOf(ExerciseType.TRANSLATION, { instructions: 'Translate.' }).size,
+    ).toBe(0);
+  });
+
+  it('is empty when instructions are absent or not a string', () => {
+    expect(stemNoiseOf(ExerciseType.SENTENCE_CONSTRUCTION, {}).size).toBe(0);
+    expect(
+      stemNoiseOf(ExerciseType.SENTENCE_CONSTRUCTION, { instructions: 42 }).size,
+    ).toBe(0);
+  });
+});
+
+describe('computeStemMonotony — sentence_construction task framing', () => {
+  const scRow = (prompt: string, instructions: string): AuditRow =>
+    ({ content: { prompt, instructions } }) as unknown as AuditRow;
+
+  it('does NOT flag a cell whose only repetition is the task specification', () => {
+    // The real de-a2-passive-present shape: identical task wording, varied scene.
+    // Verbatim shape from prod: the instructions restate the prompt's task
+    // wording, which is exactly why subtracting them strips the boilerplate.
+    const instructions =
+      'Write one sentence in German using all four words below. Use the present passive. Describe the scene.';
+    const rows = [
+      scRow('Use all four words below in one sentence. Describe the post office.', instructions),
+      scRow('Use all four words below in one sentence. Describe the kitchen.', instructions),
+      scRow('Use all four words below in one sentence. Describe the garden.', instructions),
+    ];
+    const m = computeStemMonotony(ExerciseType.SENTENCE_CONSTRUCTION, rows);
+    // `one`, `sentence`, `use`, `passive` all come from the instructions and are
+    // gone; nothing survives in every row, so no lemma reaches a flagging share.
+    expect(m?.share ?? 0).toBeLessThan(0.85);
+    expect(['one', 'sentence', 'use', 'passive']).not.toContain(m?.topLemma);
+  });
+
+  it('still detects genuine scene repetition', () => {
+    // de-a1-questions' real defect: every prompt opens "Your friend…".
+    const instructions = 'Read the situation below and write one question in German. Ask about it.';
+    const rows = [
+      scRow('Your friend just moved to Berlin. Ask about the flat.', instructions),
+      scRow('Your friend bought a car. Ask about the price.', instructions),
+      scRow('Your friend started a job. Ask about the hours.', instructions),
+    ];
+    const m = computeStemMonotony(ExerciseType.SENTENCE_CONSTRUCTION, rows);
+    expect(m?.topLemma).toBe('friend');
+    expect(m?.share).toBe(1);
+  });
+
+  it('leaves other types unaffected by an instructions field', () => {
+    const rows = [
+      { content: { sentence: 'El perro ___ grande.', instructions: 'perro' } },
+      { content: { sentence: 'El perro ___ pequeño.', instructions: 'perro' } },
+    ] as unknown as AuditRow[];
+    const m = computeStemMonotony(ExerciseType.CLOZE, rows);
+    expect(m?.topLemma).toBe('perro');
   });
 });
