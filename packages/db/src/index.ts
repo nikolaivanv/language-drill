@@ -117,6 +117,18 @@ export {
   type DemotionAction,
 } from './generation/revalidation';
 
+// Diversity-mechanisms resolver — pure report of which coverage axes a cell
+// declares (controlled with floors, or monitored only) and where its per-draft
+// seed comes from. Consumed by the admin diversity panel; delegates to
+// seedKindFor and coverageAxesFor so it cannot drift from what generation does.
+export {
+  resolveCellMechanisms,
+  type DiversityMechanisms,
+  type DeclaredAxis,
+  type DeclaredSeed,
+} from './generation/diversity-mechanisms';
+export { seedKindFor } from './generation/seed-kind';
+
 // Per-grammar-point mastery — the update rule (used by the submit handler) and
 // the history-replay fold (used by the backfill CLI).
 export { updateMastery, replayHistory } from './mastery/update';
