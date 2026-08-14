@@ -1,12 +1,13 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { PoolStatusItem } from '@language-drill/api-client';
+import type { DiversityPoint, PoolStatusItem } from '@language-drill/api-client';
 
 const mockUsePoolCell = vi.fn();
 const mockGenerateMutateAsync = vi.fn();
 const mockUseGenerateCell = vi.fn((_args?: unknown) => ({ mutateAsync: mockGenerateMutateAsync, isPending: false }));
 const mockRevalidateMutateAsync = vi.fn();
 const mockUseRevalidateCell = vi.fn((_args?: unknown) => ({ mutateAsync: mockRevalidateMutateAsync, isPending: false }));
+const mockUseDiversity = vi.fn();
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
   return {
@@ -14,6 +15,7 @@ vi.mock('@language-drill/api-client', async () => {
     usePoolCell: (args: unknown) => mockUsePoolCell(args),
     useGenerateCell: (args: unknown) => mockUseGenerateCell(args),
     useRevalidateCell: (args: unknown) => mockUseRevalidateCell(args),
+    useDiversity: (args: unknown) => mockUseDiversity(args),
   };
 });
 
@@ -29,7 +31,82 @@ const item: PoolStatusItem = {
 };
 const fetchFn = vi.fn();
 
+// Base diversity point matching `item`'s (grammarPointKey, type) so
+// PoolCellDetail's find-by-key/find-by-type lookup resolves a cell.
+function diversityPointWith(overrides: Partial<DiversityPoint> = {}): DiversityPoint {
+  return {
+    key: 'es-b1-present-subjunctive',
+    name: 'Present subjunctive',
+    language: 'ES',
+    cefrLevel: 'B1',
+    kind: 'grammar',
+    targetOverride: null,
+    provenIssues: 0,
+    unknowns: 0,
+    cells: [],
+    ...overrides,
+  };
+}
+
+const diversityPointFixture = diversityPointWith({
+  provenIssues: 1,
+  cells: [
+    {
+      cellKey: 'ES:B1:cloze:es-b1-present-subjunctive',
+      type: 'cloze',
+      level: 'B1',
+      approved: 47,
+      target: 50,
+      atTarget: false,
+      axes: [],
+      seed: {
+        kind: 'construction-variants',
+        variants: [
+          { id: 'hearsay', directive: 'H.', share: 3, count: 31, quota: 30 },
+          { id: 'passive-like', directive: 'P.', share: 1, count: 0, quota: 10 },
+        ],
+        unlabelledRows: 0,
+      },
+      shortfalls: [],
+    },
+  ],
+});
+
+const untaggedPointFixture = diversityPointWith({
+  unknowns: 1,
+  cells: [
+    {
+      cellKey: 'ES:B1:cloze:es-b1-present-subjunctive',
+      type: 'cloze',
+      level: 'B1',
+      approved: 47,
+      target: 50,
+      atTarget: false,
+      axes: [
+        {
+          name: 'person',
+          role: 'controlled',
+          values: [
+            { value: '3sg', count: 8, floor: 5 },
+            { value: '2pl', count: 1, floor: 2 },
+          ],
+          untagged: 14,
+        },
+      ],
+      seed: { kind: 'none' },
+      shortfalls: [{ axis: 'person', value: '2pl', floor: 2, actual: 1 }],
+    },
+  ],
+});
+
 afterEach(() => vi.unstubAllEnvs());
+
+beforeEach(() => {
+  // Existing tests below don't exercise the diversity panels; give them a
+  // safe default so `diversity.data?.items` short-circuits instead of the
+  // hook returning undefined outright.
+  mockUseDiversity.mockReturnValue({ isLoading: false, isError: false, data: undefined });
+});
 
 describe('PoolCellDetail', () => {
   beforeEach(() => {
@@ -216,5 +293,47 @@ describe('PoolCellDetail — revalidate', () => {
     fireEvent.click(screen.getByRole('button', { name: /^preview$/i }));
     const note = await screen.findByText(/revalidate:cloze/i);
     expect(note.textContent).toMatch(/120/);
+  });
+});
+
+describe('PoolCellDetail — diversity panels', () => {
+  beforeEach(() => {
+    mockUsePoolCell.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { floors: { person: { '3sg': 5, '2pl': 2 } }, rejectionReasonCounts: {} },
+    });
+  });
+
+  it('shows the construction variants for the cell with realized counts', async () => {
+    mockUseDiversity.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { total: 1, items: [diversityPointFixture] },
+    });
+    render(<PoolCellDetail item={item} fetchFn={vi.fn()} />);
+    expect(await screen.findByText(/hearsay/i)).toBeInTheDocument();
+    expect(screen.getByTestId('variant-passive-like')).toHaveTextContent('✗');
+  });
+
+  it('names the resolved seed source', async () => {
+    mockUseDiversity.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { total: 1, items: [diversityPointFixture] },
+    });
+    render(<PoolCellDetail item={item} fetchFn={vi.fn()} />);
+    expect(await screen.findByText(/variant pool/i)).toBeInTheDocument();
+  });
+
+  it('reports untagged rows next to the existing floors panel', async () => {
+    // The existing "Diversity vs. floors" panel must not present a zero as a
+    // failure while rows are untagged.
+    mockUseDiversity.mockReturnValue({
+      isLoading: false, isError: false,
+      data: { total: 1, items: [untaggedPointFixture] },
+    });
+    render(<PoolCellDetail item={item} fetchFn={vi.fn()} />);
+    expect(await screen.findByText(/rows untagged/i)).toBeInTheDocument();
+    const belowFloor = screen.getByTestId('axis-person-2pl');
+    expect(belowFloor).toHaveTextContent('⚠');
+    expect(belowFloor).not.toHaveTextContent('✗');
   });
 });

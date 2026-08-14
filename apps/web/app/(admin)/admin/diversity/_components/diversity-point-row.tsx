@@ -4,14 +4,12 @@ import { useState } from 'react';
 import type { DiversityCell, DiversityPoint } from '@language-drill/api-client';
 
 import { cn } from '../../../../../lib/cn';
-
-const chipBase =
-  'inline-flex items-center rounded-pill border px-2 py-px text-[12px]';
-const ok = 'border-ok-soft bg-ok-soft text-ok';
-const bad = 'border-red-200 bg-red-50 text-red-700';
-// Deliberately NOT the failure style: an unknown is a measurement gap, and
-// styling it as a failure is what gets sound rows demoted.
-const unknown = 'border-rule bg-card text-ink-soft';
+import {
+  DIVERSITY_CHIP_BASE,
+  DIVERSITY_CHIP_CLASSNAMES,
+  DIVERSITY_CHIP_SUFFIX,
+  classifyDiversityDefect,
+} from '../../../../../lib/admin/diversity-chip';
 
 export function DiversityPointRow({ point }: { point: DiversityPoint }) {
   const [open, setOpen] = useState(false);
@@ -26,10 +24,14 @@ export function DiversityPointRow({ point }: { point: DiversityPoint }) {
         <span className="text-ink">{point.name}</span>
         <span className="text-ink-soft">{point.cefrLevel}</span>
         {point.provenIssues > 0 && (
-          <span className={cn(chipBase, bad)}>✗ {point.provenIssues}</span>
+          <span className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES.bad)}>
+            ✗ {point.provenIssues}
+          </span>
         )}
         {point.unknowns > 0 && (
-          <span className={cn(chipBase, unknown)}>⚠ {point.unknowns} unknown</span>
+          <span className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES.unknown)}>
+            ⚠ {point.unknowns} unknown
+          </span>
         )}
         {point.provenIssues === 0 && point.unknowns === 0 && (
           <span className="text-[12px] text-ink-soft">— ok</span>
@@ -68,17 +70,19 @@ function CellPanel({ cell }: { cell: DiversityCell }) {
             {axis.role === 'controlled' ? '*' : ''}
           </span>
           {axis.values.map((v) => {
-            const proven = v.count === 0 && v.floor !== null && axis.untagged === 0;
-            const unsure = v.count === 0 && v.floor !== null && axis.untagged > 0;
+            const cls = classifyDiversityDefect({
+              isDeficient: v.count === 0 && v.floor !== null,
+              unmeasuredRows: axis.untagged,
+            });
             return (
               <span
                 key={v.value}
                 data-testid={`axis-${axis.name}-${v.value}`}
-                className={cn(chipBase, proven ? bad : unsure ? unknown : ok)}
+                className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES[cls])}
               >
                 {v.value} {v.count}
                 {v.floor !== null ? `/${v.floor}` : ''}
-                {proven ? ' ✗' : unsure ? ' ⚠' : ' ✓'}
+                {` ${DIVERSITY_CHIP_SUFFIX[cls]}`}
               </span>
             );
           })}
@@ -101,17 +105,19 @@ function SeedPanel({ seed }: { seed: DiversityCell['seed'] }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-[88px] font-medium text-ink">variants</span>
         {seed.variants.map((v) => {
-          const proven = v.count === 0 && seed.unlabelledRows === 0;
-          const unsure = v.count === 0 && seed.unlabelledRows > 0;
+          const cls = classifyDiversityDefect({
+            isDeficient: v.count === 0,
+            unmeasuredRows: seed.unlabelledRows,
+          });
           return (
             <span
               key={v.id}
               title={v.directive}
               data-testid={`variant-${v.id}`}
-              className={cn(chipBase, proven ? bad : unsure ? unknown : ok)}
+              className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES[cls])}
             >
               {v.id} {v.count}/{Math.round(v.quota)}
-              {proven ? ' ✗' : unsure ? ' ⚠' : ' ✓'}
+              {` ${DIVERSITY_CHIP_SUFFIX[cls]}`}
             </span>
           );
         })}
