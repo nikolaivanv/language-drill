@@ -392,14 +392,73 @@ variant the deficit-ranked picker targets.
 with quality. When the rows worth keeping are the *correctly-shaped* ones rather
 than the newest, pin by id.
 
+## Pass 4 — the first demote driven by a signal that did not previously exist
+
+`ES:B1:sentence_construction:es-b1-relative-clauses` became visible only after
+#651 pointed signal 1 at `modelAnswers` instead of the task prompt: **78% of
+model answers opened "el café"**. Nothing had measured SC answers before.
+
+### The rows were fine; the generator had no diversity mechanism
+
+An SC cell declaring no `constructionVariants` was seeded by **nothing** —
+`priorPoolSurfaces` covers only vocab_recall / free_writing /
+contextual_paraphrase, frequency seeding covered cloze / translation /
+dictation, and this point declares no `coverageSpec` either. Identical prompt
+every batch.
+
+The controlled comparison is the same point's other cells:
+
+| cell of `es-b1-relative-clauses` | rows | mentions café |
+|---|---|---|
+| cloze (frequency-seeded) | 50 | **1** |
+| translation (frequency-seeded) | 50 | 2 |
+| **sentence_construction (unseeded)** | 46 | **41** |
+
+Same point, same curriculum, same template — only the seed differs. 31 of 33 SC
+cells were unseeded, and the pattern repeated (`de-a2-perfekt-with-haben` 59%
+"ich habe", `de-a2-weil-deshalb` 56% "ich bin").
+
+**So the demote was staged behind the fix.** #652 added SC to the frequency-seed
+branch (precedent: dictation joined it for the identical "everything is about
+reading a book" collapse), and the demote waited for **merge AND CDK deploy** —
+the generation Lambda runs deployed code, so demoting first would have burned 41
+rows and refilled them from the same unanchored prompt. Same conclusion #648
+recorded: *"the right fix is seeding, not demotion."*
+
+### The demote
+
+41 rows (the café ones) pinned by id, keeping the 5 non-café rows — not
+oldest-first, because age does not correlate with which rows are collapsed.
+3 of the 41 were `manual-approved`; prior status is recorded per row.
+
+Verified after: **46 → 5 approved, café 41 → 0.** 45 slots now refill under
+frequency seeding.
+
+### What this does NOT fix
+
+**All 46 rows used `donde`, and the 5 survivors still do.** A frequency seed is
+a content word, not a relative pronoun; nothing in this point pins relative-word
+choice. Expect the next audit to clear the answer-surface flag while the ~91%
+`donde` monotony flag persists.
+
+The residual fix is `constructionVariants` on the point (`que` / `a quien` /
+`donde` / noun + `que` + infinitive — the description already enumerates them),
+which pins rotation but retroactively unlabels ~146 healthy cloze and
+translation rows, recreating the labelling debt #640 cost $2.33 to clear. Worth
+deciding once café is gone and `donde` is the only remaining defect.
+
 ## Still outstanding
 
 - **Credits topped up 2026-08-14.** Confirm the next 04:00 UTC run clears the
   83-job backlog *and* fills the 910 rows now freed (831 + 79).
-- **Expect a pass 3.** Convergence takes two or three cycles per cell, so
-  re-audit after the next run rather than assuming the deficits closed. Cells
-  that refill to target while still under floor silently re-enter the stuck set
-  — they are invisible unless the audit is re-run.
+- **Re-audit after each run.** Convergence takes two or three cycles per cell.
+  Cells that refill to target while still under floor silently re-enter the
+  stuck set — invisible unless the audit is re-run. Passes 2, 3 and 4 each found
+  work the previous pass's worklist did not contain.
+- **Check the SC seeding fix empirically.** After the next 04:00 UTC run,
+  confirm the refilled `es-b1-relative-clauses` SC rows are NOT about cafés.
+  That is the test of #652; if they still are, frequency seeding is too loose an
+  anchor for open production and the fallback is `constructionVariants`.
 - `es-a1-quantifiers-muy-mucho` is resolved (pass 3 above). **Check its refill
   specifically**: the sibling-exclusion directives are unproven until rows
   generate under them. If new rows still pair `muy` with post-verbal `mucho`,
