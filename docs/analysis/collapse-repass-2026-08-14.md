@@ -146,14 +146,103 @@ the same concentrated surfaces. Nightly capacity is 120 jobs; historical yield
 ranged 352–3,719 approved rows per night depending on backlog, so 831 rows is
 roughly one to three nights.
 
+## Coverage-tag backfill — the 12 held cells
+
+Ran `backfill:coverage-tags --include-partial` (the widened selector) per cell,
+`--concurrency 8`, one cell at a time. **413 rows tagged, $6.09, zero failures**
+(`skipped-unusable 0, skipped-no-coverage 0, failed 0` in all 12). Verified
+after: all **418** approved rows in those cells carry the spec axis, 0 still
+missing, 0 NULL — and all 418 retained `polarity`, confirming the merge added
+without dropping.
+
+Cost ran **$0.0165/row**, about double the ~$0.008/row extrapolated from
+`revalidate:cloze`. Budget future coverage-tag passes at the higher rate.
+
+Neon snapshot before the write: `pre-coverage-tags-backfill-2026-08-14`
+(`br-mute-breeze-antnqqmi`). Taken because the merge *can* overwrite an existing
+`polarity`/`sentenceType` value if the validator reads one differently, and
+there is no per-row artifact for that.
+
+## Post-repass audit — `prod-post-repass-2026-08-14`
+
+| | before | after |
+|---|---|---|
+| Rows scanned | 25,033 | 24,202 |
+| Declared-but-unrealized | 182 | 176 |
+| **At target (stuck)** | **93** | **8** |
+| Below target (self-heals) | 89 | 168 |
+
+The demote did what it was meant to: stuck cells became below-target cells the
+scheduler will refill. `unrealized` barely moves because the mechanisms stay
+unrealized *until* the refill happens — again, read composition, not the
+summary.
+
+### The 12 held cells were worth holding — quantified
+
+| | audit demanded | true, after tagging |
+|---|---|---|
+| Cells with a deficit | 12 | **6** |
+| Rows of headroom | **199** | **30** |
+
+Six were **pure phantoms** — `es-a2-comparatives-superlatives` translation,
+`es-b1-reciprocal-se` translation, `tr-a1-locative` translation, both
+`es-a2-indirect-object-pronouns-se` cells, and `tr-a1-ablative-dative`
+translation now show no deficit at all. Their content was always fine.
+
+`es-a2-comparatives-superlatives` cloze is the clearest case: the audit reported
+`comparative: 0/14`; the truth is **37** (nearly 3× the floor). Real shortfalls
+exist only on `less` (4/8) and `equative` (2/8) — 10 rows, not the 30 the audit
+computed against untagged rows.
+
+**Generalizable rule: when `audit:collapse` reports an axis at 0-realized across
+an entire cell, check whether the rows carry the key at all before demoting.**
+A spec axis added after a pool was generated produces exactly this signature,
+and the audit cannot distinguish it from real collapse.
+
+## A defect in this repass's headroom sizing
+
+Each cell's demote was sized as its *axis deficit*. That is wrong for cells
+already **over** target: a cell gains headroom only once `approved` drops
+**below** `target`, so the correct size is `approved - target + deficit`.
+
+Five of the 80 demoted cells were over target; four still dropped below. One did
+not: **`DE:A1:vocab_recall:de-a1-vocab-food-drink`** — 24/10, demoted 4, now
+20/10, still at target and **still stuck**. Four rows spent for no headroom
+(recoverable from the artifact). So the repass created headroom in 79 of 80
+cells, not 80.
+
+Any future worklist built this way must use `approved - target + deficit`.
+
+## Remaining worklist — 8 at-target cells, 64 rows
+
+| cell | now | need | demote |
+|---|---|---|---|
+| `DE:A1:vocab_recall:de-a1-vocab-food-drink` | 20/10 | 4 | 14 |
+| `ES:A2:cloze:es-a2-comparatives-superlatives` | 50/30 | 10 | 30 |
+| `TR:A1:cloze:tr-a1-accusative-definite-object` | 20/20 | 6 | 6 |
+| `TR:A1:translation:tr-a1-accusative-definite-object` | 20/20 | 6 | 6 |
+| `ES:A2:cloze:es-a2-direct-object-pronouns` | 30/30 | 3 | 3 |
+| `ES:A2:translation:es-a2-direct-object-pronouns` | 30/30 | 3 | 3 |
+| `ES:B1:cloze:es-b1-reciprocal-se` | 50/50 | 2 | 2 |
+| `ES:A1:translation:es-a1-quantifiers-muy-mucho` | 20/20 | 10 | **hold** |
+
+The held cell is still 18/20 unlabelled (the #640 classifier declined to guess),
+so its variant counts remain meaningless. Label before demoting.
+
+**Do this only after the refill loop is proven** — see below.
+
 ## Still outstanding
 
-- Run `backfill:coverage-tags --include-partial` over the 12 tagging-gap cells
-  (413 rows), then re-audit them. **This CLI calls the validator even in
-  dry-run** — only the write is gated by `--apply` — so a dry run costs the same
-  as an apply.
-- Re-run `audit:collapse` after the pool refills to confirm the deficits closed.
-- The 89 below-target cells need no action; they self-heal.
+- **Confirm generation actually resumed.** As of 2026-08-14 ~02:20 UTC the last
+  `generation_jobs` row was still `2026-07-25T04:23Z`, zero jobs in 48h. #646
+  flipped the cron on 2026-08-13 but no post-resume run had fired yet (next
+  attempt 04:00 UTC). Until it does, the pool is 831 rows smaller with nothing
+  replacing them. Check that the run fires **and** that new rows carry the
+  starved variant ids / axis values rather than refilling the same concentrated
+  surfaces.
+- Then the 64-row second pass above.
+- Re-run `audit:collapse` once cells refill, to confirm the deficits closed.
+- The 168 below-target cells need no action; they self-heal.
 - Deferred #634 calibration items are unchanged: stem-monotony measures each
   point's own target lexeme, no `gender` axis exists, `sentence_construction`
   collapse is measured on the prompt rather than the answer.
