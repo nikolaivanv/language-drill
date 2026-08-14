@@ -357,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-13");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-14");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -449,8 +449,12 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-08-13", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-13");
+  it("bumps the generation prompt version to 2026-08-14", () => {
+    // 2026-08-14: the construction-variant directive reaches
+    // SENTENCE_CONSTRUCTION. USER-prompt builder only — no Langfuse push — but
+    // the cohort tag still has to move so SC traces before and after the
+    // rotation are separable.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-14");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
@@ -1088,6 +1092,31 @@ describe("construction-variant directive", () => {
     // Same concealment clause, worded for the source-side surface.
     expect(prompt).toContain(
       "Do not name or hint at the sub-construction in `instructions` or the English source itself",
+    );
+  });
+
+  it("mandates the sub-construction for a sentence_construction draft", () => {
+    // SC is open production: the learner writes their own sentence, so the
+    // directive has to bind the TARGET STRUCTURE the prompt elicits, not a
+    // blank or a source sentence. Rotation is also what makes a
+    // multi-construction point viable for SC at all — one construction per
+    // exercise, instead of an either/or prompt the validator flags ambiguous.
+    const prompt = buildGenerationUserPrompt(
+      { ...variantInputs, exerciseType: ExerciseType.SENTENCE_CONSTRUCTION } as never,
+      0,
+      "home",
+      "adversity",
+    );
+    expect(prompt).toContain("a mishap the speaker suffered");
+    expect(prompt).toContain("do not substitute another");
+    // The loose frequency wording must not leak in as an escape hatch.
+    expect(prompt).not.toContain("Build this exercise around the word");
+    // Every model answer must use the mandated construction — otherwise the
+    // generator answers its own prompt with a different one, which is the
+    // documented second failure mode for SC on multi-construction points.
+    expect(prompt).toContain("every model answer must use it");
+    expect(prompt).toContain(
+      "Do not name the sub-construction in the prompt the learner reads",
     );
   });
 

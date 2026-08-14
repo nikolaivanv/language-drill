@@ -1303,3 +1303,35 @@ describe('findDismissal', () => {
     ).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// es-b1-que-vs-cual: the `cuál + ser + noun phrase` use.
+//
+// The point's five original variants and its description covered qué/cuál as a
+// definition-vs-selection contrast, but not the very common datum question
+// (`¿Cuál es tu nombre?`), where Spanish takes cuál and English takes "what".
+// PR #631's rotation PINS a cell's pool to the declared variants, so 21 rows
+// demoted by the #647 repass would have refilled without ever generating it.
+// ---------------------------------------------------------------------------
+
+describe('es-b1-que-vs-cual covers cuál + ser + noun phrase', () => {
+  const point = ALL_CURRICULA.find((p) => p.key === 'es-b1-que-vs-cual');
+
+  it('declares a variant for the datum question', () => {
+    expect(point?.constructionVariants?.map((v) => v.id)).toContain(
+      'cual-ser-noun-phrase',
+    );
+  });
+
+  it('describes it, so the validator counts it as on-target', () => {
+    // `grammarPointMatch` is judged against the DESCRIPTION ("ANY construction
+    // described in the grammar-point description is on-target"), so a variant
+    // the description omits would generate and then be flagged off-target.
+    expect(point?.description).toMatch(/¿Cuál es tu nombre\?/);
+  });
+
+  it('keeps a positive example and the English-interference error', () => {
+    expect(point?.examplesPositive).toContain('¿Cuál es tu número de teléfono?');
+    expect(point?.commonErrors?.join(' ')).toMatch(/¿Qué es tu nombre\?/);
+  });
+});

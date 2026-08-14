@@ -206,8 +206,18 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * Bump clears target-reached / low-yield suppression so the touched cells
  * re-run under the rotation; at-target cells additionally need demote:pool
  * (see docs/curriculum-authoring.md retrofit section).
+ *
+ * `2026-08-14`: es-b1-que-vs-cual gains a sixth variant, `cual-ser-noun-phrase`
+ * (¿Cuál es tu nombre?), plus the matching description clause, example and
+ * common error. The point previously framed cuál as selection-from-a-set only,
+ * so the highest-frequency cuál use a B1 learner meets — the datum question,
+ * where English says "what" — was undescribed and undeclared. That was
+ * harmless while the pool was static, but #631 rotation PINS a cell to the
+ * declared variants, and the #647 repass had just freed 21 slots on this point
+ * (cloze 50→39, translation 50→40); without this they would have refilled from
+ * the five old variants and re-frozen the gap for another cycle.
  */
-export const CURRICULUM_VERSION_ES = '2026-08-08';
+export const CURRICULUM_VERSION_ES = '2026-08-14';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2575,19 +2585,21 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Qué vs. cuál/cuáles',
     description:
-      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?); in standard European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative, and adónde asks where to.',
+      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?) and, with ser + a noun phrase, asks for a specific datum where English uses "what" (¿Cuál es tu nombre?, not *¿Qué es tu nombre?); in standard European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative, and adónde asks where to.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
       '¿Qué es la democracia?',
       '¿Cuál de estos dos prefieres?',
+      '¿Cuál es tu número de teléfono?',
       '¿Qué libro estás leyendo?',
       '¿Con quién vas al cine?',
       '¿Adónde vamos este verano?',
     ],
-    examplesNegative: ['*¿Cuál libro estás leyendo?'],
+    examplesNegative: ['*¿Cuál libro estás leyendo?', '*¿Qué es tu nombre?'],
     commonErrors: [
       'Using "cuál" directly before a noun in standard European Spanish instead of "qué" ("*¿cuál libro quieres?" instead of "¿qué libro quieres?").',
+      'Calquing English "what" in a datum question with ser + a noun phrase ("*¿Qué es tu nombre?" instead of "¿Cuál es tu nombre?") — the qué/cuál split does not follow the English what/which split here.',
       'Stranding the preposition at the end of the question, as in English, instead of fronting it with the interrogative ("*¿Quién vas al cine con?" instead of "¿Con quién vas al cine?").',
       'Using "cuál" instead of "qué" when asking for the definition of an abstract concept ("*¿Cuál es el amor?" instead of "¿Qué es el amor?").',
     ],
@@ -2607,6 +2619,11 @@ const esCurriculum: readonly GrammarPoint[] = [
         id: 'cual-selection-from-set',
         directive:
           'cuál/cuáles as a pronoun selecting one member of a known set (¿Cuál de estos dos prefieres?; ¿Cuáles te llevas?)',
+      },
+      {
+        id: 'cual-ser-noun-phrase',
+        directive:
+          'cuál + ser + a noun phrase asking for a specific datum — name, address, phone number, capital, favourite (¿Cuál es tu nombre?; ¿Cuál es la capital de Perú?) — where English says "what", NOT a definition question',
       },
       {
         id: 'que-before-noun',

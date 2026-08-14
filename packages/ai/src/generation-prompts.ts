@@ -264,7 +264,12 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // (saber/poder): gloss with the neutral English term, force the contrast
 // in the L2 sentence, omit the gloss if it cannot be forced. Template edit
 // → Langfuse push per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-08-13";
+// Bumped 2026-08-14 — the construction-variant directive now also fires for
+// SENTENCE_CONSTRUCTION, with wording for open production (bind the target
+// structure and every model answer; single scorable target). USER-prompt
+// builder only — ships with the code deploy, NO Langfuse push. Bumped so SC
+// traces before and after the rotation do not collapse into one cohort.
+export const GENERATION_PROMPT_VERSION = "generate@2026-08-14";
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -795,7 +800,8 @@ export function buildGenerationUserPrompt(
   // cloze/translation seed this way (see `seedKindFor`).
   const constructionVariant =
     (inputs.exerciseType === ExerciseType.CLOZE ||
-      inputs.exerciseType === ExerciseType.TRANSLATION) &&
+      inputs.exerciseType === ExerciseType.TRANSLATION ||
+      inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION) &&
     seedWord
       ? inputs.grammarPoint.constructionVariants?.find((v) => v.id === seedWord)
       : undefined;
@@ -815,7 +821,16 @@ export function buildGenerationUserPrompt(
           // construction — this clause closes that hole without softening
           // the MUST, and reinforces the system prompt's Spoiled-blank rule
           // rather than replacing it.
-          inputs.exerciseType === ExerciseType.TRANSLATION
+          inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
+          ? // Open production: there is no blank and no source sentence, so the
+            // directive has to bind the TARGET STRUCTURE the prompt elicits and
+            // every model answer. Naming it in the prompt is the SC form of the
+            // spoiler the cloze/translation branches forbid; letting a model
+            // answer drift to another construction is the second documented SC
+            // failure on multi-construction points (a model answer that is
+            // itself the point's commonError).
+            `This exercise MUST target the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write a prompt whose situation can only be answered with exactly this sub-construction, and every model answer must use it — do not substitute another, and do not fall back to the point's most common pattern. Do not name the sub-construction in the prompt the learner reads, and do not offer it as one option among several: the prompt must have a single scorable target, which the learner produces from the situation alone.\n\n`
+          : inputs.exerciseType === ExerciseType.TRANSLATION
           ? `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Write an English source sentence that naturally elicits exactly this sub-construction — the source must not telegraph a different one, and must not lean on the point's most common pattern. Use exactly this sub-construction; do not substitute another. Do not name or hint at the sub-construction in \`instructions\` or the English source itself — the learner must recognize and produce it from the source alone, not read it off the page.\n\n`
           : `This exercise MUST use the following sub-construction of ${inputs.grammarPoint.name}: ${constructionVariant.directive}. Use exactly this sub-construction; do not substitute another, and do not fall back to the point's most common pattern. Do not name or hint at the sub-construction in \`instructions\` or the surrounding sentence — the learner must recognize and produce it from the blank's context alone, not read it off the page.\n\n`
         : inputs.exerciseType === ExerciseType.CONJUGATION

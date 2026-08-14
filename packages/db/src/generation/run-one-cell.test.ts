@@ -2042,3 +2042,43 @@ describe('tallyCoverageOutcome', () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// sentence_construction under construction-variant rotation.
+//
+// SC was gated out of variant seeding, which left the one point that declares
+// both (`de-b1-um-zu-damit`) with a collapsed SC cell no repass could fix:
+// demoting SC rows there frees slots the rotation cannot refill. Rotation is
+// also the documented remedy for the "multi-construction points are a poor fit
+// for SC" failure — it forces ONE construction per exercise instead of letting
+// the prompt offer an either/or the validator then flags as ambiguous.
+// ---------------------------------------------------------------------------
+
+describe('seedKindFor — construction variants on sentence_construction', () => {
+  const variants = [
+    { id: 'um-zu-same-subject', directive: 'um … zu' },
+    { id: 'damit-different-subject', directive: 'damit' },
+  ];
+
+  it('routes a sentence_construction cell with variants to construction-variants', () => {
+    expect(
+      seedKindFor({
+        language: 'DE',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
+  it('leaves a sentence_construction cell without variants unseeded', () => {
+    expect(
+      seedKindFor({
+        language: 'DE',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+        grammarPoint: { kind: 'grammar' },
+      } as never),
+    ).toBeNull();
+  });
+});
