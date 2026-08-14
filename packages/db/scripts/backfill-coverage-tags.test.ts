@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
 
 import {
+  mergeCoverageTags,
+  missingSpecAxes,
   parseBackfillArgs,
   reconstructForValidation,
   type CandidateRow,
@@ -41,6 +43,87 @@ describe("parseBackfillArgs", () => {
     expect(a.limit).toBe(50);
     expect(a.concurrency).toBe(8);
     expect(a.maxCostUsd).toBe(3);
+  });
+
+  it("defaults --include-partial off, and the cell filters to null", () => {
+    const a = parseBackfillArgs([]);
+    expect(a.includePartial).toBe(false);
+    expect(a.grammarPoint).toBeNull();
+    expect(a.exerciseType).toBeNull();
+  });
+
+  it("parses --include-partial, --grammar-point and --type", () => {
+    const a = parseBackfillArgs([
+      "--include-partial",
+      "--grammar-point",
+      "es-a2-comparatives-superlatives",
+      "--type",
+      ExerciseType.CLOZE,
+    ]);
+    expect(a.includePartial).toBe(true);
+    expect(a.grammarPoint).toBe("es-a2-comparatives-superlatives");
+    expect(a.exerciseType).toBe(ExerciseType.CLOZE);
+  });
+
+  it("rejects an unknown --type", () => {
+    expect(() => parseBackfillArgs(["--type", "haiku"])).toThrow(/--type/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// missingSpecAxes — the selector that the `coverage_tags IS NULL` guard missed
+// ---------------------------------------------------------------------------
+
+describe("missingSpecAxes", () => {
+  const spec = { axes: [{ name: "comparison", floors: {} }] } as never;
+
+  it("flags a spec axis absent from otherwise-populated tags", () => {
+    // The real shape of the 12 stuck cells: tagged, but predating the axis.
+    expect(
+      missingSpecAxes({ polarity: "affirmative", sentenceType: "declarative" }, spec),
+    ).toEqual(["comparison"]);
+  });
+
+  it("flags every spec axis when tags are null", () => {
+    expect(missingSpecAxes(null, spec)).toEqual(["comparison"]);
+  });
+
+  it("returns nothing once the axis is present", () => {
+    expect(missingSpecAxes({ comparison: "comparative" }, spec)).toEqual([]);
+  });
+
+  it("returns nothing for a point with no coverageSpec", () => {
+    expect(missingSpecAxes({ polarity: "affirmative" }, undefined)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// mergeCoverageTags
+// ---------------------------------------------------------------------------
+
+describe("mergeCoverageTags", () => {
+  it("keeps an existing axis the fresh reading does not mention", () => {
+    // Guards the data-loss regression: a wholesale replace here would drop
+    // sentenceType, silently narrowing a row while "backfilling" it.
+    expect(
+      mergeCoverageTags({ polarity: "affirmative", sentenceType: "declarative" }, {
+        comparison: "comparative",
+      }),
+    ).toEqual({
+      polarity: "affirmative",
+      sentenceType: "declarative",
+      comparison: "comparative",
+    });
+  });
+
+  it("prefers the fresh value on conflict", () => {
+    expect(mergeCoverageTags({ polarity: "affirmative" }, { polarity: "negative" })).toEqual({
+      polarity: "negative",
+    });
+  });
+
+  it("handles null stored tags", () => {
+    expect(mergeCoverageTags(null, { polarity: "negative" })).toEqual({ polarity: "negative" });
   });
 });
 

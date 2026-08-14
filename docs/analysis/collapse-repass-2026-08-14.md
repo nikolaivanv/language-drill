@@ -1,0 +1,297 @@
+# Collapse repass — production, 2026-08-14
+
+_First run of the `audit:collapse` (#634) worklist against production, and the
+first since #640 labelled 1,766 rows with real `constructionVariants` ids. The
+audit re-run was `--dry-run` (748 cells, **$0.00**, zero LLM calls); the demote
+that followed wrote to the production Neon branch
+(`br-green-waterfall-ancrvpr5`). Supersedes the `--dry-run` inventory in
+`pool-collapse-baseline-2026-08-11.md` (#635), whose worklist was computed
+against the unlabelled pool._
+
+## The headline counters moved by almost nothing — and that is not the story
+
+| | #635 (2026-08-11) | this run |
+|---|---|---|
+| Cells scanned | 752 | 748 |
+| Declared-but-unrealized | 184 | 182 |
+| — at target (stuck) | 94 | 93 |
+| — below target (self-heals) | 90 | 89 |
+| Cells carrying unlabelled rows | 51 | **25** |
+| Unrecognized-seed rows | 1,939 | **173** |
+
+Exactly the trap recorded after #640: both summary counters are booleans over
+conditions that merely *shifted terms* (`unrecognizedSeedCount` → `underMin`)
+when the backfill labelled the rows. Read per-cell composition, never the
+summary. The findings are now `underMin` — i.e. we can finally see *which*
+variant is thin rather than only that a cell is unlabelled — which is what made
+this repass actionable at all.
+
+## Partial demotion, not wholesale
+
+The #635 doc says at-target cells "need a manual demote" without saying how
+much. Reading the two refill mechanisms settles it:
+
+- `pickVariantSeeds` (`packages/shared/src/construction-variant-seed.ts`) ranks
+  variants by deficit against fair share and seeds the most starved first.
+- `decideCoverageTargets` (`infra/lambda/src/generation/coverage-decision.ts`)
+  water-fills each axis, repeatedly picking the lowest-count value.
+
+Both short-circuit on `need <= 0`. So an at-target cell is stuck **purely for
+lack of headroom** — not because its rows are wrong. Creating *some* headroom is
+sufficient; the schedulers then self-target the starved values.
+
+That is **831 rows**, not the **3,764** a wholesale demote of the 93 at-target
+cells would have destroyed.
+
+## 13 of the 93 at-target cells were excluded
+
+### 12 tagging-gap cells — 413 rows that must NOT be demoted
+
+Their rows *are* tagged; they simply lack the axis the spec is short on. All 50
+`es-a2-comparatives-superlatives` cloze rows carry
+`{polarity, sentenceType}` and **zero** carry `comparison`: the axis was added
+to the `coverageSpec` after the pool was generated. The audit's "0/14
+comparative" is missing bookkeeping, not missing content, and demoting on it
+would have destroyed 418 possibly-sound exercises — the same mistake #635
+warned about for `seedWord`, one column over.
+
+| cell | rows | missing axis | tagged but missing it |
+|---|---|---|---|
+| `ES:A2:cloze:es-a2-comparatives-superlatives` | 50 | `comparison` | 50 |
+| `ES:A2:translation:es-a2-comparatives-superlatives` | 50 | `comparison` | 50 |
+| `ES:B1:cloze:es-b1-reciprocal-se` | 50 | `person` | 49 |
+| `ES:B1:translation:es-b1-reciprocal-se` | 50 | `person` | 49 |
+| `TR:A1:translation:tr-a1-locative` | 38 | `number` | 38 |
+| `ES:A2:cloze:es-a2-direct-object-pronouns` | 30 | `number` | 30 |
+| `ES:A2:translation:es-a2-direct-object-pronouns` | 30 | `number` | 29 |
+| `ES:A2:cloze:es-a2-indirect-object-pronouns-se` | 30 | `number` | 29 |
+| `ES:A2:translation:es-a2-indirect-object-pronouns-se` | 30 | `number` | 29 |
+| `TR:A1:cloze:tr-a1-accusative-definite-object` | 20 | `number` | 20 |
+| `TR:A1:translation:tr-a1-accusative-definite-object` | 20 | `number` | 20 |
+| `TR:A1:translation:tr-a1-ablative-dative` | 20 | `case` | 20 |
+
+**`coverage_tags IS NULL` is 0 in every one of these cells**, so
+`backfill:coverage-tags` as written selected *nothing* here — a no-op on
+precisely the rows that need it, the same bug class as the `seedWord IS NULL`
+guard that made the #631 variant backfill a no-op on 96% of its rows. Fixed by
+`--include-partial` (see the CLI's header); the widened selector reaches **413**
+of these rows.
+
+### 1 cell still substantially unlabelled
+
+`ES:A1:translation:es-a1-quantifiers-muy-mucho` — 18 of 20 rows carry no
+recognized variant id (the #640 classifier declined to guess), so its variant
+counts are not yet meaningful. Held.
+
+## What was demoted
+
+**831 rows across 80 cells, `--reason pool-hygiene`.**
+
+| language | cells | rows |
+|---|---|---|
+| ES | 49 | 534 |
+| TR | 27 | 268 |
+| DE | 4 | 29 |
+
+By mechanism: 516 rows coverage-spec, 315 rows construction-variants. No cell
+had both — the two deficits are disjoint across the whole worklist.
+
+`pool-hygiene` is the correct reason and the choice is load-bearing: these rows
+under-cover a declared mechanism, they are not defective. `quality` and
+`learner-flag` are the two `NON_EVIDENCE_DEMOTION_REASONS`, which would revoke
+learners' credit for past attempts and require a `backfill:mastery` rebuild.
+Nothing was deleted — rows move to `review_status = 'rejected'`.
+
+## Rollback
+
+`collapse-repass-2026-08-14-rollback.json` records all 831 primary keys **and
+each row's prior status** — 826 `auto-approved`, 5 `manual-approved`. The prior
+status matters: a revert that assumed `auto-approved` would silently flatten the
+5 hand-curated rows. Committed to the repo deliberately; the #640 artifacts
+ended up untracked outside it and are irreplaceable.
+
+```
+pnpm --filter @language-drill/db exec tsx scripts/collapse-repass-2026-08-14.ts \
+  --revert docs/analysis/collapse-repass-2026-08-14-rollback.json --apply
+```
+
+## The run itself — one incident
+
+The first `--apply` **timed out after 54 of 80 cells (582 of 831 rows)**. Phase 2
+issued one `UPDATE` per row: 831 sequential round trips to Neon. Both paths now
+chunk by id (200/batch).
+
+Re-running `--apply` would have caused real damage rather than merely repeating
+work: the 582 already-demoted rows now read as `rejected`, so
+`selectRowsToDemote` skips them and returns the *next-oldest* approved rows —
+demoting a second, unplanned tranche, and overwriting the artifact so the first
+tranche's ids became the only unrecorded evidence of what happened. `--resume`
+therefore works **only** from the captured id list and never re-selects. It
+reported 582 already demoted / 249 remaining, completed to 831/831, and per-cell
+counts were then verified independently in SQL (e.g. `tr-b1-olarak` translation
+50→42 against a planned limit of 8).
+
+## Sequencing caveat, recorded because it was overridden knowingly
+
+Generation had **not** provably resumed when the demote ran. #646 flipped the
+cron on 2026-08-13, but the last `generation_jobs` row was `2026-07-25T04:23Z`
+and there were zero jobs in the preceding 48h — the first post-resume nightly
+run (04:00 UTC) had not yet fired. Demoting ahead of that confirmation shrinks
+the pool with nothing yet proven to refill it. The recommendation was to pilot
+one cell and wait; the decision was to proceed with all 80.
+
+**Open follow-up:** confirm the 04:00 UTC run fired, and that the freed slots
+are being targeted at the starved variants and axis values rather than refilling
+the same concentrated surfaces. Nightly capacity is 120 jobs; historical yield
+ranged 352–3,719 approved rows per night depending on backlog, so 831 rows is
+roughly one to three nights.
+
+## Coverage-tag backfill — the 12 held cells
+
+Ran `backfill:coverage-tags --include-partial` (the widened selector) per cell,
+`--concurrency 8`, one cell at a time. **413 rows tagged, $6.09, zero failures**
+(`skipped-unusable 0, skipped-no-coverage 0, failed 0` in all 12). Verified
+after: all **418** approved rows in those cells carry the spec axis, 0 still
+missing, 0 NULL — and all 418 retained `polarity`, confirming the merge added
+without dropping.
+
+Cost ran **$0.0165/row**, about double the ~$0.008/row extrapolated from
+`revalidate:cloze`. Budget future coverage-tag passes at the higher rate.
+
+Neon snapshot before the write: `pre-coverage-tags-backfill-2026-08-14`
+(`br-mute-breeze-antnqqmi`). Taken because the merge *can* overwrite an existing
+`polarity`/`sentenceType` value if the validator reads one differently, and
+there is no per-row artifact for that.
+
+## Post-repass audit — `prod-post-repass-2026-08-14`
+
+| | before | after |
+|---|---|---|
+| Rows scanned | 25,033 | 24,202 |
+| Declared-but-unrealized | 182 | 176 |
+| **At target (stuck)** | **93** | **8** |
+| Below target (self-heals) | 89 | 168 |
+
+The demote did what it was meant to: stuck cells became below-target cells the
+scheduler will refill. `unrealized` barely moves because the mechanisms stay
+unrealized *until* the refill happens — again, read composition, not the
+summary.
+
+### The 12 held cells were worth holding — quantified
+
+| | audit demanded | true, after tagging |
+|---|---|---|
+| Cells with a deficit | 12 | **6** |
+| Rows of headroom | **199** | **30** |
+
+Six were **pure phantoms** — `es-a2-comparatives-superlatives` translation,
+`es-b1-reciprocal-se` translation, `tr-a1-locative` translation, both
+`es-a2-indirect-object-pronouns-se` cells, and `tr-a1-ablative-dative`
+translation now show no deficit at all. Their content was always fine.
+
+`es-a2-comparatives-superlatives` cloze is the clearest case: the audit reported
+`comparative: 0/14`; the truth is **37** (nearly 3× the floor). Real shortfalls
+exist only on `less` (4/8) and `equative` (2/8) — 10 rows, not the 30 the audit
+computed against untagged rows.
+
+**Generalizable rule: when `audit:collapse` reports an axis at 0-realized across
+an entire cell, check whether the rows carry the key at all before demoting.**
+A spec axis added after a pool was generated produces exactly this signature,
+and the audit cannot distinguish it from real collapse.
+
+## A defect in this repass's headroom sizing
+
+Each cell's demote was sized as its *axis deficit*. That is wrong for cells
+already **over** target: a cell gains headroom only once `approved` drops
+**below** `target`, so the correct size is `approved - target + deficit`.
+
+Five of the 80 demoted cells were over target; four still dropped below. One did
+not: **`DE:A1:vocab_recall:de-a1-vocab-food-drink`** — 24/10, demoted 4, now
+20/10, still at target and **still stuck**. Four rows spent for no headroom
+(recoverable from the artifact). So the repass created headroom in 79 of 80
+cells, not 80.
+
+Any future worklist built this way must use `approved - target + deficit`.
+
+## Remaining worklist — 8 at-target cells, 64 rows
+
+| cell | now | need | demote |
+|---|---|---|---|
+| `DE:A1:vocab_recall:de-a1-vocab-food-drink` | 20/10 | 4 | 14 |
+| `ES:A2:cloze:es-a2-comparatives-superlatives` | 50/30 | 10 | 30 |
+| `TR:A1:cloze:tr-a1-accusative-definite-object` | 20/20 | 6 | 6 |
+| `TR:A1:translation:tr-a1-accusative-definite-object` | 20/20 | 6 | 6 |
+| `ES:A2:cloze:es-a2-direct-object-pronouns` | 30/30 | 3 | 3 |
+| `ES:A2:translation:es-a2-direct-object-pronouns` | 30/30 | 3 | 3 |
+| `ES:B1:cloze:es-b1-reciprocal-se` | 50/50 | 2 | 2 |
+| `ES:A1:translation:es-a1-quantifiers-muy-mucho` | 20/20 | 10 | **hold** |
+
+The held cell is still 18/20 unlabelled (the #640 classifier declined to guess),
+so its variant counts remain meaningless. Label before demoting.
+
+**Do this only after the refill loop is proven** — see below.
+
+## The refill loop is CONFIRMED working — and the run ran out of credits
+
+The first post-resume nightly run fired **2026-08-14 04:00 UTC**. Two checks,
+both clean:
+
+**1. The scheduler targeted exactly the cells the demote freed.**
+`requested_count` matches the per-cell demote counts one-for-one — not
+approximately:
+
+| cell | demoted | requested |
+|---|---|---|
+| `es:b2:translation:es-b2-compound-tenses` | 27 | 27 |
+| `es:b1:translation:es-b1-conditional` | 30 | 30 |
+| `es:b2:cloze:es-b2-complex-conditionals` | 23 | 23 |
+| `es:b1:translation:es-b1-present-subjunctive` | 26 | 26 |
+| `es:a2:translation:es-a2-por-para` | 14 | 14 |
+
+**2. New rows went to the starved values, not the concentrated ones.** For
+`es-b1-conditional` cloze, all 19 new rows landed on the three under-floor
+persons and **zero** on the two over-represented ones:
+
+| person | before | now | new |
+|---|---|---|---|
+| 1sg | 32 | 24 | **0** |
+| 3sg | 17 | 14 | **0** |
+| 2sg | 12 | 13 | +7 |
+| 3pl | 7 | 12 | +6 |
+| 1pl | 7 | 12 | +6 |
+
+This validates the entire basis for partial demotion. It also shows convergence
+takes **more than one pass**: floors are 15 and the cell sits at 12/13/12,
+because oldest-first demotion also removed rows *from* the starved buckets.
+Expect two or three cycles per cell, not one.
+
+### Credit exhaustion cut the run 69% short
+
+Of 120 jobs: **37 succeeded, 83 failed**, every failure the same —
+`Your credit balance is too low to access the Anthropic API`. The run spent
+**$17.00 in 16 minutes** (04:00 → 04:16), hit zero at 04:17, and the remaining
+83 jobs failed instantly.
+
+So only **511 of the 831** freed slots refilled; the pool is still ~320 rows
+below its pre-repass size. The failed jobs are not lost — they self-recover on
+the next 04:00 UTC run once the balance is topped up. **Nothing alarms on
+this**, so it is invisible unless `generation_jobs.status` is checked directly.
+
+Contributing factor worth recording: the coverage-tag backfill on this branch
+spent **$6.09** (plus $0.82 for the pilot) about 90 minutes earlier, on the same
+account that funds nightly generation. Against a balance with roughly $17 of
+headroom that is a material fraction, and it likely brought the exhaustion point
+forward. **Check available credit before discretionary AI spend on this
+account** — a $7 backfill is not free if it displaces a night of generation.
+
+## Still outstanding
+
+- **Top up Anthropic credits**, then confirm the next run clears the 83-job
+  backlog.
+- Then the 64-row second pass above — but let one *uninterrupted* run complete
+  first, now that we know a run can stop a third of the way through in silence.
+- Re-run `audit:collapse` once cells refill, to confirm the deficits closed.
+- The 168 below-target cells need no action; they self-heal.
+- Deferred #634 calibration items are unchanged: stem-monotony measures each
+  point's own target lexeme, no `gender` axis exists, `sentence_construction`
+  collapse is measured on the prompt rather than the answer.

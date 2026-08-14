@@ -4,22 +4,38 @@
  * generation is tagged at insert time; this backfills legacy rows.
  *
  * Replays the current validator over each approved row (`auto-approved` +
- * `manual-approved`) whose `coverage_tags IS NULL`, reads `result.coverage`,
- * applies the cell-applicability rule (`applicableCoverageTags` from Task 5),
- * and writes the column.
+ * `manual-approved`) that needs tagging, reads `result.coverage`, applies the
+ * cell-applicability rule (`applicableCoverageTags` from Task 5), and merges
+ * the result into the column.
+ *
+ * Two selection modes:
+ *   - default — rows whose `coverage_tags IS NULL`.
+ *   - `--include-partial` — ALSO rows whose tags exist but lack an axis the
+ *     point's `coverageSpec` declares. This is the case a `coverageSpec` axis
+ *     added AFTER a cell was generated creates: every row is tagged, none
+ *     carries the new key, and `audit:collapse` reports the axis as 0-realized
+ *     even though the content may be fine. `IS NULL` alone never reaches them
+ *     — the same blind spot as the `seedWord IS NULL` guard that made the #631
+ *     variant backfill a no-op on 96% of its rows.
+ *
+ * Writes MERGE over existing tags (`mergeCoverageTags`), so re-tagging a
+ * partially-tagged row can only add axes, never drop ones it already had.
  *
  * Scope: because polarity/sentenceType apply to all grammar cells (not only
- * personRotation ones), this effectively covers the whole approved grammar +
- * vocab pool. Bound spend with --max-cost-usd and --language/--cefr. The pass
- * is resumable: it only touches rows with coverage_tags IS NULL.
+ * personRotation ones), the default mode effectively covers the whole approved
+ * grammar + vocab pool. Bound spend with --max-cost-usd and
+ * --language/--cefr/--grammar-point/--type. The pass is resumable: a row that
+ * has been tagged stops matching.
  *
  * Defaults to dry-run; pass --apply to write.
  *
  * Usage:
  *   pnpm backfill:coverage-tags
- *   pnpm backfill:coverage-tags -- --language TR --cefr A1
- *   pnpm backfill:coverage-tags -- --apply --max-cost-usd 5
- *   pnpm backfill:coverage-tags -- --limit 100 --concurrency 4
+ *   pnpm backfill:coverage-tags --language TR --cefr A1
+ *   pnpm backfill:coverage-tags --apply --max-cost-usd 5
+ *   pnpm backfill:coverage-tags --limit 100 --concurrency 4
+ *   pnpm backfill:coverage-tags --include-partial \
+ *     --grammar-point es-a2-comparatives-superlatives --type cloze
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  */
@@ -40,6 +56,7 @@ import {
   CefrLevel,
   ExerciseType,
   Language,
+  type CoverageSpec,
   type CoverageTags,
   type CurriculumCefrLevel,
   type ExerciseContent,
@@ -73,6 +90,10 @@ export type BackfillArgs = {
   apply: boolean;
   language: Language | null;
   cefrLevel: CefrLevel | null;
+  grammarPoint: string | null;
+  exerciseType: string | null;
+  /** Also consider rows whose tags exist but lack a spec-declared axis. */
+  includePartial: boolean;
   limit: number | null;
   concurrency: number;
   maxCostUsd: number;
@@ -82,6 +103,9 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
   let apply = false;
   let language: Language | null = null;
   let cefrLevel: CefrLevel | null = null;
+  let grammarPoint: string | null = null;
+  let exerciseType: string | null = null;
+  let includePartial = false;
   let limit: number | null = null;
   let concurrency = DEFAULT_CONCURRENCY;
   let maxCostUsd = DEFAULT_MAX_COST_USD;
@@ -94,6 +118,21 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
       apply = true;
     } else if (arg === '--dry-run') {
       apply = false;
+    } else if (arg === '--include-partial') {
+      includePartial = true;
+    } else if (arg === '--grammar-point') {
+      const next = argv[++i];
+      if (next === undefined) throw new Error('--grammar-point requires a value');
+      grammarPoint = next;
+    } else if (arg === '--type') {
+      const next = argv[++i];
+      if (next === undefined) throw new Error('--type requires a value');
+      if (!EXERCISE_TYPE_VALUES.has(next)) {
+        throw new Error(
+          `--type: expected one of ${[...EXERCISE_TYPE_VALUES].join('|')}, got '${next}'`,
+        );
+      }
+      exerciseType = next;
     } else if (arg === '--language' || arg === '--lang') {
       const next = argv[++i];
       if (next === undefined) throw new Error(`${arg} requires a value`);
@@ -143,7 +182,17 @@ export function parseBackfillArgs(argv: readonly string[]): BackfillArgs {
     }
   }
 
-  return { apply, language, cefrLevel, limit, concurrency, maxCostUsd };
+  return {
+    apply,
+    language,
+    cefrLevel,
+    grammarPoint,
+    exerciseType,
+    includePartial,
+    limit,
+    concurrency,
+    maxCostUsd,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -159,7 +208,44 @@ export type CandidateRow = {
   grammarPointKey: string | null;
   topicDomain: string | null;
   modelId: string | null;
+  coverageTags: CoverageTags | null;
 };
+
+/**
+ * Spec-declared axes absent from a row's stored `coverage_tags`.
+ *
+ * Why spec axes only, and not everything `coverageAxesFor` monitors: the defect
+ * this serves is a `coverageSpec` axis added to the curriculum AFTER a cell's
+ * pool was generated, so every row predates it and no row carries the key —
+ * `es-a2-comparatives-superlatives` has 50 rows tagged {polarity, sentenceType}
+ * and zero carrying `comparison`, which the collapse audit then reports as
+ * "0/14 comparative" when the content may be perfectly fine. The universal
+ * monitoring axes (polarity/sentenceType) were always attempted, so their
+ * absence usually means the validator genuinely could not determine one;
+ * re-running would burn a call to reach the same answer. Including them would
+ * also widen the sweep from a handful of cells to most of the pool.
+ */
+export function missingSpecAxes(
+  stored: CoverageTags | null,
+  spec: CoverageSpec | undefined,
+): string[] {
+  if (!spec) return [];
+  const have = new Set(Object.keys(stored ?? {}));
+  return spec.axes.map((a) => a.name).filter((name) => !have.has(name));
+}
+
+/**
+ * Fresh tags layered over stored ones. Never narrows: an axis present in
+ * `stored` but absent from `fresh` survives. Replacing outright would let a
+ * single-axis repair delete the axes a row already had, which is data loss
+ * dressed up as a backfill.
+ */
+export function mergeCoverageTags(
+  stored: CoverageTags | null,
+  fresh: CoverageTags,
+): CoverageTags {
+  return { ...(stored ?? {}), ...fresh };
+}
 
 export type Reconstructed =
   | { ok: true; draft: ExerciseDraft; spec: GenerationSpec; cell: Cell }
@@ -257,12 +343,17 @@ export function reconstructForValidation(row: CandidateRow): Reconstructed {
 // ---------------------------------------------------------------------------
 
 async function fetchCandidates(db: Db, args: BackfillArgs): Promise<CandidateRow[]> {
-  const filters = [
-    inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
-    isNull(exercises.coverageTags),
-  ];
+  const filters = [inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved'])];
+  // `coverage_tags IS NULL` is the ONLY selector without --include-partial, and
+  // it silently skips every row whose tags exist but lack a declared axis — the
+  // rows a late-added `coverageSpec` axis creates. Same shape as the
+  // `seedWord IS NULL` guard that made the #631 variant backfill a no-op on 96%
+  // of its intended rows.
+  if (!args.includePartial) filters.push(isNull(exercises.coverageTags));
   if (args.language) filters.push(eq(exercises.language, args.language));
   if (args.cefrLevel) filters.push(eq(exercises.difficulty, args.cefrLevel));
+  if (args.grammarPoint) filters.push(eq(exercises.grammarPointKey, args.grammarPoint));
+  if (args.exerciseType) filters.push(eq(exercises.type, args.exerciseType));
 
   const query = db
     .select({
@@ -274,6 +365,7 @@ async function fetchCandidates(db: Db, args: BackfillArgs): Promise<CandidateRow
       grammarPointKey: exercises.grammarPointKey,
       topicDomain: exercises.topicDomain,
       modelId: exercises.modelId,
+      coverageTags: exercises.coverageTags,
     })
     .from(exercises)
     .where(and(...filters))
@@ -305,9 +397,22 @@ async function main(): Promise<void> {
   const client = createClaudeClient(anthropicKey);
   const limit = pLimit(args.concurrency);
 
-  const candidates = await fetchCandidates(db, args);
+  const fetched = await fetchCandidates(db, args);
+  // With --include-partial the query also returns fully-tagged rows (it cannot
+  // know each cell's declared axes in SQL), so drop those here. Rows with NULL
+  // tags always qualify.
+  const candidates = args.includePartial
+    ? fetched.filter((row) => {
+        if (row.coverageTags === null) return true;
+        const point = row.grammarPointKey ? getGrammarPoint(row.grammarPointKey) : null;
+        return missingSpecAxes(row.coverageTags, point?.coverageSpec).length > 0;
+      })
+    : fetched;
   console.log(
-    `[backfill-coverage-tags] ${args.apply ? 'APPLY' : 'DRY-RUN'} — ${candidates.length} untagged approved rows`,
+    `[backfill-coverage-tags] ${args.apply ? 'APPLY' : 'DRY-RUN'} — ${candidates.length} rows to tag` +
+      (args.includePartial
+        ? ` (${fetched.length} scanned; --include-partial: NULL tags + rows missing a spec axis)`
+        : ' (untagged approved rows)'),
   );
 
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
@@ -363,8 +468,14 @@ async function main(): Promise<void> {
           axisCounts[axis] = (axisCounts[axis] ?? 0) + 1;
         }
 
+        // Merge over what is already stored rather than replacing it. A fresh
+        // `applicableCoverageTags` is normally a superset, but if the validator
+        // fails to determine one axis on this pass, a wholesale replace would
+        // DELETE a good existing tag — turning a partial-tag repair into data
+        // loss. Merging can only add or overwrite with a fresh reading.
+        const merged = mergeCoverageTags(row.coverageTags, tags);
         if (args.apply) {
-          await db.update(exercises).set({ coverageTags: tags }).where(eq(exercises.id, row.id));
+          await db.update(exercises).set({ coverageTags: merged }).where(eq(exercises.id, row.id));
         }
         written++;
       }),
