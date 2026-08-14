@@ -652,6 +652,7 @@ admin.get('/admin/curriculum', async (c) => {
         : null,
       freeWritingRegister: e.freeWriting?.register ?? null,
       exerciseTypes: [...(exerciseTypesByKey.get(e.key) ?? [])].sort(),
+      constructionVariantIds: e.constructionVariants ? e.constructionVariants.map((v) => v.id) : [],
     }))
     .sort((a, b) => {
       const la = LANGUAGE_ORDER.indexOf(a.language);
