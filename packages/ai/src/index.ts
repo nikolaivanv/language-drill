@@ -437,7 +437,9 @@ export {
   computeSurfaceCollapse,
   isSurfaceFlagged,
   computeSpecShortfall,
+  computeSpecShortfallFromCounts,
   computeVariantSkew,
+  computeVariantSkewFromCounts,
   stemOf,
   computeStemMonotony,
 } from "./collapse-metrics.js";

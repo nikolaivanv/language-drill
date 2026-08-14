@@ -35,4 +35,60 @@ describe('ContentExerciseCard', () => {
     expect(screen.getByRole('button', { name: /demote/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /reject/i })).toBeDisabled();
   });
+
+  it('renders each coverage tag as its own chip', () => {
+    render(
+      <ContentExerciseCard
+        item={{ ...item, coverageTags: { person: '1sg', polarity: 'negative' } }}
+        onResolve={vi.fn()} pending={false} demoted={false}
+      />,
+    );
+    expect(screen.getByText('person: 1sg')).toBeInTheDocument();
+    expect(screen.getByText('polarity: negative')).toBeInTheDocument();
+  });
+
+  it('labels a declared variant id as a variant, not a seed word', () => {
+    render(
+      <ContentExerciseCard
+        item={{
+          ...item,
+          grammarPointKey: 'es-b1-impersonal-plural',
+          contentJson: { ...(item.contentJson as Record<string, unknown>), seedWord: 'hearsay' },
+          coverageTags: null,
+        }}
+        isVariantSeed
+        onResolve={vi.fn()} pending={false} demoted={false}
+      />,
+    );
+    expect(screen.getByText('variant: hearsay')).toBeInTheDocument();
+  });
+
+  it('labels a frequency seed as a seed', () => {
+    render(
+      <ContentExerciseCard
+        item={{
+          ...item,
+          contentJson: { ...(item.contentJson as Record<string, unknown>), seedWord: 'okul' },
+          coverageTags: null,
+        }}
+        isVariantSeed={false}
+        onResolve={vi.fn()} pending={false} demoted={false}
+      />,
+    );
+    expect(screen.getByText('seed: okul')).toBeInTheDocument();
+  });
+
+  it('renders nothing for an unseeded, untagged exercise', () => {
+    render(
+      <ContentExerciseCard
+        item={{
+          ...item,
+          coverageTags: null,
+          contentJson: { ...(item.contentJson as Record<string, unknown>), seedWord: undefined },
+        }}
+        onResolve={vi.fn()} pending={false} demoted={false}
+      />,
+    );
+    expect(screen.queryByText(/^seed:/)).not.toBeInTheDocument();
+  });
 });

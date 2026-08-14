@@ -1788,6 +1788,24 @@ describe('GET /admin/curriculum', () => {
     const res = await app.request('/admin/curriculum', undefined, nonAdminEnv);
     expect(res.status).toBe(403);
   });
+
+  it('reports the declared construction-variant ids for a point that has them', async () => {
+    const withVariants = ALL_CURRICULA.find((e) => e.constructionVariants);
+    expect(withVariants).toBeDefined();
+    const res = await app.request('/admin/curriculum', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    const item = body.items.find((i: AnyJson) => i.key === withVariants!.key);
+    expect(item.constructionVariantIds).toEqual(withVariants!.constructionVariants!.map((v) => v.id));
+  });
+
+  it('reports an empty array for a point that declares no construction variants', async () => {
+    const withoutVariants = ALL_CURRICULA.find((e) => !e.constructionVariants);
+    expect(withoutVariants).toBeDefined();
+    const res = await app.request('/admin/curriculum', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    const item = body.items.find((i: AnyJson) => i.key === withoutVariants!.key);
+    expect(item.constructionVariantIds).toEqual([]);
+  });
 });
 
 // ---------------------------------------------------------------------------

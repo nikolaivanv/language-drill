@@ -1,21 +1,63 @@
 'use client';
 
 import { useState } from 'react';
-import type { AuthenticatedFetch, PoolStatusItem } from '@language-drill/api-client';
-import { usePoolCell, useGenerateCell, useRevalidateCell, type RevalidateResponse } from '@language-drill/api-client';
+import type { AuthenticatedFetch, DiversityCell, PoolStatusItem } from '@language-drill/api-client';
+import {
+  usePoolCell,
+  useGenerateCell,
+  useRevalidateCell,
+  useDiversity,
+  type RevalidateResponse,
+} from '@language-drill/api-client';
 import { REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
 import { Chip } from '../../../../../components/ui';
 import { LangfuseTracesLink } from '../../../../../components/admin/langfuse-traces-link';
 import { cellKeyFor } from '../../../../../lib/admin/langfuse';
 import { cn } from '../../../../../lib/cn';
+import {
+  DIVERSITY_CHIP_BASE,
+  DIVERSITY_CHIP_CLASSNAMES,
+  DIVERSITY_CHIP_SUFFIX,
+  classifyAxisValue,
+  classifyVariant,
+} from '../../../../../lib/admin/diversity-chip';
 
 const sectionLabel = 'text-[11px] font-semibold uppercase tracking-wide text-ink-mute';
+
+function seedSourceSummary(seed: DiversityCell['seed']): string {
+  switch (seed.kind) {
+    case 'construction-variants': {
+      const realized = seed.variants.filter((v) => v.count > 0).length;
+      return `variant pool — ${realized} of ${seed.variants.length} variants realized`;
+    }
+    case 'curated':
+      return (
+        `curated ${seed.source} — ${seed.usedCount} of ${seed.poolSize} used` +
+        (seed.usedCount >= seed.poolSize && seed.poolSize > 0 ? ' — pool exhausted' : '')
+      );
+    case 'frequency-band':
+      return `${seed.band} band, ranks ≤ ${seed.rankMax} — ${seed.distinctSeeds} distinct realized`;
+    case 'vocab-target':
+      return 'curated vocab-target list';
+    case 'none':
+    default:
+      return 'none (unseeded cell)';
+  }
+}
 
 export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchFn: AuthenticatedFetch }) {
   const detail = usePoolCell({
     fetchFn,
     cell: { language: item.language, level: item.level, type: item.type, grammarPoint: item.grammarPointKey },
   });
+
+  const diversity = useDiversity({
+    fetchFn,
+    params: { language: item.language, level: item.level },
+  });
+  const diversityCell = diversity.data?.items
+    .find((p) => p.key === item.grammarPointKey)
+    ?.cells.find((cc) => cc.type === item.type);
 
   const generate = useGenerateCell({ fetchFn });
   const [refillCount, setRefillCount] = useState(() =>
@@ -94,31 +136,43 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
                 const axisDist = dist[axis] ?? {};
                 const axisFloors = floors[axis] ?? {};
                 const values = Array.from(new Set([...Object.keys(axisFloors), ...Object.keys(axisDist)])).sort();
+                // `undefined` here means the diversity denominator is UNKNOWN
+                // (still loading, errored, or this cell/axis is absent from
+                // the response) — never coerce that to 0, which would let a
+                // below-floor value render as PROVEN on no evidence at all.
+                const axisDenom = diversityCell?.axes.find((a) => a.name === axis);
+                const untaggedForAxis = axisDenom?.untagged;
                 return (
                   <li key={axis} className="flex flex-wrap items-center gap-2">
                     <span className="font-medium text-ink min-w-[88px]">{axis}</span>
                     {values.map((v) => {
                       const actual = axisDist[v] ?? 0;
                       const floor = axisFloors[v];
-                      const below = floor !== undefined && actual < floor;
-                      const suffix = below ? ' ✗' : floor !== undefined ? ' ✓' : '';
+                      const hasFloor = floor !== undefined;
+                      const cls = classifyAxisValue(
+                        { count: actual, floor: hasFloor ? floor : null },
+                        untaggedForAxis,
+                      );
                       return (
                         <span
                           key={v}
                           data-testid={`axis-${axis}-${v}`}
                           className={cn(
-                            'inline-flex items-center rounded-pill border px-2 py-px text-[12px]',
-                            below
-                              ? 'border-red-200 bg-red-50 text-red-700'
-                              : floor !== undefined
-                                ? 'border-ok-soft bg-ok-soft text-ok'
-                                : 'border-rule bg-card text-ink-soft',
+                            DIVERSITY_CHIP_BASE,
+                            cls ? DIVERSITY_CHIP_CLASSNAMES[cls] : 'border-rule bg-card text-ink-soft',
                           )}
                         >
-                          {v} {actual}{floor !== undefined ? `/${floor}` : ''}{suffix}
+                          {v} {actual}
+                          {hasFloor ? `/${floor}` : ''}
+                          {cls ? ` ${DIVERSITY_CHIP_SUFFIX[cls]}` : ''}
                         </span>
                       );
                     })}
+                    {untaggedForAxis !== undefined && untaggedForAxis > 0 && (
+                      <span className="text-ink-soft">
+                        {untaggedForAxis} rows untagged — a zero here may be a tagging gap
+                      </span>
+                    )}
                   </li>
                 );
               })}
@@ -141,6 +195,24 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
           )}
         </section>
       </div>
+
+      {diversityCell && (
+        <div className="grid gap-4 md:grid-cols-2 border-b border-rule pb-4">
+          <section className="flex flex-col gap-2">
+            <h4 className={sectionLabel}>Construction variants</h4>
+            {diversityCell.seed.kind === 'construction-variants' ? (
+              <ConstructionVariantsPanel seed={diversityCell.seed} />
+            ) : (
+              <p className="text-ink-soft">This cell has no construction variants.</p>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-2">
+            <h4 className={sectionLabel}>Seed source</h4>
+            <p className="text-ink-soft">{seedSourceSummary(diversityCell.seed)}</p>
+          </section>
+        </div>
+      )}
 
       <dl className="flex flex-wrap gap-x-6 gap-y-2 border-y border-rule py-3">
         <Stat label="target" value={String(item.generationTarget)} />
@@ -244,8 +316,47 @@ export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchF
             grammarPoint: item.grammarPointKey,
           })}
         />
+        <a
+          href={`/admin/diversity?language=${item.language}&level=${item.level}`}
+          className="text-[13px] font-medium text-accent-2 hover:underline"
+        >
+          Diversity for {item.language} {item.level} →
+        </a>
       </div>
     </div>
+  );
+}
+
+function ConstructionVariantsPanel({
+  seed,
+}: {
+  seed: Extract<DiversityCell['seed'], { kind: 'construction-variants' }>;
+}) {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        {seed.variants.map((v) => {
+          const cls = classifyVariant(v, seed.unlabelledRows);
+          return (
+            <span
+              key={v.id}
+              title={v.directive}
+              data-testid={`variant-${v.id}`}
+              className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES[cls])}
+            >
+              {v.id} {v.count}/{Math.round(v.quota)}
+              {` ${DIVERSITY_CHIP_SUFFIX[cls]}`}
+            </span>
+          );
+        })}
+      </div>
+      {seed.unlabelledRows > 0 && (
+        <p className="text-ink-soft">
+          {seed.unlabelledRows} rows unlabelled (pre-#640) — a variant at zero here is unmeasured,
+          not absent
+        </p>
+      )}
+    </>
   );
 }
 

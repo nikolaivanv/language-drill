@@ -52,6 +52,16 @@ function ContentPageInner() {
     () => (curriculum.data?.items ?? []).map((e) => ({ key: e.key, name: e.name })),
     [curriculum.data],
   );
+  // A construction-variant id and a frequency seed word both live in
+  // `content_json.seedWord`; look up the point's declared variant ids so the
+  // card can tell them apart instead of mislabeling a variant as vocabulary.
+  const variantIdsByGrammarPoint = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const entry of curriculum.data?.items ?? []) {
+      map.set(entry.key, new Set(entry.constructionVariantIds));
+    }
+    return map;
+  }, [curriculum.data]);
 
   const active = tab === 'exercises' ? exercises : theory;
   const total = active.data?.total ?? 0;
@@ -125,15 +135,26 @@ function ContentPageInner() {
                 {total} match{total === 1 ? '' : 'es'} · page {Math.floor(offset / PAGE_SIZE) + 1}/{Math.max(1, Math.ceil(total / PAGE_SIZE))}
               </p>
               {tab === 'exercises'
-                ? exercises.data?.items.map((item) => (
+                ? exercises.data?.items.map((item) => {
+                    const seedWord = typeof (item.contentJson as { seedWord?: unknown })?.seedWord === 'string'
+                      ? (item.contentJson as { seedWord: string }).seedWord
+                      : null;
+                    const isVariantSeed = Boolean(
+                      seedWord
+                      && item.grammarPointKey
+                      && variantIdsByGrammarPoint.get(item.grammarPointKey)?.has(seedWord),
+                    );
+                    return (
                     <ContentExerciseCard key={item.id} item={item} pending={resolveExercise.isPending} demoted={demotedId === item.id}
+                      isVariantSeed={isVariantSeed}
                       onResolve={async (action) => {
                         try {
                           const outcome = await resolveExercise.mutateAsync({ id: item.id, action });
                           setDemotedId(outcome === 'demoted' ? item.id : null); setError(null);
                         } catch { setError('Failed to update item. Please try again.'); }
                       }} />
-                  ))
+                    );
+                  })
                 : theory.data?.items.map((item) => (
                     <ContentTheoryCard key={item.id} item={item} pending={resolveTheory.isPending} demoted={demotedId === item.id}
                       onResolve={async (action) => {

@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
-import type { GrammarPoint } from '@language-drill/shared';
+import type { GrammarPoint, CoverageTags } from '@language-drill/shared';
 import {
   surfaceOf,
   normalizeSurface,
   computeSurfaceCollapse,
   isSurfaceFlagged,
   computeSpecShortfall,
+  computeSpecShortfallFromCounts,
   computeVariantSkew,
+  computeVariantSkewFromCounts,
   computeStemMonotony,
   stemOf,
   stemNoiseOf,
@@ -187,6 +189,20 @@ const seeded = (seedWord: string | null, n: number): AuditRow[] =>
     content: seedWord === null ? {} : { seedWord },
     coverageTags: null,
   }));
+
+const rowWithTags = (coverageTags: CoverageTags | null): AuditRow => ({
+  id: 'x',
+  type: ExerciseType.CLOZE,
+  content: {},
+  coverageTags,
+});
+
+const rowWithSeed = (seedWord: string | null): AuditRow => ({
+  id: 'x',
+  type: ExerciseType.CLOZE,
+  content: seedWord === null ? {} : { seedWord },
+  coverageTags: null,
+});
 
 describe('computeSpecShortfall', () => {
   const spec = {
@@ -389,6 +405,132 @@ describe('computeStemMonotony', () => {
       { id: 'a', type: ExerciseType.CONJUGATION, content: { lemma: 'ir' }, coverageTags: null },
     ];
     expect(computeStemMonotony(ExerciseType.CONJUGATION, rows)).toBeNull();
+  });
+});
+
+describe('computeSpecShortfallFromCounts', () => {
+  const gp = {
+    ...point(),
+    coverageSpec: {
+      axes: [{ name: 'person' as const, floors: { '1sg': 4, '3sg': 6 } }],
+    },
+  };
+
+  it('reports a shortfall for a value under its floor', () => {
+    const result = computeSpecShortfallFromCounts(
+      gp,
+      { person: { '1sg': 2, '3sg': 9 } },
+      11,
+      20,
+    );
+    expect(result?.shortfalls).toEqual([
+      { axis: 'person', value: '1sg', floor: 4, actual: 2 },
+    ]);
+    expect(result?.approved).toBe(11);
+    expect(result?.target).toBe(20);
+    expect(result?.atTarget).toBe(false);
+  });
+
+  it('treats a value absent from the counts as zero', () => {
+    const result = computeSpecShortfallFromCounts(gp, { person: {} }, 0, 20);
+    expect(result?.shortfalls).toEqual([
+      { axis: 'person', value: '1sg', floor: 4, actual: 0 },
+      { axis: 'person', value: '3sg', floor: 6, actual: 0 },
+    ]);
+  });
+
+  it('flags atTarget — the cell the scheduler will never revisit', () => {
+    const result = computeSpecShortfallFromCounts(
+      gp,
+      { person: { '1sg': 0, '3sg': 20 } },
+      20,
+      20,
+    );
+    expect(result?.atTarget).toBe(true);
+    expect(result?.shortfalls.length).toBeGreaterThan(0);
+  });
+
+  it('returns null for a point with no coverageSpec', () => {
+    expect(
+      computeSpecShortfallFromCounts(point(), {}, 5, 20),
+    ).toBeNull();
+  });
+
+  it('agrees exactly with the row-scanning version', () => {
+    const rows = [
+      rowWithTags({ person: '1sg' }),
+      rowWithTags({ person: '1sg' }),
+      rowWithTags({ person: '3sg' }),
+      rowWithTags(null), // untagged — evidence for no floor
+    ];
+    const fromRows = computeSpecShortfall(gp, rows, 20);
+    const fromCounts = computeSpecShortfallFromCounts(
+      gp,
+      { person: { '1sg': 2, '3sg': 1 } },
+      rows.length,
+      20,
+    );
+    expect(fromCounts).toEqual(fromRows);
+  });
+});
+
+describe('computeVariantSkewFromCounts', () => {
+  const gp = {
+    ...point(),
+    constructionVariants: [
+      { id: 'hearsay', directive: 'H.', share: 3 },
+      { id: 'adversity', directive: 'A.' },
+    ],
+  };
+
+  it('computes per-variant quota from the declared-row denominator', () => {
+    const skew = computeVariantSkewFromCounts(
+      gp,
+      { hearsay: 30, adversity: 10 },
+      0,
+    );
+    expect(skew?.declaredRows).toBe(40);
+    expect(skew?.perVariant).toEqual([
+      { id: 'hearsay', count: 30, share: 3, quota: 30 },
+      { id: 'adversity', count: 10, share: 1, quota: 10 },
+    ]);
+    expect(skew?.overQuota).toEqual([]);
+  });
+
+  it('carries unrecognizedSeedCount through as the unlabelled denominator', () => {
+    const skew = computeVariantSkewFromCounts(gp, { hearsay: 5 }, 42);
+    expect(skew?.unrecognizedSeedCount).toBe(42);
+    expect(skew?.declaredRows).toBe(5);
+  });
+
+  it('lists variants below MIN_PER_VARIANT as underMin', () => {
+    const skew = computeVariantSkewFromCounts(
+      gp,
+      { hearsay: 30, adversity: 0 },
+      0,
+    );
+    expect(skew?.underMin).toContain('adversity');
+  });
+
+  it('returns null for a point with no constructionVariants', () => {
+    expect(computeVariantSkewFromCounts(point(), {}, 0)).toBeNull();
+  });
+
+  it('agrees exactly with the row-scanning version', () => {
+    const rows = [
+      rowWithSeed('hearsay'),
+      rowWithSeed('hearsay'),
+      rowWithSeed('adversity'),
+      rowWithSeed('restaurante'), // legacy frequency word — unrecognized
+      rowWithSeed(null),
+    ];
+    const fromRows = computeVariantSkew(gp, rows);
+    const fromCounts = computeVariantSkewFromCounts(
+      gp,
+      { hearsay: 2, adversity: 1 },
+      2,
+    );
+    expect(fromCounts).toEqual(fromRows);
   });
 });
 
