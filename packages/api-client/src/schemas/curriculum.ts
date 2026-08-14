@@ -24,6 +24,7 @@ export const CurriculumEntrySchema = z.object({
   coverageSpec: z.object({ axes: z.array(CoverageAxisSchema) }).nullable(),
   freeWritingRegister: z.enum(['informal', 'neutral', 'formal']).nullable(),
   exerciseTypes: z.array(z.string()),
+  constructionVariantIds: z.array(z.string()),
 });
 export type CurriculumEntry = z.infer<typeof CurriculumEntrySchema>;
 

@@ -20,6 +20,7 @@ const payload = {
       clozeUnsuitable: false, sentenceConstructionSuitable: true, conjugationSuitable: false,
       coverageSpec: { axes: [{ name: 'person', floors: { '1sg': 2 } }] },
       freeWritingRegister: null, exerciseTypes: ['cloze', 'translation'],
+      constructionVariantIds: [],
     },
     {
       key: 'es-b1-paraphrase', kind: 'paraphrase', name: 'Paraphrase (B1)', description: 'desc',
@@ -27,6 +28,7 @@ const payload = {
       commonErrors: ['e'], prerequisiteKeys: [], targetOverride: null,
       clozeUnsuitable: false, sentenceConstructionSuitable: false, conjugationSuitable: false,
       coverageSpec: null, freeWritingRegister: null, exerciseTypes: [],
+      constructionVariantIds: ['hearsay-dicen-que', 'adversity-passive'],
     },
   ],
   total: 2,
