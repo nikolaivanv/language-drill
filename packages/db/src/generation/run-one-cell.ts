@@ -650,7 +650,27 @@ export function seedKindFor(
     // breaks the "everything is about reading a book" collapse. No prior-seed
     // avoid-list (priorSeeds stays empty for dictation) — diversity comes from
     // batchSeed rotation over the band, matching cloze/translation.
-    cell.exerciseType === ExerciseType.DICTATION
+    cell.exerciseType === ExerciseType.DICTATION ||
+    // sentence_construction joined 2026-08-14, for the identical collapse.
+    // Reached only when the point declares NO constructionVariants — the
+    // variant branch above takes precedence, because there the sub-construction
+    // is the diversity axis and a frequency seed would be absorbed into the
+    // complement.
+    //
+    // Without this an SC cell has NO diversity mechanism whatsoever:
+    // `priorPoolSurfaces` is supplied only for vocab_recall / free_writing /
+    // contextual_paraphrase, so SC gets an identical prompt every batch.
+    // Measured on prod 2026-08-14, `es-b1-relative-clauses` SC ran to 46/46
+    // rows containing `donde` and 41/46 mentioning a café (78% of model answers
+    // opening "el café"), while the SAME POINT's cloze cell — which is
+    // frequency-seeded — sat at 1 café in 50. 31 of 33 SC cells were unseeded,
+    // and the pattern repeats (`de-a2-perfekt-with-haben` 59% "ich habe",
+    // `de-a2-weil-deshalb` 56% "ich bin").
+    //
+    // This is also why demoting a collapsed SC cell alone does not work: the
+    // freed slots refill from the same unanchored prompt. Same conclusion #648
+    // reached — "the right fix is seeding, not demotion".
+    cell.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION
   ) {
     return 'frequency';
   }

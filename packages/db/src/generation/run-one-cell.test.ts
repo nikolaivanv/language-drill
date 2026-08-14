@@ -2071,7 +2071,13 @@ describe('seedKindFor — construction variants on sentence_construction', () =>
     ).toBe('construction-variants');
   });
 
-  it('leaves a sentence_construction cell without variants unseeded', () => {
+  it('frequency-seeds a sentence_construction cell WITHOUT variants', () => {
+    // Was `null` when variant seeding shipped (#648). Changed 2026-08-14:
+    // unseeded meant NO diversity mechanism at all for SC — `priorPoolSurfaces`
+    // is supplied only for vocab_recall / free_writing / contextual_paraphrase,
+    // so the prompt was identical every batch. `es-b1-relative-clauses` SC ran
+    // to 46/46 rows containing `donde` and 41/46 mentioning a café, while the
+    // same point's frequency-seeded cloze cell had 1 café in 50.
     expect(
       seedKindFor({
         language: 'DE',
@@ -2079,6 +2085,20 @@ describe('seedKindFor — construction variants on sentence_construction', () =>
         exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
         grammarPoint: { kind: 'grammar' },
       } as never),
-    ).toBeNull();
+    ).toBe('frequency');
+  });
+
+  it('still prefers construction-variants over frequency when both could apply', () => {
+    // Order matters: for a multi-construction point the SUB-CONSTRUCTION is the
+    // diversity axis, and a frequency seed would be absorbed into the
+    // complement while the frame collapses onto the prototype.
+    expect(
+      seedKindFor({
+        language: 'DE',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.SENTENCE_CONSTRUCTION,
+        grammarPoint: { kind: 'grammar', constructionVariants: variants },
+      } as never),
+    ).toBe('construction-variants');
   });
 });
