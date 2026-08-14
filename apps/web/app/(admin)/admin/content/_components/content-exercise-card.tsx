@@ -1,15 +1,20 @@
 import type { ContentExercise } from '@language-drill/api-client';
-import { Button } from '../../../../../components/ui';
+import { Button, Chip } from '../../../../../components/ui';
 import { ContentFieldView } from '../../../../../components/admin/content-field-view';
 
 export function ContentExerciseCard({
-  item, onResolve, pending, demoted,
+  item, onResolve, pending, demoted, isVariantSeed = false,
 }: {
   item: ContentExercise;
   onResolve: (action: 'demote' | 'reject') => void;
   pending: boolean;
   demoted: boolean;
+  isVariantSeed?: boolean;
 }) {
+  const seedWord =
+    typeof (item.contentJson as { seedWord?: unknown }).seedWord === 'string'
+      ? ((item.contentJson as { seedWord: string }).seedWord)
+      : null;
   return (
     <div className="border border-rule rounded-sm p-4 flex flex-col gap-3 bg-paper">
       <div className="flex items-center gap-2 text-[13px] text-ink-soft flex-wrap">
@@ -21,8 +26,17 @@ export function ContentExerciseCard({
         <span>· {item.generationSource}</span>
         {item.modelId ? <span>· {item.modelId}</span> : null}
       </div>
-      {item.coverageTags ? (
-        <p className="text-[12px] text-ink-soft break-words">coverage: {JSON.stringify(item.coverageTags)}</p>
+      {item.coverageTags || seedWord ? (
+        <div className="flex flex-wrap gap-1">
+          {Object.entries((item.coverageTags ?? {}) as Record<string, unknown>).map(([axis, value]) => (
+            <Chip key={axis}>{axis}: {String(value)}</Chip>
+          ))}
+          {seedWord ? (
+            // A variant id and a frequency word both live in `seedWord`; labelling
+            // them the same way invites reading a construction id as vocabulary.
+            <Chip>{isVariantSeed ? 'variant' : 'seed'}: {seedWord}</Chip>
+          ) : null}
+        </div>
       ) : null}
       <ContentFieldView content={item.contentJson} />
       {demoted ? (
