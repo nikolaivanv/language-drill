@@ -104,12 +104,20 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * At-target cloze/translation cells additionally need demote:pool (see
  * docs/curriculum-authoring.md retrofit section).
  */
+// 2026-08-16: de-b1-n-declension drops its unrealizable `case: nominative`
+// floor. The bump is load-bearing here, not ceremonial: the conjugation cell
+// approved 1 row on 2026-08-16 (< LOW_YIELD_THRESHOLD), so without it the cell
+// is skip-low-yield-suppressed and the corrected spec never fires. It also
+// clears the coverage give-up state, so the remaining case values start from a
+// clean outcome. As always, the bump re-enqueues other suppressed DE cells for
+// one night.
+//
 // 2026-08-13: de-a1-numbers-ordinals gains selfRevealingElicitation
 // 'digit-form' + a curated pool — it was the only numbers/ordinals point
 // never flagged, so it kept cueing the written word and leaking the answer
 // through glossEn. Bump also clears skip-low-yield suppression, so other DE
 // cells re-enqueue on the next generation run.
-export const CURRICULUM_VERSION_DE = '2026-08-13';
+export const CURRICULUM_VERSION_DE = '2026-08-16';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1856,9 +1864,22 @@ const deCurriculum: readonly GrammarPoint[] = [
     coverageSpec: {
       axes: [
         // The whole point is a case paradigm: -(e)n in every case except
-        // nominative singular, plus genitive -ns (des Namens). The small
-        // nominative floor covers the over-application trap (bare form).
-        { name: 'case', floors: { nominative: 3, accusative: 7, dative: 7, genitive: 4 } },
+        // nominative singular, plus genitive -ns (des Namens).
+        //
+        // NO nominative floor (removed 2026-08-16). The nominative singular is
+        // precisely the case that takes no suffix, so a pinned-nominative draft
+        // asks for the citation form and the prompt hands over the answer:
+        // 145 nominative drafts requested across the three surfaces over five
+        // prod runs, 3 approved (2%), and the two approved conjugation rows
+        // ("Student" → "der Student") drill article gender, not n-declension.
+        // The over-application trap this floor used to chase is real but is a
+        // DISTRACTOR problem, not a coverage one — it only ever worked on cloze
+        // with a 4-way option set (Kardinal/Kardinalen/Kardinals/Kardinalem),
+        // which the candidateFillers path (#638) serves directly. A coverage
+        // floor also fires on conjugation and translation, where the item is
+        // degenerate by construction. See
+        // docs/analysis/generation-run-2026-08-16.md.
+        { name: 'case', floors: { accusative: 7, dative: 7, genitive: 4 } },
       ],
     },
     kind: 'grammar',

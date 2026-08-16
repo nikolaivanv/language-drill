@@ -238,12 +238,32 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     // (the 'noun'-kind analogue of the curated-verb override).
     const point = ALL_CURRICULA.find((g) => g.key === 'de-b1-n-declension');
     const pool = point?.conjugationSeedWords ?? [];
-    // Sized above the case-floor sum (3+7+7+4 = 21) so the lemma-keyed exclude
+    // Sized above the case-floor sum (7+7+4 = 18) so the lemma-keyed exclude
     // has some room before it exhausts; saturation is then handled by the
     // scheduler's dedup give-up.
     expect(pool.length).toBeGreaterThanOrEqual(18);
     // All entries are capitalized German nouns.
     for (const w of pool) expect(w, w).toMatch(/^[A-ZÄÖÜ][a-zäöüß]+$/);
+  });
+
+  it('de-b1-n-declension floors no nominative — the value has no marked form', () => {
+    // Removed 2026-08-16. The nominative singular is the ONE case where a weak
+    // masculine takes no suffix, so a pinned-nominative draft asks for the
+    // citation form: the prompt hands over the answer. Measured over five prod
+    // runs (docs/analysis/generation-run-2026-08-16.md): 145 nominative drafts
+    // requested across conjugation/cloze/translation, 3 approved (2%), and the
+    // two approved conjugation rows drill article gender, not n-declension.
+    // Form-relevance is a PER-VALUE test, not a per-axis one — `case` is
+    // form-relevant here, `case: nominative` is not. Re-adding this floor
+    // restarts a deficit loop that cannot converge.
+    const point = ALL_CURRICULA.find((g) => g.key === 'de-b1-n-declension');
+    const caseAxis = point?.coverageSpec?.axes.find((a) => a.name === 'case');
+    expect(caseAxis, 'de-b1-n-declension must keep its case axis').toBeDefined();
+    expect(Object.keys(caseAxis?.floors ?? {}).sort()).toEqual([
+      'accusative',
+      'dative',
+      'genitive',
+    ]);
   });
 
   it('the DE adjective-declension noun-seeded points draw from the band (no curated pool)', () => {

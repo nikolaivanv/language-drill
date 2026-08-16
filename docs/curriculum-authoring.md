@@ -42,6 +42,33 @@ A **yes** needs all three of:
    A meaning-contrast point (preterite-vs-imperfect *usage*, conditional
    conjecture) does not need form floors.
 
+**Form-relevance is a per-VALUE test, not a per-axis one.** An axis can be
+form-relevant overall while one of its values is the unmarked/citation form, and
+that value is unfloorable: the target form equals the prompt, so the item hands
+over its own answer and the validator kills it as `context-spoils-answer` or
+`low-quality-reject`. Before floors go in, walk the values and ask **"what does
+the learner actually write here, and is it different from what they were
+given?"**
+
+Precedent (`de-b1-n-declension`, fixed 2026-08-16): `case` is exactly right for
+weak masculines — but nominative singular is the one case with *no* -(e)n
+suffix. Its `nominative: 3` floor drew **145 drafts across five prod runs for 3
+approvals (2%)**, and the two approved conjugation rows ("Student" → "der
+Student") drilled article gender instead of the point. Note the failure was
+*silent* — the cell just looked chronically low-yield.
+
+Watch for the same shape wherever a paradigm has an unmarked member: a
+`polarity: affirmative` floor on a point that only exists in the negative
+(`es-b2-subjunctive-negated-opinion`: 0/73), a `case: genitive` floor where the
+construction is vanishingly rare in real usage, a `wordClass: verb` floor on a
+noun-heavy vocab umbrella. Diagnose from `generation_jobs.coverage_outcome`,
+which records approved/requested per `(axis, value)` per run.
+
+If the value is genuinely worth drilling but has no marked form, it is a
+**distractor** problem, not a coverage one — an option set the learner must
+choose from (cloze `options` / the `candidateFillers` path), not a floor that
+also fires on conjugation and translation where the item is degenerate.
+
 A **no** is fine — most points don't need a spec. Legitimate no's:
 
 - Lexical/invariant points: connectors, fixed postpositions, word order,
@@ -77,9 +104,13 @@ have to re-derive it.
 - **Partial floors are valid and encouraged** — omitted values are "NA", never
   targeted. `tr-a1-imperative` floors only `{2sg, 2pl}`: 3rd-person commands
   belong to `tr-a2-optative`. Floor only what the point actually owns.
-- Give-up safety net: a value requested ≥2× in a batch with zero approvals is
-  suppressed until the next `CURRICULUM_VERSION` bump — an unproducible floor
-  won't grind the scheduler forever, but don't rely on this as a design tool.
+- Give-up safety net — **weaker than it reads, do not design against it.** A
+  value is suppressed only when the *single most recent* batch requested it ≥2×
+  and approved **exactly zero** (`suppressedFor`, `coverage-decision.ts`). One
+  lucky approval resets the counter, so a value yielding a few percent is never
+  suppressed at all: `de-b1-n-declension`'s nominative survived five runs and
+  145 drafts on 3 approvals. Treat an unproducible floor as something you must
+  catch at authoring time, not something the scheduler will absorb.
 
 ## Wiring facts (why a spec is all you need)
 
