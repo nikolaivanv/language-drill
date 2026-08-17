@@ -1,0 +1,38 @@
+[
+  {
+    "language": "DE",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "de-a1-vocab-home-objects"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A2",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "de-a2-vocab-travel-nature"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "de-a1-vocab-food-drink"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "B1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "de-b1-vocab-media-news"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "es-a1-vocab-city-places"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "A2",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "tr-a2-vocab-city-shopping"
+  }
+]

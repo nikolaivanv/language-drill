@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -320,8 +320,23 @@ describe("buildValidationSystemPrompt", () => {
     );
   });
 
+  // Mirror of the generation-side DISTINCT-referent rule. Both halves must be
+  // present or the contract splits: the generator would stop straddling while
+  // the validator kept accepting straddled drafts that enumerate — the exact
+  // behaviour observed on `der Schreibtisch`, flagged by the validator's own
+  // judgement while its prompt text still said enumeration cures ambiguity.
+  it("says enumeration cures only same-referent synonyms for vocab_recall", () => {
+    const t = VALIDATION_SYSTEM_PROMPT_TEMPLATE;
+    expect(t).toMatch(/Enumeration cures ONLY same-referent synonyms/);
+    expect(t).toMatch(/Schreibtisch/);
+    expect(t).toMatch(/Ebene/);
+    // The instruction must name the remedy, otherwise the judge flags without
+    // telling the generator what to change.
+    expect(t).toMatch(/tighter definition/i);
+  });
+
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
   });
 });
 
@@ -1006,7 +1021,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
   });
 });
 

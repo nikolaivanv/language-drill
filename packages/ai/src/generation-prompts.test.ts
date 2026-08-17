@@ -357,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-14");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-17");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -449,12 +449,34 @@ describe("buildGenerationSystemPrompt", () => {
     expect(section).toMatch(/do not default/i);
   });
 
-  it("bumps the generation prompt version to 2026-08-14", () => {
+  // Regression: vocab_recall carried 26 of 61 `ambiguous` flags on the
+  // 2026-08-17 run. The pre-existing near-synonym rule told the generator it
+  // could cure ambiguity by enumerating in `acceptableAnswers`; it applied that
+  // to pairs with DIFFERENT referents, producing straddling definitions
+  // (Tisch/Schreibtisch, Wiese/Ebene) that no answer list can repair. The
+  // escape hatch must stay scoped to same-referent synonyms.
+  it("scopes the vocab_recall enumerate escape hatch to same-referent synonyms", () => {
+    const t = GENERATION_SYSTEM_PROMPT_TEMPLATE;
+    expect(t).toMatch(/DISTINCT referents/);
+    expect(t).toMatch(/SAME referent/);
+    // The remedy must be stated as tightening, not enumerating.
+    expect(t).toMatch(/tighten the definition/i);
+    // Each of the three observed shapes is pinned by its worked example, so a
+    // reworded rule that silently drops one is caught.
+    expect(t).toMatch(/Schreibtisch/); // superordinate vs subordinate
+    expect(t).toMatch(/Ebene/); // adjacent-but-different concepts
+    expect(t).toMatch(/nachhaltig/); // different word class
+    expect(t).toMatch(/heiß/); // different point on one scale
+    // Hint/definition must agree in direction — the Wiese failure mode.
+    expect(t).toMatch(/hints.*SAME direction|SAME direction.*definition/s);
+  });
+
+  it("bumps the generation prompt version to 2026-08-17", () => {
     // 2026-08-14: the construction-variant directive reaches
     // SENTENCE_CONSTRUCTION. USER-prompt builder only — no Langfuse push — but
     // the cohort tag still has to move so SC traces before and after the
     // rotation are separable.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-14");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-17");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
