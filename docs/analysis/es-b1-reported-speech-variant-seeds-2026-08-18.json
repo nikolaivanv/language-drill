@@ -1,0 +1,698 @@
+{
+  "name": "prod-es-b1-reported-speech-2026-08-18",
+  "createdAtIso": "2026-08-17T23:19:20.028Z",
+  "applied": true,
+  "appliedCount": 98,
+  "snapshotBranchId": null,
+  "minConfidence": "high",
+  "classifierPromptVersion": "variant-seed-classifier@2026-08-11",
+  "classifierModel": "claude-sonnet-4-6",
+  "entries": [
+    {
+      "id": "d7534a28-a180-53cc-b348-2b107a68fc1d",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "propietario",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "da534ee1-24d5-5d1b-b648-2fe7fb8599ee",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "temperatura",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "d9534d4e-a3b9-5f56-b548-2e4a7ca237bf",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "dólar",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "cf533d90-989b-55a4-bb48-37f871840d95",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "tuviera",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "d0533f23-19b7-5369-bc48-3995f0676fc4",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "amamos",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "161febd1-13fc-5de5-b56f-f9492edb2f3c",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "diseñar",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "141fe8ab-1635-596f-b76f-fc8331146ade",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "eterno",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9b22fbc7-0133-59b9-ae72-f935dbd0354c",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "fugitivo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "dc535207-1e2a-5a7d-b848-3321f4d9e708",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "enterado",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "151fea3e-92e0-5020-b46f-f7acaff7cd0d",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "vecindario",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9822f70e-7ddd-506a-b373-01465ab3977b",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "agotado",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "1a1ff21d-186f-54f9-b16f-f2d52a68b7f8",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "intente",
+      "newSeedWord": "present-report-command-subjunctive",
+      "confidence": "high"
+    },
+    {
+      "id": "191ff08a-9752-5734-b06f-f138ab8555c9",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "pid",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "171fed64-998b-52be-b26f-f472adbe916b",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "entiendo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9c22fd5a-824f-577e-af72-fad25f260ebf",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "cranir",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9a22fa34-8016-5bf4-ad72-f7985cecd31d",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "gordon",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "0e1fdf39-1ce1-5c0d-ad6f-ec6125f640b4",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "protege",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9922f8a1-fefa-5e2f-b473-02e3d996f9aa",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "andrew",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9622f3e8-7ba4-54e0-b172-fe0c587a5bd9",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "volante",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "82251303-f0a3-5117-a975-2ddbf9b7c43e",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "dick",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8b275fc5-288b-55f7-a678-343bf15e050a",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "facultad",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9722f57b-fcc0-52a5-b272-ffa9d75dbe08",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "discúlpamir",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9422f0c2-8b34-55a6-a772-edea56412037",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "injusto",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9522f255-0c51-536b-a872-ef87d5248266",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "canto",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "81251170-6f86-5352-a875-2c3e7ad4620f",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "circuito",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "84251629-ee69-558d-a775-2aa1f77e889c",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "gorra",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8625194f-f515-582b-a575-2767f5454cfa",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "walt",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "852517bc-73f9-5a66-a475-25ca7661eacb",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "estuviera",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "842754c0-a9a7-53bc-9f78-28f074b3de7d",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "jenna",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "85275653-2ac4-5181-a078-2a8df39740ac",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "street",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "87251ae2-71bf-5edc-a275-22907428af29",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "samantha",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "862757e6-abe0-5f46-a178-2c2a76ed1a1f",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "remedio",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "91276937-1d6c-5c45-ac78-3de9e63fdae0",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "crío",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8f96753d-eb68-56ef-9aa7-dd53f536b2a2",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "robin",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8c967084-6812-5da0-97a7-d87c741a14d1",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "muestra",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "89966bcb-eda1-5279-94a7-d3a5f76fee44",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "juventud",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "0ed7f848-bada-5778-a7cd-23f43a586211",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "barba",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "15d8034d-42a2-57db-a6cd-2257bfe77726",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "patrulla",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8e9673aa-6a4b-592a-99a7-dbb676535073",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "rango",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8a966d5e-6ebe-503e-95a7-d5427ac5c7b7",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "huel",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "88966a38-6c85-54b4-93a7-d208788c8c15",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "bart",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "879668a5-f44d-5517-92a7-d06bfe1ba12a",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "ideal",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "86966712-7330-5752-91a7-cece7f383efb",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "b.",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "10d7fb6e-bd13-5302-a9cd-272e3c919db3",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "vídeo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "11d7fd01-3e30-50c7-aacd-28cbbb74ffe2",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "contenido",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "8b966ef1-efdb-5e03-96a7-d6dff9a929e6",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "marcado",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "0fd7f9db-3bf7-553d-a8cd-2591b93bc440",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "veterano",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "12d7fe94-bf4c-5e8c-a3cd-1d803ecad955",
+      "cellKey": "ES:B1:cloze:es-b1-reported-speech",
+      "oldSeedWord": "entro",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "82dc5dbb-0bb3-552d-83b5-c821655fd1d8",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "diseñar",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9c4670c2-380f-53a0-a699-903caaca077d",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "delantero",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9d467255-b92c-5165-a799-91d929ad69ac",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "enterado",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a046770e-4566-58dc-9a99-7ce09d72a1b1",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "tuviera",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "98466a76-3c81-5ab4-a299-89c8a6579039",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "propietario",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "974668e3-bfd7-5403-a599-8e9f27742e0a",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "temperatura",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "96466750-3ebb-563e-a499-8d02a890cbdb",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "dólar",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "7adc5123-02ce-5705-8bb5-d5095c7ae350",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "protege",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f0d4bc20-7a06-5ec6-bdb8-c9aa23f999db",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "cranir",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "81dc5c28-8a96-5768-82b5-c684e67c6fa9",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "vecindario",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f4d4c26c-7594-57b2-81b8-d01e286c111f",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "agotado",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f6d4c592-735a-5c28-bfb8-cce42632d57d",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "volante",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f7d4c725-f477-59ed-80b8-ce81a51637ac",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "discúlpamir",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "87dc659a-9142-5a06-80b5-c34aed28228f",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "entiendo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "79dc4f90-81b1-5940-8ab5-d36cdd978121",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "elén",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f5d4c3ff-f6b0-5577-82b8-d1bba74f734e",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "andrew",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f9d4ca4b-f23e-5e63-86b8-d82f99f80d82",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "canto",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f9d708e2-d66a-5b8e-92bb-2842441a646f",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "estuviera",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f8d7074f-554e-5dc9-91bb-26a5c0c48afc",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "neil",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f7d705bc-d431-5004-90bb-250841e128cd",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "samantha",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f9e3d4d5-8d36-52a9-8ebd-5e85694719c8",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "street",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f6e3d01c-0e52-506e-8fbd-6022ec9cf33b",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "remedio",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f6d70429-5314-523f-97bb-3053be8b4f5a",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "dick",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f5d70296-d1f8-547a-96bb-2eb63fa7ed2b",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "circuito",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "fad70a75-5787-5953-93bb-29dfc2fdc69e",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "walt",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f8d4c8b8-7121-509e-85b8-d6921b14ab53",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "injusto",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f4d70103-50db-56b5-95bb-2d19bc5213b8",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "gorra",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f4e3ccf6-07a6-5dd0-91bd-635ceed62edd",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "apuesta",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f3e3cb63-8afc-571f-94bd-68336ff2ccae",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "facultad",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "f8e3d342-0c19-54e4-8dbd-5ce8ea63b799",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "jenna",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "fde3db21-91a8-59bd-8abd-581164d4a284",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "crío",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a867151d-1692-561d-bc21-9081e04cd2a4",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "what",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a5671064-97af-53e2-bd21-921e63a2ac17",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "rango",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a4670ed1-1b05-5d31-b821-8a0ddbda5b60",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "juventud",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b73eb762-a759-5f10-8b28-d0fc946d3b35",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "barba",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b23eaf83-2f21-5f73-8a28-cf5f111761c2",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "patrulla",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a767138a-9575-5858-bb21-8ee461697075",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "muestra",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b83eb8f5-2876-5cd5-8c28-d29913509d64",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "veterano",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "a1670a18-9c21-5af6-b921-8baa5f3034d3",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "huel",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9e67055f-0fe6-537f-8621-a0a3eb6afcce",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "ideal",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "9d6703cc-8eca-55ba-8521-9f066c879a9f",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "b.",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b53eb43c-a992-5a9a-8d28-d43696a676d7",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "vídeo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b63eb5cf-2aaf-585f-8e28-d5d31589d906",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "contenido",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b43eb2a9-2ce8-53e9-8828-cc250ede2620",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "ayudo",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b13eadf0-ae05-51ae-8928-cdc29233ff93",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "white",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "b33eb116-abcb-5624-8728-ca888ffac3f1",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "entro",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "3c5b64d7-93c1-57a5-a8c6-62793bd11c98",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "perder él",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "3b5b6344-12a5-59e0-a7c6-60dcbcedba69",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "mochilar",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "3e5b67fd-95fa-532f-aac6-65b33e0a583a",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "pendiente",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    },
+    {
+      "id": "00ebddf1-cf12-5f31-9d2a-f54d2ab66608",
+      "cellKey": "ES:B1:translation:es-b1-reported-speech",
+      "oldSeedWord": "comprar él",
+      "newSeedWord": "past-report-imperfect-backshift",
+      "confidence": "high"
+    }
+  ]
+}
