@@ -266,6 +266,29 @@ describe('curriculum conjugationSeedKind (nominal-inflection points seed from th
     ]);
   });
 
+  it('tr-a1-vowel-harmony floors no locative — the validator assigns it to another point', () => {
+    // Removed 2026-08-17. Unlike de-b1-n-declension above, the value is not
+    // linguistically degenerate — a locative draft is perfectly well-formed. It
+    // is unapprovable for a DIFFERENT reason: the validator's grammarPointMatch
+    // rule names this exact case as its worked example, so a locative blank in a
+    // vowel-harmony cell is grammarPointMatch=false by construction and belongs
+    // to `tr-a1-locative`. The curriculum was requesting what the validator is
+    // told to reject — a generate<->validate contract split.
+    //
+    // Localised to this one value by prod data (succeeded runs since 2026-07-01,
+    // approved/requested): accusative 8/14, dative 9/19, ablative 8/17, locative
+    // 2/17. Keep the other three: the axis exists to force BOTH harmony patterns
+    // and ablative still carries the 2-way -DAn half.
+    const point = ALL_CURRICULA.find((g) => g.key === 'tr-a1-vowel-harmony');
+    const caseAxis = point?.coverageSpec?.axes.find((a) => a.name === 'case');
+    expect(caseAxis, 'tr-a1-vowel-harmony must keep its case axis').toBeDefined();
+    expect(Object.keys(caseAxis?.floors ?? {}).sort()).toEqual([
+      'ablative',
+      'accusative',
+      'dative',
+    ]);
+  });
+
   it('the DE adjective-declension noun-seeded points draw from the band (no curated pool)', () => {
     // Their identity space is the open noun inventory — a curated pool would
     // only shrink it. Only the closed-class n-declension curates.

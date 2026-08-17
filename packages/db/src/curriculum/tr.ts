@@ -241,7 +241,13 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * additionally need demote:pool (see docs/curriculum-authoring.md retrofit
  * section).
  */
-export const CURRICULUM_VERSION_TR = '2026-08-08';
+// 2026-08-17: tr-a1-vowel-harmony drops its `case: locative` floor — it
+// requested exactly what the validator's grammarPointMatch rule is instructed to
+// reject (locative `-DA` belongs to `tr-a1-locative`), yielding 2 approved of 17
+// requested against 47-57% for the sibling case values. Load-bearing, not
+// ceremonial: the bump also clears `skip-low-yield` suppression, without which a
+// corrected spec cannot re-run on any cell already suppressed.
+export const CURRICULUM_VERSION_TR = '2026-08-17';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -252,11 +258,28 @@ const trCurriculum: readonly GrammarPoint[] = [
     coverageSpec: {
       axes: [
         // Forces both harmony patterns via case suffixes: 4-way -(y)I/-(y)A
-        // (accusative/dative) + 2-way -DA/-DAn (locative/ablative). The
-        // 2026-07-17 audit found the translation pool 43/43 "X-lar ve Y-ler"
-        // plural pairs — exactly the plural-suffix collapse the generation
-        // prompt's cell-level rule warns against.
-        { name: 'case', floors: { accusative: 4, dative: 4, locative: 4, ablative: 4 } },
+        // (accusative/dative) + 2-way -DAn (ablative). The 2026-07-17 audit
+        // found the translation pool 43/43 "X-lar ve Y-ler" plural pairs —
+        // exactly the plural-suffix collapse the generation prompt's
+        // cell-level rule warns against.
+        //
+        // NO `locative` floor (removed 2026-08-17). It asked for precisely what
+        // the validator is instructed to reject: VALIDATION_SYSTEM_PROMPT_TEMPLATE's
+        // grammarPointMatch rule names this exact case as its worked example —
+        // «`correctAnswer: "da"` in a `tr-a1-vowel-harmony` cell tests locative
+        // `-DA` (belongs in `tr-a1-locative`)» — so a locative draft here is
+        // grammarPointMatch=false by construction. A generate<->validate contract
+        // split, provable from two committed files without judging a single draft.
+        //
+        // The data agrees, and localises it to this one value (all succeeded runs
+        // since 2026-07-01, approved/requested): accusative 8/14 (57%), dative
+        // 9/19 (47%), ablative 8/17 (47%), locative 2/17 (12%). The siblings are
+        // fine even though `tr-a1-accusative-definite-object` and
+        // `tr-a1-ablative-dative` also exist as their own points — the validator
+        // rule singles out locative by name, so only locative collapses. Dropping
+        // the whole axis would therefore be wrong; ablative still carries the
+        // 2-way -DAn pattern the axis exists to force.
+        { name: 'case', floors: { accusative: 4, dative: 4, ablative: 4 } },
       ],
     },
     kind: 'grammar',
