@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Language, CefrLevel, ExerciseType } from '@language-drill/shared';
 import {
   ExerciseResponseSchema,
@@ -9,6 +9,7 @@ import {
   type SubmitResultResponse,
 } from '../schemas/exercise';
 import type { AuthenticatedFetch } from '../fetchClient';
+import { invalidateProgressDerivedQueries } from '../lib/progress-cache';
 
 // ---------------------------------------------------------------------------
 // useExercise
@@ -120,6 +121,7 @@ export type UseSubmitAnswerOptions = {
 };
 
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
+  const queryClient = useQueryClient();
   return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
     mutationFn: async ({ exerciseId, answer, sessionId, hintUsage, optionsRevealed }) => {
       const body: {
@@ -138,7 +140,7 @@ export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
       const json: unknown = await response.json();
       return parseSubmitResult(json);
     },
-    // Deliberately NO query invalidation here. The single-exercise pages
+    // Deliberately NO ['exercise'] invalidation here. The single-exercise pages
     // (conjugation warm-up) render the fetched task live, so invalidating
     // ['exercise'] on submit would override `staleTime: Infinity` and refetch a
     // fresh random exercise the instant feedback appears — swapping the prompt
@@ -146,5 +148,15 @@ export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
     // exercise is an explicit caller action (`refetch()` on "next"), never a
     // submit side effect. Session-driven flows read from the manifest, not this
     // query, so they are unaffected either way.
+    //
+    // The progress-derived caches ARE marked stale: a graded answer moves
+    // mastery server-side, so the pre-drill snapshot those screens hold is now
+    // wrong. `refetchType: 'none'` keeps that free — nothing refetches mid-
+    // session; `/progress` and `/home` fetch on their next mount. Doing it per
+    // answer (rather than only at session complete) also covers the conjugation
+    // warm-up, which has no completion step, and sessions abandoned part-way.
+    onSuccess: () => {
+      invalidateProgressDerivedQueries(queryClient, 'none');
+    },
   });
 }

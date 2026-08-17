@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CreateSessionResponseSchema,
   type CreateSessionRequest,
@@ -9,6 +9,7 @@ import {
   type ResumeSessionResponse,
 } from '../schemas/session';
 import type { AuthenticatedFetch } from '../fetchClient';
+import { invalidateProgressDerivedQueries } from '../lib/progress-cache';
 
 // ---------------------------------------------------------------------------
 // useCreateSession
@@ -45,6 +46,12 @@ export function useCreateSession({ fetchFn }: UseCreateSessionOptions) {
 // response is validated against `CompleteSessionResponseSchema` so the
 // SessionSummary screen receives strongly-typed data. Used by the `/drill`
 // page when the learner finishes the last exercise (Req 3.3, 4.1, 7.4).
+//
+// On success it also invalidates every progress-derived cache: the learner
+// leaves the debrief straight for `/progress` or `/home`, and those queries'
+// multi-minute `staleTime` would otherwise serve the pre-session snapshot
+// until a hard refresh. Completion is also the write that sets `completedAt`
+// / `correctCount`, which the today-plan reads.
 // ---------------------------------------------------------------------------
 
 export type CompleteSessionParams = {
@@ -56,6 +63,7 @@ export type UseCompleteSessionOptions = {
 };
 
 export function useCompleteSession({ fetchFn }: UseCompleteSessionOptions) {
+  const queryClient = useQueryClient();
   return useMutation<CompleteSessionResponse, Error, CompleteSessionParams>({
     mutationFn: async ({ sessionId }) => {
       const response = await fetchFn(`/sessions/${sessionId}/complete`, {
@@ -63,6 +71,9 @@ export function useCompleteSession({ fetchFn }: UseCompleteSessionOptions) {
       });
       const json: unknown = await response.json();
       return CompleteSessionResponseSchema.parse(json);
+    },
+    onSuccess: () => {
+      invalidateProgressDerivedQueries(queryClient);
     },
   });
 }
