@@ -161,7 +161,14 @@ function renderBulletList(items: readonly string[]): string {
 // body carries BOTH, so it needs a version that supersedes BOTH; reusing
 // 2026-08-13 would silently fold three distinct prompt bodies into one Langfuse
 // cohort. Template edit → Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-08-13a";
+// Bumped 2026-08-17 — conjugation `breakdown` / `exampleSentences` re-scoped out
+// of `contextSpoilsAnswer` (both are post-answer feedback; the prompt's own
+// "Breakdown shown to the learner" label asserted otherwise and the judge vetoed
+// on it — see `conjugationScoringNote`). **USER-prompt-only**: the cached
+// template is untouched, so this ships with the CODE deploy and needs NO
+// `push-prompts` run. Bumped anyway so the before/after traces cohort apart —
+// the whole point of the constant.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-08-17";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -389,6 +396,43 @@ function sentenceConstructionScoringNote(spec: GenerationSpec): string {
 **Scoring note for sentence_construction:** this is OPEN PRODUCTION. Do NOT dock qualityScore below 0.7, and do NOT add a low-quality flaggedReason, merely because the model answers add optional words (e.g. \`zu Hause\`, \`heute Abend\`), use different modals/polarity, or vary word order — that variation is expected and correct. Reserve concerns for: a self-contradictory or under-specified PROMPT; a model answer that is incoherent or off-target for the prompt (e.g. a \`du\`-subject sentence where the situation requires a first-person \`ich\` reply); or a model answer using a structure clearly ABOVE ${spec.cefrLevel} (e.g. a \`weil\`/\`dass\` subordinate clause or \`also\`-coordination at A1 → set levelMatch=false). A prompt whose \`du\`/\`Sie\` is a register/addressee cue is fine; only flag when it is mis-compiled into the grammatical subject and yields an incoherent answer.`;
 }
 
+// ---------------------------------------------------------------------------
+// Conjugation scoring note (appended to the conjugation user prompt).
+//
+// Fixes a UI-visibility assertion that was false: `breakdown` and
+// `exampleSentences` are POST-ANSWER feedback — `conjugation-exercise.tsx`
+// renders both only inside `FeedbackShell`, gated on
+// `submission.kind === 'evaluated'`, so neither is on screen while the learner
+// answers. The prompt nevertheless labelled the breakdown "Breakdown shown to
+// the learner", and the judge duly applied the `contextSpoilsAnswer` HARD VETO
+// to a field whose entire job is to spell out the morphology ("frisch + -e
+// (strong feminine accusative singular ending)"). Compounding it, the
+// GENERATION prompt REQUIRES `exampleSentences` to use `targetForm` verbatim
+// (generation-prompts.ts) — the generator is instructed to produce exactly what
+// the validator then vetoed. Same class as the #612 -> #620 evaluator defect.
+//
+// Measured on 2026-08-17 with a paired 3-arm probe over 16 freshly generated
+// `de:a2:conjugation:de-a2-adjective-declension-zero` drafts (identical drafts
+// per arm; only the note differed):
+//   baseline                     9/16 spoiled
+//   + breakdown note             1/16
+//   + exampleSentences note      5/16
+// Every baseline veto quoted "The breakdown shown to the learner explicitly
+// states…", which is why the label goes too, not just the note. In production
+// this cell ran 15 approved / 152 requested with 110 `context-spoils-answer`
+// across six runs; conjugation overall was 202 spoils per 984 drafts (20.5%)
+// vs 3.5-4.5% on every other surface.
+//
+// Kept SURGICAL, mirroring `vocabRecallScoringNote`: it re-scopes ONE dimension
+// to the pre-answer fields and explicitly keeps the veto live for them. No
+// "pre-vetted / curated / good draft" framing — a broader pro-draft block was
+// previously verified to make the validator miss real spoilers elsewhere.
+function conjugationScoringNote(): string {
+  return `
+
+**Scoring note for conjugation:** \`Breakdown (post-answer feedback)\` and \`Example sentences (post-answer feedback)\` are NOT visible while the learner answers — the UI reveals both only after submission. The target form, or the ending it decomposes into, appearing in EITHER field is therefore NOT contextSpoilsAnswer: explaining the morphology is the breakdown's job, and the generator is required to use the target form verbatim in the example sentences. Judge contextSpoilsAnswer ONLY on the pre-answer, learner-visible fields — \`Instructions\` and \`Feature bundle\` — and it is still \`true\` when THOSE spell out the inflected answer itself (e.g. "add -em to kalt") rather than naming the lemma plus the grammatical features the learner must apply. Naming the feature bundle (case/number/gender/tense) is the task statement, not a spoiler.`;
+}
+
 function buildClozeValidationUserPrompt(
   content: ClozeContent,
   spec: GenerationSpec,
@@ -507,8 +551,8 @@ export function buildConjugationValidationUserPrompt(
 **Feature bundle:** ${content.featureBundle}
 **Proposed correct form:** ${content.targetForm}
 **Acceptable variants:** ${(content.acceptableForms ?? []).join(", ") || "(none)"}
-**Breakdown shown to the learner:** ${content.breakdown}
-**Example sentences:** ${content.exampleSentences.join(" / ")}
+**Breakdown (post-answer feedback):** ${content.breakdown}
+**Example sentences (post-answer feedback):** ${content.exampleSentences.join(" / ")}
 
 Check, and reject (low quality) if any fails:
 1. Is "${content.targetForm}" the EXACTLY correct ${spec.language} form for that lemma + feature bundle, including all diacritics? An incorrect stored form mis-grades every learner. For nominal points in languages that mark case/number on the article/adjective rather than the noun (German declension), the target is legitimately a multi-word NP ("einen neuen Tisch", "kaltem Wasser") — do NOT reject it for not being a single word; instead verify every word of the phrase (article type, adjective ending, noun form) is correct for the stated case/number and the noun's gender.
@@ -516,6 +560,7 @@ Check, and reject (low quality) if any fails:
 3. Are all "acceptable variants" genuinely fully-correct alternatives (not near-misses or common errors)?
 4. Does the feature bundle avoid leaking the answer, and do the example sentences use the form correctly and naturally at this level?
 5. Is the breakdown accurate?
+${conjugationScoringNote()}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }
