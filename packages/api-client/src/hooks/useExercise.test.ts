@@ -498,6 +498,65 @@ describe('useSubmitAnswer — does not swap the live exercise', () => {
   });
 });
 
+describe('useSubmitAnswer — progress cache invalidation', () => {
+  const SAMPLE_EVALUATION = {
+    score: 0.9,
+    grammarAccuracy: 0.9,
+    vocabularyRange: 'B1',
+    taskAchievement: 0.9,
+    feedback: 'good',
+    errors: [],
+    estimatedCefrEvidence: 'B1',
+  };
+
+  function jsonResponse(body: unknown): Response {
+    return { ok: true, status: 200, json: async () => body } as unknown as Response;
+  }
+
+  // A graded answer moves server-side mastery immediately, so every
+  // progress-derived cache seeded before the drill is now a stale snapshot.
+  // Marking them invalidated (without refetching — see the hook) means the
+  // next mount of `/progress` or `/home` fetches the post-answer numbers,
+  // including when the learner abandons a session part-way.
+  it('marks progress-derived queries stale on success', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const wrapper = function Wrapper({ children }: { children: ReactNode }) {
+      return createElement(QueryClientProvider, { client: queryClient }, children);
+    };
+
+    const seeded: readonly (readonly unknown[])[] = [
+      ['progressRadar', 'ES'],
+      ['curriculumMap', 'ES'],
+      ['errorTrends', 'ES'],
+      ['insightsErrors', 'ES'],
+      ['fluencyStats', 'ES'],
+      ['todayPlan', 'ES'],
+      ['vocab', 'topics', 'ES'],
+      ['progress', 'point', 'es-b1-preterite-vs-imperfect'],
+    ];
+    for (const key of seeded) queryClient.setQueryData(key, { stale: 'snapshot' });
+
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_EVALUATION));
+
+    const { result } = renderHook(() => useSubmitAnswer({ fetchFn }), { wrapper });
+
+    await act(async () => {
+      await result.current.mutateAsync({ exerciseId: 'ex-1', answer: 'fue' });
+    });
+
+    for (const key of seeded) {
+      expect(
+        queryClient.getQueryState(key)?.isInvalidated,
+        `expected ${JSON.stringify(key)} to be invalidated`,
+      ).toBe(true);
+    }
+  });
+});
+
 describe('useSubmitAnswer — sessionId threading', () => {
   function jsonResponse(body: unknown): Response {
     return { ok: true, status: 200, json: async () => body } as unknown as Response;

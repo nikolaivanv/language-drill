@@ -517,3 +517,7 @@ export {
 } from './schemas/vocab';
 export { useVocabTopics, type UseVocabTopicsParams } from './hooks/useVocabTopics';
 export { useVocabTopicDetail, type UseVocabTopicDetailParams } from './hooks/useVocabTopicDetail';
+export {
+  PROGRESS_DERIVED_QUERY_KEY_PREFIXES,
+  invalidateProgressDerivedQueries,
+} from './lib/progress-cache';

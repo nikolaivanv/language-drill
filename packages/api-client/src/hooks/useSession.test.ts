@@ -358,6 +358,84 @@ describe('useCompleteSession — error propagation', () => {
 });
 
 // ---------------------------------------------------------------------------
+// useCompleteSession — progress cache invalidation
+// ---------------------------------------------------------------------------
+// Finishing a session is the moment the learner's server-side mastery,
+// error trends and today-plan state stop matching whatever the progress
+// screens fetched before the drill. Those queries carry a 5-minute
+// `staleTime`, so without an invalidation here a client-side hop from the
+// debrief to `/progress` renders the PRE-session snapshot until either the
+// staleTime lapses or the user hard-refreshes.
+// ---------------------------------------------------------------------------
+
+describe('useCompleteSession — progress cache invalidation', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = buildQueryClient();
+  });
+
+  it('invalidates every progress-derived query on success', async () => {
+    // Seed the caches the dashboard/progress screens populate before a drill.
+    const seeded: readonly (readonly unknown[])[] = [
+      ['progressRadar', 'ES'],
+      ['curriculumMap', 'ES'],
+      ['errorTrends', 'ES'],
+      ['insightsErrors', 'ES'],
+      ['fluencyStats', 'ES'],
+      ['todayPlan', 'ES'],
+      ['vocab', 'topics', 'ES'],
+      ['progress', 'point', 'es-b1-preterite-vs-imperfect'],
+    ];
+    for (const key of seeded) queryClient.setQueryData(key, { stale: 'snapshot' });
+    for (const key of seeded) {
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false);
+    }
+
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_COMPLETE_RESPONSE));
+
+    const { result } = renderHook(() => useCompleteSession({ fetchFn }), {
+      wrapper: buildWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ sessionId: 'abc-uuid' });
+    });
+
+    for (const key of seeded) {
+      expect(
+        queryClient.getQueryState(key)?.isInvalidated,
+        `expected ${JSON.stringify(key)} to be invalidated`,
+      ).toBe(true);
+    }
+  });
+
+  it('leaves unrelated caches alone', async () => {
+    queryClient.setQueryData(['exercise', 'ES', 'B1'], { id: 'ex-001' });
+    queryClient.setQueryData(['preferences'], { dailyGoal: 'standard' });
+
+    const fetchFn = vi
+      .fn<AuthenticatedFetch>()
+      .mockResolvedValue(jsonResponse(SAMPLE_COMPLETE_RESPONSE));
+
+    const { result } = renderHook(() => useCompleteSession({ fetchFn }), {
+      wrapper: buildWrapper(queryClient),
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({ sessionId: 'abc-uuid' });
+    });
+
+    expect(
+      queryClient.getQueryState(['exercise', 'ES', 'B1'])?.isInvalidated,
+    ).toBe(false);
+    expect(queryClient.getQueryState(['preferences'])?.isInvalidated).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // useResumeSession
 // ---------------------------------------------------------------------------
 
