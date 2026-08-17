@@ -171,9 +171,31 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           DEPLOY_URL=$(vercel deploy --token "$VERCEL_TOKEN" --yes)
+          # `vercel deploy` exiting 0 with no URL would otherwise sail through:
+          # the assignment succeeds, `echo` succeeds, the step goes green, and
+          # the comment below posts a broken link. Fail loudly instead.
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::vercel deploy returned no URL"
+            exit 1
+          fi
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          # Surface the URL somewhere durable BEFORE the comment step, so it is
+          # still reachable when commenting fails (and without digging in raw logs).
+          echo "🔗 **Preview deploy:** $DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"
 
+      # Non-fatal on purpose. This posts a convenience link AFTER the deploy has
+      # already succeeded — its failure says nothing about whether the deploy
+      # worked. On 2026-08-17 a GitHub API outage 5xx'd `createComment`
+      # ("No server is currently available to service your request") and failed
+      # the whole required check on #660, while the preview it had just built was
+      # live and serving 200.
+      #
+      # Contrast with the Vercel env sync in deploy.yml (#659), where making the
+      # step non-fatal would have been WRONG — that one mutated remote state and
+      # its failure left a variable deleted. This step only writes a comment; it
+      # has no state to corrupt, and the URL is in the step summary above.
       - name: Post preview URL as PR comment
+        continue-on-error: true
         uses: actions/github-script@v8
         with:
           script: |
