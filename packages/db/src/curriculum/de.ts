@@ -117,7 +117,32 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // never flagged, so it kept cueing the written word and leaking the answer
 // through glossEn. Bump also clears skip-low-yield suppression, so other DE
 // cells re-enqueue on the next generation run.
-export const CURRICULUM_VERSION_DE = '2026-08-16';
+// 2026-08-17: **no curriculum edit** — this bump exists solely to clear
+// `skip-low-yield` suppression across DE. That is normally a side effect of a
+// content bump; here it is the entire point, so it is called out rather than
+// left to be inferred from an empty diff.
+//
+// Why it is needed: `decideEnqueue` (infra/lambda/src/generation/scheduler-decision.ts)
+// suppresses a cell whose most-recent succeeded job approved
+// < LOW_YIELD_THRESHOLD (3), and step 4 clears that ONLY on a
+// CURRICULUM_VERSION mismatch. It never reads GENERATION_PROMPT_VERSION or
+// VALIDATION_PROMPT_VERSION. So a prompt-only fix can never revive the cells it
+// was written to fix — #656 (conjugation `contextSpoilsAnswer` no longer fires
+// on the post-answer `breakdown`) would have shipped inert on
+// de-a2-adjective-declension-zero, which approved 1 row on 08-17 and recorded
+// curriculum_version '2026-08-16' (matching disk → suppressed forever).
+//
+// That one cell was already un-stuck by a manual CLI run (6 approved ≥ 3). This
+// bump is for the rest: 54 of the 78 DE cells that ran on 2026-08-17 approved
+// < 3. Most are near-target and benign, but de-a1-zero-article (1 approved of
+// 11 requested) and de-b1-articles-use (1 of 6) are genuinely stuck, and every
+// conjugation cell should get one night under the corrected validator.
+//
+// Cost: one larger DE night as the suppressed cells re-enqueue; they re-suppress
+// on their own if they stay low-yield. See docs/analysis/generation-run-2026-08-17.md
+// rec #1b for the standing question of whether a prompt-version mismatch should
+// clear suppression too — that would remove the need for bumps like this one.
+export const CURRICULUM_VERSION_DE = '2026-08-17';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
