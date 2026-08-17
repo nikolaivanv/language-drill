@@ -357,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-17");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-18");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -471,12 +471,33 @@ describe("buildGenerationSystemPrompt", () => {
     expect(t).toMatch(/hints.*SAME direction|SAME direction.*definition/s);
   });
 
-  it("bumps the generation prompt version to 2026-08-17", () => {
-    // 2026-08-14: the construction-variant directive reaches
-    // SENTENCE_CONSTRUCTION. USER-prompt builder only — no Langfuse push — but
-    // the cohort tag still has to move so SC traces before and after the
-    // rotation are separable.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-17");
+  // All 50 approved es-b1-reported-speech translations carried an
+  // already-backshifted English source ("She said that she was tired"), so a
+  // word-for-word rendering produced the reference and the Spanish shift was
+  // never applied. English backshifts OPTIONALLY, so the source shape is the
+  // author's choice — which is what makes this a generation rule rather than a
+  // validator veto.
+  it("forbids a translation source that pre-resolves an optional-in-English contrast", () => {
+    const t = GENERATION_SYSTEM_PROMPT_TEMPLATE;
+    expect(t).toMatch(/anti-bypass/);
+    expect(t).toMatch(/OPTIONAL/);
+    // The worked pair: the bypassable source and the one that keeps the shift live.
+    expect(t).toContain("She said that she was tired");
+    expect(t).toContain("She said she **is** tired");
+    // The no-shift direction must survive a reword too, or only half the
+    // reported-speech contrast is covered.
+    expect(t).toContain("Ha dicho que viene");
+    // The boundary clause is load-bearing: without it the rule reads as a ban on
+    // any source whose English structure matches the target, which would condemn
+    // English prepositions (TR case) and infinitives (ES subjunctive complements).
+    expect(t).toMatch(/where English FORCES a shape/);
+    expect(t).toMatch(/do not distort natural English/);
+  });
+
+  it("bumps the generation prompt version to 2026-08-18", () => {
+    // 2026-08-18: anti-bypass rule for translation sources on contrasts English
+    // leaves optional. Template edit → Langfuse push per env.
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-18");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
