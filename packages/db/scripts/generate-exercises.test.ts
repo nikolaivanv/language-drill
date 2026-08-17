@@ -27,6 +27,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { createDb, type Db } from '../src/client';
 import { ALL_CURRICULA } from '../src/curriculum';
+import { enumerateCurriculumCells } from '../src/generation/cells';
 import { deterministicUuid } from '../src/lib/deterministic-uuid';
 import { exerciseTags, exercises, generationJobs } from '../src/schema/index';
 
@@ -245,6 +246,70 @@ describe('resolveCells', () => {
         ALL_CURRICULA,
       ),
     ).toThrow(/not compatible with --type cloze/);
+  });
+
+  // Regression: this file used to keep its OWN copy of the kind -> types map,
+  // written before `conjugation` existed. `--type conjugation` was rejected for
+  // every point ("kind: grammar is not compatible"), so no conjugation cell
+  // could be driven from the CLI — while the scheduler generated them nightly.
+  // Blocked the 2026-08-17 manual re-run of de-a2-adjective-declension-zero.
+  it('resolves a conjugation cell for a conjugationSuitable grammar point', () => {
+    const cells = resolveCells(
+      {
+        ...baseArgs,
+        lang: Language.DE,
+        level: CefrLevel.A2,
+        type: ExerciseType.CONJUGATION,
+        grammarPoint: 'de-a2-adjective-declension-zero',
+      },
+      ALL_CURRICULA,
+    );
+    expect(cells).toHaveLength(1);
+    expect(cells[0].grammarPoint.key).toBe('de-a2-adjective-declension-zero');
+    expect(cells[0].exerciseType).toBe(ExerciseType.CONJUGATION);
+  });
+
+  it('throws a flag-naming error when --type conjugation is used with a non-flagged point', () => {
+    expect(() =>
+      resolveCells(
+        {
+          ...baseArgs,
+          lang: Language.ES,
+          level: CefrLevel.B1,
+          type: ExerciseType.CONJUGATION,
+          grammarPoint: 'es-b1-passive-se',
+        },
+        ALL_CURRICULA,
+      ),
+    ).toThrow(/not flagged conjugationSuitable/);
+  });
+
+  // The CLI's accepted (point, type) pairs must be exactly the enumerator's —
+  // the invariant the deleted duplicate silently broke.
+  it('accepts exactly the (grammarPoint, type) pairs the cell universe contains', () => {
+    const universe = enumerateCurriculumCells(ALL_CURRICULA);
+    // Sample across kinds/flags rather than all ~2k cells: one per exercise type.
+    const seen = new Set<string>();
+    const sample = universe.filter((c) => {
+      if (seen.has(c.exerciseType)) return false;
+      seen.add(c.exerciseType);
+      return true;
+    });
+    expect(sample.length).toBeGreaterThan(1);
+    for (const cell of sample) {
+      expect(() =>
+        resolveCells(
+          {
+            ...baseArgs,
+            lang: cell.language,
+            level: cell.cefrLevel,
+            type: cell.exerciseType,
+            grammarPoint: cell.grammarPoint.key,
+          },
+          ALL_CURRICULA,
+        ),
+      ).not.toThrow();
+    }
   });
 
   it('throws when --grammar-point is unknown', () => {

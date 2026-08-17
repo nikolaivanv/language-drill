@@ -14,7 +14,11 @@
 import { ExerciseType } from '@language-drill/shared';
 
 import type { GrammarPoint } from '../src/curriculum';
-import { type Cell, enumerateCurriculumCells } from '../src/generation/cells';
+import {
+  type Cell,
+  compatibleTypes,
+  enumerateCurriculumCells,
+} from '../src/generation/cells';
 
 import type { ParsedArgs } from './generate-exercises-parse-args';
 
@@ -23,28 +27,23 @@ import type { ParsedArgs } from './generate-exercises-parse-args';
 export type { Cell };
 
 // ---------------------------------------------------------------------------
-// Kind compatibility (kept here only for the single-grammar-point validation
-// branch — the universe enumeration uses the same compatibility rules inside
-// `enumerateCurriculumCells`).
+// Kind compatibility — delegated to `compatibleTypes` (src/generation/cells.ts),
+// the same function `enumerateCurriculumCells` builds the universe from.
+//
+// This file used to keep its own copy of the kind -> types mapping "for the
+// single-grammar-point validation branch", with a comment asserting it matched
+// the enumerator. It did not: the copy was written before `conjugation`,
+// `free-writing` and `paraphrase` existed, hardcoded SENTENCE_CONSTRUCTION into
+// the grammar set instead of gating it on `sentenceConstructionSuitable`, and
+// ignored `clozeUnsuitable`. Net effect: `--type conjugation` was rejected for
+// EVERY point ("kind: grammar is not compatible with --type conjugation") even
+// though the scheduler generates those cells nightly, so no conjugation cell
+// could be driven from the CLI at all.
+//
+// A duplicated mapping cannot be kept honest by a comment — the two must be the
+// same function. The validation branch below now asks the enumerator's own
+// predicate, so a future exercise type is picked up here for free.
 // ---------------------------------------------------------------------------
-
-const GRAMMAR_KIND_TYPES: ReadonlyArray<ExerciseType> = [
-  ExerciseType.CLOZE,
-  ExerciseType.TRANSLATION,
-  ExerciseType.SENTENCE_CONSTRUCTION,
-];
-const VOCAB_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.VOCAB_RECALL];
-const DICTATION_KIND_TYPES: ReadonlyArray<ExerciseType> = [ExerciseType.DICTATION];
-
-function isCompatible(kind: GrammarPoint['kind'], exerciseType: ExerciseType): boolean {
-  const compatible =
-    kind === 'dictation'
-      ? DICTATION_KIND_TYPES
-      : kind === 'vocab'
-        ? VOCAB_KIND_TYPES
-        : GRAMMAR_KIND_TYPES;
-  return compatible.includes(exerciseType);
-}
 
 // ---------------------------------------------------------------------------
 // resolveCells
@@ -81,17 +80,27 @@ export function resolveCells(
         `--grammar-point '${args.grammarPoint}' is at CEFR ${entry.cefrLevel}, not --level ${args.level}`,
       );
     }
-    if (!isCompatible(entry.kind, args.type)) {
-      throw new Error(
-        `--grammar-point '${args.grammarPoint}' (kind: ${entry.kind}) is not compatible with --type ${args.type}`,
-      );
-    }
+    // Checked BEFORE the general compatibility test purely for the error
+    // message: `compatibleTypes` already omits SENTENCE_CONSTRUCTION for a point
+    // without the flag, but "not compatible with --type sentence_construction"
+    // doesn't tell the author that the fix is a curriculum flag.
     if (
       args.type === ExerciseType.SENTENCE_CONSTRUCTION &&
       !entry.sentenceConstructionSuitable
     ) {
       throw new Error(
         `grammar point '${args.grammarPoint}' is not flagged sentenceConstructionSuitable; add the flag in the curriculum to generate sentence_construction exercises for it`,
+      );
+    }
+    // Same shape as the SC flag, for the same reason.
+    if (args.type === ExerciseType.CONJUGATION && !entry.conjugationSuitable) {
+      throw new Error(
+        `grammar point '${args.grammarPoint}' is not flagged conjugationSuitable; add the flag in the curriculum to generate conjugation exercises for it`,
+      );
+    }
+    if (!compatibleTypes(entry).includes(args.type)) {
+      throw new Error(
+        `--grammar-point '${args.grammarPoint}' (kind: ${entry.kind}) is not compatible with --type ${args.type}`,
       );
     }
 
