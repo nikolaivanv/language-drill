@@ -145,9 +145,10 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel env rm NEXT_PUBLIC_ANNOTATE_STREAM_URL production --yes --token "$VERCEL_TOKEN" || true
-          echo "${{ steps.prod_stream_url.outputs.url }}" | vercel env add NEXT_PUBLIC_ANNOTATE_STREAM_URL production --token "$VERCEL_TOKEN"
+          ENV_KEY: NEXT_PUBLIC_ANNOTATE_STREAM_URL
+          ENV_VALUE: ${{ steps.prod_stream_url.outputs.url }}
+          ENV_TARGET: production
+        run: .github/scripts/sync-vercel-env.sh
 
       - name: Deploy to Vercel Production
         env:
@@ -222,9 +223,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
+      # No `Install Vercel CLI` here: this job only syncs an env var, which now
+      # goes through the REST API. The production job still installs it because
+      # it also runs `vercel deploy`.
       - name: Read AnnotateStreamUrl from dev CFN outputs
         id: dev_stream_url
         env:
@@ -247,6 +248,7 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          vercel env rm NEXT_PUBLIC_ANNOTATE_STREAM_URL preview --yes --token "$VERCEL_TOKEN" || true
-          echo "${{ steps.dev_stream_url.outputs.url }}" | vercel env add NEXT_PUBLIC_ANNOTATE_STREAM_URL preview --token "$VERCEL_TOKEN"
+          ENV_KEY: NEXT_PUBLIC_ANNOTATE_STREAM_URL
+          ENV_VALUE: ${{ steps.dev_stream_url.outputs.url }}
+          ENV_TARGET: preview
+        run: .github/scripts/sync-vercel-env.sh
