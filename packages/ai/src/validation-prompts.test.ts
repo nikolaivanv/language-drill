@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -321,7 +321,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
   });
 });
 
@@ -929,6 +929,37 @@ describe("buildConjugationValidationUserPrompt", () => {
     expect(out).toMatch(/inflectional category|case\/number/i);
     expect(out).toContain("evde");
   });
+
+  // Regression: `breakdown` and `exampleSentences` are POST-ANSWER feedback —
+  // `conjugation-exercise.tsx` renders both only inside `FeedbackShell`, gated
+  // on `submission.kind === 'evaluated'`. The prompt used to label the
+  // breakdown "Breakdown shown to the learner", and the judge then applied the
+  // `contextSpoilsAnswer` hard veto to a field whose whole job is to spell out
+  // the morphology. A 16-draft paired probe on
+  // `de:a2:conjugation:de-a2-adjective-declension-zero` measured 9/16 spoiled
+  // at baseline vs 1/16 once the judge was told the breakdown is post-answer.
+  it("does not claim the breakdown is visible while the learner answers", () => {
+    const out = buildConjugationValidationUserPrompt(
+      nominalContent as never,
+      nominalSpec,
+    );
+    expect(out).not.toContain("Breakdown shown to the learner");
+  });
+
+  it("tells the judge the breakdown and example sentences are post-answer", () => {
+    const out = buildConjugationValidationUserPrompt(
+      nominalContent as never,
+      nominalSpec,
+    );
+    expect(out).toContain("Scoring note for conjugation");
+    // Both fields must be named — the probe's isolation arms scored 1/16
+    // (breakdown note) and 5/16 (examples note) against a 9/16 baseline.
+    expect(out).toMatch(/post-answer/i);
+    expect(out).toMatch(/breakdown/i);
+    expect(out).toMatch(/example sentences/i);
+    // The veto must stay live for the genuinely pre-answer fields.
+    expect(out).toMatch(/instructions|feature bundle/i);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -975,7 +1006,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-13a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17");
   });
 });
 
