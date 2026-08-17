@@ -216,8 +216,25 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * declared variants, and the #647 repass had just freed 21 slots on this point
  * (cloze 50→39, translation 50→40); without this they would have refilled from
  * the five old variants and re-frozen the gap for another cycle.
+ *
+ * `2026-08-18`: es-b1-reported-speech gains three `constructionVariants` plus
+ * the description clause, example, negative example and common error for the
+ * present-zone (no-shift) case it never described. The approved prod pool was
+ * 96/99 `dijo que` + imperfect, 1/99 reported command with the subjunctive and
+ * 0/99 no-shift — the point declared two constructions and had effectively
+ * generated one. The no-shift case is stated the way Butt & Benjamin 17.8
+ * actually licenses it (the PERFECT reporting verb keeps the present: "Juan ha
+ * dicho que viene"), NOT as the English-pedagogy rule that a still-true
+ * statement keeps the present — after a preterite Spanish shifts anyway, and
+ * "?Juan dijo que viene" is sub-standard. All 50 approved translations also had
+ * an already-past English source ("She said that she was tired"), so a literal
+ * rendering produced the answer; the variant directives now force the
+ * reporting-verb tense that makes the decision live. Bump clears
+ * target-reached / low-yield suppression; both cells sit at target, so the
+ * retrofit also needs backfill:variant-seeds then demote:pool
+ * (see docs/curriculum-authoring.md retrofit section).
  */
-export const CURRICULUM_VERSION_ES = '2026-08-14';
+export const CURRICULUM_VERSION_ES = '2026-08-18';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2463,15 +2480,53 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Reported speech (present-to-past)',
     description:
-      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes).',
+      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes). A present-zone reporting verb takes no shift — notably the perfect, which counts as a present (Juan ha dicho que viene) — but after a past one Spanish requires the shift even when the statement still holds.',
     cefrLevel: B1,
     language: ES,
-    examplesPositive: ['Dijo que tenía mucho sueño.', 'El profesor dice que hagamos los deberes.'],
-    examplesNegative: ['*Dijo que tiene mucho sueño.'],
+    examplesPositive: [
+      'Dijo que tenía mucho sueño.',
+      'El profesor dice que hagamos los deberes.',
+      'Juan ha dicho que viene.',
+    ],
+    examplesNegative: ['*Dijo que tiene mucho sueño.', '*Ha dicho que venía.'],
     commonErrors: [
-      'Keeping the present tense in the reported clause after a past-tense reporting verb ("*dijo que tiene sueño" instead of "dijo que tenía sueño").',
+      'Keeping the present tense in the reported clause after a past-tense reporting verb ("*dijo que tiene sueño" instead of "dijo que tenía sueño") — Spanish is stricter than English here, and keeps the shift even when the reported fact is still true.',
+      'Over-applying the shift to a present-zone reporting verb, backshifting after the perfect ("*ha dicho que venía" instead of "ha dicho que viene" when he is still on his way).',
       'Reporting a command with the infinitive instead of que + present subjunctive ("*dice hacer los deberes" instead of "dice que hagamos los deberes").',
       'Using the indicative for a reported command instead of switching to the subjunctive ("*dice que vienes" instead of "dice que vengas" when relaying an order).',
+    ],
+    // Butt & Benjamin 17.8 (past-with-past agreement is stricter than English:
+    // "?Juan dijo que viene" is careless even when the arrival is still
+    // awaited; the present is licensed by the PERFECT — "Juan ha dicho que
+    // viene"), 20.8a + 20.8d (present and perfect reporting verbs both take the
+    // present subjunctive for a relayed order), 37.4.1 (que is obligatory, and
+    // covers the English personal infinitive "he told me to come").
+    // Splits are by reporting-verb tense zone, which is what actually licenses
+    // or forbids the shift, crossed with statement vs. order. Backshift keeps
+    // share 3 — it is the point's headline and its name — while the two
+    // present-zone constructions, previously 1/99 and 0/99 of the approved
+    // pool, get a floor they can reach (~17 and ~8 at the B1 target of 50).
+    // Reported QUESTIONS are not a variant here: es-b1-indirect-questions owns
+    // them (book ledger 37.4.5), and past commands + future/preterite backshift
+    // belong to es-b2-reported-speech-backshift.
+    constructionVariants: [
+      {
+        id: 'past-report-imperfect-backshift',
+        directive:
+          'a past-tense reporting verb (dijo/dijeron/contó/comentó/aseguró) + que + a reported present that must shift to the IMPERFECT (Dijo que tenía mucho sueño; Nos contó que el piso no estaba libre)',
+        share: 3,
+      },
+      {
+        id: 'present-report-command-subjunctive',
+        directive:
+          'a relayed ORDER or request rather than a statement: a present-zone reporting verb (dice/dicen/pide/ha dicho) + que + PRESENT SUBJUNCTIVE (El profesor dice que hagamos los deberes; Mi madre dice que no salgas todavía) — never the indicative, never a bare infinitive',
+        share: 2,
+      },
+      {
+        id: 'perfect-report-present-retained',
+        directive:
+          'a PERFECT reporting verb (ha dicho / ha comentado / ha avisado), which counts as a present tense, so the reported present is KEPT and not shifted, the event being still pending or still true (Juan ha dicho que viene; Ha dicho que está en casa)',
+      },
     ],
   },
   {
