@@ -32,6 +32,7 @@ import {
 import {
   CONSTRUCTION_COVERAGE_PROMPT_VERSION,
   DEFAULT_CLASSIFICATION_BATCH_SIZE,
+  FINDING_MAX_SHARE,
   analyzeCell,
   classifyRowBatch,
   createClaudeClient,
@@ -107,9 +108,22 @@ export function parseAuditConstructionsArgs(argv: string[]): AuditConstructionsF
         '                          [--type cloze|translation] [--max-points N]\n' +
         '                          [--min-rows 8] [--sample-per-cell 24] [--seed <s>]\n' +
         '                          [--max-cost-usd 2] [--concurrency 4]\n' +
-        '                          [--enumeration-model <id>] [--out <path>]\n' +
+        '                          [--enumeration-model <id>] [--out <name>]\n' +
         '                          [--dry-run] [--check-fixture]\n\n' +
-        '--dry-run makes NO API calls and costs nothing.',
+        '--dry-run makes NO API calls and costs nothing, and prints a rough dollar\n' +
+        '  estimate for a real run.\n' +
+        '--max-cost-usd defaults to 2 (dollars). A full sweep runs roughly $19, so\n' +
+        '  the no-flag invocation truncates well short of a full sweep — check the\n' +
+        '  --dry-run estimate first and raise the cap if you want a full pass.\n' +
+        '--concurrency parallelizes classification batches WITHIN one cell; cells\n' +
+        '  and points are still processed serially.\n' +
+        '--max-points caps the points selected from the curriculum BEFORE filtering\n' +
+        '  to those that actually have an approved cell, so fewer than N points may\n' +
+        '  end up examined.\n' +
+        '--out names the run — the report is written to audit-runs/<name>.json and\n' +
+        '  audit-runs/<name>.md, not to the literal path given.\n' +
+        '--enumeration-model overrides only the enumeration-stage model; the cost\n' +
+        '  cap and the reported cost stay priced at Sonnet rates regardless.',
     );
     process.exit(0);
   }
@@ -242,6 +256,33 @@ export function estimateCallCostUsd(usage: Anthropic.Usage): number {
   );
 }
 
+// Rough, deliberately conservative per-call token estimates for the
+// --dry-run dollar estimate only — no call is made to measure these.
+// `audit-gloss --dry-run`'s printDryRunEstimate is the precedent. Both stages
+// cache-mark their system block, so a real run's actual cost trends well
+// below this bound after the first call of each stage; these numbers ignore
+// that discount on purpose so the estimate errs high, not low.
+const ESTIMATED_ENUMERATION_INPUT_TOKENS = 900;
+const ESTIMATED_ENUMERATION_OUTPUT_TOKENS = 500;
+const ESTIMATED_CLASSIFICATION_BATCH_INPUT_TOKENS = 1800; // per batch of up to DEFAULT_CLASSIFICATION_BATCH_SIZE rows
+const ESTIMATED_CLASSIFICATION_BATCH_OUTPUT_TOKENS = 400;
+
+function roughCostUsd(inputTokens: number, outputTokens: number): number {
+  return (
+    (inputTokens / 1_000_000) * SONNET_INPUT_USD_PER_MTOK +
+    (outputTokens / 1_000_000) * SONNET_OUTPUT_USD_PER_MTOK
+  );
+}
+
+const ESTIMATED_ENUMERATION_COST_USD = roughCostUsd(
+  ESTIMATED_ENUMERATION_INPUT_TOKENS,
+  ESTIMATED_ENUMERATION_OUTPUT_TOKENS,
+);
+const ESTIMATED_CLASSIFICATION_BATCH_COST_USD = roughCostUsd(
+  ESTIMATED_CLASSIFICATION_BATCH_INPUT_TOKENS,
+  ESTIMATED_CLASSIFICATION_BATCH_OUTPUT_TOKENS,
+);
+
 export type Budget = {
   /** Record spend against the running total. */
   spend(usd: number): void;
@@ -325,6 +366,9 @@ export type ConstructionAuditReport = {
   stoppedReason: string | null;
   summary: {
     pointsEnumerated: number;
+    /** examinable.length — the denominator `pointsEnumerated` needs to read as
+     *  "40 of 312", not a bare count with no scale. */
+    pointsInScope: number;
     pointsSingleConstruction: number;
     cellsClassified: number;
     rowsSampled: number;
@@ -333,6 +377,8 @@ export type ConstructionAuditReport = {
     dismissed: number;
     thinCellsSkipped: number;
     enumerationErrors: number;
+    classificationErrors: number;
+    proposalErrors: number;
     costUsd: number;
   };
   findings: ConstructionFinding[];
@@ -340,6 +386,17 @@ export type ConstructionAuditReport = {
   dismissed: Array<{ cellKey: string; constructionId: string; reason: string; dismissedOn: string }>;
   thinCells: Array<{ cellKey: string; rows: number }>;
   enumerationErrors: Array<{ grammarPointKey: string; message: string }>;
+  /** A failed classification batch never aborts the run — its rows are
+   *  recorded as unresolved (see `nullClassificationsForBatch`) so the
+   *  denominator stays honest, and the failure is recorded here instead. */
+  classificationErrors: Array<{ cellKey: string; batchIndex: number; message: string }>;
+  /** A failed proposal call is otherwise indistinguishable from a point whose
+   *  fix mechanism is legitimately `none`. */
+  proposalErrors: Array<{ cellKey: string; grammarPointKey: string; message: string }>;
+  /** Points in scope that were never enumerated AND have no recorded
+   *  enumeration error — i.e. the cost cap stopped the run before stage 1
+   *  even attempted them. Only meaningful (and only rendered) on a partial run. */
+  neverEnumerated: string[];
 };
 
 /** Zero-realized first, then bigger cells first. The retrofit tail per fix is
@@ -359,8 +416,19 @@ function pct(share: number): string {
   return `${(share * 100).toFixed(0)}%`;
 }
 
+/** Fallback used when a classification batch call throws (transient overload,
+ *  a malformed tool response, etc.). Every row in the batch resolves to
+ *  `constructionId: null` — exactly what an honest `unclear` classification
+ *  would produce — so the batch's rows still count toward `sampled` and a
+ *  badly-degraded cell surfaces through the existing `enumeration-suspect`
+ *  gate rather than vanishing from the denominator. */
+export function nullClassificationsForBatch(size: number): RowClassification[] {
+  return Array.from({ length: size }, () => ({ constructionId: null }));
+}
+
 export function renderConstructionsMarkdown(report: ConstructionAuditReport): string {
   const lines: string[] = [];
+  const ranked = rankFindings(report.findings);
   lines.push(`# Construction-coverage audit — ${report.runName}`, '');
   if (report.partial) {
     lines.push(
@@ -374,7 +442,7 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
     '',
     '## Summary',
     '',
-    `- Points enumerated: **${report.summary.pointsEnumerated}**`,
+    `- Points enumerated: **${report.summary.pointsEnumerated}** / ${report.summary.pointsInScope} in scope`,
     `- Single-construction (classification skipped): **${report.summary.pointsSingleConstruction}**`,
     `- Cells classified: **${report.summary.cellsClassified}**`,
     `- Rows sampled: **${report.summary.rowsSampled}**`,
@@ -383,6 +451,8 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
     `- Dismissed by ledger: **${report.summary.dismissed}**`,
     `- Thin cells skipped: **${report.summary.thinCellsSkipped}**`,
     `- Enumeration errors: **${report.summary.enumerationErrors}**`,
+    `- Classification errors: **${report.summary.classificationErrors}**`,
+    `- Proposal errors: **${report.summary.proposalErrors}**`,
     `- Estimated cost: **$${report.summary.costUsd.toFixed(2)}**`,
     '',
     '## Findings',
@@ -392,7 +462,7 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
   if (report.findings.length === 0) {
     lines.push('_None._', '');
   }
-  for (const f of rankFindings(report.findings)) {
+  for (const f of ranked) {
     lines.push(
       `### \`${f.cellKey}\` — ${f.grammarPointName}`,
       '',
@@ -411,7 +481,7 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
   }
 
   lines.push('## Proposed snippets', '');
-  const withProposals = report.findings.filter((f) => f.proposal !== null);
+  const withProposals = ranked.filter((f) => f.proposal !== null);
   if (withProposals.length === 0) lines.push('_None._', '');
   for (const f of withProposals) {
     lines.push(
@@ -424,6 +494,14 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
       '```',
       '',
     );
+  }
+
+  if (report.proposalErrors.length > 0) {
+    lines.push('## Proposal errors', '');
+    for (const e of report.proposalErrors) {
+      lines.push(`- \`${e.cellKey}\` (\`${e.grammarPointKey}\`): ${e.message}`);
+    }
+    lines.push('');
   }
 
   lines.push('## Enumeration-suspect cells', '');
@@ -457,6 +535,29 @@ export function renderConstructionsMarkdown(report: ConstructionAuditReport): st
       lines.push(`- \`${e.grammarPointKey}\`: ${e.message}`);
     }
     lines.push('');
+  }
+
+  if (report.classificationErrors.length > 0) {
+    lines.push('## Classification errors', '');
+    for (const e of report.classificationErrors) {
+      lines.push(`- \`${e.cellKey}\` batch ${e.batchIndex}: ${e.message}`);
+    }
+    lines.push('');
+  }
+
+  if (report.partial) {
+    lines.push(
+      '## Never enumerated',
+      '',
+      '_Points in scope the cost cap stopped the run from ever attempting — no error, just never reached._',
+      '',
+    );
+    if (report.neverEnumerated.length === 0) {
+      lines.push('_None._', '');
+    } else {
+      for (const key of report.neverEnumerated) lines.push(`- \`${key}\``);
+      lines.push('');
+    }
   }
 
   return lines.join('\n');
@@ -534,20 +635,44 @@ export function scoreFixtureCase(
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_FIXTURE_PATH = path.join(SCRIPT_DIR, 'fixtures', 'construction-coverage-cases.json');
 
+/** `estimateCallCostUsd` hardcodes Sonnet pricing, but stage 1's model is
+ *  user-overridable. Opus runs roughly 1.7x Sonnet's cost, so an
+ *  `--enumeration-model` override under-counts against `--max-cost-usd` by
+ *  that factor with no other signal — a money-safety control, not just a
+ *  cosmetic report column. This does not attempt per-model pricing; it only
+ *  makes the mispricing visible. */
+function warnIfEnumerationModelOverridesCost(filters: AuditConstructionsFilters): void {
+  if (!filters.enumerationModel) return;
+  console.warn(
+    `[audit-constructions] WARNING: --enumeration-model ${filters.enumerationModel} overrides ` +
+      'the enumeration-stage model, but --max-cost-usd and every printed cost figure are priced ' +
+      'at Sonnet rates. A more expensive model (e.g. Opus, roughly 1.7x Sonnet) will under-count ' +
+      'against the cap and the reported total will understate real spend.',
+  );
+}
+
 async function runCheckFixtureMode(filters: AuditConstructionsFilters): Promise<void> {
   const cases = loadFixtureCases(DEFAULT_FIXTURE_PATH);
   const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+  const budget = createBudget(filters.maxCostUsd);
 
   let passed = 0;
+  let attempted = 0;
   for (const c of cases) {
+    if (!budget.left()) {
+      console.log(`[audit-constructions] fixture: stopping early — ${budget.reason()}`);
+      break;
+    }
+    attempted++;
     const draws: number[] = [];
     for (let i = 0; i < FIXTURE_DRAWS_PER_CASE; i++) {
-      const { enumeration } = await enumeratePointConstructions(
+      const { enumeration, usage } = await enumeratePointConstructions(
         client,
         c.grammarPoint,
         undefined,
         filters.enumerationModel,
       );
+      budget.spend(estimateCallCostUsd(usage));
       draws.push(enumeration.constructions.filter((x) => x.mustRepresent).length);
     }
     const score = scoreFixtureCase(draws, c.expectedMustRepresentCount);
@@ -557,12 +682,16 @@ async function runCheckFixtureMode(filters: AuditConstructionsFilters): Promise<
         `majority=${score.majority}  expected=${c.expectedMustRepresentCount}`,
     );
   }
-  console.log(`\n[audit-constructions] fixture: ${passed}/${cases.length} passed`);
+  console.log(
+    `\n[audit-constructions] fixture: ${passed}/${attempted} passed` +
+      (attempted < cases.length ? ` (${cases.length - attempted} case(s) never attempted — cost cap)` : ''),
+  );
   if (passed < cases.length) process.exitCode = 1;
 }
 
 async function main(): Promise<void> {
   const filters = parseAuditConstructionsArgs(process.argv.slice(2));
+  warnIfEnumerationModelOverridesCost(filters);
 
   if (filters.checkFixture) {
     await runCheckFixtureMode(filters);
@@ -592,18 +721,47 @@ async function main(): Promise<void> {
 
   if (filters.dryRun) {
     const cellCount = [...cellsByPoint.values()].reduce((n, list) => n + list.length, 0);
-    const sampled = [...cellsByPoint.values()]
-      .flat()
-      .reduce((n, c) => n + Math.min(c.rows.length, filters.samplePerCell), 0);
+    const cellList = [...cellsByPoint.values()].flat();
+    const sampled = cellList.reduce(
+      (n, c) => n + Math.min(c.rows.length, filters.samplePerCell),
+      0,
+    );
+    // Upper bound: assumes every cell needs classification (in reality only
+    // points with >=2 must-represent constructions do — unknowable before
+    // stage 1 runs) and ignores the prompt-cache discount after each stage's
+    // first call. Deliberately conservative, per the estimate constants above.
+    const classificationBatches = cellList.reduce(
+      (n, c) =>
+        n +
+        Math.ceil(
+          Math.min(c.rows.length, filters.samplePerCell) / DEFAULT_CLASSIFICATION_BATCH_SIZE,
+        ),
+      0,
+    );
+    const estimatedCostUsd =
+      examinable.length * ESTIMATED_ENUMERATION_COST_USD +
+      classificationBatches * ESTIMATED_CLASSIFICATION_BATCH_COST_USD;
     console.log(
       `[audit-constructions] DRY RUN — no API calls, no cost.\n` +
         `  points to enumerate: ${examinable.length}\n` +
         `  cells in scope: ${cellCount}\n` +
         `  rows that would be sampled (upper bound): ${sampled}\n` +
         `  thin cells skipped (< ${filters.minRows} rows): ${thinCells.length}\n` +
+        `  rough upper-bound cost estimate: $${estimatedCostUsd.toFixed(2)} ` +
+        `(conservative — assumes every cell needs classification and ignores\n` +
+        `        prompt-cache discounts after each stage's first call; the real\n` +
+        `        cost is typically well below this)\n` +
         `  NOTE: classification runs only for points with >=2 must-represent\n` +
         `        constructions, so the real cost is well below this bound.`,
     );
+    if (estimatedCostUsd > filters.maxCostUsd) {
+      console.log(
+        `[audit-constructions] NOTE: this rough estimate ($${estimatedCostUsd.toFixed(2)}) exceeds ` +
+          `--max-cost-usd ${filters.maxCostUsd} — an unflagged run will likely stop early, roughly ` +
+          `$${(estimatedCostUsd - filters.maxCostUsd).toFixed(2)} short of a full sweep. Raise ` +
+          '--max-cost-usd if you want the full sweep.',
+      );
+    }
     return;
   }
 
@@ -652,6 +810,8 @@ async function main(): Promise<void> {
   const findings: ConstructionFinding[] = [];
   const enumerationSuspect: ConstructionAuditReport['enumerationSuspect'] = [];
   const dismissedEntries: ConstructionAuditReport['dismissed'] = [];
+  const classificationErrors: ConstructionAuditReport['classificationErrors'] = [];
+  const proposalErrors: ConstructionAuditReport['proposalErrors'] = [];
   let cellsClassified = 0;
   let rowsSampled = 0;
   let singleConstruction = 0;
@@ -670,15 +830,28 @@ async function main(): Promise<void> {
       const sample = sampleRowsForCell(cell.rows, filters.seed, filters.samplePerCell);
       const batches = chunk(sample, DEFAULT_CLASSIFICATION_BATCH_SIZE);
       const results = await Promise.all(
-        batches.map((batch) =>
+        batches.map((batch, batchIndex) =>
           limit(async () => {
-            const { classifications, usage } = await classifyRowBatch(client, {
-              constructions: enumeration.constructions,
-              type: cell.type,
-              rows: batch,
-            });
-            budget.spend(estimateCallCostUsd(usage));
-            return classifications;
+            try {
+              const { classifications, usage } = await classifyRowBatch(client, {
+                constructions: enumeration.constructions,
+                type: cell.type,
+                rows: batch,
+              });
+              budget.spend(estimateCallCostUsd(usage));
+              return classifications;
+            } catch (err) {
+              // A single batch failure (transient overload across ~600 calls,
+              // or a parser throw on a malformed tool response) must not sink
+              // the whole run — the rows resolve to unresolved instead, which
+              // the existing judge-health gate below already handles honestly.
+              classificationErrors.push({
+                cellKey: cell.cellKey,
+                batchIndex,
+                message: err instanceof Error ? err.message : String(err),
+              });
+              return nullClassificationsForBatch(batch.length);
+            }
           }),
         ),
       );
@@ -687,9 +860,22 @@ async function main(): Promise<void> {
       rowsSampled += sample.length;
 
       const dismissed = dismissedConstructionIds(cell.grammarPointKey, cell.type);
+
+      const analysis: CellAnalysis = analyzeCell({
+        constructions: enumeration.constructions,
+        classifications,
+        dismissedConstructionIds: dismissed,
+      });
+
+      // Only record a dismissal as "suppressed a finding" when the ledgered
+      // construction was actually at-or-below the finding threshold this run
+      // — otherwise `summary.dismissed` reads as "N findings suppressed" when
+      // it may mean "N dismissals exist and none were needed."
       for (const id of dismissed) {
         const entry = findConstructionDismissal(cell.grammarPointKey, cell.type, id);
-        if (entry) {
+        if (!entry) continue;
+        const countEntry = analysis.counts.find((c) => c.id === id);
+        if (countEntry && countEntry.mustRepresent && countEntry.share <= FINDING_MAX_SHARE) {
           dismissedEntries.push({
             cellKey: cell.cellKey,
             constructionId: id,
@@ -698,12 +884,6 @@ async function main(): Promise<void> {
           });
         }
       }
-
-      const analysis: CellAnalysis = analyzeCell({
-        constructions: enumeration.constructions,
-        classifications,
-        dismissedConstructionIds: dismissed,
-      });
 
       if (analysis.status === 'enumeration-suspect') {
         enumerationSuspect.push({
@@ -726,8 +906,13 @@ async function main(): Promise<void> {
           });
           budget.spend(estimateCallCostUsd(result.usage));
           proposal = result.proposal;
-        } catch {
+        } catch (err) {
           proposal = null;
+          proposalErrors.push({
+            cellKey: cell.cellKey,
+            grammarPointKey: gp.key,
+            message: err instanceof Error ? err.message : String(err),
+          });
         }
       }
 
@@ -749,6 +934,20 @@ async function main(): Promise<void> {
     }
   }
 
+  // Mirrors the enumeration-error latch above: a cell with a failed batch
+  // still gets a verdict (its rows read as unresolved), but the run as a
+  // whole must not read as a complete sweep when a call actually failed.
+  if (classificationErrors.length > 0) {
+    budget.markPartial(
+      `${classificationErrors.length} classification batch(es) failed and were recorded as unresolved`,
+    );
+  }
+
+  const enumerationErrorKeys = new Set(enumerationErrors.map((e) => e.grammarPointKey));
+  const neverEnumerated = examinable
+    .filter((p) => !enumerations.has(p.key) && !enumerationErrorKeys.has(p.key))
+    .map((p) => p.key);
+
   const runName = filters.out ?? `constructions-${filters.seed}`;
   const report: ConstructionAuditReport = {
     runName,
@@ -759,6 +958,7 @@ async function main(): Promise<void> {
     stoppedReason: budget.reason(),
     summary: {
       pointsEnumerated: enumerations.size,
+      pointsInScope: examinable.length,
       pointsSingleConstruction: singleConstruction,
       cellsClassified,
       rowsSampled,
@@ -767,6 +967,8 @@ async function main(): Promise<void> {
       dismissed: dismissedEntries.length,
       thinCellsSkipped: thinCells.length,
       enumerationErrors: enumerationErrors.length,
+      classificationErrors: classificationErrors.length,
+      proposalErrors: proposalErrors.length,
       costUsd: budget.total(),
     },
     findings: rankFindings(findings),
@@ -774,6 +976,9 @@ async function main(): Promise<void> {
     dismissed: dismissedEntries,
     thinCells,
     enumerationErrors,
+    classificationErrors,
+    proposalErrors,
+    neverEnumerated,
   };
 
   const outDir = path.join(process.cwd(), 'audit-runs');

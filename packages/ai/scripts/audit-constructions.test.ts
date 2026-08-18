@@ -11,6 +11,7 @@ import {
   createBudget,
   loadFixtureCases,
   scoreFixtureCase,
+  nullClassificationsForBatch,
   FIXTURE_DRAWS_PER_CASE,
   type ConstructionAuditReport,
 } from './audit-constructions.js';
@@ -81,6 +82,7 @@ const baseReport: ConstructionAuditReport = {
   stoppedReason: null,
   summary: {
     pointsEnumerated: 2,
+    pointsInScope: 2,
     pointsSingleConstruction: 1,
     cellsClassified: 1,
     rowsSampled: 24,
@@ -89,6 +91,8 @@ const baseReport: ConstructionAuditReport = {
     dismissed: 0,
     thinCellsSkipped: 1,
     enumerationErrors: 0,
+    classificationErrors: 0,
+    proposalErrors: 0,
     costUsd: 0.42,
   },
   findings: [
@@ -117,6 +121,9 @@ const baseReport: ConstructionAuditReport = {
   dismissed: [],
   thinCells: [{ cellKey: 'tr-a1-beri-dir:cloze', rows: 1 }],
   enumerationErrors: [],
+  classificationErrors: [],
+  proposalErrors: [],
+  neverEnumerated: [],
 };
 
 describe('renderConstructionsMarkdown', () => {
@@ -157,6 +164,84 @@ describe('renderConstructionsMarkdown', () => {
     const md = renderConstructionsMarkdown(baseReport);
     expect(md).not.toContain('PARTIAL');
     expect(md).not.toContain('NOT evidence of coverage');
+  });
+
+  it('prints the enumerated count against its in-scope denominator, not a bare count', () => {
+    const md = renderConstructionsMarkdown({
+      ...baseReport,
+      summary: { ...baseReport.summary, pointsEnumerated: 40, pointsInScope: 312 },
+    });
+    expect(md).toContain('40');
+    expect(md).toContain('312');
+    expect(md).toMatch(/40\D+312/);
+  });
+
+  it('lists never-enumerated points only on a partial run', () => {
+    const partial = renderConstructionsMarkdown({
+      ...baseReport,
+      partial: true,
+      stoppedReason: 'cost cap of $2 reached',
+      neverEnumerated: ['es-b2-subjunctive-noun-clauses', 'de-b1-passive-voice'],
+    });
+    expect(partial).toContain('## Never enumerated');
+    expect(partial).toContain('es-b2-subjunctive-noun-clauses');
+    expect(partial).toContain('de-b1-passive-voice');
+
+    const nonPartial = renderConstructionsMarkdown(baseReport);
+    expect(nonPartial).not.toContain('## Never enumerated');
+  });
+
+  it('renders classification and proposal error counts and sections', () => {
+    const md = renderConstructionsMarkdown({
+      ...baseReport,
+      summary: { ...baseReport.summary, classificationErrors: 1, proposalErrors: 1 },
+      classificationErrors: [
+        { cellKey: 'es-b1-reported-speech:cloze', batchIndex: 2, message: '529 overloaded_error' },
+      ],
+      proposalErrors: [
+        { cellKey: 'es-b1-reported-speech:cloze', grammarPointKey: 'es-b1-reported-speech', message: 'boom' },
+      ],
+    });
+    expect(md).toContain('Classification errors: **1**');
+    expect(md).toContain('Proposal errors: **1**');
+    expect(md).toContain('## Classification errors');
+    expect(md).toContain('529 overloaded_error');
+    expect(md).toContain('## Proposal errors');
+    expect(md).toContain('boom');
+  });
+
+  it('ranks the Proposed snippets section the same way as Findings', () => {
+    const zero = {
+      ...baseReport.findings[0],
+      cellKey: 'a:cloze',
+      grammarPointKey: 'a-point',
+      missing: [{ id: 'x', label: 'x', mustRepresent: true, count: 0, share: 0 }],
+      proposal: { mechanism: 'construction-variants' as const, snippet: 'A', notes: 'a' },
+    };
+    const rare = {
+      ...baseReport.findings[0],
+      cellKey: 'b:cloze',
+      grammarPointKey: 'b-point',
+      missing: [{ id: 'y', label: 'y', mustRepresent: true, count: 1, share: 0.04 }],
+      proposal: { mechanism: 'construction-variants' as const, snippet: 'B', notes: 'b' },
+    };
+    // Unranked input order is deliberately the opposite of what rankFindings
+    // would produce (zero-realized before merely-rare), so a renderer that
+    // iterates report.findings raw for the snippets section would print B before A.
+    const md = renderConstructionsMarkdown({ ...baseReport, findings: [rare, zero] });
+    expect(md.indexOf('a-point')).toBeLessThan(md.indexOf('b-point'));
+  });
+});
+
+describe('nullClassificationsForBatch', () => {
+  it('returns the requested number of unresolved classifications rather than throwing', () => {
+    const result = nullClassificationsForBatch(5);
+    expect(result).toHaveLength(5);
+    expect(result.every((r) => r.constructionId === null)).toBe(true);
+  });
+
+  it('handles a zero-length batch', () => {
+    expect(nullClassificationsForBatch(0)).toEqual([]);
   });
 });
 
