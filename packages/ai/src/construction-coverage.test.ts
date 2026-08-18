@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type { GrammarPoint } from '@language-drill/shared';
+import type Anthropic from '@anthropic-ai/sdk';
 import {
   pLimit,
   sampleRowsForCell,
@@ -6,6 +8,13 @@ import {
   FINDING_MAX_SHARE,
   JUDGE_HEALTH_MAX_UNRESOLVED_SHARE,
   type ClaimedConstruction,
+  CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT,
+  ENUMERATION_TOOL,
+  ENUMERATION_TOOL_NAME,
+  buildEnumerationUserPrompt,
+  parsePointEnumeration,
+  enumeratePointConstructions,
+  CONSTRUCTION_COVERAGE_MODEL,
 } from './construction-coverage.js';
 
 const rows = Array.from({ length: 50 }, (_, i) => ({ id: `row-${i}` }));
@@ -154,5 +163,146 @@ describe('analyzeCell', () => {
   it('exposes the thresholds it enforces', () => {
     expect(FINDING_MAX_SHARE).toBe(0.05);
     expect(JUDGE_HEALTH_MAX_UNRESOLVED_SHARE).toBe(0.33);
+  });
+});
+
+const gp: GrammarPoint = {
+  key: 'es-b1-reported-speech',
+  kind: 'grammar',
+  name: 'Reported speech (present-to-past)',
+  description: 'Reporting what someone said with dijo que + imperfect, and reported commands with que + present subjunctive.',
+  cefrLevel: 'B1',
+  language: 'ES',
+  examplesPositive: ['Dijo que estaba cansada.', 'Me dijo que viniera temprano.'],
+  examplesNegative: ['*Dijo que está cansada.'],
+  commonErrors: ['Failing to backshift the tense.'],
+} as GrammarPoint;
+
+describe('buildEnumerationUserPrompt', () => {
+  it('includes the description and examples', () => {
+    const prompt = buildEnumerationUserPrompt(gp);
+    expect(prompt).toContain(gp.description);
+    expect(prompt).toContain('Dijo que estaba cansada.');
+  });
+
+  // The spec's rule: stage 1 must enumerate what the point CLAIMS before
+  // seeing what was built, or it rationalizes the existing distribution as
+  // complete — the exact blindness that let 96/99 look fine.
+  it('never mentions the pool', () => {
+    const prompt = buildEnumerationUserPrompt(gp);
+    expect(prompt.toLowerCase()).not.toContain('approved');
+    expect(prompt.toLowerCase()).not.toContain('pool');
+  });
+});
+
+describe('parsePointEnumeration', () => {
+  const valid = {
+    mechanism: 'construction-variants',
+    constructions: [
+      { id: 'backshift', label: 'dijo que + imperfect', mustRepresent: true, rationale: 'r' },
+      { id: 'command', label: 'que + present subjunctive', mustRepresent: true, rationale: 'r' },
+    ],
+  };
+
+  it('accepts a well-formed enumeration', () => {
+    const parsed = parsePointEnumeration(valid, 'es-b1-reported-speech');
+    expect(parsed.constructions).toHaveLength(2);
+    expect(parsed.grammarPointKey).toBe('es-b1-reported-speech');
+  });
+
+  it('rejects a non-kebab-case id', () => {
+    expect(() =>
+      parsePointEnumeration(
+        { ...valid, constructions: [{ ...valid.constructions[0], id: 'Back Shift' }] },
+        'k',
+      ),
+    ).toThrow(/kebab-case/);
+  });
+
+  it('rejects duplicate ids', () => {
+    expect(() =>
+      parsePointEnumeration(
+        { ...valid, constructions: [valid.constructions[0], valid.constructions[0]] },
+        'k',
+      ),
+    ).toThrow(/duplicate/);
+  });
+
+  it('rejects an unknown mechanism', () => {
+    expect(() => parsePointEnumeration({ ...valid, mechanism: 'vibes' }, 'k')).toThrow(/mechanism/);
+  });
+
+  it('rejects a missing rationale', () => {
+    expect(() =>
+      parsePointEnumeration(
+        { ...valid, constructions: [{ ...valid.constructions[0], rationale: '  ' }] },
+        'k',
+      ),
+    ).toThrow(/rationale/);
+  });
+
+  it('accepts an empty construction list', () => {
+    expect(parsePointEnumeration({ mechanism: 'none', constructions: [] }, 'k').constructions)
+      .toEqual([]);
+  });
+});
+
+describe('enumeratePointConstructions', () => {
+  it('forces the tool and returns the parsed enumeration plus usage', async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: 'tool_use',
+          input: {
+            mechanism: 'construction-variants',
+            constructions: [
+              { id: 'backshift', label: 'a', mustRepresent: true, rationale: 'r' },
+              { id: 'command', label: 'b', mustRepresent: true, rationale: 'r' },
+            ],
+          },
+        },
+      ],
+      usage: { input_tokens: 100, output_tokens: 20 },
+      stop_reason: 'tool_use',
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    const { enumeration, usage } = await enumeratePointConstructions(client, gp);
+
+    expect(enumeration.constructions).toHaveLength(2);
+    expect(usage.input_tokens).toBe(100);
+    const args = create.mock.calls[0][0];
+    expect(args.model).toBe(CONSTRUCTION_COVERAGE_MODEL);
+    expect(args.tool_choice).toEqual({ type: 'tool', name: ENUMERATION_TOOL_NAME });
+    expect(args.system[0].cache_control).toEqual({ type: 'ephemeral' });
+  });
+
+  it('throws when no tool_use block comes back', async () => {
+    const client = {
+      messages: {
+        create: vi.fn().mockResolvedValue({
+          content: [{ type: 'text', text: 'nope' }],
+          usage: { input_tokens: 1, output_tokens: 1 },
+          stop_reason: 'end_turn',
+        }),
+      },
+    } as unknown as Anthropic;
+
+    await expect(enumeratePointConstructions(client, gp)).rejects.toThrow(/no tool_use/);
+  });
+});
+
+describe('ENUMERATION_TOOL', () => {
+  it('requires every field the parser enforces', () => {
+    const props = ENUMERATION_TOOL.input_schema.properties as Record<string, unknown>;
+    expect(Object.keys(props).sort()).toEqual(['constructions', 'mechanism']);
+  });
+});
+
+describe('CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT', () => {
+  it('states the three-part mustRepresent test', () => {
+    expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Distinct form');
+    expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Actually claimed');
+    expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Cell-realizable');
   });
 });
