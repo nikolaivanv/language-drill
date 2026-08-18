@@ -17,6 +17,7 @@
  */
 
 import type Anthropic from '@anthropic-ai/sdk';
+import { ExerciseType } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
 
 export const CONSTRUCTION_COVERAGE_PROMPT_VERSION = 'construction-coverage@2026-08-18';
@@ -356,4 +357,168 @@ export async function enumeratePointConstructions(
     );
   }
   return { enumeration: parsePointEnumeration(toolUse.input, gp.key), usage: response.usage };
+}
+
+export const CLASSIFICATION_TOOL_NAME = 'report_row_constructions';
+export const DEFAULT_CLASSIFICATION_BATCH_SIZE = 20;
+
+/** The escape hatches. Both collapse to `constructionId: null` — the verdict
+ *  step only needs "did this row resolve", and separating them would imply a
+ *  precision the classifier does not have. */
+const UNRESOLVED_IDS = new Set(['none', 'unclear']);
+
+/**
+ * The learner-visible surface of a row, per exercise type. Returns null when
+ * the row is malformed — a defensive skip beats a crash on one legacy row.
+ */
+export function rowSurfaceFor(
+  type: ExerciseType,
+  content: Record<string, unknown>,
+): string | null {
+  if (type === ExerciseType.CLOZE) {
+    const stem = content.sourceText;
+    const answer = content.correctAnswer;
+    if (typeof stem !== 'string' || typeof answer !== 'string') return null;
+    return `${stem}   [answer: ${answer}]`;
+  }
+  if (type === ExerciseType.TRANSLATION) {
+    const source = content.sourceText;
+    const reference = content.referenceTranslation;
+    if (typeof source !== 'string' || typeof reference !== 'string') return null;
+    return `${source}   [reference: ${reference}]`;
+  }
+  return null;
+}
+
+export const CLASSIFICATION_SYSTEM_PROMPT = `You classify pre-generated language exercises by which construction each one realizes.
+
+You are given a numbered list of constructions and a numbered list of exercises. For EVERY exercise, return the id of the single construction it realizes.
+
+Two escape hatches, and using them honestly matters more than covering every row:
+- \`none\` — the exercise realizes some other construction of this grammar point that is not on the list.
+- \`unclear\` — the exercise is ambiguous between two listed constructions, or too short to tell.
+
+Do not stretch an exercise to fit a listed construction. A high rate of \`none\` is a useful signal that the construction list is wrong, and it is read as exactly that downstream — guessing to look decisive destroys that signal.
+
+Judge only what the exercise actually contains. Call the ${CLASSIFICATION_TOOL_NAME} tool with one entry per exercise.`;
+
+export type ClassificationInput = {
+  constructions: readonly ClaimedConstruction[];
+  type: ExerciseType;
+  rows: readonly AuditRow[];
+};
+
+export function buildClassificationUserPrompt(input: ClassificationInput): string {
+  // Labels only — never the enumerator's rationale, so the classifier reads
+  // what a row IS rather than what the enumerator hoped to find.
+  const list = input.constructions.map((c) => `- ${c.id}: ${c.label}`).join('\n');
+  const rows = input.rows
+    .map((r, i) => `${i + 1}. ${rowSurfaceFor(input.type, r.content) ?? '(unreadable row)'}`)
+    .join('\n');
+  return `Constructions:
+${list}
+
+Exercises (${input.type}):
+${rows}
+
+Classify every exercise.`;
+}
+
+export const CLASSIFICATION_TOOL: Anthropic.Tool = {
+  name: CLASSIFICATION_TOOL_NAME,
+  description: 'Report which construction each exercise realizes.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      classifications: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            index: { type: 'integer', description: '1-based index of the exercise.' },
+            constructionId: {
+              type: 'string',
+              description: "A listed construction id, or 'none', or 'unclear'.",
+            },
+          },
+          required: ['index', 'constructionId'],
+        },
+      },
+    },
+    required: ['classifications'],
+  },
+};
+
+/**
+ * Pure validator. Returns exactly `batchSize` entries in input order.
+ *
+ * An id the enumeration never produced is normalised to null rather than
+ * trusted: a hallucinated id would otherwise inflate a construction's count
+ * and mask the very absence being measured. Omitted rows are likewise null —
+ * a silently short answer must not shrink the denominator.
+ */
+export function parseRowClassifications(
+  input: unknown,
+  batchSize: number,
+  validIds: ReadonlySet<string>,
+): RowClassification[] {
+  if (!isObject(input)) throw new Error('classification result must be an object');
+  const raw = input.classifications;
+  if (!Array.isArray(raw)) throw new Error('classifications must be an array');
+
+  const out: RowClassification[] = Array.from({ length: batchSize }, () => ({
+    constructionId: null,
+  }));
+
+  for (const entry of raw) {
+    if (!isObject(entry)) throw new Error('each classification must be an object');
+    const index = entry.index;
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 1 || index > batchSize) {
+      throw new Error(`classification index ${String(index)} out of range 1..${batchSize}`);
+    }
+    const id = entry.constructionId;
+    if (typeof id !== 'string') throw new Error('constructionId must be a string');
+    out[index - 1] = {
+      constructionId: UNRESOLVED_IDS.has(id) || !validIds.has(id) ? null : id,
+    };
+  }
+
+  return out;
+}
+
+/** Call Claude with the forced classification tool for one batch of rows. */
+export async function classifyRowBatch(
+  client: Anthropic,
+  input: ClassificationInput,
+  signal?: AbortSignal,
+): Promise<{ classifications: RowClassification[]; usage: Anthropic.Usage }> {
+  const response = await client.messages.create(
+    {
+      model: CONSTRUCTION_COVERAGE_MODEL,
+      max_tokens: CONSTRUCTION_COVERAGE_MAX_TOKENS,
+      system: [
+        {
+          type: 'text' as const,
+          text: CLASSIFICATION_SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
+      messages: [{ role: 'user' as const, content: buildClassificationUserPrompt(input) }],
+      tools: [CLASSIFICATION_TOOL],
+      tool_choice: { type: 'tool' as const, name: CLASSIFICATION_TOOL_NAME },
+      temperature: CONSTRUCTION_COVERAGE_TEMPERATURE,
+    },
+    { signal },
+  );
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+  );
+  if (!toolUse) {
+    throw new Error(`classifyRowBatch: no tool_use block (stop_reason ${response.stop_reason})`);
+  }
+  const validIds = new Set(input.constructions.map((c) => c.id));
+  return {
+    classifications: parseRowClassifications(toolUse.input, input.rows.length, validIds),
+    usage: response.usage,
+  };
 }

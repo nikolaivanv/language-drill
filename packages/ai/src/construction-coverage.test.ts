@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { ExerciseType } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -8,6 +9,7 @@ import {
   FINDING_MAX_SHARE,
   JUDGE_HEALTH_MAX_UNRESOLVED_SHARE,
   type ClaimedConstruction,
+  type AuditRow,
   CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT,
   ENUMERATION_TOOL,
   ENUMERATION_TOOL_NAME,
@@ -15,6 +17,13 @@ import {
   parsePointEnumeration,
   enumeratePointConstructions,
   CONSTRUCTION_COVERAGE_MODEL,
+  CLASSIFICATION_SYSTEM_PROMPT,
+  CLASSIFICATION_TOOL_NAME,
+  rowSurfaceFor,
+  buildClassificationUserPrompt,
+  parseRowClassifications,
+  classifyRowBatch,
+  DEFAULT_CLASSIFICATION_BATCH_SIZE,
 } from './construction-coverage.js';
 
 const rows = Array.from({ length: 50 }, (_, i) => ({ id: `row-${i}` }));
@@ -304,5 +313,148 @@ describe('CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT', () => {
     expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Distinct form');
     expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Actually claimed');
     expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Cell-realizable');
+  });
+});
+
+describe('rowSurfaceFor', () => {
+  it('renders a cloze as stem plus answer', () => {
+    const s = rowSurfaceFor(ExerciseType.CLOZE, {
+      sourceText: 'Dijo que ___ cansada.',
+      correctAnswer: 'estaba',
+    });
+    expect(s).toContain('Dijo que ___ cansada.');
+    expect(s).toContain('estaba');
+  });
+
+  it('renders a translation as source plus reference', () => {
+    const s = rowSurfaceFor(ExerciseType.TRANSLATION, {
+      sourceText: 'She said she was tired.',
+      referenceTranslation: 'Dijo que estaba cansada.',
+    });
+    expect(s).toContain('She said she was tired.');
+    expect(s).toContain('Dijo que estaba cansada.');
+  });
+
+  it('returns null when the fields are missing or not strings', () => {
+    expect(rowSurfaceFor(ExerciseType.CLOZE, {})).toBeNull();
+    expect(rowSurfaceFor(ExerciseType.CLOZE, { sourceText: 5, correctAnswer: 'x' })).toBeNull();
+  });
+});
+
+describe('buildClassificationUserPrompt', () => {
+  const constructions: ClaimedConstruction[] = [
+    { id: 'backshift', label: 'dijo que + imperfect', mustRepresent: true, rationale: 'why' },
+    { id: 'command', label: 'que + present subjunctive', mustRepresent: true, rationale: 'why' },
+  ];
+
+  it('lists the rows with 1-based indices', () => {
+    const prompt = buildClassificationUserPrompt({
+      constructions,
+      type: ExerciseType.CLOZE,
+      rows: [
+        { id: 'a', content: { sourceText: 'x ___', correctAnswer: 'y' } },
+        { id: 'b', content: { sourceText: 'p ___', correctAnswer: 'q' } },
+      ],
+    });
+    expect(prompt).toContain('1.');
+    expect(prompt).toContain('2.');
+  });
+
+  // The spec: the classifier sees only the labels, so it classifies what a row
+  // IS rather than what the enumerator hoped to find.
+  it('does not leak the enumerator rationale', () => {
+    const prompt = buildClassificationUserPrompt({
+      constructions,
+      type: ExerciseType.CLOZE,
+      rows: [{ id: 'a', content: { sourceText: 'x ___', correctAnswer: 'y' } }],
+    });
+    expect(prompt).not.toContain('why');
+  });
+});
+
+describe('parseRowClassifications', () => {
+  const validIds = new Set(['backshift', 'command']);
+
+  it('maps ids through and nulls out none/unclear', () => {
+    const parsed = parseRowClassifications(
+      {
+        classifications: [
+          { index: 1, constructionId: 'backshift' },
+          { index: 2, constructionId: 'none' },
+          { index: 3, constructionId: 'unclear' },
+        ],
+      },
+      3,
+      validIds,
+    );
+    expect(parsed.map((p) => p.constructionId)).toEqual(['backshift', null, null]);
+  });
+
+  it('nulls out an id that was never enumerated rather than trusting it', () => {
+    const parsed = parseRowClassifications(
+      { classifications: [{ index: 1, constructionId: 'invented' }] },
+      1,
+      validIds,
+    );
+    expect(parsed[0].constructionId).toBeNull();
+  });
+
+  it('nulls out any row the model omitted', () => {
+    const parsed = parseRowClassifications(
+      { classifications: [{ index: 1, constructionId: 'backshift' }] },
+      3,
+      validIds,
+    );
+    expect(parsed).toHaveLength(3);
+    expect(parsed[1].constructionId).toBeNull();
+    expect(parsed[2].constructionId).toBeNull();
+  });
+
+  it('rejects an out-of-range index', () => {
+    expect(() =>
+      parseRowClassifications({ classifications: [{ index: 9, constructionId: 'backshift' }] }, 3, validIds),
+    ).toThrow(/index/);
+  });
+});
+
+describe('classifyRowBatch', () => {
+  it('forces the tool and returns classifications plus usage', async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: 'tool_use',
+          input: { classifications: [{ index: 1, constructionId: 'backshift' }] },
+        },
+      ],
+      usage: { input_tokens: 200, output_tokens: 30 },
+      stop_reason: 'tool_use',
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    const { classifications, usage } = await classifyRowBatch(client, {
+      constructions: [
+        { id: 'backshift', label: 'a', mustRepresent: true, rationale: 'r' },
+      ],
+      type: ExerciseType.CLOZE,
+      rows: [{ id: 'a', content: { sourceText: 'x ___', correctAnswer: 'y' } }],
+    });
+
+    expect(classifications).toEqual([{ constructionId: 'backshift' }]);
+    expect(usage.output_tokens).toBe(30);
+    expect(create.mock.calls[0][0].tool_choice).toEqual({
+      type: 'tool',
+      name: CLASSIFICATION_TOOL_NAME,
+    });
+  });
+});
+
+describe('CLASSIFICATION_SYSTEM_PROMPT', () => {
+  it('offers none and unclear as escape hatches', () => {
+    expect(CLASSIFICATION_SYSTEM_PROMPT).toContain('none');
+    expect(CLASSIFICATION_SYSTEM_PROMPT).toContain('unclear');
+  });
+
+  it('batches at a size that keeps the system block cacheable', () => {
+    expect(DEFAULT_CLASSIFICATION_BATCH_SIZE).toBe(20);
   });
 });
