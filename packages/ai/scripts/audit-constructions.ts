@@ -219,12 +219,82 @@ export function groupRowsIntoCells(rows: readonly LoadedRow[]): Cell[] {
 
 const SONNET_INPUT_USD_PER_MTOK = 3;
 const SONNET_OUTPUT_USD_PER_MTOK = 15;
+// All three stages (enumerate, classify, propose) cache-mark their system
+// block (`cache_control: { type: 'ephemeral' }` in construction-coverage.ts).
+// Anthropic reports those tokens separately from `input_tokens` — a cache
+// WRITE costs 1.25x base input (the default 5-minute ephemeral TTL; a future
+// switch to `ttl: '1h'` would make this 2x instead), a cache READ costs 0.1x.
+// Classification caches the point's construction list, so every new point
+// writes a fresh cache entry: omitting these terms would understate the real
+// spend behind the money-safety `--max-cost-usd` cap by the large half of
+// each call's input.
+const SONNET_CACHE_WRITE_USD_PER_MTOK = 3.75; // 1.25x base input, 5-minute ephemeral TTL
+const SONNET_CACHE_READ_USD_PER_MTOK = 0.3; // 0.1x base input
 
 export function estimateCallCostUsd(usage: Anthropic.Usage): number {
+  const cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
+  const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
   return (
     (usage.input_tokens / 1_000_000) * SONNET_INPUT_USD_PER_MTOK +
-    (usage.output_tokens / 1_000_000) * SONNET_OUTPUT_USD_PER_MTOK
+    (usage.output_tokens / 1_000_000) * SONNET_OUTPUT_USD_PER_MTOK +
+    (cacheCreationTokens / 1_000_000) * SONNET_CACHE_WRITE_USD_PER_MTOK +
+    (cacheReadTokens / 1_000_000) * SONNET_CACHE_READ_USD_PER_MTOK
   );
+}
+
+export type Budget = {
+  /** Record spend against the running total. */
+  spend(usd: number): void;
+  /**
+   * True while under the cap. The FIRST call that finds the cap reached
+   * latches `partial` + a cost-cap `reason` and returns false forever after.
+   * The cap bounds NEW work, not work already sent: with concurrency > 1 the
+   * in-flight jobs still complete, so `total()` can modestly exceed `maxCostUsd`.
+   */
+  left(): boolean;
+  partial(): boolean;
+  reason(): string | null;
+  total(): number;
+  /** Latches `partial` with a caller-supplied reason — e.g. "N points never
+   *  enumerated". A no-op if a reason is already latched (never clobbers an
+   *  earlier cost-cap reason with a later, less specific one). */
+  markPartial(reason: string): void;
+};
+
+/** Seam extracted so the cost-cap / partial state machine — the highest-risk
+ *  logic in this file — is unit-testable without driving the whole of
+ *  `main()`. */
+export function createBudget(maxCostUsd: number): Budget {
+  let total = 0;
+  let isPartial = false;
+  let stoppedReason: string | null = null;
+
+  const markPartial = (reason: string): void => {
+    if (isPartial) return;
+    isPartial = true;
+    stoppedReason = reason;
+  };
+
+  return {
+    spend(usd: number): void {
+      total += usd;
+    },
+    left(): boolean {
+      if (total < maxCostUsd) return true;
+      markPartial(`cost cap of $${maxCostUsd} reached`);
+      return false;
+    },
+    partial(): boolean {
+      return isPartial;
+    },
+    reason(): string | null {
+      return stoppedReason;
+    },
+    total(): number {
+      return total;
+    },
+    markPartial,
+  };
 }
 
 export type ConstructionFinding = {
@@ -461,21 +531,7 @@ async function main(): Promise<void> {
 
   const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
   const limit = pLimit(filters.concurrency);
-  let costUsd = 0;
-  let partial = false;
-  let stoppedReason: string | null = null;
-
-  // The cost cap is checked BEFORE dispatching each unit of work. With
-  // concurrency > 1 the in-flight jobs still complete, so the final cost can
-  // modestly exceed the cap — the cap bounds new work, not work already sent.
-  const budgetLeft = (): boolean => {
-    if (costUsd < filters.maxCostUsd) return true;
-    if (!partial) {
-      partial = true;
-      stoppedReason = `cost cap of $${filters.maxCostUsd} reached`;
-    }
-    return false;
-  };
+  const budget = createBudget(filters.maxCostUsd);
 
   const enumerations = new Map<string, PointEnumeration>();
   const enumerationErrors: ConstructionAuditReport['enumerationErrors'] = [];
@@ -483,7 +539,7 @@ async function main(): Promise<void> {
   await Promise.all(
     examinable.map((gp) =>
       limit(async () => {
-        if (!budgetLeft()) return;
+        if (!budget.left()) return;
         try {
           const { enumeration, usage } = await enumeratePointConstructions(
             client,
@@ -491,7 +547,7 @@ async function main(): Promise<void> {
             undefined,
             filters.enumerationModel,
           );
-          costUsd += estimateCallCostUsd(usage);
+          budget.spend(estimateCallCostUsd(usage));
           enumerations.set(gp.key, enumeration);
         } catch (err) {
           enumerationErrors.push({
@@ -502,6 +558,18 @@ async function main(): Promise<void> {
       }),
     ),
   );
+
+  // A point whose enumeration failed (Anthropic degraded, a parser change,
+  // etc.) is never examined for classification either — that is exactly the
+  // "truncated sweep reads as complete" failure `partial` exists to flag, so
+  // it must latch the same way a cost-cap stop does. `markPartial` no-ops if
+  // a cost-cap reason already latched during stage 1, so this never clobbers
+  // the more specific reason.
+  if (enumerationErrors.length > 0) {
+    budget.markPartial(
+      `${enumerationErrors.length} point(s) failed enumeration and were never examined`,
+    );
+  }
 
   const findings: ConstructionFinding[] = [];
   const enumerationSuspect: ConstructionAuditReport['enumerationSuspect'] = [];
@@ -520,7 +588,7 @@ async function main(): Promise<void> {
     }
 
     for (const cell of cellsByPoint.get(gp.key) ?? []) {
-      if (!budgetLeft()) break;
+      if (!budget.left()) break;
       const sample = sampleRowsForCell(cell.rows, filters.seed, filters.samplePerCell);
       const batches = chunk(sample, DEFAULT_CLASSIFICATION_BATCH_SIZE);
       const results = await Promise.all(
@@ -531,7 +599,7 @@ async function main(): Promise<void> {
               type: cell.type,
               rows: batch,
             });
-            costUsd += estimateCallCostUsd(usage);
+            budget.spend(estimateCallCostUsd(usage));
             return classifications;
           }),
         ),
@@ -570,7 +638,7 @@ async function main(): Promise<void> {
       if (analysis.status !== 'finding') continue;
 
       let proposal: MechanismProposal | null = null;
-      if (enumeration.mechanism !== 'none' && budgetLeft()) {
+      if (enumeration.mechanism !== 'none' && budget.left()) {
         try {
           const result = await proposeMechanism(client, {
             grammarPoint: gp,
@@ -578,7 +646,7 @@ async function main(): Promise<void> {
             counts: analysis.counts,
             sampled: analysis.sampled,
           });
-          costUsd += estimateCallCostUsd(result.usage);
+          budget.spend(estimateCallCostUsd(result.usage));
           proposal = result.proposal;
         } catch {
           proposal = null;
@@ -609,8 +677,8 @@ async function main(): Promise<void> {
     promptVersion: CONSTRUCTION_COVERAGE_PROMPT_VERSION,
     seed: filters.seed,
     samplePerCell: filters.samplePerCell,
-    partial,
-    stoppedReason,
+    partial: budget.partial(),
+    stoppedReason: budget.reason(),
     summary: {
       pointsEnumerated: enumerations.size,
       pointsSingleConstruction: singleConstruction,
@@ -621,7 +689,7 @@ async function main(): Promise<void> {
       dismissed: dismissedEntries.length,
       thinCellsSkipped: thinCells.length,
       enumerationErrors: enumerationErrors.length,
-      costUsd,
+      costUsd: budget.total(),
     },
     findings: rankFindings(findings),
     enumerationSuspect,
@@ -635,7 +703,7 @@ async function main(): Promise<void> {
   writeFileSync(path.join(outDir, `${runName}.json`), JSON.stringify(report, null, 2), 'utf8');
   writeFileSync(path.join(outDir, `${runName}.md`), renderConstructionsMarkdown(report), 'utf8');
   console.log(
-    `[audit-constructions] ${findings.length} findings · $${costUsd.toFixed(2)} · audit-runs/${runName}.md`,
+    `[audit-constructions] ${findings.length} findings · $${budget.total().toFixed(2)} · audit-runs/${runName}.md`,
   );
 }
 

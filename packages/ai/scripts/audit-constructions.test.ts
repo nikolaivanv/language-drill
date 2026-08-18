@@ -6,6 +6,7 @@ import {
   renderConstructionsMarkdown,
   estimateCallCostUsd,
   rankFindings,
+  createBudget,
   type ConstructionAuditReport,
 } from './audit-constructions.js';
 
@@ -135,7 +136,7 @@ describe('renderConstructionsMarkdown', () => {
     expect(md).toContain('tr-a1-beri-dir:cloze');
   });
 
-  it('marks a partial run prominently', () => {
+  it('marks a partial run prominently, with the coverage-absence caveat', () => {
     const md = renderConstructionsMarkdown({
       ...baseReport,
       partial: true,
@@ -143,6 +144,13 @@ describe('renderConstructionsMarkdown', () => {
     });
     expect(md).toContain('PARTIAL');
     expect(md).toContain('cost cap');
+    expect(md).toContain('absence of a finding below is NOT evidence of coverage');
+  });
+
+  it('omits the PARTIAL banner entirely for a non-partial report', () => {
+    const md = renderConstructionsMarkdown(baseReport);
+    expect(md).not.toContain('PARTIAL');
+    expect(md).not.toContain('NOT evidence of coverage');
   });
 });
 
@@ -174,5 +182,80 @@ describe('estimateCallCostUsd', () => {
   it('prices at Sonnet rates', () => {
     expect(estimateCallCostUsd({ input_tokens: 1_000_000, output_tokens: 0 } as never)).toBeCloseTo(3);
     expect(estimateCallCostUsd({ input_tokens: 0, output_tokens: 1_000_000 } as never)).toBeCloseTo(15);
+  });
+
+  it('prices a cache WRITE at 1.25x base input — all three stages cache-mark their system block', () => {
+    expect(
+      estimateCallCostUsd({
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_creation_input_tokens: 1_000_000,
+      } as never),
+    ).toBeCloseTo(3.75);
+  });
+
+  it('prices a cache READ at 0.1x base input — every enumeration after the first hits the cache', () => {
+    expect(
+      estimateCallCostUsd({
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_read_input_tokens: 1_000_000,
+      } as never),
+    ).toBeCloseTo(0.3);
+  });
+
+  it('reads cache fields defensively — null (the SDK type) must not throw or NaN the total', () => {
+    expect(
+      estimateCallCostUsd({
+        input_tokens: 100,
+        output_tokens: 0,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+      } as never),
+    ).toBeCloseTo(0.0003);
+  });
+});
+
+describe('createBudget', () => {
+  it('reports left() as true while spend stays under the cap', () => {
+    const budget = createBudget(2);
+    budget.spend(1);
+    expect(budget.left()).toBe(true);
+    expect(budget.partial()).toBe(false);
+    expect(budget.reason()).toBeNull();
+  });
+
+  it('latches partial() and a cap-naming reason once spend reaches the cap', () => {
+    const budget = createBudget(2);
+    budget.spend(2);
+    expect(budget.left()).toBe(false);
+    expect(budget.partial()).toBe(true);
+    expect(budget.reason()).toContain('cost cap');
+    expect(budget.reason()).toContain('$2');
+  });
+
+  it('does not let a later markPartial overwrite an already-latched cost-cap reason', () => {
+    const budget = createBudget(2);
+    budget.spend(2);
+    expect(budget.left()).toBe(false);
+    const capReason = budget.reason();
+    budget.markPartial('3 point(s) failed enumeration and were never examined');
+    expect(budget.reason()).toBe(capReason);
+  });
+
+  it('markPartial alone latches partial() with its own reason, independent of the cap', () => {
+    const budget = createBudget(2);
+    budget.markPartial('3 point(s) failed enumeration and were never examined');
+    expect(budget.partial()).toBe(true);
+    expect(budget.reason()).toBe('3 point(s) failed enumeration and were never examined');
+    // spend never reached the cap — left() still reflects the cap check, not markPartial.
+    expect(budget.left()).toBe(true);
+  });
+
+  it('total() reflects cumulative spend, unaffected by markPartial', () => {
+    const budget = createBudget(10);
+    budget.spend(1.5);
+    budget.spend(2.5);
+    expect(budget.total()).toBeCloseTo(4);
   });
 });
