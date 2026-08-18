@@ -9,8 +9,25 @@ import {
 } from '@language-drill/api-client';
 import { PoolCellDetail } from './pool-cell-detail';
 import { DataTable, Th, Td } from '../../../../../components/admin/data-table';
+import { cn } from '../../../../../lib/cn';
+import {
+  DIVERSITY_CHIP_BASE,
+  DIVERSITY_CHIP_CLASSNAMES,
+} from '../../../../../lib/admin/diversity-chip';
+import {
+  poolCellKey,
+  type CellDiversity,
+  type CellDiversityStatus,
+  type MechanismState,
+} from '../../../../../lib/admin/diversity-status';
 
-type Props = { items: PoolStatusItem[] };
+type Props = {
+  items: PoolStatusItem[];
+  /** cellKey → declared mechanisms + realization, or undefined while the
+   *  diversity fetch is in flight. A row with no entry renders '—', never a
+   *  claimed absence. */
+  diversityByCell?: Map<string, CellDiversity>;
+};
 
 type SortDir = 'asc' | 'desc';
 
@@ -77,11 +94,76 @@ function StatusBadge({ status }: { status: PoolCellStatus }) {
   );
 }
 
-function cellKeyOf(item: PoolStatusItem): string {
-  return `${item.language}:${item.level}:${item.type}:${item.grammarPointKey}`;
+// `not-applicable` deliberately borrows the 'unknown' neutral style rather
+// than the failure style — an umbrella kind with no coverageSpec is correct by
+// design, not a defect. See lib/admin/diversity-status.ts.
+const MECHANISM_CHIP_CLASSNAMES: Record<MechanismState, string> = {
+  present: DIVERSITY_CHIP_CLASSNAMES.ok,
+  missing: DIVERSITY_CHIP_CLASSNAMES.bad,
+  'not-applicable': DIVERSITY_CHIP_CLASSNAMES.unknown,
+};
+
+function MechanismChip({
+  label,
+  state,
+  testId,
+}: {
+  label: string;
+  state: MechanismState;
+  testId: string;
+}) {
+  return (
+    <span
+      data-testid={testId}
+      className={cn(DIVERSITY_CHIP_BASE, MECHANISM_CHIP_CLASSNAMES[state])}
+    >
+      {label}
+      {state === 'present' ? ' ✓' : state === 'missing' ? ' ✗' : ''}
+    </span>
+  );
 }
 
-export function PoolCoverageTable({ items }: Props) {
+function DiversityChips({ status }: { status: CellDiversityStatus | undefined }) {
+  // Absence of evidence is not evidence of absence: while the diversity fetch
+  // is unresolved the row must claim nothing at all.
+  if (!status) return <span className="text-ink-soft">—</span>;
+
+  const specLabel =
+    status.spec.state === 'present'
+      ? `spec ${status.spec.controlledAxes}ax`
+      : status.spec.state === 'missing'
+        ? 'spec —'
+        : 'spec n/a';
+  const seedLabel =
+    status.seed.state === 'not-applicable' ? 'seed n/a' : `seed ${status.seed.label}`;
+
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1">
+      <MechanismChip label={specLabel} state={status.spec.state} testId="mechanism-spec" />
+      <MechanismChip label={seedLabel} state={status.seed.state} testId="mechanism-seed" />
+      {status.provenIssues > 0 && (
+        <span
+          data-testid="mechanism-proven-issues"
+          title="Deficiencies this cell's own denominators prove."
+          className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES.bad)}
+        >
+          ✗ {status.provenIssues}
+        </span>
+      )}
+      {status.unknowns > 0 && (
+        <span
+          data-testid="mechanism-unknowns"
+          title="Possible measurement gaps — rows remain untagged or unlabelled."
+          className={cn(DIVERSITY_CHIP_BASE, DIVERSITY_CHIP_CLASSNAMES.unknown)}
+        >
+          ⚠ {status.unknowns}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export function PoolCoverageTable({ items, diversityByCell }: Props) {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -113,6 +195,9 @@ export function PoolCoverageTable({ items }: Props) {
           <Th align="right">Approved</Th>
           <Th align="right">Gen Target</Th>
           <Th align="right">Demand</Th>
+          <Th title="Declared diversity mechanisms: coverage-spec floors and seed source, plus this cell's proven (✗) and unknown (⚠) deficiencies.">
+            Diversity
+          </Th>
           <Th align="right">
             <button
               type="button"
@@ -127,7 +212,8 @@ export function PoolCoverageTable({ items }: Props) {
       <tbody>
         {sortedItems.map((item) => {
           const ratio = item.approved / item.generationTarget;
-          const key = cellKeyOf(item);
+          const key = poolCellKey(item);
+          const diversity = diversityByCell?.get(key);
           const isOpen = expanded === key;
           return (
             <Fragment key={key}>
@@ -149,12 +235,13 @@ export function PoolCoverageTable({ items }: Props) {
                 <Td align="right">{item.approved}</Td>
                 <Td align="right">{item.generationTarget}</Td>
                 <Td align="right">{item.targetSize}</Td>
+                <Td><DiversityChips status={diversity?.status} /></Td>
                 <Td align="right" className="font-medium">{(ratio * 100).toFixed(1)}%</Td>
               </tr>
               {isOpen ? (
                 <tr>
-                  <td colSpan={9} className="border-b border-rule bg-paper p-0">
-                    <PoolCellDetail item={item} fetchFn={fetchFn} />
+                  <td colSpan={10} className="border-b border-rule bg-paper p-0">
+                    <PoolCellDetail item={item} fetchFn={fetchFn} diversityCell={diversity?.cell} />
                   </td>
                 </tr>
               ) : null}

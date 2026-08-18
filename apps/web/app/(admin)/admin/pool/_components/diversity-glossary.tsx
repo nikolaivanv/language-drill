@@ -3,8 +3,8 @@
 import { useState } from 'react';
 
 /**
- * The mechanism vocabulary, in the panel rather than in CLAUDE.md. Static —
- * not generated, not fetched.
+ * The mechanism vocabulary for the pool table's Diversity column, in the panel
+ * rather than in CLAUDE.md. Static — not generated, not fetched.
  */
 export function DiversityGlossary() {
   const [open, setOpen] = useState(false);
@@ -20,14 +20,28 @@ export function DiversityGlossary() {
       {open && (
         <dl className="mt-2 flex flex-col gap-2 text-[12px] text-ink-soft">
           <div>
+            <dt className="font-medium text-ink">
+              The two chips: <code>spec</code> and <code>seed</code>
+            </dt>
+            <dd>
+              The two independent mechanism families a cell can declare. A cell
+              can have either, both, or neither — <code>spec — ✗</code> plus{' '}
+              <code>seed none ✗</code> means nothing varies its drafts at all.
+              Umbrella kinds (dictation, free-writing, paraphrase, vocab) show{' '}
+              <code>n/a</code>: they carry no grammar-point semantics and are not
+              expected to declare either.
+            </dd>
+          </div>
+          <div>
             <dt className="font-medium text-ink">Coverage axis</dt>
             <dd>
               A categorical dimension the validator records for every approved
-              exercise (person, polarity, case…). An axis marked <code>*</code>{' '}
-              is <em>controlled</em>: the point&apos;s <code>coverageSpec</code>{' '}
-              declares a minimum count per value, and the scheduler steers drafts
-              toward the values that are short. An unmarked axis is only
-              monitored.
+              exercise (person, polarity, case…). The <code>spec Nax</code> chip
+              counts only the <em>controlled</em> ones: the point&apos;s{' '}
+              <code>coverageSpec</code> declares a minimum count per value, and
+              the scheduler steers drafts toward the values that are short. An
+              axis that is merely <em>monitored</em> carries no floors, steers
+              nothing, and is not counted.
             </dd>
           </div>
           <div>

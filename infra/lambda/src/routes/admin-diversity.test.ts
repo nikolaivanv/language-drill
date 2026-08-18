@@ -320,18 +320,6 @@ describe('GET /admin/diversity', () => {
     expect(point.provenIssues).toBeGreaterThan(0);
   });
 
-  it('restricts the response to points with problems when issuesOnly=true', async () => {
-    queryQueue.push([]);
-    queryQueue.push([]);
-    queryQueue.push([]);
-
-    const res = await app.request('/admin/diversity?issuesOnly=true', undefined, adminEnv);
-    const body = (await res.json()) as AnyJson;
-    expect(
-      body.items.every((p: AnyJson) => p.provenIssues > 0 || p.unknowns > 0),
-    ).toBe(true);
-  });
-
   it('flags an exhausted curated pool as a proven issue when the cell is NOT at target', async () => {
     queryQueue.push([]); // no coverage tags
     queryQueue.push(CURATED_SEED_VALUES.map((v) => ({ cellKey: CURATED_CELL_KEY, seed: v, n: 1 })));
@@ -376,25 +364,53 @@ describe('GET /admin/diversity', () => {
     expect(point.unknowns).toBe(0);
   });
 
-  it('reports "total" as the pre-filter point count, not the post-issuesOnly item count', async () => {
-    // All-empty aggregates: cells with a coverageSpec floor > 0 report a
-    // proven shortfall (approved=0 < any positive floor), so issuesOnly=true
-    // trims the list while `total` (language-scoped, pre-issuesOnly) must
-    // stay the same across both requests.
+  // The pool table badges a single (language, level, type, point) ROW, so the
+  // counts have to be resolvable per cell — and a point's numbers must stay
+  // exactly the sum of its cells' rather than a separately-derived figure.
+  it('reports the issue counts per cell, summing to the point counts', async () => {
+    queryQueue.push([]);
+    queryQueue.push([
+      { cellKey: VARIANT_CELL_KEY, seed: VARIANT_ID_1, n: 31 },
+      { cellKey: VARIANT_CELL_KEY, seed: VARIANT_ID_2, n: 9 },
+    ]);
+    queryQueue.push([
+      { cellKey: VARIANT_CELL_KEY, approved: 40, untaggedRows: 0, unlabelledRows: 0 },
+    ]);
+
+    const res = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
+    const body = (await res.json()) as AnyJson;
+    const point = body.items.find((p: AnyJson) => p.key === VARIANT_POINT_KEY);
+    const cell = point.cells.find((c: AnyJson) => c.cellKey === VARIANT_CELL_KEY);
+
+    expect(cell.provenIssues).toBeGreaterThan(0);
+    expect(point.provenIssues).toBe(
+      point.cells.reduce((n: number, c: AnyJson) => n + c.provenIssues, 0),
+    );
+    expect(point.unknowns).toBe(
+      point.cells.reduce((n: number, c: AnyJson) => n + c.unknowns, 0),
+    );
+  });
+
+  // Narrowing server-side would blank the mechanism chips on the rows that
+  // didn't match rather than hide those rows, so the endpoint scopes only.
+  it('ignores a mechanism filter — scoping params are language/level/kind', async () => {
     queryQueue.push([]);
     queryQueue.push([]);
     queryQueue.push([]);
-    const unfiltered = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
-    const unfilteredBody = (await unfiltered.json()) as AnyJson;
-    expect(unfilteredBody.total).toBe(unfilteredBody.items.length);
+    const scoped = await app.request('/admin/diversity?language=ES', undefined, adminEnv);
+    const scopedBody = (await scoped.json()) as AnyJson;
 
     queryQueue.push([]);
     queryQueue.push([]);
     queryQueue.push([]);
-    const filtered = await app.request('/admin/diversity?language=ES&issuesOnly=true', undefined, adminEnv);
-    const filteredBody = (await filtered.json()) as AnyJson;
+    const withMechanism = await app.request(
+      '/admin/diversity?language=ES&mechanism=none&issuesOnly=true',
+      undefined,
+      adminEnv,
+    );
+    expect(withMechanism.status).toBe(200);
+    const mechanismBody = (await withMechanism.json()) as AnyJson;
 
-    expect(filteredBody.items.length).toBeLessThan(unfilteredBody.items.length);
-    expect(filteredBody.total).toBe(unfilteredBody.total);
+    expect(mechanismBody.items.length).toBe(scopedBody.items.length);
   });
 });

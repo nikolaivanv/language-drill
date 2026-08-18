@@ -18,11 +18,7 @@ export function useDiversity({
   return useQuery({
     queryKey: ['admin', 'diversity', params],
     queryFn: async () => {
-      const queryParams: Record<string, string | number | undefined> = {
-        ...params,
-        issuesOnly: params.issuesOnly ? 'true' : undefined,
-      };
-      const res = await fetchFn(`/admin/diversity${buildQueryString(queryParams)}`);
+      const res = await fetchFn(`/admin/diversity${buildQueryString(params)}`);
       const json: unknown = await res.json();
       return DiversityResponseSchema.parse(json);
     },

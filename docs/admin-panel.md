@@ -102,9 +102,9 @@ with display labels in `REASON_LABELS` — the queue can render them directly.
 
 ### Reading a zero: ✗ versus ⚠
 
-Every surface that reports diversity (`/admin/diversity`, the `/admin/pool`
-cell drawer) distinguishes two kinds of zero, and the distinction is
-load-bearing rather than cosmetic:
+Every surface that reports diversity (the `/admin/pool` table's Diversity
+column and its cell drawer) distinguishes two kinds of zero, and the
+distinction is load-bearing rather than cosmetic:
 
 - **✗ (red)** — the denominator *proves* absence. Every approved row in the
   cell carries that coverage axis (or a declared variant id) and the value is
@@ -117,11 +117,18 @@ A below-floor value far more often means missing *tags* than missing
 predicates that decide "deficient" (`classifyAxisValue`, `classifyVariant`)
 and the shared proven-vs-unknown classifier (`classifyDiversityDefect`) all
 live in `apps/web/lib/admin/diversity-chip.ts`, and both surfaces call them
-rather than restating the rule — a prior drift where the diversity hub read
-"deficient" as `count === 0` while the pool drawer read it as `count < floor`
-is exactly the kind of bug that recurs if a call site restates the predicate
-instead of importing it, so treat any new "deficient" check outside that
-module as a regression.
+rather than restating the rule — a prior drift where the (since-removed)
+standalone diversity hub read "deficient" as `count === 0` while the pool
+drawer read it as `count < floor` is exactly the kind of bug that recurs if a
+call site restates the predicate instead of importing it, so treat any new
+"deficient" check outside that module as a regression.
+
+The same principle governs the **unresolved** case. While the diversity fetch
+is in flight, errored, or simply has no entry for a cell, that row's Diversity
+column renders `—` and matches **no** mechanism filter. Sweeping unknowns into
+a `missing coverage spec` result would manufacture exactly the false positive
+the column exists to remove, so `matchesDiversityFilter` returns `false` for an
+undefined status rather than defaulting either way.
 
 ### 2. Pool & curriculum health
 
@@ -130,7 +137,7 @@ module as a regression.
 | **Pool health drill-down** | Extends today's pool-coverage table: click a cell to see its exercises, **per-axis diversity vs. floors** (person / polarity / wordClass / sentenceType), depletion rate, target vs. actual, and a **rejection-reason breakdown** (`rejectionReasonCounts`) to spot systematic generation failures. | `exercises.coverageTags`, `generation_jobs.coverageOutcome` / `rejectionReasonCounts`, `GET /admin/pool-status` | Read-only |
 | **On-demand generation trigger** | Refill an underfilled cell from the UI. The job model already reserves `trigger = 'admin'`; no endpoint exists yet. | new `POST /admin/generate` → SQS, `generation_jobs` | Mutating |
 | **Curriculum / grammar-point reference** | Grammar points per language/level, CEFR mapping, which have coverage specs, suitability flags (e.g. `sentenceConstructionSuitable`). Mostly read-only reference. | curriculum source, `skill_topics` | Read-only |
-| **Diversity** (`/admin/diversity`) | Every grammar point's *declared* diversity machinery — coverage axes and floors, `constructionVariants`, curated seed pools vs. frequency bands — against what the approved pool actually realizes. One row per point, expandable per cell. Flags the two failures nothing else surfaces: a cell **at target with unmet floors** (the scheduler has no deficit, so it never revisits it and the floors never fire — needs `demote:pool`), and a **bounded seed pool fully consumed** (seeding returns nothing and the cell silently stops generating). Deterministic, no LLM calls. Links out to `/admin/pool` for actions. | `exercises.coverage_tags`, `exercises.content_json->>'seedWord'`, curriculum source, `GET /admin/diversity` | Read-only |
+| **Diversity column** (`/admin/pool`, Exercises tab) | Each cell's *declared* diversity machinery against what the approved pool realizes, as two chips per row — `spec Nax` (controlled coverage axes with floors) and `seed …` (construction variants, a curated pool, the frequency band, the vocab-target list) — plus that cell's proven (✗) and unknown (⚠) deficiency counts. The chips make the **absence** of a mechanism scannable, which no other surface shows; the `Diversity` filter selects on it in both directions, negation first (`no mechanism at all` / `no coverage spec` / `no seed source`). Umbrella kinds (dictation, free-writing, paraphrase, vocab) render `n/a`, never a failure — they carry no `coverageSpec` by design. Expanding a row shows the per-axis and per-variant detail. Flags the two failures nothing else surfaces: a cell **at target with unmet floors** (the scheduler has no deficit, so it never revisits it and the floors never fire — needs `demote:pool`), and a **bounded seed pool fully consumed** (seeding returns nothing and the cell silently stops generating). Deterministic, no LLM calls. | `exercises.coverage_tags`, `exercises.content_json->>'seedWord'`, curriculum source, `GET /admin/diversity` | Read-only |
 
 ### 3. Ops & cost
 
