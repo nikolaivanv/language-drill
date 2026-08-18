@@ -143,6 +143,16 @@ at-target cell has no deficit, so the floors never fire.
 At target" section lists every cell whose declared floors cannot fire because
 the cell has no deficit. Run it before assuming a merged spec took effect.
 
+> **Detecting the failure after the fact.** `pnpm audit:constructions` sweeps the
+> approved pool for points whose description claims several constructions but
+> whose rows realize one, and recommends which mechanism fixes each — a
+> `coverageSpec` axis when the items are values of one dimension (person,
+> number, plural class), or `constructionVariants` when they are distinct
+> sub-constructions. It is a spotlight, not a gate: authoring the decision up
+> front is still the cheap path, since a retrofit onto a filled cell needs a
+> merge, a Langfuse push, `backfill:variant-seeds`, and `demote:pool` for
+> headroom before a single new draft is generated.
+
 ## Authoring-time checklist (append to any new-grammar-point work)
 
 - [ ] For each of the 6 axes: claimed? collapse-prone? form-relevant?
