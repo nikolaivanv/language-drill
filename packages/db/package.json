@@ -19,7 +19,7 @@
     "review:flagged-theory": "npx tsx scripts/review-flagged-theory.ts",
     "review:flagged-vocab": "npx tsx scripts/review-flagged-vocab.ts",
     "revalidate:cloze": "npx tsx scripts/revalidate-cloze-pool.ts",
-    "revalidate:sc-promote": "npx tsx scripts/revalidate-sc-promote-pool.ts",
+    "revalidate:promote": "npx tsx scripts/revalidate-promote-pool.ts",
     "dedupe:conjugation": "npx tsx scripts/dedupe-conjugation-pool.ts",
     "dedup:sc-pool": "npx tsx scripts/dedup-sc-pool.ts",
     "demote:pool": "npx tsx scripts/demote-cell-pool.ts",
