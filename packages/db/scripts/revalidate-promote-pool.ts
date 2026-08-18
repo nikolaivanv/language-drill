@@ -1,16 +1,23 @@
 /**
- * `pnpm revalidate:sc-promote` — one-off CLI to recover falsely-flagged
- * `sentence_construction` (SC) exercises after the PR #606 validator fix.
+ * `pnpm revalidate:promote` — one-off CLI to recover falsely-flagged exercises
+ * after a validator over-flag bug has been fixed.
  *
- * Background: the generation validator was applying the cloze single-answer
- * `ambiguous` rubric to SC, which is **open production** (many correct
- * sentences by design). Pool-wide that stranded ~80% of flagged SC drafts as
- * false positives — good exercises routed to `flagged` and never served
- * (serving filters on `auto-approved` / `manual-approved`). PR #606 scoped the
- * `ambiguous` dimension to SC + added an SC scoring note; #607 fixed the paired
- * `du`-as-subject generation bug. This script re-scores the already-stored
- * flagged SC drafts through the **corrected** validator and PROMOTES the ones
- * that now auto-approve. See `docs/analysis/generation-run-2026-07-22.md`.
+ * Originally `revalidate:sc-promote`, scoped to `sentence_construction` for the
+ * PR #606 recovery: the generation validator was applying the cloze
+ * single-answer `ambiguous` rubric to SC, which is **open production** (many
+ * correct sentences by design). Pool-wide that stranded ~80% of flagged SC
+ * drafts as false positives — good exercises routed to `flagged` and never
+ * served (serving filters on `auto-approved` / `manual-approved`). PR #606
+ * scoped the `ambiguous` dimension to SC + added an SC scoring note; #607 fixed
+ * the paired `du`-as-subject generation bug. See
+ * `docs/analysis/generation-run-2026-07-22.md`.
+ *
+ * Generalized 2026-08-18 for the `es-b1-reported-speech` recovery: PR #664 gave
+ * the point two new `constructionVariants`, but its `name` still read "Reported
+ * speech (present-to-past)" and the validator reasons from that string — so 20
+ * of 20 correct on-variant translations were flagged `grammar-point-mismatch`
+ * the first night they were generated. See
+ * `docs/analysis/generation-run-2026-08-18.md`.
  *
  * Promote-only policy — the mirror image of `revalidate:cloze`'s demote-only
  * policy (`decidePromotion` in `src/generation/revalidation.ts`):
@@ -25,23 +32,32 @@
  *
  * `manual-approved` (not `auto-approved`) records the operator remediation and
  * shields the row from the demote-only `revalidate:cloze` pass. As a side
- * effect, promoting these drafts lifts the affected SC cells back toward their
- * coverage target, which un-sticks the scheduler's `skip-low-yield`
- * suppression on cells whose last run approved < 3 drafts.
+ * effect, promoting these drafts lifts the affected cells back toward their
+ * coverage target, which un-sticks the scheduler's `skip-low-yield` suppression
+ * on cells whose last run approved < 3 drafts.
  *
- * Scope: `type = 'sentence_construction'`, `review_status = 'flagged'` only.
+ * Scope: `review_status = 'flagged'` only, within one `--type`.
+ *
  * The promote policy is justified ONLY where a specific validator over-flag bug
- * was fixed — do NOT generalize this to other types without the same evidence.
+ * was fixed, so the argument parser enforces that rather than trusting a
+ * comment: `--type` is **required** (a promote pass can never sweep the pool by
+ * omission), and `--grammar-point` is **required for every type except
+ * `sentence_construction`** — the one type whose whole-pool sweep is the
+ * historical #606 case. Widen this only alongside the same kind of evidence.
  *
  * Defaults to dry-run; pass `--apply` to write. The fallback Langfuse path
  * (LANGFUSE_PUBLIC_KEY unset) returns the in-repo prompt template byte-for-
  * byte, so dry-running locally scores exactly as Lambda would in prod.
  *
  * Usage:
- *   pnpm revalidate:sc-promote                                 # dry-run, all flagged SC
- *   pnpm revalidate:sc-promote -- --language TR --cefr B1     # narrower
- *   pnpm revalidate:sc-promote -- --limit 20                  # bounded probe
- *   pnpm revalidate:sc-promote -- --apply --max-cost-usd 10   # write changes
+ *   pnpm revalidate:promote --type sentence_construction        # dry-run, all flagged SC
+ *   pnpm revalidate:promote --type sentence_construction --language TR --cefr B1
+ *   pnpm revalidate:promote --type translation --grammar-point es-b1-reported-speech
+ *   pnpm revalidate:promote --type cloze --grammar-point es-b1-reported-speech --limit 20
+ *   pnpm revalidate:promote --type translation --grammar-point es-b1-reported-speech \
+ *     --apply --max-cost-usd 10
+ *
+ * (A `--` separator is tolerated — the parser skips it — but not needed.)
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  */
@@ -60,6 +76,7 @@ import {
 import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 
 import { createDb, type Db } from '../src/client';
+import { getGrammarPoint } from '../src/curriculum';
 import { exercises } from '../src/schema';
 import type { ReviewStatus } from '../src/generation/routing';
 import {
@@ -85,6 +102,10 @@ const DEFAULT_MAX_COST_USD = 5.0;
 
 export type PromoteArgs = {
   apply: boolean;
+  /** Required — a promote pass never sweeps more than one exercise type. */
+  exerciseType: ExerciseType;
+  /** Empty only for the historical pool-wide `sentence_construction` sweep. */
+  grammarPoints: readonly string[];
   language: Language | null;
   cefrLevel: CefrLevel | null;
   limit: number | null;
@@ -94,9 +115,12 @@ export type PromoteArgs = {
 
 const LANGUAGE_VALUES = new Set(Object.values(Language));
 const CEFR_VALUES = new Set(Object.values(CefrLevel));
+const EXERCISE_TYPE_VALUES = new Set(Object.values(ExerciseType));
 
 export function parsePromoteArgs(argv: readonly string[]): PromoteArgs {
   let apply = false;
+  let exerciseType: ExerciseType | null = null;
+  const grammarPoints: string[] = [];
   let language: Language | null = null;
   let cefrLevel: CefrLevel | null = null;
   let limit: number | null = null;
@@ -107,6 +131,24 @@ export function parsePromoteArgs(argv: readonly string[]): PromoteArgs {
     const arg = argv[i];
     if (arg === '--') {
       continue;
+    } else if (arg === '--type') {
+      const next = argv[++i];
+      if (next === undefined) throw new Error(`${arg} requires a value`);
+      if (!EXERCISE_TYPE_VALUES.has(next as ExerciseType)) {
+        throw new Error(
+          `${arg}: expected one of ${[...EXERCISE_TYPE_VALUES].join('|')}, got '${next}'`,
+        );
+      }
+      exerciseType = next as ExerciseType;
+    } else if (arg === '--grammar-point') {
+      // Validated like --language/--cefr: an unvalidated key silently selects
+      // zero rows, which reads as "nothing to do" rather than "you typo'd".
+      const next = argv[++i];
+      if (next === undefined) throw new Error(`${arg} requires a value`);
+      if (!getGrammarPoint(next)) {
+        throw new Error(`${arg}: unknown grammar point '${next}'`);
+      }
+      if (!grammarPoints.includes(next)) grammarPoints.push(next);
     } else if (arg === '--apply') {
       apply = true;
     } else if (arg === '--dry-run') {
@@ -160,7 +202,34 @@ export function parsePromoteArgs(argv: readonly string[]): PromoteArgs {
     }
   }
 
-  return { apply, language, cefrLevel, limit, concurrency, maxCostUsd };
+  if (exerciseType === null) {
+    throw new Error(
+      `--type is required (one of ${[...EXERCISE_TYPE_VALUES].join('|')}) — ` +
+        'a promote pass must never sweep the pool by omission',
+    );
+  }
+  // The promote policy is only justified where a specific validator over-flag
+  // bug was fixed. `sentence_construction` is the one type whose whole-pool
+  // sweep carries that evidence (PR #606); everything else must name the
+  // points it has the evidence for.
+  if (exerciseType !== ExerciseType.SENTENCE_CONSTRUCTION && grammarPoints.length === 0) {
+    throw new Error(
+      `--grammar-point is required for --type ${exerciseType}: the promote policy is ` +
+        'justified only where a specific validator over-flag bug was fixed, so name the ' +
+        'point(s) you have that evidence for (repeatable)',
+    );
+  }
+
+  return {
+    apply,
+    exerciseType,
+    grammarPoints,
+    language,
+    cefrLevel,
+    limit,
+    concurrency,
+    maxCostUsd,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -169,11 +238,14 @@ export function parsePromoteArgs(argv: readonly string[]): PromoteArgs {
 
 async function fetchCandidates(db: Db, args: PromoteArgs): Promise<CandidateRow[]> {
   const filters = [
-    eq(exercises.type, ExerciseType.SENTENCE_CONSTRUCTION),
+    eq(exercises.type, args.exerciseType),
     // Only flagged rows are promote candidates. auto/manual-approved are
     // already served; rejected was a hard veto we do not resurrect.
     inArray(exercises.reviewStatus, ['flagged']),
   ];
+  if (args.grammarPoints.length > 0) {
+    filters.push(inArray(exercises.grammarPointKey, [...args.grammarPoints]));
+  }
   if (args.language) filters.push(eq(exercises.language, args.language));
   if (args.cefrLevel) filters.push(eq(exercises.difficulty, args.cefrLevel));
 
@@ -221,10 +293,25 @@ async function applyPromotion(
 // Summary
 // ---------------------------------------------------------------------------
 
+/**
+ * `validator-error` and `cost-capped` are deliberately NOT folded into
+ * `malformed-content-json`: a transport failure (bad API key, rate limit) and
+ * a budget stop say nothing about the stored row, and reporting them as bad
+ * content sends the reader to `content_json` for a problem that is not there.
+ */
+type SkipOutcomeReason =
+  | SkipReason
+  | 'auto-approved'
+  | 'manual-approved'
+  | 'rejected'
+  | 'validator-error'
+  | 'update-failed'
+  | 'cost-capped';
+
 type Outcome =
   | { kind: 'no-change'; row: CandidateRow; result: ValidationResult }
   | { kind: 'promote'; row: CandidateRow; result: ValidationResult }
-  | { kind: 'skip'; row: CandidateRow; reason: SkipReason | 'auto-approved' | 'manual-approved' | 'rejected'; detail?: string };
+  | { kind: 'skip'; row: CandidateRow; reason: SkipOutcomeReason; detail?: string };
 
 function printSummary(
   outcomes: readonly Outcome[],
@@ -235,7 +322,7 @@ function printSummary(
   const noChange = outcomes.filter((o) => o.kind === 'no-change').length;
   const skipped = outcomes.filter((o) => o.kind === 'skip').length;
 
-  process.stdout.write('\n=== SC promote summary ===\n');
+  process.stdout.write(`\n=== promote summary (${args.exerciseType}) ===\n`);
   process.stdout.write(`  rows scanned:            ${outcomes.length}\n`);
   process.stdout.write(`  promote → manual-approved: ${promoted}\n`);
   process.stdout.write(`  no change (stays flagged): ${noChange}\n`);
@@ -272,6 +359,14 @@ function printSummary(
     for (const [reason, count] of skipReasons) {
       process.stdout.write(`  ${reason}: ${count}\n`);
     }
+    // One worked example per reason: the count alone cannot tell a bad API key
+    // from bad stored content, and both arrive as a wall of identical skips.
+    const shown = new Set<string>();
+    for (const o of outcomes) {
+      if (o.kind !== 'skip' || !o.detail || shown.has(o.reason)) continue;
+      shown.add(o.reason);
+      process.stdout.write(`    e.g. ${o.reason}: ${o.detail}\n`);
+    }
   }
 }
 
@@ -297,7 +392,8 @@ async function main(): Promise<void> {
   const client = createClaudeClient(anthropicKey);
 
   process.stdout.write(
-    `Filters: type=sentence_construction review_status=flagged` +
+    `Filters: type=${args.exerciseType} review_status=flagged` +
+      `${args.grammarPoints.length > 0 ? ` grammar-point=${args.grammarPoints.join(',')}` : ''}` +
       `${args.language ? ` language=${args.language}` : ''}` +
       `${args.cefrLevel ? ` cefr=${args.cefrLevel}` : ''}` +
       `${args.limit !== null ? ` limit=${args.limit}` : ''}\n`,
@@ -308,7 +404,7 @@ async function main(): Promise<void> {
     process.stdout.write('No matching rows.\n');
     return;
   }
-  process.stdout.write(`Found ${candidates.length} flagged SC candidate rows.\n`);
+  process.stdout.write(`Found ${candidates.length} flagged ${args.exerciseType} candidate rows.\n`);
 
   const limit = pLimit(args.concurrency);
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
@@ -319,11 +415,11 @@ async function main(): Promise<void> {
     candidates.map((row, idx) =>
       limit(async () => {
         if (costStopped) {
-          outcomes[idx] = { kind: 'skip', row, reason: 'rejected', detail: 'cost-cap reached' };
+          outcomes[idx] = { kind: 'skip', row, reason: 'cost-capped', detail: 'cost-cap reached' };
           return;
         }
 
-        const recon = reconstructDraftAndSpec(row, ExerciseType.SENTENCE_CONSTRUCTION);
+        const recon = reconstructDraftAndSpec(row, args.exerciseType);
         if (!recon.ok) {
           outcomes[idx] = { kind: 'skip', row, reason: recon.reason, detail: recon.detail };
           return;
@@ -340,7 +436,7 @@ async function main(): Promise<void> {
           outcomes[idx] = {
             kind: 'skip',
             row,
-            reason: 'malformed-content-json',
+            reason: 'validator-error',
             detail: `validator threw: ${message}`,
           };
           return;
@@ -378,7 +474,7 @@ async function main(): Promise<void> {
             outcomes[idx] = {
               kind: 'skip',
               row,
-              reason: 'malformed-content-json',
+              reason: 'update-failed',
               detail: `update failed: ${message}`,
             };
             return;

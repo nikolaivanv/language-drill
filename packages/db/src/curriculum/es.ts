@@ -233,6 +233,27 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * target-reached / low-yield suppression; both cells sit at target, so the
  * retrofit also needs backfill:variant-seeds then demote:pool
  * (see docs/curriculum-authoring.md retrofit section).
+ *
+ * `2026-08-18` (same date, follow-up — deliberately NOT a version bump):
+ * es-b1-reported-speech is RENAMED from "Reported speech (present-to-past)".
+ * The retrofit above worked at the generator — the 2026-08-18 run put 51 of 55
+ * drafts on the two previously-unrealized variants — but the VALIDATOR reads
+ * `grammarPoint.name` (validation-prompts.ts computeValidationPromptVars) and
+ * reasoned from the old title, flagging 20 of 20 correct on-variant
+ * translations `grammar-point-mismatch`: "the target grammar point is
+ * 'Reported speech (present-to-past)', which requires a PAST-tense reporting
+ * verb". One note read the new description, acknowledged it licenses the
+ * no-shift case, and overruled it on the strength of the title. The new name
+ * enumerates all three declared variants so a judge that reasons from the
+ * title reaches the same verdict as one that reads the description.
+ *
+ * No CURRICULUM_VERSION_ES bump: `name` is a runtime `{{grammarPointName}}`
+ * substitution, so the change ships with the code deploy (no push-prompts,
+ * no VALIDATION_PROMPT_VERSION bump), and both cells approved >= 3 on
+ * 2026-08-18 and sit below target — they are requested tonight regardless.
+ * A bump would buy nothing here and would re-release the whole ES low-yield
+ * backlog for a second night (14 cells, 134 requested, 29 approved on the
+ * first). See docs/analysis/generation-run-2026-08-18.md.
  */
 export const CURRICULUM_VERSION_ES = '2026-08-18';
 
@@ -2478,7 +2499,7 @@ const esCurriculum: readonly GrammarPoint[] = [
   {
     key: 'es-b1-reported-speech',
     kind: 'grammar',
-    name: 'Reported speech (present-to-past)',
+    name: 'Reported speech: backshift, no-shift, and reported commands',
     description:
       'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes). A present-zone reporting verb takes no shift — notably the perfect, which counts as a present (Juan ha dicho que viene) — but after a past one Spanish requires the shift even when the statement still holds.',
     cefrLevel: B1,
@@ -2503,9 +2524,12 @@ const esCurriculum: readonly GrammarPoint[] = [
     // covers the English personal infinitive "he told me to come").
     // Splits are by reporting-verb tense zone, which is what actually licenses
     // or forbids the shift, crossed with statement vs. order. Backshift keeps
-    // share 3 — it is the point's headline and its name — while the two
-    // present-zone constructions, previously 1/99 and 0/99 of the approved
-    // pool, get a floor they can reach (~17 and ~8 at the B1 target of 50).
+    // share 3 — it is the point's headline — while the two present-zone
+    // constructions, previously 1/99 and 0/99 of the approved pool, get a
+    // floor they can reach (~17 and ~8 at the B1 target of 50). It is no
+    // longer the point's NAME: leaving "present-to-past" in the title made the
+    // validator veto the other two variants outright (see the 2026-08-18
+    // follow-up in the changelog above).
     // Reported QUESTIONS are not a variant here: es-b1-indirect-questions owns
     // them (book ledger 37.4.5), and past commands + future/preterite backshift
     // belong to es-b2-reported-speech-backshift.

@@ -1,0 +1,1238 @@
+{
+  "capturedAt": "2026-08-18T09:41:15.255716+00:00",
+  "branch": "br-green-waterfall-ancrvpr5",
+  "rows": [
+    {
+      "id": "99466c09-bd9e-5879-a399-8b65253af268",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation uses 'salvador' for 'lifeguard', which is non-standard and potentially confusing. The standard Spanish term for a swimming/beach lifeguard is 'socorrista' (or 'salvavidas' in Latin America). 'Salvador' primarily means 'saviour/rescuer' in a religious or figurative sense and would not be the expected lexical choice for a B1 learner. This vocabulary mismatch could mislead learners or cause confusion when marking."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point is correctly targeted — the past-tense reporting verb 'dijo' triggers the present-to-imperfect shift ('era' instead of 'es'), which is exactly what the exercise tests. However, the sentence is relatively simple and does not strongly discriminate against the common learner error of keeping the present tense ('*dijo que es muy valiente'), since the imperfect 'era' is not a particularly challenging form for B1 learners. The exercise is functional but not maximally diagnostic."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Minor: the instructions mention 'verb tense shifts' which is acceptable (names the rule category, not the outcome), but reviewers may want to verify this does not inadvertently over-scaffold for some learners."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "salvador",
+      "createdAt": "2026-07-07T05:09:29.443496"
+    },
+    {
+      "id": "9a466d9c-3a48-5f2a-a899-9376ad03431f",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation uses 'estaba pasando por' (imperfect progressive), which is a valid but non-canonical form of reported speech. The simpler and more pedagogically central form would be 'dijo que su amiga tenía una depresión' or 'dijo que su amiga pasaba por una depresión' (plain imperfect), which more directly illustrates the present-to-past tense shift targeted by this grammar point. The progressive construction adds an extra layer (estar + gerundio) that may distract from the core reported-speech shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The phrase 'estaba pasando por una depresión' is grammatically correct but the use of 'estar + gerundio' in the reported clause means the tense-shift lesson is partially obscured — learners must also handle the imperfect of 'estar' plus the gerund, rather than focusing cleanly on the present→imperfect indicative shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The topic of depression, while not culturally offensive, is a sensitive mental health subject. It is not inappropriate for B1 learners but reviewers may wish to confirm it aligns with the course's content guidelines."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Alternative correct translations exist that differ only in surface form (e.g., 'Dijo que su amiga sufría una depresión'), which is acceptable for a translation exercise, but the reference answer should ideally be the most canonical form for the grammar point."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "depresión",
+      "createdAt": "2026-07-07T05:09:29.63114"
+    },
+    {
+      "id": "9b466f2f-bb65-5cef-a999-95132be6a54e",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Reference translation uses the imperfect subjunctive (calláramos), which belongs to B2, not B1. The B1 grammar scope for reported speech specifies reported commands with que + present subjunctive (e.g. 'Dice que te sientes'), not past/imperfect subjunctive. A B1 learner has not yet studied the imperfect subjunctive."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: multiple structurally different correct translations exist. A B1 learner could legitimately render the reported command as 'nos dijo que nos callásemos' (alternative imperfect subjunctive form) or even 'nos pidió que guardáramos silencio', but more critically, a B1-appropriate answer would use present subjunctive after a present-tense reporting verb (e.g. 'nos dice que nos callemos'). The source sentence uses a past reporting verb ('told'), which forces imperfect subjunctive — a B2 construction — making it impossible to produce a correct B1-level answer for this exact sentence."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence requires imperfect subjunctive in the reported clause because the reporting verb is past-tense ('told/dijo'). This is a B2 sequence-of-tenses construction. The B1 target grammar point covers present-to-past shift in indicative clauses and reported commands with que + present subjunctive (after a present-tense reporting verb), not past-tense-triggered imperfect subjunctive."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider revising the source sentence to use a present-tense reporting verb (e.g. 'The librarian tells us to be quiet') so the reported command uses que + present subjunctive, which is within B1 scope."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "shh",
+      "createdAt": "2026-07-07T05:09:29.632662"
+    },
+    {
+      "id": "83dc5f4e-8ccf-52f2-84b5-c9bee8b5ab4b",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation uses 'iba a cesar' (ir a + infinitive in the imperfect), which correctly shifts the present-tense 'is not going to stop' back to the imperfect under a past reporting verb — this is on-point for reported speech (present-to-past). However, the source sentence's reported clause contains 'was not going to stop', which is already in the past in English, making it ambiguous whether the learner is being asked to shift a present to a past or simply to render an already-past English clause. A cleaner source would use a present-tense reported clause in English (e.g. 'She told me that her headache is not going to stop') to make the present-to-past shift unambiguous."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The verb 'cesar' is relatively low-frequency and may be above typical B1 active vocabulary; a more common alternative like 'parar' or 'terminar' would be more level-appropriate and reduce cognitive load on vocabulary rather than grammar."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Surface variation in acceptable translations is wide: 'Me dijo que su dolor de cabeza no iba a parar/terminar/detenerse' are all equally valid, and the reference answer alone may mislead graders marking learner responses."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "césar",
+      "createdAt": "2026-07-07T05:09:29.825916"
+    },
+    {
+      "id": "84dc60e1-0dec-50b7-85b5-cb5b67990d7a",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point is technically present (dijo → era, present-to-past shift), but the imperfect 'era' is the expected form for 'eternal/permanent' even in direct speech ('su amistad ES eterna' → 'era' is the natural imperfect of 'ser'), making it hard to distinguish whether the learner is applying reported-speech backshift or simply producing the imperfect of 'ser' for a habitual/permanent state. The tense shift is therefore not a strong diagnostic for the target grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The adjective 'eterna' and the noun 'amistad' are low-frequency B1-edge vocabulary; while not above level, they add a slight lexical challenge that could distract from the grammar focus."
+        },
+        {
+          "code": "validator-note",
+          "detail": "A cleaner diagnostic sentence would use a present-tense stative or dynamic verb that unambiguously requires backshift (e.g. 'Dijo que tenía hambre' or 'Dijo que estaba cansada'), so the learner cannot produce the correct answer by default imperfect usage of 'ser'."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "eterno",
+      "createdAt": "2026-07-07T05:09:29.823083"
+    },
+    {
+      "id": "86dc6407-1025-5c41-bfb5-c1ad69d2491c",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Reference translation uses imperfect subjunctive (intentara) after a past-tense reporting verb (dijo), but the grammar point targets reported commands with que + PRESENT subjunctive (e.g., 'Dice que te sientes'). The imperfect subjunctive is a B2-level construction and is outside the declared B1 scope for this grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: multiple structurally different correct translations exist. A B1 learner could correctly write 'El médico le dijo que intentase descansar más' (imperfect subjunctive -se form, equally valid), or even 'El médico le dijo que descansara/descansase más' (dropping 'intentar' and using a simpler verb), or with a present-tense reporting verb 'El médico le dice que intente descansar más' (present subjunctive, which is the actual B1 target form). These are structurally different and the acceptableAnswers list does not enumerate them."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence 'The doctor told him to try to rest more' uses a past-tense reporting verb ('told'), which triggers the imperfect subjunctive in Spanish — a B2 construction. The grammar point spec targets present-to-past shift with present subjunctive for reported commands (e.g., 'Dice que hagamos'). A sentence with a present-tense reporting verb (e.g., 'The doctor tells him to try to rest more') would better target the B1 construction."
+        },
+        {
+          "code": "validator-note",
+          "detail": "levelMatch set to false: the reference answer requires the imperfect subjunctive (intentara), which is a B2 construction not listed in the B1 grammar scope provided."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "intente",
+      "createdAt": "2026-07-07T05:09:29.824974"
+    },
+    {
+      "id": "85dc6274-8f09-5e7c-beb5-c010eaeee6ed",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The reference translation 'Me pidió que me sentara' uses the imperfect subjunctive (sentara), which is a B2-level construction and is NOT in the B1 grammar scope. The B1 reported-speech point covers present-to-past shift in the indicative (dijo que tenía) and reported commands with que + present subjunctive (dice que te sientes). A reported request with pedir + que + imperfect subjunctive falls outside the declared B1 scope."
+        },
+        {
+          "code": "validator-note",
+          "detail": "ambiguous: 'She asked me to sit down' can be rendered in multiple structurally different ways in Spanish: (1) Me pidió que me sentara (imperfect subjunctive — B2), (2) Me dijo que me sentara (same issue), (3) Me pidió que me sentase (Peninsular variant of imperfect subjunctive), (4) Me dijo que me sentara. None of these map cleanly to the B1 target pattern (present-to-past indicative shift or reported command with present subjunctive). The acceptableAnswers list does not enumerate alternatives."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The English source 'She asked me to sit down' most naturally maps to a reported request/command, which in Spanish requires imperfect subjunctive after a past-tense reporting verb — a B2 construction. A better B1 exercise would use a direct statement shift, e.g. 'She said she was tired' → 'Dijo que estaba cansada', or a reported command with a present-tense reporting verb, e.g. 'She says to sit down' → 'Dice que te sientes'."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "pid",
+      "createdAt": "2026-07-07T05:09:29.826359"
+    },
+    {
+      "id": "88dc672d-125f-57cb-81b5-c4e76c0b84be",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous reference translation: the English source 'saves everyone who is in danger' is a habitual/generic present, which could legitimately be rendered in Spanish as (a) imperfect 'salvaba…estaban' (backshifted, as in the reference), (b) present 'salva…están' (if the speaker treats it as a general truth/habitual fact — a well-known exception to backshift), or even (c) 'salvaba a todos los que estaban en peligro' vs. 'salvaba a todos los que estuvieran en peligro' (subjunctive in the relative clause). These are structurally different correct translations, not mere surface variation, and the exercise does not enumerate acceptable alternatives."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The relative clause 'todos los que estaban en peligro' vs. 'todos los que estuvieran en peligro' introduces a secondary ambiguity (indicative vs. subjunctive in the embedded relative) that is not addressed in the reference or instructions."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence involves a somewhat specialised lexical item ('lifeguard' / 'socorrista') which, while not above B1, is low-frequency and may distract from the grammar focus; consider replacing with a more neutral noun."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Instructions say 'paying attention to reported speech' but do not clarify whether the general-truth exception applies, leaving learners uncertain about whether present tense is acceptable — this ambiguity should be resolved or the source sentence rewritten to force unambiguous backshift."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "salva",
+      "createdAt": "2026-07-07T05:09:29.994862"
+    },
+    {
+      "id": "fed710c1-5bf9-5067-8fbb-236bb5a660d2",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: the reference translation 'Dijo que era de España' is correct, but 'Ella dijo que era de España' (with explicit subject pronoun) is equally valid and structurally identical — surface variation only, acceptable. However, a more significant ambiguity exists: the original English 'She said that she was from Spain' could be rendered with 'ser' (era) OR 'venir' (venía) in some registers, though 'era' is the canonical choice. More critically, the reporting verb 'dijo' (preterite of decir) is the primary target, but 'comentó', 'mencionó', 'afirmó' etc. are all equally correct past-tense reporting verbs that would also shift the subordinate clause to imperfect — the exercise does not constrain the reporting verb, making multiple structurally different correct translations possible."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise is straightforward and tests the core present-to-past shift (is → era) under a past reporting verb, which is exactly the target grammar point. However, the sentence is arguably too simple: 'ser de' + country is a very basic construction, and the imperfect shift here (era) is the only real challenge. The sentence does not expose the common learner error of keeping the present tense (*dijo que es de España) in a way that requires the learner to actively choose between forms — a cloze would be more diagnostic."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence 'She said that she was from Spain' is already in the past tense in English ('was'), so the present-to-past shift in Spanish is not clearly motivated by the English source. A learner might not realize they need to use imperfect rather than preterite ('fue') since 'was' in English maps to both 'era' and 'fue'. The reference answer does not include 'fue' as an acceptable alternative, but 'Dijo que fue de España' — while less natural — could be produced by a learner and is not clearly wrong in all contexts. The acceptableAnswers field should enumerate this or explicitly exclude it with a note."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "españa",
+      "createdAt": "2026-07-07T05:09:30.775521"
+    },
+    {
+      "id": "f1d4bdb3-fb23-5c8b-beb8-cb47a2dcfc0a",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch concern: The target grammar point is 'Reported speech (present-to-past)' — specifically the shift from a present-tense direct speech clause to an imperfect (or preterite) in the reported clause under a past-tense reporting verb. However, the source sentence ('She said that she always had breakfast before going to work') does not demonstrate a present-to-past shift: the original direct speech would have been 'I always have breakfast before going to work' (present habitual), which correctly shifts to the imperfect 'desayunaba'. This IS a valid present-to-past shift, but the imperfect 'desayunaba' is also the natural translation of a past habitual action in English ('had breakfast' = habitual past), making it ambiguous whether the learner is applying the reported-speech tense-shift rule or simply translating a past habitual. A learner could produce 'Dijo que siempre desayunó antes de ir al trabajo' (using preterite instead of imperfect) and it would be arguably acceptable for a one-time past event, creating mild ambiguity about the target form. The grammar point is only incidentally tested."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence 'antes de ir al trabajo' introduces a verb+preposition regime construction (antes de + infinitive) that, while within B1 scope, adds complexity beyond the reported-speech focus and could distract from the target point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation is correct and natural Spanish. The reported-speech shift (present → imperfect) is present but not sharply foregrounded because the English source already uses past tense ('had breakfast'), so the tense-shift motivation is not transparent to the learner."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "desayunar",
+      "createdAt": "2026-07-07T05:09:30.182775"
+    },
+    {
+      "id": "f2d4bf46-77cd-533c-bbb8-c67021c05e39",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous reference translation: the core reported-speech shift (present→imperfect) is demonstrated by 'se estaba enfriando' (imperfect progressive), but an equally correct and structurally distinct answer is 'Me dijo que la comida se enfriaba' (simple imperfect) or even 'Me dijo que la comida estaba enfriándose'. The reference translation privileges one valid form without listing acceptable alternatives, so learners producing the simple imperfect would be incorrectly penalised."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point targets present-to-past tense shift in reported speech (e.g. 'tiene' → 'tenía'), but the reference answer uses an imperfect progressive ('se estaba enfriando') rather than a simple imperfect. While grammatically valid, this construction may obscure the core present→imperfect shift that the grammar point is designed to teach, and could confuse learners about what the target form actually is."
+        },
+        {
+          "code": "validator-note",
+          "detail": "No acceptableAnswers list is provided to enumerate the multiple structurally valid translations (simple imperfect, imperfect progressive, etc.)."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "gordon",
+      "createdAt": "2026-07-07T05:09:30.196914"
+    },
+    {
+      "id": "f3d4c0d9-f8e9-5101-bcb8-c80da0a3c068",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: both the imperfect indicative 'se escondía' (present-to-past shift, the target point) and the preterite 'se escondió' are grammatically acceptable after 'dijo que', with subtly different aspectual readings — a B1 learner could reasonably produce either and both are defensible. The reference translation does not enumerate 'se escondió' as an acceptable answer."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Level concern: the noun 'fugitivo' (fugitive) is low-frequency and unlikely to be in a B1 learner's active vocabulary, potentially making the exercise a vocabulary obstacle rather than a grammar test. The word 'policía' in the sense of 'police officer' (masculine) may also cause gender-agreement confusion at this level."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The present-to-past shift is correctly targeted (dijo que + imperfect), but the ambiguity between imperfect and preterite in the reported clause is a structural issue that needs resolution via an acceptableAnswers list or a tighter context that forces the imperfect reading (e.g. an ongoing/habitual action more clearly signalled in the source)."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "fugitivo",
+      "createdAt": "2026-07-07T05:09:30.204612"
+    },
+    {
+      "id": "f3d6ff70-cfbf-58f0-94bb-2b7c3d6eb189",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: multiple structurally different correct translations exist. The reference uses the imperfect subjunctive (llevara), which is a B2 construction. A B1 learner would correctly use the present subjunctive after 'dijo que' for a reported command — 'Me dijo que la llevara' is valid but so is 'Me dijo que me llevara' (reflexive shift ambiguity) and more critically 'Me pidió que la llevara'. The grammar point spec targets present-to-past shift (present subjunctive after past reporting verb), but the reference answer uses imperfect subjunctive (llevara), which belongs to B2 reported speech (past-to-past sequence of tenses), not the B1 target of present-to-past (e.g. 'Dice que la lleve'). This misaligns the reference with the declared grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Level mismatch: the imperfect subjunctive (llevara) is a B2 construction and is outside the B1 grammar scope. The B1 reported-speech point covers present subjunctive in reported commands (dice que hagas), not imperfect subjunctive under a past reporting verb."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence 'She told me to take her to the airport' maps most naturally to a reported command with a past reporting verb + imperfect subjunctive, which is B2. To target B1 reported speech (present-to-past), the source should use a present-tense reporting verb (e.g. 'She says to take her to the airport' → 'Dice que la lleve al aeropuerto') or a present-indicative shift scenario."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "llévame",
+      "createdAt": "2026-07-07T05:09:30.585177"
+    },
+    {
+      "id": "fdd70f2e-dadd-52a2-8ebb-21ce36c2fea3",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.5,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation uses the pluperfect passive ('había sido presentado'), which requires both the pluperfect (past perfect) and the passive with 'ser' — constructions that sit at B2 level, not B1. The target grammar point (es-b1-reported-speech) specifies present-to-past shift: a present-tense verb in the original becoming imperfect in the reported clause (e.g., 'tiene' → 'tenía'), or a reported command with que + present subjunctive. This exercise instead tests present-perfect-to-pluperfect shift inside a passive construction, which is a different and more advanced transformation."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence ('had already been introduced') is already in the past perfect passive in English, so the learner is not being asked to perform a present-to-past tense shift — the core mechanic of the target grammar point. The exercise therefore fails to expose the common learner error of keeping the present tense after a past-tense reporting verb."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The pluperfect passive ('había sido presentado') is above B1 scope; B1 learners are expected to handle the imperfect in reported speech, not the pluperfect passive."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Exercise should be redesigned with a source sentence whose embedded clause is in the present tense (e.g., 'She said she was tired' → 'Dijo que estaba cansada') to properly target the present-to-past shift at B1."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "presentado",
+      "createdAt": "2026-07-07T05:09:30.775956"
+    },
+    {
+      "id": "f5e3ce89-88c3-5b95-92bd-64f96db9910c",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch concern: The target grammar point is 'Reported speech (present-to-past)', specifically the shift from present indicative to imperfect indicative (e.g., 'tiene' → 'tenía') or reported commands with que + present subjunctive. However, the reference translation 'Dijo que la familia iba a adoptar un niño' uses 'ir a + infinitive' in the imperfect ('iba a adoptar'), which is a periphrastic future construction shifted to the imperfect. This does not cleanly illustrate the core present-to-past tense shift (e.g., present indicative → imperfect indicative) that defines this grammar point. A learner could produce this sentence by simply knowing 'ir a + infinitive' in the imperfect without engaging with the present-to-past reported speech rule. The exercise would be more on-point with a sentence like 'She said the family was tired' → 'Dijo que la familia estaba cansada', where the present-to-imperfect shift is unambiguous."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence 'was going to adopt' is already in the past in English, so the tense shift is less salient to the learner — the English already signals past tense, reducing the pedagogical challenge of recognizing that a present-tense reporting context requires a tense shift in Spanish."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "adoptar",
+      "createdAt": "2026-07-07T05:09:30.936701"
+    },
+    {
+      "id": "f2e3c9d0-09e0-595a-93bd-6696f10f6a7f",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires shifting a present-tense verb in the original to the imperfect (e.g., 'tiene' → 'tenía') or a reported command with que + present subjunctive. The reference translation 'Me dijo que había roto su teléfono' uses the pluperfect (había roto), which reflects a past-perfect backshift from a simple past ('she broke/has broken'), not a present-to-past shift. This tests a different backshift rule (preterite/perfect → pluperfect) rather than the targeted present → imperfect shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Level match concern: the pluperfect (pluscuamperfecto: había roto) is listed in the B1 grammar scope, so it is not strictly above level, but the exercise tests a backshift pattern (past → pluperfect) that is not the declared grammar point. A sentence like 'She told me she was tired' → 'Me dijo que estaba cansada' would correctly target present-to-past (imperfect) backshift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence 'she had broken her phone' is already in the past perfect in English, making it ambiguous whether the learner is being asked to apply reported-speech backshift at all — the English already shows the shifted form, so the exercise may not expose the common learner error of keeping the present tense after a past reporting verb."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "rompí",
+      "createdAt": "2026-07-07T05:09:30.944825"
+    },
+    {
+      "id": "fce3d98e-108b-5bf8-89bd-5674e5f14055",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "level-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Reference translation uses imperfect subjunctive (abrieran), which is a B2-level construction. The grammar point spec targets present-to-past shift with que + present subjunctive for reported commands (B1 scope), e.g. 'dijo que abran/abráis'. The imperfect subjunctive is not listed in the B1 grammar scope and is typically introduced at B2."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: multiple structurally different correct translations exist at B1. A learner could correctly write 'El profesor les dijo a los estudiantes que abrieran sus libros' (imperfect subjunctive, B2) OR 'El profesor les dijo a los estudiantes que abrieran' is the only B2 form; at B1 the expected form would be present subjunctive 'que abran', but the reference answer uses imperfect subjunctive — creating a mismatch between the declared grammar point and the reference answer. This ambiguity between the B1-expected form and the B2 reference form is a structural problem."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation 'abrieran' (imperfect subjunctive) does not align with the grammar point description, which specifies reported commands with que + present subjunctive. The positive example given is 'dice que hagamos los deberes' (present subjunctive). A past-tense reporting verb (dijo) triggering imperfect subjunctive in the subordinate clause is a sequence-of-tenses rule that belongs to B2, not B1."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The instruction says 'paying attention to how the reported command is expressed' — this is acceptable (names the category, not the outcome), so contextSpoilsAnswer remains false."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "abran",
+      "createdAt": "2026-07-07T05:09:31.132499"
+    },
+    {
+      "id": "a2670bab-1d3e-58bb-ba21-8d47de139702",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.72,
+      "flaggedReasons": [
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: the reported clause admits two structurally different but equally correct verb forms. 'dijo que el gol no estaba marcado correctamente' (imperfect passive) and 'dijo que el gol no había sido marcado correctamente' (pluperfect passive) are both grammatically valid reported-speech shifts from a present/perfect original. Additionally, 'dijo que el gol no fue marcado correctamente' (preterite passive) is defensible if the original is read as a simple past. The reference translation does not enumerate acceptable alternatives, making this ambiguous for a translation exercise."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation uses 'estaba marcado' (imperfect + past participle as adjectival passive), which is correct but not the only valid shift; 'había sido marcado' is equally standard reported-speech backshift. acceptableAnswers should enumerate at least these two variants."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Minor note: 'árbitro' is solid B1 sports vocabulary and appropriate for the level."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "marcado",
+      "createdAt": "2026-07-08T04:28:23.042044"
+    },
+    {
+      "id": "a3670d3e-99e8-5f6c-b721-88705cf6f931",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The source sentence uses 'her beard' — assigning a beard to a female-pronoun referent is unusual and may confuse learners, distracting them from the grammar target (reported speech tense shift) with a lexical/pragmatic puzzle. While not a cultural stereotype per se, it is an odd sentence that could cause unnecessary confusion."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The possessive 'su' in the reference translation is ambiguous in Spanish (could refer to his/her/your beard), though this is a surface-level issue inherent to Spanish and not a structural ambiguity in the reported-speech construction itself."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence is otherwise a clean present-to-past shift (told → dijo, is → era), but the distracting content may reduce pedagogical effectiveness."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "bart",
+      "createdAt": "2026-07-08T04:28:23.224728"
+    },
+    {
+      "id": "bd3ec0d4-b277-58c2-8528-c74e9f8b655f",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch concern: The target grammar point is 'Reported speech (present-to-past)' — specifically, the backshift of a present-tense verb to imperfect under a past-tense reporting verb (e.g. 'dijo que tenía sueño'), or reported commands with que + present subjunctive. In this sentence, 'adónde iba' is an indirect question (reported interrogative), not an indirect statement or reported command. The backshift here (going → iba) is incidental to the indirect question structure, which belongs more squarely to 'Indirect questions' (es-b1-indirect-questions). The exercise does not cleanly isolate the present-to-past backshift in a declarative reported clause or a reported command."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The 'no lo entendí' clause adds a second focal point (direct object pronoun 'lo' with entender) that may distract from the reported speech element."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The reference translation 'Me dijo adónde iba' is correct and natural, but the grammar point being tested is ambiguous — a learner could produce 'Me dijo adónde fue' (preterite) or 'Me dijo adónde estaba yendo' and the exercise instructions do not clarify which backshift is expected, though 'iba' (imperfect) is clearly the best answer."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Surface variation acceptable: 'Me contó adónde iba' or 'Me dijo a dónde iba' are equally valid alternatives that should be noted as acceptable."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "adonde",
+      "createdAt": "2026-07-08T04:28:23.603326"
+    },
+    {
+      "id": "fc9760fd-75cc-5045-9e81-839968acb8cc",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'El banco pidió que enviáramos…'). The reference translation uses a PRESENT-tense reporting verb ('pide') with a present subjunctive reported clause ('que enviemos'). This is a reported command with a present-zone reporting verb — it tests 'que + present subjunctive for reported commands' but does NOT test the present-to-past shift that is the declared grammar point. The exercise would be on-target if the reporting verb were past ('pidió', 'ha pedido' would still be present-zone, so 'pidió' is needed) and the reported clause shifted to imperfect subjunctive ('que enviáramos')."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers list correctly captures the object-pronoun variation ('nos pide' vs. 'pide'), which is good practice, but the core grammar point is still not exercised."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sentence is otherwise well-formed, culturally neutral, and at an appropriate B1 vocabulary level — salvageable with a tense change to the reporting verb."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.783524"
+    },
+    {
+      "id": "fa975dd7-7806-5bcf-a081-86d36ae5f46e",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'dijo que tenía', 'pidió que reiniciáramos'). This exercise uses a PRESENT-tense reporting verb ('pide que reiniciemos'), which is a present-zone reporting construction — it tests reported commands with que + present subjunctive, but NOT the present-to-past shift that is the declared grammar point. No tense backshift occurs here at all."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The 'antes de que empiece/comience' subordinate clause tests subjunctive in adverbial temporal clauses (a separate B1 grammar point), adding complexity that may distract from the intended focus."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence is otherwise well-formed, culturally neutral, and level-appropriate for B1; it could be repurposed for a 'reported commands with present-zone verb' cell or rewritten with a past reporting verb (e.g. 'El departamento de informática nos pidió que reiniciáramos los ordenadores...') to hit the declared grammar point."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.979512"
+    },
+    {
+      "id": "f59755f8-fb5c-551e-9b81-7ec2e7901afb",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause (e.g. 'dijo que tenía', 'pidió que visitáramos'). This sentence uses 'pide' (present indicative) as the reporting verb, so NO tense shift occurs — the subjunctive 'visitemos' is simply the standard present subjunctive after a volitional verb in the present tense. This tests 'que + present subjunctive after a volitional verb' (a B1 subjunctive point), not the present-to-past reported-speech shift. The grammar-point description does mention 'Dice que te sientes' (present-zone reporting verb, no shift) as a positive example, but the core pedagogical target is the PAST-tense shift; a present-tense reporting verb with no shift does not expose the key learner errors listed (keeping present after past verb, over-applying shift after perfect, etc.)."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable-answers pair ('pide que' vs 'nos pide que') is a minor pronoun-placement variant, not a structurally different rendering — both are essentially the same construction. This is fine but adds little coverage."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider revising to use a past-tense reporting verb (e.g. 'Mi abuela pidió que la visitáramos todos los domingos.') to genuinely target the present-to-past backshift."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.786476"
+    },
+    {
+      "id": "f9975c44-f6e9-5e0a-9f81-8536ec02923f",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The grammar point targets reported speech with present-to-past backshift (e.g. 'dijo que tenía', 'pensé que estabas'). The reference answer uses 'pide' (present tense reporting verb), which requires NO backshift — the subordinate clause correctly stays in present subjunctive ('recojamos'). This tests reported commands with a PRESENT-zone reporting verb, not the present-to-past shift that is the declared target. The present-to-past shift is entirely absent from this exercise."
+        },
+        {
+          "code": "validator-note",
+          "detail": "ambiguous: The source 'is asking us not to pick' can be rendered with at least two structurally different Spanish constructions: (1) the reference 'nos pide que no recojamos' (reported command with subjunctive) and (2) 'nos está pidiendo que no recojamos' (progressive periphrasis, estar + gerundio, equally natural for the English present progressive). No acceptableAnswers are declared to cover the progressive alternant. Additionally, 'guardabosques' could be rendered 'guardaparques' in many Latin American varieties — a lexical alternant that should be listed."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise would be a better fit for a cell targeting reported commands with present-zone reporting verbs (pedir/decir que + subjunctive) rather than the present-to-past backshift cell. Consider revising the source to use a past-tense reporting verb (e.g. 'The park ranger asked us not to pick…' → 'El guardabosques nos pidió que no recogiéramos…') to hit the declared grammar point, though that would require imperfect subjunctive which is above B1 scope — or use a simpler reported statement with a past reporting verb and indicative backshift."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.980737"
+    },
+    {
+      "id": "f04161d7-42b4-5883-a0e4-9caf5c88678a",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause (e.g. 'dijo que tenía…'). The reference translation uses 'ha dicho' (pretérito perfecto), which counts as a PRESENT-ZONE reporting verb. Per the grammar-point description, the perfect counts as present and takes NO backshift — 'ha dicho que la calefacción está rota' is correct Spanish but exercises the NON-backshift rule, the opposite of what this cell targets. The exercise therefore fails to expose the key learner error (keeping present after a past reporting verb) and instead reinforces the present-zone case."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers 'ha comentado' and 'ha avisado de que' also use present-zone (perfect) reporting verbs, so they share the same mismatch."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To target the grammar point correctly, the source sentence should use a simple past reporting verb (e.g. 'My sister told me that the heating was broken') so that learners must produce 'dijo/comentó que la calefacción estaba rota', demonstrating the obligatory present-to-past backshift."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.172255"
+    },
+    {
+      "id": "ee415eb1-3c08-55e5-a2e4-9fe95ec1a32c",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the reporting verb is 'ha avisado/ha advertido' (pretérito perfecto), which counts as a present-zone verb. Under the grammar point's own description, a present-zone reporting verb takes NO tense shift — 'Juan ha dicho que viene' is the canonical example. The reported clause therefore correctly keeps the present indicative ('necesita'), which is what the reference translation does. This means the exercise does NOT test the present-to-past shift that is the core of es-b1-reported-speech; it tests the complementary rule (no shift after a present-zone verb). A learner who knows only the shift rule would produce the wrong answer ('necesitara'/'necesitaba'), and a learner who produces the correct answer ('necesita') is demonstrating the ABSENCE of the shift. The exercise is thus mis-targeted for this grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable-answers list is thorough and well-constructed, covering médico/doctor and avisado/advertido and de que/que variation — good practice for a translation item."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To fix: replace the reporting verb with a simple past (e.g. 'El médico nos avisó de que el paciente necesitaba descanso.') so the present-to-past shift is actually required and tested."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.36016"
+    },
+    {
+      "id": "fb975f6a-f4b0-5280-9d81-81fce9c9569d",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'Dijo que tenía sueño'). This exercise uses a PRESENT-tense reporting verb ('pide') with a present subjunctive reported clause ('que mostremos'), which tests reported commands with a present-zone reporting verb — a related but distinct construction. No tense backshift occurs here, so the exercise does not expose the key learner error (keeping present after a past reporting verb). It would better target 'reported commands with present subjunctive after a present-tense verb', not the present-to-past shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise is a reasonable B1 translation task and the reference answer is grammatically correct, but it misses the declared grammar point. A past-tense reporting verb (e.g. 'El conductor nos pidió que mostráramos los billetes') would be needed to target the present-to-past shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Multiple acceptable answers are well-enumerated, so ambiguity is not a concern."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.979189"
+    },
+    {
+      "id": "f0974e19-8324-5581-9281-703d5b555300",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'Dijo que tenía sueño'). This sentence uses a PRESENT-tense reporting verb ('pide') with a present subjunctive reported clause ('comprobemos'). That construction — a present-zone reporting verb with que + present subjunctive for a reported command — is described in the grammar-point notes as a positive example ('El profesor dice que hagamos los deberes'), but the core pedagogical target of this cell is the PAST-to-imperfect shift. The exercise does not expose or test that shift at all; a learner could produce the correct answer with no knowledge of present-to-past backshift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise tests 'reported command with present-tense reporting verb + que + present subjunctive', which is a related but distinct sub-construction. It would be on-target for a 'reported speech (commands/present zone)' cell but misses the defining feature of the present-to-past shift cell."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers list is thorough (gender variants of 'editor/editora', optional 'nos', 'comprobar'/'verificar' alternants), which is a positive quality signal, but does not rescue the grammar-point mismatch."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Vocabulary ('datos', 'comprobar', 'verificar', 'publicar', 'artículo') is appropriate for B1 and the sentence is well-formed and natural."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:37.981423"
+    },
+    {
+      "id": "ef974c86-0207-57bc-9181-6ea0dc71f0d1",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'dijo que tenía…'). The reference translation uses 'ha anunciado' — a present-perfect (pretérito perfecto) reporting verb — which counts as a PRESENT-ZONE verb. Under the grammar point's own description, the perfect does NOT trigger backshift, so the reported clause correctly stays in the present indicative ('juega'). This means the exercise tests the NON-backshift case (present-zone reporting verb → no shift), not the backshift case (past reporting verb → imperfect). While the non-backshift rule is mentioned in the grammar-point description as a contrast case, the exercise does not expose the core learner error (keeping present after a past verb) and does not require the learner to produce the imperfect. It therefore fails to target the primary skill the cell is designed to build."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise would be more valuable if the reporting verb were in the preterite or imperfect (e.g. 'El entrenador anunció que el equipo jugaba en casa este sábado'), forcing the learner to apply the present-to-past shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers list only varies the reporting verb lexeme (anunció → comunicó → dijo) but all share the same structure; this is fine for a translation exercise but does not add structural diversity."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:37.98554"
+    },
+    {
+      "id": "ef416044-c197-5abe-9fe4-9b12dda5055b",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.62,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'Dijo que tenía sueño'). This exercise uses a PRESENT-tense reporting verb ('pide'), so no tense shift occurs. The construction tested — reported command with present-tense 'pide que + present subjunctive' — is a valid reported-speech construction, but it belongs to the present-zone reporting verb pattern (no shift), not the present-to-past shift that defines this grammar point. The grammar-point description explicitly contrasts present-zone vs. past-zone reporting verbs; this draft exercises only the former."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise does test reported commands with que + present subjunctive, which is mentioned in the grammar-point description, but the defining and targeted feature of 'present-to-past' is the obligatory backshift after a past reporting verb — absent here."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Acceptable answers are well-enumerated (chef/cocinero and añadir/agregar variants), so no ambiguity concern."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sentence is otherwise well-formed, culturally neutral, and at an appropriate B1 vocabulary level."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.171357"
+    },
+    {
+      "id": "f24164fd-407b-5cf9-9ee4-99755a4f2be8",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the reporting verb is 'ha dicho' (pretérito perfecto), which counts as a present-zone verb under the grammar point description. Consequently, NO tense shift is required — the reported clause correctly keeps the present indicative 'sale'. This tests the NO-SHIFT case (perfect = present zone), not the present-to-past shift that is the core of es-b1-reported-speech. The exercise does not expose the key learner error of backshifting after a past-tense reporting verb; it instead tests the complementary rule (no shift after the perfect). While this is mentioned in the grammar point description as a positive example ('Juan ha dicho que viene'), the exercise's pedagogical value for drilling present-to-past shift is minimal — it could even reinforce the wrong habit if learners generalise 'ha dicho → sale' to 'dijo → sale'."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptableAnswers list varies only the gender of 'agente' and the reporting verb (ha dicho / ha comentado / ha avisado) — all structurally identical and all present-zone reporters. No structurally different rendering is offered. This is fine for ambiguity purposes but underscores that the exercise is entirely in the no-shift zone."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Recommendation: replace the reporting verb with a simple preterite (e.g. 'El agente de viajes nos dijo que el vuelo salía al mediodía.') to genuinely drill the present-to-past shift and expose the common learner error of keeping 'sale' after 'dijo'."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.170975"
+    },
+    {
+      "id": "eb4159f8-bd25-53aa-a3e4-a186e2177c9f",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'Dijo que tenía sueño'). This exercise uses a PRESENT-tense reporting verb ('pide'), so no tense shift occurs. The construction tested — reported command with que + present subjunctive after a present-tense verb — is a valid sub-construction of reported speech, but the cell is specifically configured for the present-to-past shift. A present-zone reporting verb explicitly does NOT trigger the shift, making this exercise orthogonal to the declared grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise does test reported commands with que + present subjunctive, which is adjacent to the grammar point, but the defining feature of this cell (present→past backshift under a past reporting verb) is entirely absent."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To fix: change the reporting verb to a past tense (e.g. 'El dependiente nos pidió que esperáramos fuera.') so the imperfect subjunctive backshift is elicited, or reclassify this exercise under a reported-commands/subjunctive cell."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.361909"
+    },
+    {
+      "id": "eb3f1b61-e6c4-535f-abec-331340da143a",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The target grammar point is 'Reported speech (present-to-past)' — specifically, shifting a present-tense reported clause to the imperfect after a past-tense reporting verb (e.g. 'dijo que tenía'). This sentence uses a PRESENT-tense reporting verb ('pide'), so no tense shift occurs. The subjunctive clause 'que firmemos' is triggered by a volitional/request verb in the present, which is a standard present-subjunctive-in-noun-clause construction (B1 subjunctive), not reported speech with backshift. The grammar point description does mention 'reported commands with que + present subjunctive (Dice que te sientes)', but that example also uses a present-tense reporting verb — the defining feature of the target point is the PAST-tense reporting verb triggering a shift. A sentence with 'pide que' tests present subjunctive after verbs of volition, not the present-to-past reported speech shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "ambiguous: The English source 'The bank asks that we sign the documents before Friday' can be rendered with at least two structurally different Spanish constructions: (1) 'El banco pide que firmemos los documentos antes del viernes.' (subjunctive noun clause) and (2) 'El banco nos pide que firmemos los documentos antes del viernes.' (with indirect object pronoun 'nos', which is natural and arguably more idiomatic). Additionally, 'solicita que firmemos' is equally natural. No acceptableAnswers are declared to cover these alternants."
+        },
+        {
+          "code": "validator-note",
+          "detail": "levelMatch note: The present subjunctive after a volitional verb is within B1 scope, so levelMatch is true, but the exercise does not hit the configured grammar point."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.551234"
+    },
+    {
+      "id": "e83f16a8-636e-5a10-a8ec-2e3cbfbd7669",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause from present to imperfect (e.g. 'dijo que tenía…'). The reference translation uses 'ha avisado' (present perfect / pretérito perfecto), which is a PRESENT-ZONE reporting verb. Per the grammar-point description, the perfect counts as a present and takes NO backshift — the reported clause correctly stays in the present indicative ('es peligroso'). This sentence therefore illustrates the NON-backshift case (present-zone reporting verb), not the present-to-past shift the cell is designed to drill. It would be on-target for a 'present-zone reporting verb' contrast exercise, but it does not expose the key learner error of failing to backshift after a past-tense reporting verb."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Vocabulary note: 'guardabosques' (ranger/forest warden) is a somewhat specialised lexeme that may be at the upper edge of B1 productive vocabulary, though it is comprehensible in context and does not alone disqualify the item."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Acceptable answers are well-enumerated (avisado/advertido × que/de que), which is good practice."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.553216"
+    },
+    {
+      "id": "f141636a-bf5e-5f34-9de4-97d8db6bc9b9",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch concern: The grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'dijo que tenía'). This exercise uses a PRESENT-tense reporting verb ('pide que saquemos'), which is a reported command with present subjunctive — a valid construction under the broader reported-speech family, but the grammar-point description specifically targets the present-to-past shift under a past reporting verb. The positive examples include 'El profesor dice que hagamos los deberes' (present reporting verb + subjunctive), which does match this pattern, so there is a case for inclusion; however, the cell's declared focus is the tense-shift mechanism (present→imperfect after a past verb), and this exercise does not exercise that shift at all. A learner could produce the correct answer without ever engaging with backshift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise tests reported commands with present-tense 'pide que + subjunctive', which is closer to the 'reported command' sub-point than the 'present-to-past' shift sub-point. The grammar-point description does include 'Dice que te sientes' as a positive example, so this construction is within scope, but the cell name 'present-to-past' and the common learner errors listed all centre on the tense-shift after a past reporting verb — this exercise does not expose any of those errors."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The vocabulary ('zonas indicadas', 'guía turístico') is solidly B1 and the subjunctive 'saquemos/hagamos' is appropriate. The acceptable-answers list is thorough and covers gender variants, 'hacer fotos' vs 'sacar fotos', and presence/absence of 'nos'. Quality is reasonable but the grammar-point targeting is off-centre for the declared cell focus."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.170794"
+    },
+    {
+      "id": "ed415d1e-baec-5820-a1e4-9e4cdfde40fd",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.6,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'Dijo que tenía sueño'). This exercise uses a PRESENT-tense reporting verb ('pide'/'ha pedido') with a reported command in the present subjunctive ('que enviemos'). That construction — a present-zone reporting verb + que + present subjunctive for a reported command — is a different sub-point (present-tense reported commands, no tense shift required). The grammar-point description explicitly contrasts present-zone vs. past-zone reporting verbs and states that the shift is required only after a past-tense reporting verb. None of the acceptable answers use a past-tense reporting verb that triggers the present-to-past shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers include 'ha pedido' (present perfect), which the grammar-point description correctly classifies as a present-zone verb (no shift), but the exercise still does not test the past-to-imperfect shift that defines this grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To target 'Reported speech (present-to-past)' properly, the source sentence should use a past-tense reporting verb (e.g. 'The manager asked us to send the report before Friday') so that the learner must produce 'El jefe nos pidió que enviáramos el informe antes del viernes' (with the imperfect subjunctive after a preterite reporting verb) — or at minimum a construction where the present-to-past shift is the key decision point."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.178924"
+    },
+    {
+      "id": "ec415b8b-3e42-516f-a4e4-a32360fadece",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch failure: The target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause from present to imperfect (e.g. 'dijo que tenía'). The reference translation uses 'ha avisado' (present perfect / pretérito perfecto), which is a PRESENT-ZONE reporting verb. Under the grammar-point description, the perfect counts as a present and takes NO backshift — 'ha avisado que hay' is the correct form and demonstrates the NON-shift case. This exercises the exception rule (no shift after perfect), not the core present-to-past shift. The exercise therefore does not test the primary target construction."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise could be repurposed to illustrate the present-perfect exception, but as drafted it is mis-targeted for the cell 'Reported speech (present-to-past)'. A past-tense reporting verb (e.g. 'avisó que había una tormenta') would be needed to hit the target point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Surface variation is well-handled by the acceptableAnswers list (avisado/advertido, de que/que, app/aplicación), so ambiguity is not an issue."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.362365"
+    },
+    {
+      "id": "e94156d2-c843-5d5c-95e4-8af0d286db31",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.75,
+      "flaggedReasons": [
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch concern: The grammar point is 'Reported speech (present-to-past)', which targets the backshift of a present-tense clause to imperfect under a past-tense reporting verb (e.g. 'dijo que tenía'). This sentence uses a PRESENT-tense reporting verb ('pide que') with a reported command (que + present subjunctive). While 'que + present subjunctive' for reported commands is mentioned in the grammar-point description, the source sentence 'The librarian is asking us to return…' uses a present-tense reporting verb — there is NO past-to-imperfect backshift involved at all. The core pedagogical target (present→imperfect shift after a past reporting verb) is entirely absent. The exercise tests reported commands with a present-zone verb, which is a peripheral sub-case of the point and does not expose the primary learner error (keeping present after a past verb). A past-tense reporting verb (e.g. 'La bibliotecaria nos pidió que devolviéramos…') would be needed to test the declared grammar point properly."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers correctly enumerate gender variants (bibliotecaria/bibliotecario) and the optional indirect object pronoun (nos/omitted), which cures surface-variation ambiguity well."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider revising to use a past-tense reporting verb to target the present-to-past backshift that is the core of this grammar point."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.363947"
+    },
+    {
+      "id": "ea3f19ce-65a8-559a-aaec-3176c1f6b20b",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-TENSE reporting verb triggering backshift of the reported clause from present to imperfect (e.g. 'dijo que tenía sueño'). The reference translation uses 'ha avisado' (present perfect / pretérito perfecto), which is a PRESENT-ZONE reporting verb. Under the grammar point's own description, the perfect counts as a present and takes NO backshift — so the reported clause correctly stays in the present ('llega tarde'). This exercise therefore tests the NO-SHIFT case (present-zone reporting verb), not the present-to-past shift that is the declared target. It would be a good exercise for illustrating the contrast, but as a standalone item it does not exercise the backshift rule learners need to practise."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise would be more useful if the reporting verb were in the preterite or imperfect (e.g. 'El conductor avisó que el próximo autobús llegaba tarde'), which would force the learner to apply the present-to-past shift."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptable answers list is thorough and well-constructed (covering avisado/advertido, de que/que, próximo/siguiente variants), which is a positive quality signal — but the core grammar-point targeting issue overrides this."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "perfect-report-present-retained",
+      "createdAt": "2026-08-18T04:07:38.552195"
+    },
+    {
+      "id": "ef3f21ad-eb37-5a73-a7ec-2c9f454c8b7e",
+      "reviewStatus": "flagged",
+      "qualityScore": 0.55,
+      "flaggedReasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar point mismatch: the target grammar point is 'Reported speech (present-to-past)', which requires a PAST-tense reporting verb triggering backshift of the reported clause to the imperfect (e.g. 'dijo que tenía', 'pidió que comprobáramos'). This exercise uses a PRESENT-tense reporting verb ('pide que comprobemos'), which tests the reported-command construction with a present-zone reporting verb — no tense shift occurs. That is a different sub-point (present-zone reporting verb + subjunctive for commands) and does not exercise the present-to-past shift that is the declared target."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The acceptableAnswers list handles gender variation (editor/editora), the indirect object clitic (nos), and synonym variation (comprobar/verificar) — coverage is thorough for what the exercise does test, but the exercise itself is off-target for the declared grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sentence is otherwise well-formed, culturally neutral, and at an appropriate B1 vocabulary level; could be repurposed for a 'reported commands with present-zone verb' cell."
+        }
+      ],
+      "demotionReason": null,
+      "seedWord": "present-report-command-subjunctive",
+      "createdAt": "2026-08-18T04:07:38.564256"
+    }
+  ],
+  "purpose": "Pre-apply snapshot for the `revalidate:promote` pass on es-b1-reported-speech translations after the point was renamed away from \"Reported speech (present-to-past)\". Every flagged translation row of the point at capture time, with the state a rollback must restore. `revalidate:promote` writes no rollback artifact of its own, and packages/db/backfill-runs/ is gitignored, so this file is committed instead.",
+  "command": "DATABASE_URL=<prod> ANTHROPIC_API_KEY=<key> npx tsx scripts/revalidate-promote-pool.ts --type translation --grammar-point es-b1-reported-speech --apply",
+  "rollback": "UPDATE exercises SET review_status = 'flagged', flagged_reasons = <flaggedReasons>, quality_score = <qualityScore> WHERE id = <id>;  -- per row below whose review_status is now 'manual-approved'",
+  "dryRun": {
+    "oldName": {
+      "name": "Reported speech (present-to-past)",
+      "scanned": 40,
+      "promote": 15,
+      "noChange": 25
+    },
+    "newName": {
+      "name": "Reported speech: backshift, no-shift, and reported commands",
+      "scanned": 40,
+      "promote": 28,
+      "noChange": 12
+    },
+    "note": "Paired arms over the identical 40 rows; the rename accounts for +13."
+  },
+  "applied": {
+    "at": "2026-08-18",
+    "scanned": 40,
+    "promoted": 24,
+    "noChange": 16,
+    "costUsd": 0.4515,
+    "promotedIds": [
+      "84dc60e1-0dec-50b7-85b5-cb5b67990d7a",
+      "e83f16a8-636e-5a10-a8ec-2e3cbfbd7669",
+      "e94156d2-c843-5d5c-95e4-8af0d286db31",
+      "ea3f19ce-65a8-559a-aaec-3176c1f6b20b",
+      "eb3f1b61-e6c4-535f-abec-331340da143a",
+      "eb4159f8-bd25-53aa-a3e4-a186e2177c9f",
+      "ec415b8b-3e42-516f-a4e4-a32360fadece",
+      "ed415d1e-baec-5820-a1e4-9e4cdfde40fd",
+      "ee415eb1-3c08-55e5-a2e4-9fe95ec1a32c",
+      "ef3f21ad-eb37-5a73-a7ec-2c9f454c8b7e",
+      "ef416044-c197-5abe-9fe4-9b12dda5055b",
+      "ef974c86-0207-57bc-9181-6ea0dc71f0d1",
+      "f04161d7-42b4-5883-a0e4-9caf5c88678a",
+      "f0974e19-8324-5581-9281-703d5b555300",
+      "f141636a-bf5e-5f34-9de4-97d8db6bc9b9",
+      "f1d4bdb3-fb23-5c8b-beb8-cb47a2dcfc0a",
+      "f24164fd-407b-5cf9-9ee4-99755a4f2be8",
+      "f3d6ff70-cfbf-58f0-94bb-2b7c3d6eb189",
+      "f5e3ce89-88c3-5b95-92bd-64f96db9910c",
+      "f9975c44-f6e9-5e0a-9f81-8536ec02923f",
+      "fa975dd7-7806-5bcf-a081-86d36ae5f46e",
+      "fb975f6a-f4b0-5280-9d81-81fce9c9569d",
+      "fce3d98e-108b-5bf8-89bd-5674e5f14055",
+      "fed710c1-5bf9-5067-8fbb-236bb5a660d2"
+    ],
+    "note": "The apply promoted 24, the immediately preceding dry-run 28, and the old-name baseline 15 — the validator is not deterministic across runs, so treat the arm gap (+9 to +13) as the effect size, not any single pair. Only the ids listed here were written; every other row in `rows` is untouched and needs no rollback.",
+    "poolAfter": {
+      "translation": {
+        "autoApproved": 30,
+        "manualApproved": 24,
+        "flagged": 16,
+        "demoted": 25
+      },
+      "variantMix": {
+        "past-report-imperfect-backshift": 25,
+        "present-report-command-subjunctive": 15,
+        "perfect-report-present-retained": 8
+      },
+      "targetQuotaAt50": {
+        "past-report-imperfect-backshift": 25,
+        "present-report-command-subjunctive": 17,
+        "perfect-report-present-retained": 8
+      }
+    },
+    "clozeNotApplied": "The cloze arm dry-ran 11 promotable of 35 — at or below the 15/40 re-score baseline the translation arms established, so the rename does little there. Cloze losses are the person-indeterminacy class (2026-08-18 analysis rec #2), not the name, and promoting on a re-score with no identified fixed bug is what the CLI's --grammar-point guard exists to prevent. Left flagged."
+  }
+}
