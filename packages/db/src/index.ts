@@ -56,6 +56,14 @@ export type {
 export { COLLAPSE_DISMISSALS, findDismissal, isDismissed } from './curriculum/collapse-dismissals';
 export type { CollapseDismissal, CollapseSignal } from './curriculum/collapse-dismissals';
 
+// Construction-dismissals ledger (dev-time metadata; see the 2026-08-18 design doc).
+export {
+  CONSTRUCTION_DISMISSALS,
+  findConstructionDismissal,
+  dismissedConstructionIds,
+} from './curriculum/construction-dismissals';
+export type { ConstructionDismissal } from './curriculum/construction-dismissals';
+
 // Helpers that Phase 1 deliberately left internal-only. Phase 2 promotes them
 // because they cross the package boundary: deterministicUuid is the hash
 // behind exerciseDraftId in packages/ai/src/generate.ts, and assertValidCellKey

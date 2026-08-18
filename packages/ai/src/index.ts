@@ -507,3 +507,38 @@ export type {
   ClassifierAssignment,
   ClassifierConfidence,
 } from "./variant-seed-classifier.js";
+
+// ---------------------------------------------------------------------------
+// Construction-coverage audit (2026-08-18 design) — dev-time, not a runtime path
+// ---------------------------------------------------------------------------
+
+export {
+  CONSTRUCTION_COVERAGE_PROMPT_VERSION,
+  CONSTRUCTION_COVERAGE_MODEL,
+  FINDING_MAX_SHARE,
+  JUDGE_HEALTH_MAX_UNRESOLVED_SHARE,
+  DEFAULT_CLASSIFICATION_BATCH_SIZE,
+  CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT,
+  CLASSIFICATION_SYSTEM_PROMPT,
+  PROPOSAL_SYSTEM_PROMPT,
+  pLimit,
+  sampleRowsForCell,
+  analyzeCell,
+  rowSurfaceFor,
+  enumeratePointConstructions,
+  classifyRowBatch,
+  proposeMechanism,
+  parsePointEnumeration,
+  parseRowClassifications,
+  parseMechanismProposal,
+} from './construction-coverage.js';
+
+export type {
+  ClaimedConstruction,
+  PointEnumeration,
+  AuditRow as ConstructionAuditRow,
+  RowClassification,
+  ConstructionCount,
+  CellAnalysis,
+  MechanismProposal,
+} from './construction-coverage.js';

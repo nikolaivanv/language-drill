@@ -21,6 +21,7 @@
     "audit:collapse": "tsx scripts/audit-collapse.ts",
     "eval:validator": "tsx scripts/eval-validator-run.ts",
     "audit:gloss": "tsx scripts/audit-gloss.ts",
+    "audit:constructions": "tsx scripts/audit-constructions.ts",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",

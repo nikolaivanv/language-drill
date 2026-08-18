@@ -454,3 +454,10 @@ export function assertCurriculumInvariants(
 
 export { COLLAPSE_DISMISSALS, findDismissal, isDismissed } from './collapse-dismissals';
 export type { CollapseDismissal, CollapseSignal } from './collapse-dismissals';
+
+export {
+  CONSTRUCTION_DISMISSALS,
+  findConstructionDismissal,
+  dismissedConstructionIds,
+} from './construction-dismissals';
+export type { ConstructionDismissal } from './construction-dismissals';

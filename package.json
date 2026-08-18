@@ -40,7 +40,8 @@
     "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen",
     "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample",
     "audit:collapse": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:collapse",
-    "audit:gloss": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:gloss"
+    "audit:gloss": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:gloss",
+    "audit:constructions": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:constructions"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
