@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ExerciseType } from '@language-drill/shared';
 import {
   parseAuditConstructionsArgs,
@@ -7,8 +9,12 @@ import {
   estimateCallCostUsd,
   rankFindings,
   createBudget,
+  loadFixtureCases,
+  scoreFixtureCase,
+  FIXTURE_DRAWS_PER_CASE,
   type ConstructionAuditReport,
 } from './audit-constructions.js';
+import { CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT } from '../src/index.js';
 
 describe('parseAuditConstructionsArgs', () => {
   it('defaults the knobs to the spec values', () => {
@@ -259,12 +265,6 @@ describe('createBudget', () => {
     expect(budget.total()).toBeCloseTo(4);
   });
 });
-
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT } from '../src/index.js';
-import { loadFixtureCases, scoreFixtureCase, FIXTURE_DRAWS_PER_CASE } from './audit-constructions.js';
-import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_PATH = path.join(SCRIPT_DIR, 'fixtures', 'construction-coverage-cases.json');
