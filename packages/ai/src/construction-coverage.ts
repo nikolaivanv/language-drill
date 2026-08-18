@@ -522,3 +522,117 @@ export async function classifyRowBatch(
     usage: response.usage,
   };
 }
+
+export const PROPOSAL_TOOL_NAME = 'report_mechanism_proposal';
+
+const PROPOSABLE_MECHANISMS = ['construction-variants', 'coverage-spec'] as const;
+
+export type MechanismProposal = {
+  mechanism: (typeof PROPOSABLE_MECHANISMS)[number];
+  /** Paste-ready TypeScript fragment for the curriculum entry. */
+  snippet: string;
+  notes: string;
+};
+
+export const PROPOSAL_SYSTEM_PROMPT = `You author a fix for a grammar point whose exercise pool has been measured as covering only some of the constructions the point teaches.
+
+You are given the point, the constructions it claims, and how many sampled exercises realize each. Produce a paste-ready TypeScript fragment for the curriculum entry.
+
+For \`construction-variants\`, emit a \`constructionVariants\` array. Each entry needs:
+- \`id\` — kebab-case, stable. Reuse the ids you are given; renaming one resets that variant's measured coverage.
+- \`directive\` — strict prompt text naming the sub-construction, with a concrete exemplar. This is injected verbatim into the generation prompt, so it must be an instruction a generator can follow, not a description of the grammar.
+- \`share\` — relative weight. Give the prototypical construction a plurality without letting it own the pool; a share of 3 against three share-1 variants targets 50%.
+
+For \`coverage-spec\`, emit a \`coverageSpec\` fragment with one or two axes and an absolute minimum approved-count floor per value. Floors are absolute counts, not percentages.
+
+Keep the snippet minimal — only the fields being added. A human reviews and commits it.`;
+
+export type ProposalInput = {
+  grammarPoint: GrammarPoint;
+  mechanism: (typeof PROPOSABLE_MECHANISMS)[number];
+  counts: readonly ConstructionCount[];
+  sampled: number;
+};
+
+export function buildProposalUserPrompt(input: ProposalInput): string {
+  const { grammarPoint: gp } = input;
+  const rows = input.counts
+    .map(
+      (c) =>
+        `- ${c.id} (${c.label}) — realized ${c.count}/${input.sampled} sampled` +
+        `${c.mustRepresent ? '' : ' [not load-bearing]'}`,
+    )
+    .join('\n');
+  return `Grammar point: ${gp.name} (${gp.key}, ${gp.language} ${gp.cefrLevel})
+Description: ${gp.description}
+Positive examples: ${gp.examplesPositive.join(' | ')}
+
+Measured coverage:
+${rows}
+
+Recommended mechanism: ${input.mechanism}
+
+Author the fix.`;
+}
+
+export const PROPOSAL_TOOL: Anthropic.Tool = {
+  name: PROPOSAL_TOOL_NAME,
+  description: 'Report a paste-ready curriculum fragment fixing a coverage gap.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      mechanism: { type: 'string', enum: [...PROPOSABLE_MECHANISMS] },
+      snippet: { type: 'string', description: 'Paste-ready TypeScript fragment.' },
+      notes: { type: 'string', description: 'One or two sentences for the reviewer.' },
+    },
+    required: ['mechanism', 'snippet', 'notes'],
+  },
+};
+
+export function parseMechanismProposal(input: unknown): MechanismProposal {
+  if (!isObject(input)) throw new Error('proposal must be an object');
+  const mechanism = input.mechanism;
+  if (
+    typeof mechanism !== 'string' ||
+    !(PROPOSABLE_MECHANISMS as readonly string[]).includes(mechanism)
+  ) {
+    throw new Error(`mechanism '${String(mechanism)}' is not proposable`);
+  }
+  return {
+    mechanism: mechanism as MechanismProposal['mechanism'],
+    snippet: requireNonEmptyString(input.snippet, 'snippet'),
+    notes: requireNonEmptyString(input.notes, 'notes'),
+  };
+}
+
+export async function proposeMechanism(
+  client: Anthropic,
+  input: ProposalInput,
+  signal?: AbortSignal,
+): Promise<{ proposal: MechanismProposal; usage: Anthropic.Usage }> {
+  const response = await client.messages.create(
+    {
+      model: CONSTRUCTION_COVERAGE_MODEL,
+      max_tokens: CONSTRUCTION_COVERAGE_MAX_TOKENS,
+      system: [
+        {
+          type: 'text' as const,
+          text: PROPOSAL_SYSTEM_PROMPT,
+          cache_control: { type: 'ephemeral' as const },
+        },
+      ],
+      messages: [{ role: 'user' as const, content: buildProposalUserPrompt(input) }],
+      tools: [PROPOSAL_TOOL],
+      tool_choice: { type: 'tool' as const, name: PROPOSAL_TOOL_NAME },
+      temperature: CONSTRUCTION_COVERAGE_TEMPERATURE,
+    },
+    { signal },
+  );
+  const toolUse = response.content.find(
+    (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+  );
+  if (!toolUse) {
+    throw new Error(`proposeMechanism: no tool_use block (stop_reason ${response.stop_reason})`);
+  }
+  return { proposal: parseMechanismProposal(toolUse.input), usage: response.usage };
+}

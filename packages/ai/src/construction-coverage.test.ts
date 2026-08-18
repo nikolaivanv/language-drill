@@ -23,6 +23,10 @@ import {
   parseRowClassifications,
   classifyRowBatch,
   DEFAULT_CLASSIFICATION_BATCH_SIZE,
+  PROPOSAL_TOOL_NAME,
+  buildProposalUserPrompt,
+  parseMechanismProposal,
+  proposeMechanism,
 } from './construction-coverage.js';
 
 const rows = Array.from({ length: 50 }, (_, i) => ({ id: `row-${i}` }));
@@ -455,5 +459,76 @@ describe('CLASSIFICATION_SYSTEM_PROMPT', () => {
 
   it('batches at a size that keeps the system block cacheable', () => {
     expect(DEFAULT_CLASSIFICATION_BATCH_SIZE).toBe(20);
+  });
+});
+
+const proposalInput = {
+  grammarPoint: gp,
+  mechanism: 'construction-variants' as const,
+  counts: [
+    { id: 'backshift', label: 'dijo que + imperfect', mustRepresent: true, count: 23, share: 0.96 },
+    { id: 'command', label: 'que + present subjunctive', mustRepresent: true, count: 1, share: 0.04 },
+  ],
+  sampled: 24,
+};
+
+describe('buildProposalUserPrompt', () => {
+  it('shows each construction with its measured realized count', () => {
+    const prompt = buildProposalUserPrompt(proposalInput);
+    expect(prompt).toContain('23');
+    expect(prompt).toContain('1');
+    expect(prompt).toContain('24');
+  });
+});
+
+describe('parseMechanismProposal', () => {
+  it('accepts a construction-variants proposal', () => {
+    const parsed = parseMechanismProposal({
+      mechanism: 'construction-variants',
+      snippet: 'constructionVariants: [...]',
+      notes: 'Split by reporting-verb tense zone.',
+    });
+    expect(parsed.mechanism).toBe('construction-variants');
+    expect(parsed.snippet).toContain('constructionVariants');
+  });
+
+  it('rejects an empty snippet', () => {
+    expect(() =>
+      parseMechanismProposal({ mechanism: 'coverage-spec', snippet: '  ', notes: 'n' }),
+    ).toThrow(/snippet/);
+  });
+
+  it('rejects the none mechanism — there is nothing to propose', () => {
+    expect(() =>
+      parseMechanismProposal({ mechanism: 'none', snippet: 'x', notes: 'n' }),
+    ).toThrow(/mechanism/);
+  });
+});
+
+describe('proposeMechanism', () => {
+  it('forces the proposal tool', async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [
+        {
+          type: 'tool_use',
+          input: {
+            mechanism: 'construction-variants',
+            snippet: 'constructionVariants: [...]',
+            notes: 'n',
+          },
+        },
+      ],
+      usage: { input_tokens: 300, output_tokens: 200 },
+      stop_reason: 'tool_use',
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+
+    const { proposal } = await proposeMechanism(client, proposalInput);
+
+    expect(proposal.snippet).toContain('constructionVariants');
+    expect(create.mock.calls[0][0].tool_choice).toEqual({
+      type: 'tool',
+      name: PROPOSAL_TOOL_NAME,
+    });
   });
 });
