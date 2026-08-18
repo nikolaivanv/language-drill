@@ -12,7 +12,7 @@
  *   pnpm audit:constructions --language ES --cefr B1 --max-cost-usd 2
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
@@ -479,8 +479,86 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
   return out;
 }
 
-async function runCheckFixtureMode(_f: AuditConstructionsFilters): Promise<void> {
-  throw new Error('not implemented');
+// ---------------------------------------------------------------------------
+// --check-fixture — precision/recall gate for enumeration stability.
+// ---------------------------------------------------------------------------
+
+export const FIXTURE_DRAWS_PER_CASE = 3;
+
+export type FixtureCase = {
+  name: string;
+  grammarPointKey: string;
+  grammarPoint: GrammarPoint;
+  expectedMustRepresentCount: number;
+  expectedMechanism: PointEnumeration['mechanism'];
+};
+
+export function loadFixtureCases(fixturePath: string): FixtureCase[] {
+  const parsed: unknown = JSON.parse(readFileSync(fixturePath, 'utf8'));
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    !Array.isArray((parsed as { cases?: unknown }).cases)
+  ) {
+    throw new Error(`fixture ${fixturePath} must be an object with a 'cases' array`);
+  }
+  return (parsed as { cases: FixtureCase[] }).cases;
+}
+
+/** Majority vote across draws. A tie counts as a failure — an unstable judge
+ *  is not a passing judge. */
+export function scoreFixtureCase(
+  draws: readonly number[],
+  expected: number,
+): { majority: number; passed: boolean } {
+  const tally = new Map<number, number>();
+  for (const d of draws) tally.set(d, (tally.get(d) ?? 0) + 1);
+  let majority = draws[0];
+  let best = 0;
+  let tied = false;
+  for (const [value, n] of tally) {
+    if (n > best) {
+      best = n;
+      majority = value;
+      tied = false;
+    } else if (n === best) {
+      tied = true;
+    }
+  }
+  return { majority, passed: !tied && majority === expected };
+}
+
+// `--out` names the REPORT, not the fixture, so it is deliberately not consulted
+// here — overloading it would make `--check-fixture --out x` silently look for a
+// fixture at the report path.
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_FIXTURE_PATH = path.join(SCRIPT_DIR, 'fixtures', 'construction-coverage-cases.json');
+
+async function runCheckFixtureMode(filters: AuditConstructionsFilters): Promise<void> {
+  const cases = loadFixtureCases(DEFAULT_FIXTURE_PATH);
+  const client = createClaudeClient(requireEnv('ANTHROPIC_API_KEY'));
+
+  let passed = 0;
+  for (const c of cases) {
+    const draws: number[] = [];
+    for (let i = 0; i < FIXTURE_DRAWS_PER_CASE; i++) {
+      const { enumeration } = await enumeratePointConstructions(
+        client,
+        c.grammarPoint,
+        undefined,
+        filters.enumerationModel,
+      );
+      draws.push(enumeration.constructions.filter((x) => x.mustRepresent).length);
+    }
+    const score = scoreFixtureCase(draws, c.expectedMustRepresentCount);
+    if (score.passed) passed++;
+    console.log(
+      `${score.passed ? 'PASS' : 'FAIL'}  ${c.name}  draws=[${draws.join(', ')}]  ` +
+        `majority=${score.majority}  expected=${c.expectedMustRepresentCount}`,
+    );
+  }
+  console.log(`\n[audit-constructions] fixture: ${passed}/${cases.length} passed`);
+  if (passed < cases.length) process.exitCode = 1;
 }
 
 async function main(): Promise<void> {

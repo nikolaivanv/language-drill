@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "name": "es-b1-reported-speech-pre-664",
+      "grammarPointKey": "es-b1-reported-speech-snapshot",
+      "note": "Recorded pre-#664 state, verbatim from `git show 2c76509a^:packages/db/src/curriculum/es.ts`. The key is deliberately suffixed so it never resolves against the live curriculum, and so the contamination test compares against a key the prompt cannot contain.",
+      "grammarPoint": {
+        "key": "es-b1-reported-speech-snapshot",
+        "kind": "grammar",
+        "name": "Reported speech (present-to-past)",
+        "description": "Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes).",
+        "cefrLevel": "B1",
+        "language": "ES",
+        "examplesPositive": [
+          "Dijo que tenía mucho sueño.",
+          "El profesor dice que hagamos los deberes."
+        ],
+        "examplesNegative": ["*Dijo que tiene mucho sueño."],
+        "commonErrors": [
+          "Keeping the present tense in the reported clause after a past-tense reporting verb (\"*dijo que tiene sueño\" instead of \"dijo que tenía sueño\").",
+          "Reporting a command with the infinitive instead of que + present subjunctive (\"*dice hacer los deberes\" instead of \"dice que hagamos los deberes\").",
+          "Using the indicative for a reported command instead of switching to the subjunctive (\"*dice que vienes\" instead of \"dice que vengas\" when relaying an order)."
+        ]
+      },
+      "expectedMustRepresentCount": 2,
+      "expectedMechanism": "construction-variants"
+    }
+  ]
+}

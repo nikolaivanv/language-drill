@@ -259,3 +259,44 @@ describe('createBudget', () => {
     expect(budget.total()).toBeCloseTo(4);
   });
 });
+
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT } from '../src/index.js';
+import { loadFixtureCases, scoreFixtureCase, FIXTURE_DRAWS_PER_CASE } from './audit-constructions.js';
+import { fileURLToPath } from 'node:url';
+
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const FIXTURE_PATH = path.join(SCRIPT_DIR, 'fixtures', 'construction-coverage-cases.json');
+
+describe('fixture', () => {
+  it('parses', () => {
+    expect(loadFixtureCases(FIXTURE_PATH).length).toBeGreaterThan(0);
+  });
+
+  // Memory: never build a judge's fixture from its own few-shot examples — the
+  // check would measure memorisation, not judgment. Enforced mechanically so a
+  // later prompt edit that adds an example breaks the build.
+  it('shares no point key with the enumeration prompt examples', () => {
+    for (const c of loadFixtureCases(FIXTURE_PATH)) {
+      expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).not.toContain(c.grammarPointKey);
+    }
+  });
+
+  it('gives every case an expected must-represent count', () => {
+    for (const c of loadFixtureCases(FIXTURE_PATH)) {
+      expect(Number.isInteger(c.expectedMustRepresentCount)).toBe(true);
+    }
+  });
+});
+
+describe('scoreFixtureCase', () => {
+  it('takes the majority across draws', () => {
+    expect(scoreFixtureCase([2, 2, 3], 2)).toEqual({ majority: 2, passed: true });
+    expect(scoreFixtureCase([1, 1, 3], 2)).toEqual({ majority: 1, passed: false });
+  });
+
+  it('uses three draws', () => {
+    expect(FIXTURE_DRAWS_PER_CASE).toBe(3);
+  });
+});
