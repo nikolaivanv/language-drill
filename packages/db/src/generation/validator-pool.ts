@@ -69,6 +69,11 @@ export async function runValidatorPool(opts: {
         drafts[ordinal],
         spec,
         signal,
+        // Same per-ordinal seed the GENERATOR was given. For a
+        // construction-variant cell this is the variant id, and it is what
+        // stops the validator judging a deliberately non-headline draft
+        // against the point's prototype (2026-08-18 asymmetry fix).
+        { seedWord: spec.seedWords?.[ordinal] ?? null },
       );
       results.set(ordinal, validation);
     } catch (err) {

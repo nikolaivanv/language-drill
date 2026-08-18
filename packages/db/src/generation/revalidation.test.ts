@@ -71,6 +71,41 @@ function makeResult(overrides: Partial<ValidationResult>): ValidationResult {
 // ---------------------------------------------------------------------------
 
 describe('reconstructDraftAndSpec', () => {
+  // The seed a re-score needs so a stored construction-variant row is judged
+  // against the sub-construction it was generated for, not the point's
+  // prototype (2026-08-18 information-asymmetry fix).
+  it('returns the stored seedWord so the validator can resolve the variant', () => {
+    const recon = reconstructDraftAndSpec(
+      {
+        ...baseRow,
+        contentJson: { ...baseClozeContent, seedWord: 'perfect-report-present-retained' },
+      },
+      ExerciseType.CLOZE,
+    );
+    expect(recon.ok).toBe(true);
+    if (!recon.ok) return;
+    expect(recon.seedWord).toBe('perfect-report-present-retained');
+  });
+
+  it('returns seedWord null for a legacy row that carries none', () => {
+    const recon = reconstructDraftAndSpec(baseRow, ExerciseType.CLOZE);
+    expect(recon.ok).toBe(true);
+    if (!recon.ok) return;
+    expect(recon.seedWord).toBeNull();
+  });
+
+  it('returns seedWord null for a non-string or empty stored seed', () => {
+    for (const bad of [42, '', null, {}]) {
+      const recon = reconstructDraftAndSpec(
+        { ...baseRow, contentJson: { ...baseClozeContent, seedWord: bad } },
+        ExerciseType.CLOZE,
+      );
+      expect(recon.ok).toBe(true);
+      if (!recon.ok) return;
+      expect(recon.seedWord).toBeNull();
+    }
+  });
+
   it('builds (draft, spec) for a well-formed cloze row', () => {
     const recon = reconstructDraftAndSpec(baseRow, ExerciseType.CLOZE);
     expect(recon.ok).toBe(true);

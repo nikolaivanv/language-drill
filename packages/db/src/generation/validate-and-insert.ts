@@ -348,6 +348,10 @@ export async function validateAndInsertWithRetry(
         currentDraft,
         opts.spec,
         opts.signal,
+        // `seedWord` is this ordinal's generation seed (resolved above). A
+        // retry regenerates the draft under the SAME seed, so the validator
+        // keeps seeing the sub-construction that was actually requested.
+        { seedWord },
       ));
     }
     extraUsage = addUsage(extraUsage, valUsage);
@@ -445,6 +449,15 @@ export async function validateAndInsertWithRetry(
       ...currentDraft.contentJson,
       _dedupKey: dedupKey,
       ...(seedWord ? { seedWord } : {}),
+      // The variant the validator says the draft ACTUALLY realizes, as opposed
+      // to `seedWord`, which is the one it was ASKED for. Descriptive only —
+      // nothing routes on it — but persisting it makes variant drift queryable
+      // (`content_json->>'realizedVariant'`) instead of needing a
+      // `backfill:variant-seeds` classification pass after the fact. Only ever
+      // set for construction-variant points; see the 2026-08-18 asymmetry fix.
+      ...(result.constructionVariant
+        ? { realizedVariant: result.constructionVariant }
+        : {}),
     };
 
     // R6 per-word cap: for vocab_recall, refuse to insert an (N+1)-th exercise

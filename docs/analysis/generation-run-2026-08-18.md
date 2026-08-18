@@ -409,7 +409,20 @@ One cell, **2 requested, 1 approved** (`de:a2:sentence_construction:de-a2-perfek
 
 6. **Make curriculum-version bumps narrower, or stage them.** A `CURRICULUM_VERSION_<LANG>` bump clears suppression for the whole language, so a one-point retrofit dumped 14 backlogged ES cells into one $5.37 night at 18.7% approval. Either scope the version to a point (or a set), or accept the pattern and schedule bumps on nights where the churn is affordable. Related to 08-17 rec #1b, which asked the opposite question (should a *prompt* version also clear suppression) — the two want a single design decision about what un-suppresses what.
 
-7. **Emit `constructionVariants` realization into `coverage_outcome`.** The reported-speech retrofit's success at stage 1 was only visible by hand-querying `content_json.seedWord`; `generation_jobs` showed a failing cell. Variants are the second diversity mechanism and they are invisible to the run record.
+7. **~~Emit `constructionVariants` realization into the run record~~ — PARTLY DONE 2026-08-18.** The validator now reports the variant a draft actually realizes, persisted as `content_json.realizedVariant`, so drift between the variant a draft was *asked* for (`seedWord`) and the one it *delivered* is queryable without a `backfill:variant-seeds` classification pass. **Still open:** this labels new drafts only — the existing pool is unchanged — and variants still do not appear in `generation_jobs.coverage_outcome`, so a cell mid-retrofit still reads as failing there.
+
+   Shipped alongside the fix for the asymmetry itself: the validator was never told which sub-construction the generator had been directed to produce, so it judged every draft against the point's most prototypical pattern — the mechanism behind rec #1, but present on all **32** variant points, not just this one. Paired dry-runs over 91 flagged rows on three points in three languages:
+
+   | Cell | Rows | Variant withheld | Variant fed |
+   |---|---|---|---|
+   | `es-b1-reported-speech` cloze | 35 | 11 | **15** |
+   | `de-b2-adversative-connectors` cloze | 17 | 7 | **14** |
+   | `tr-a2-causal-connectors` translation | 39 | 4 | **10** |
+   | **total** | **91** | **22 (24%)** | **39 (43%)** |
+
+   And it is specific rather than a blanket loosening — on the reported-speech cell, `perfect-report-present-retained` recovers **3/5** while the person-indeterminate `present-report-command-subjunctive` rows stay flagged at **2/11** (that is rec #2, which this does not and should not fix), with the legacy word-seeded rows unmoved as a control.
+
+   **The 39 recoverable rows were NOT promoted** — a pool-wide variant repass across 32 points is a separate decision from the code fix, and a far larger blast radius than the single cell in rec #1.
 
 8. **Triage the eleven live unrealizable floors** and do the `suppressedFor` trailing-window change in `coverage-decision.ts` as its own PR. Unchanged from 08-17 rec #4; new entry this run is `tr-a1-possessive-suffixes` `person: 3pl` (1/15).
 

@@ -19,7 +19,56 @@
  * Pure function — no I/O. Deterministic: identical inputs, identical output.
  */
 
-import type { ConstructionVariant } from './curriculum-types';
+import { ExerciseType } from './index';
+import type { ConstructionVariant, GrammarPoint } from './curriculum-types';
+
+/**
+ * Exercise types whose cells seed from a point's `constructionVariants` pool
+ * rather than the frequency band (see `seedKindFor` in
+ * `packages/db/src/generation/seed-kind.ts`). A seed slot on any other type
+ * holds something else entirely — a verb lemma, an elicitation value — so a
+ * variant lookup there would be a category error, not a miss.
+ *
+ * Built lazily, NOT at module scope: `ExerciseType` is declared in `./index`,
+ * which re-exports this file, so a module-scope `new Set([ExerciseType.CLOZE])`
+ * reads the enum before the barrel has initialized it and throws
+ * "Cannot read properties of undefined". Function bodies run long after both
+ * modules are live — the same circular-import property `generation-prompts.ts`
+ * relies on for `TOOL_NAME_BY_TYPE`.
+ */
+let variantSeededTypes: ReadonlySet<ExerciseType> | undefined;
+function isVariantSeededType(exerciseType: ExerciseType): boolean {
+  variantSeededTypes ??= new Set([
+    ExerciseType.CLOZE,
+    ExerciseType.TRANSLATION,
+    ExerciseType.SENTENCE_CONSTRUCTION,
+  ]);
+  return variantSeededTypes.has(exerciseType);
+}
+
+/**
+ * The single rule for "which sub-construction was this draft asked to realize".
+ *
+ * A construction-variant seed is the variant's `id`, not a content word, so a
+ * draft's `seedWord` is only a variant when the point declares one with that
+ * exact id. Everything else — a frequency lemma, a conjugation verb, an
+ * elicitation value, a legacy pre-#631 seed — resolves to `undefined`, which
+ * is what keeps callers rendering nothing outside the variant points.
+ *
+ * Shared deliberately. The generation prompt has resolved this inline since
+ * #631; the validation prompt started resolving it in the 2026-08-18
+ * information-asymmetry fix. Two copies of this rule drifting apart is the
+ * same class of bug as #664's stale point name, so there is exactly one.
+ */
+export function resolveConstructionVariant(
+  grammarPoint: GrammarPoint,
+  exerciseType: ExerciseType,
+  seedWord: string | null | undefined,
+): ConstructionVariant | undefined {
+  if (!seedWord) return undefined;
+  if (!isVariantSeededType(exerciseType)) return undefined;
+  return grammarPoint.constructionVariants?.find((v) => v.id === seedWord);
+}
 
 /**
  * Minimum approved exercises a single construction variant should reach before

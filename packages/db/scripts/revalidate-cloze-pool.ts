@@ -554,7 +554,14 @@ async function main(): Promise<void> {
         let result: ValidationResult;
         let callUsage: ClaudeUsageBreakdown;
         try {
-          const r = await validateDraft(client, recon.draft, recon.spec);
+          // Pass the row's stored generation seed so a construction-variant
+          // row is re-judged against the sub-construction it was generated
+          // for, exactly as the live generation path now does. Without it
+          // this pass would re-inflict the 2026-08-18 asymmetry on the
+          // stored pool. `null` for every unseeded row — no change there.
+          const r = await validateDraft(client, recon.draft, recon.spec, undefined, {
+            seedWord: recon.seedWord,
+          });
           result = r.result;
           callUsage = r.tokenUsage;
         } catch (err: unknown) {

@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -336,7 +336,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
   });
 });
 
@@ -1021,7 +1021,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-17a");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
   });
 });
 
@@ -1070,5 +1070,121 @@ describe("validation template — gloss consistency rule", () => {
     expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("I want/can walk");
     // The form-vs-lexeme carve-out keeps de-a1-zero-article legitimate.
     expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/zero article before a profession/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Construction-variant directive (2026-08-18 information-asymmetry fix)
+//
+// Before this, the generator was told which sub-construction to realize and the
+// validator was not, so a draft that correctly realized a non-headline variant
+// read as off-point. See docs/analysis/generation-run-2026-08-18.md.
+// ---------------------------------------------------------------------------
+
+const variantPoint = getGrammarPoint("es-b1-reported-speech");
+if (!variantPoint) {
+  throw new Error("test fixture missing: curriculum entry 'es-b1-reported-speech'");
+}
+if (!variantPoint.constructionVariants?.length) {
+  throw new Error("test fixture invalid: es-b1-reported-speech declares no constructionVariants");
+}
+
+const variantSpec: GenerationSpec = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.B1,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: variantPoint,
+  topicDomain: null,
+  count: 1,
+  batchSeed: "test-seed",
+};
+
+const variantDraft: ExerciseDraft = {
+  id: "00000000-0000-4000-8000-000000000001",
+  contentJson: {
+    type: ExerciseType.CLOZE,
+    instructions: "Completa la frase.",
+    sentence: "Mi hermana me ha dicho que la calefacción ___ rota. (estar)",
+    correctAnswer: "está",
+  } as ClozeContent,
+  metadata: {
+    grammarPointKey: variantPoint.key,
+    topicDomain: null,
+    modelId: "test",
+    inputTokens: 0,
+    outputTokens: 0,
+    cacheCreationInputTokens: 0,
+    cacheReadInputTokens: 0,
+    inBatchDuplicate: false,
+  },
+};
+
+describe("buildValidationUserPrompt — construction-variant directive", () => {
+  const variantId = "perfect-report-present-retained";
+  const variant = variantPoint.constructionVariants!.find((v) => v.id === variantId);
+  if (!variant) throw new Error(`test fixture missing variant: ${variantId}`);
+
+  it("names the requested sub-construction and quotes its directive verbatim", () => {
+    const prompt = buildValidationUserPrompt(variantDraft, variantSpec, variantId);
+    expect(prompt).toContain(variant.directive);
+    expect(prompt).toContain(variantId);
+  });
+
+  it("tells the judge the variant is on-point and must not lower any score", () => {
+    const prompt = buildValidationUserPrompt(variantDraft, variantSpec, variantId);
+    expect(prompt).toMatch(/on-point/i);
+    expect(prompt).toMatch(/grammarPointMatch/);
+    // The directive is context, never a new veto: it must not instruct a
+    // rejection when the realized variant differs from the requested one.
+    expect(prompt).not.toMatch(/set .*grammarPointMatch.* to false/i);
+  });
+
+  // Blast-radius pin. Everything outside a variant-seeded draft on a variant
+  // point must be byte-identical to the pre-change prompt, so this change
+  // cannot move approval anywhere else in the pool.
+  it("renders NOTHING extra when no seedWord is supplied", () => {
+    expect(buildValidationUserPrompt(variantDraft, variantSpec, null)).toBe(
+      buildValidationUserPrompt(variantDraft, variantSpec),
+    );
+  });
+
+  it("renders NOTHING extra for a frequency-word seed on a variant point", () => {
+    expect(buildValidationUserPrompt(variantDraft, variantSpec, "calefacción")).toBe(
+      buildValidationUserPrompt(variantDraft, variantSpec),
+    );
+  });
+
+  it("renders NOTHING extra on a point that declares no variants", () => {
+    // `baseSpec`'s point (es-b1-present-subjunctive) has no constructionVariants.
+    expect(buildValidationUserPrompt(variantDraft, baseSpec, "some-seed")).toBe(
+      buildValidationUserPrompt(variantDraft, baseSpec),
+    );
+  });
+
+  it("renders NOTHING extra for an exercise type that does not variant-seed", () => {
+    const conjSpec: GenerationSpec = {
+      ...variantSpec,
+      exerciseType: ExerciseType.CONJUGATION,
+    };
+    // A conjugation seed slot holds a verb lemma, never a variant id.
+    expect(buildValidationUserPrompt(variantDraft, conjSpec, variantId)).toBe(
+      buildValidationUserPrompt(variantDraft, conjSpec),
+    );
+  });
+
+  it("asks for the realized variant back, listing the point's declared ids", () => {
+    const prompt = buildValidationUserPrompt(variantDraft, variantSpec, variantId);
+    expect(prompt).toContain("constructionVariant");
+    for (const v of variantPoint.constructionVariants!) {
+      expect(prompt).toContain(v.id);
+    }
+    // Descriptive only — same contract as the `coverage` tags beside it.
+    expect(prompt).toMatch(/never affects? approval|do NOT change qualityScore/i);
+  });
+
+  it("is deterministic — two identical calls return byte-identical strings", () => {
+    expect(buildValidationUserPrompt(variantDraft, variantSpec, variantId)).toBe(
+      buildValidationUserPrompt(variantDraft, variantSpec, variantId),
+    );
   });
 });

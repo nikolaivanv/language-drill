@@ -1206,7 +1206,12 @@ admin.post('/admin/revalidate', async (c) => {
     let result;
     let callUsage;
     try {
-      const r = await validateDraft(client, recon.draft, recon.spec);
+      // Stored generation seed, so a construction-variant row is re-judged
+      // against the sub-construction it was generated for — same reason as
+      // the revalidate CLIs (2026-08-18 asymmetry fix).
+      const r = await validateDraft(client, recon.draft, recon.spec, undefined, {
+        seedWord: recon.seedWord,
+      });
       result = r.result;
       callUsage = r.tokenUsage;
     } catch {
