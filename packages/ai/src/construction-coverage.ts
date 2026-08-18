@@ -376,7 +376,7 @@ export function rowSurfaceFor(
   content: Record<string, unknown>,
 ): string | null {
   if (type === ExerciseType.CLOZE) {
-    const stem = content.sourceText;
+    const stem = content.sentence;
     const answer = content.correctAnswer;
     if (typeof stem !== 'string' || typeof answer !== 'string') return null;
     return `${stem}   [answer: ${answer}]`;
