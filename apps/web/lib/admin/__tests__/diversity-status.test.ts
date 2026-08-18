@@ -116,6 +116,51 @@ describe('matchesDiversityFilter', () => {
     expect(matchesDiversityFilter(bare, 'has-spec')).toBe(false);
   });
 
+  // The negatives exist so the dropdown reads symmetrically against the "has"
+  // group; each one must be the exact complement of its positive twin, and must
+  // stay off the umbrella kinds like every other missing-* filter.
+  it('filters negatively by seed kind, as the complement of the has-* twin', () => {
+    const freq = cellDiversityStatus(
+      cell({
+        seed: { kind: 'frequency-band', band: 'content-word', rankMax: 4000, distinctSeeds: 12, unlabelledRows: 0 },
+      }),
+      'grammar',
+    );
+
+    expect(matchesDiversityFilter(variants, 'missing-variants')).toBe(false);
+    expect(matchesDiversityFilter(freq, 'missing-variants')).toBe(true);
+    expect(matchesDiversityFilter(bare, 'missing-variants')).toBe(true);
+
+    expect(matchesDiversityFilter(freq, 'missing-frequency-band')).toBe(false);
+    expect(matchesDiversityFilter(variants, 'missing-frequency-band')).toBe(true);
+    expect(matchesDiversityFilter(bare, 'missing-frequency-band')).toBe(true);
+
+    const curated = cellDiversityStatus(
+      cell({
+        seed: { kind: 'curated', source: 'conjugationSeedWords', poolSize: 12, usedCount: 9, unused: [] },
+      }),
+      'grammar',
+    );
+    expect(matchesDiversityFilter(curated, 'missing-curated')).toBe(false);
+    expect(matchesDiversityFilter(freq, 'missing-curated')).toBe(true);
+    expect(matchesDiversityFilter(bare, 'missing-curated')).toBe(true);
+    // …and a curated cell falls under both of the other two negatives.
+    expect(matchesDiversityFilter(curated, 'missing-variants')).toBe(true);
+    expect(matchesDiversityFilter(curated, 'missing-frequency-band')).toBe(true);
+  });
+
+  it('never matches an umbrella on a negative seed filter', () => {
+    // A vocab umbrella is seeded from the curated target list, so its seed
+    // state is `present` — only the kind expectation keeps it out of these.
+    const vocabUmbrella = cellDiversityStatus(cell({ seed: { kind: 'vocab-target' } }), 'vocab');
+    expect(matchesDiversityFilter(vocabUmbrella, 'missing-variants')).toBe(false);
+    expect(matchesDiversityFilter(vocabUmbrella, 'missing-frequency-band')).toBe(false);
+    expect(matchesDiversityFilter(vocabUmbrella, 'missing-curated')).toBe(false);
+    expect(matchesDiversityFilter(umbrella, 'missing-variants')).toBe(false);
+    expect(matchesDiversityFilter(umbrella, 'missing-frequency-band')).toBe(false);
+    expect(matchesDiversityFilter(umbrella, 'missing-curated')).toBe(false);
+  });
+
   it('filters by issue counts', () => {
     expect(matchesDiversityFilter(specced, 'proven-issues')).toBe(true);
     expect(matchesDiversityFilter(bare, 'proven-issues')).toBe(false);
@@ -130,6 +175,9 @@ describe('matchesDiversityFilter', () => {
     expect(matchesDiversityFilter(undefined, 'missing-all')).toBe(false);
     expect(matchesDiversityFilter(undefined, 'has-spec')).toBe(false);
     expect(matchesDiversityFilter(undefined, 'proven-issues')).toBe(false);
+    expect(matchesDiversityFilter(undefined, 'missing-variants')).toBe(false);
+    expect(matchesDiversityFilter(undefined, 'missing-frequency-band')).toBe(false);
+    expect(matchesDiversityFilter(undefined, 'missing-curated')).toBe(false);
   });
 });
 

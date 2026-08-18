@@ -23,6 +23,12 @@ export type CellDiversityStatus = {
   seed: { state: MechanismState; kind: DiversitySeed['kind']; label: string };
   provenIssues: number;
   unknowns: number;
+  /** Whether this cell's point kind is EXPECTED to declare mechanisms at all —
+   *  i.e. it is a `grammar` point. Not derivable from the two `state` fields: a
+   *  vocab umbrella may legally carry a `wordClass` coverageSpec, which makes
+   *  `spec.state` 'present' on a kind that declares nothing else. The negative
+   *  seed filters need it to stay off the umbrellas. */
+  mechanismsExpected: boolean;
 };
 
 /**
@@ -67,6 +73,7 @@ export function cellDiversityStatus(
     seed: { state: seedState, kind: cell.seed.kind, label: SEED_LABELS[cell.seed.kind] },
     provenIssues: cell.provenIssues,
     unknowns: cell.unknowns,
+    mechanismsExpected: expected,
   };
 }
 
@@ -110,6 +117,9 @@ export const DIVERSITY_FILTER_GROUPS = [
       { value: 'missing-all', label: 'no mechanism at all' },
       { value: 'missing-spec', label: 'no coverage spec' },
       { value: 'missing-seed', label: 'no seed source' },
+      { value: 'missing-variants', label: 'no construction variants' },
+      { value: 'missing-curated', label: 'no curated seeds' },
+      { value: 'missing-frequency-band', label: 'no frequency band' },
     ],
   },
   {
@@ -156,6 +166,19 @@ export function matchesDiversityFilter(
       return status.spec.state === 'missing';
     case 'missing-seed':
       return status.seed.state === 'missing';
+    // The exact negations of the three `has-<seed kind>` filters, scoped to the
+    // cells that are expected to declare a mechanism. Seed kinds are
+    // mutually exclusive, so "no variants" means "seeded by something else, or
+    // by nothing" — including the cells whose exercise type could never carry
+    // variants. Gating on that type list would mean re-stating `seedKindFor`'s
+    // gate in the web package, which drifts (sentence_construction joined it on
+    // 2026-08-14); the chips on each row already say which seed it does have.
+    case 'missing-variants':
+      return status.mechanismsExpected && status.seed.kind !== 'construction-variants';
+    case 'missing-curated':
+      return status.mechanismsExpected && status.seed.kind !== 'curated';
+    case 'missing-frequency-band':
+      return status.mechanismsExpected && status.seed.kind !== 'frequency-band';
     case 'proven-issues':
       return status.provenIssues > 0;
     case 'unknowns':
