@@ -138,7 +138,10 @@ function DiversityChips({ status }: { status: CellDiversityStatus | undefined })
     status.seed.state === 'not-applicable' ? 'seed n/a' : `seed ${status.seed.label}`;
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-1">
+    // Never wrap: the chips are short, and letting a 10th column squeeze them
+    // into three-line stacks triples every row's height. The DataTable wrapper
+    // already scrolls horizontally.
+    <span className="inline-flex items-center gap-1 whitespace-nowrap">
       <MechanismChip label={specLabel} state={status.spec.state} testId="mechanism-spec" />
       <MechanismChip label={seedLabel} state={status.seed.state} testId="mechanism-seed" />
       {status.provenIssues > 0 && (
@@ -191,13 +194,13 @@ export function PoolCoverageTable({ items, diversityByCell }: Props) {
           <Th>Level</Th>
           <Th>Type</Th>
           <Th>Grammar Point</Th>
+          <Th title="Declared diversity mechanisms: coverage-spec floors and seed source, plus this cell's proven (✗) and unknown (⚠) deficiencies.">
+            Diversity
+          </Th>
           <Th>Status</Th>
           <Th align="right">Approved</Th>
           <Th align="right">Gen Target</Th>
           <Th align="right">Demand</Th>
-          <Th title="Declared diversity mechanisms: coverage-spec floors and seed source, plus this cell's proven (✗) and unknown (⚠) deficiencies.">
-            Diversity
-          </Th>
           <Th align="right">
             <button
               type="button"
@@ -231,11 +234,11 @@ export function PoolCoverageTable({ items, diversityByCell }: Props) {
                     <span className="t-mono">{item.grammarPointKey}</span> {isOpen ? '▼' : '▶'}
                   </button>
                 </Td>
+                <Td className="whitespace-nowrap"><DiversityChips status={diversity?.status} /></Td>
                 <Td><StatusBadge status={item.status} /></Td>
                 <Td align="right">{item.approved}</Td>
                 <Td align="right">{item.generationTarget}</Td>
                 <Td align="right">{item.targetSize}</Td>
-                <Td><DiversityChips status={diversity?.status} /></Td>
                 <Td align="right" className="font-medium">{(ratio * 100).toFixed(1)}%</Td>
               </tr>
               {isOpen ? (
