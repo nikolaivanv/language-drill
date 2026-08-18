@@ -25,6 +25,7 @@ import {
   type SentenceConstructionContent,
   type TranslationContent,
   type VocabRecallContent,
+  resolveConstructionVariant,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -168,6 +169,15 @@ function renderBulletList(items: readonly string[]): string {
 // template is untouched, so this ships with the CODE deploy and needs NO
 // `push-prompts` run. Bumped anyway so the before/after traces cohort apart —
 // the whole point of the constant.
+// 2026-08-18 (validate@2026-08-18): the per-draft USER prompt now names the
+// construction variant the generator was directed to realize, and asks for the
+// realized one back in the descriptive `constructionVariant` tool field. Closes
+// the generate/validate information asymmetry that flagged 20 of 20 correct
+// es-b1-reported-speech translations on 2026-08-18 (see
+// docs/analysis/generation-run-2026-08-18.md). USER prompt + tool schema only —
+// both are code, so this ships with the deploy and needs no `push-prompts`; the
+// cached system template is untouched. Adds no veto.
+//
 // 2026-08-17a (validate@2026-08-17a): the vocab_recall `ambiguous` rule now
 // distinguishes SAME-referent synonyms (enumeration cures) from DIFFERENT
 // referents — superordinate/subordinate, adjacent concepts, different word
@@ -183,7 +193,7 @@ function renderBulletList(items: readonly string[]): string {
 // the exact mistake the 2026-08-13a note above records.
 //
 // Unlike #656 this IS a cached-template edit -> needs `push-prompts` per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-08-17a";
+export const VALIDATION_PROMPT_VERSION = "validate@2026-08-18";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -601,6 +611,59 @@ const COVERAGE_AXIS_DIRECTIVE: Record<CoverageAxis, string> = {
     "- `coverage.comparison`: the comparison construction the target realizes (comparative/superlative/equative/less). Report what the draft ACTUALLY produced, not what was requested.",
 };
 
+/**
+ * Names the sub-construction this draft was ASKED to realize, and tells the
+ * judge that realizing it is on-point.
+ *
+ * The bug this closes: `constructionVariants` (#631) told the GENERATOR to
+ * produce a non-headline sub-construction, but the validator was shown only the
+ * grammar point and judged every draft against the point's most familiar
+ * pattern. On 2026-08-18 that flagged 20 of 20 correct `es-b1-reported-speech`
+ * translations as `grammar-point-mismatch` — the generator obeyed and the
+ * validator vetoed it for obeying. All 32 variant points carry the exposure.
+ *
+ * Deliberately NOT a veto. It only removes a false rejection: nothing here
+ * instructs the judge to fail a draft that realizes a DIFFERENT variant than
+ * the one requested. That mismatch is made observable instead, via the
+ * descriptive `constructionVariant` field below — measure before gating, the
+ * same discipline the audit CLIs follow ("a spotlight, not a gate"). Revisit
+ * only with data on how often it actually happens.
+ *
+ * Returns "" for every draft that is not a variant-seeded draft on a
+ * variant-declaring point, so the prompt stays byte-identical to the
+ * pre-2026-08-18 text everywhere else in the pool.
+ */
+function renderConstructionVariantDirective(
+  spec: GenerationSpec,
+  seedWord: string | null | undefined,
+): string {
+  const variant = resolveConstructionVariant(
+    spec.grammarPoint,
+    spec.exerciseType,
+    seedWord,
+  );
+  if (!variant) return "";
+
+  const declaredIds = (spec.grammarPoint.constructionVariants ?? [])
+    .map((v) => `\`${v.id}\``)
+    .join(", ");
+
+  return (
+    `\n\n**Requested sub-construction (\`${variant.id}\`):** ${variant.directive}\n\n` +
+    `This grammar point covers several sub-constructions and the generator was ` +
+    `directed to realize exactly this one. A draft that realizes it is **on-point** ` +
+    `for the grammar point: judge \`grammarPointMatch\` against the point INCLUDING ` +
+    `this sub-construction, not against the point's most common or most ` +
+    `prototypical pattern. Do NOT lower \`qualityScore\`, and do NOT set ` +
+    `\`grammarPointMatch\` false, merely because the draft realizes this ` +
+    `sub-construction rather than the point's headline one.\n\n` +
+    `**Realized sub-construction (descriptive only — never affects approval):** ` +
+    `also set \`constructionVariant\` to the id of the sub-construction the draft ` +
+    `ACTUALLY realizes, from: ${declaredIds}. Report what you see, not what was ` +
+    `requested; omit the field if none of them fits.`
+  );
+}
+
 function renderCoverageDirective(spec: GenerationSpec): string {
   const axes = coverageAxesFor(
     spec.exerciseType,
@@ -624,6 +687,14 @@ function renderCoverageDirective(spec: GenerationSpec): string {
 export function buildValidationUserPrompt(
   draft: ExerciseDraft,
   spec: GenerationSpec,
+  /**
+   * The seed this draft was generated from — `spec.seedWords[ordinal]` at
+   * generation time, `content_json.seedWord` when re-scoring a stored row.
+   * Only a construction-variant id has any effect here (see
+   * `resolveConstructionVariant`); a frequency lemma or an absent seed renders
+   * nothing. Optional so every existing caller keeps its exact behaviour.
+   */
+  seedWord?: string | null,
 ): string {
   const content = draft.contentJson;
   let base: string;
@@ -663,6 +734,10 @@ export function buildValidationUserPrompt(
       );
     }
   }
-  return base + renderCoverageDirective(spec);
+  return (
+    base +
+    renderConstructionVariantDirective(spec, seedWord) +
+    renderCoverageDirective(spec)
+  );
 }
 

@@ -17,6 +17,7 @@ import {
   Language,
   PERSON_CODES,
   type PersonCode,
+  resolveConstructionVariant,
 } from "@language-drill/shared";
 
 import { CEFR_LEVEL_DESCRIPTORS } from "./prompts.js";
@@ -828,15 +829,15 @@ export function buildGenerationUserPrompt(
         }Cue the learner with the BASE word in parentheses after the sentence — e.g. "(silla)" when the answer is "sillita" — NEVER the derived form itself, and the derived form must not appear anywhere in the visible text. The base-word cue is the sanctioned elicitation for this cell, not an answer leak: the tested skill is choosing the suffix from the context's nuance and forming it with the correct allomorph and gender. Craft the context so the intended nuance (smallness/affection, augmentative force, or pejorative shabbiness) is unmistakable and no other established suffixed form of the same base fits. Vary the scenario; do not reuse a noun or template from earlier exercises in this batch.\n\n`
     : "";
   // A construction-variant seed is the variant's `id`, not a content word: look
-  // up its directive so the per-draft block names the sub-construction. Only
-  // cloze/translation seed this way (see `seedKindFor`).
-  const constructionVariant =
-    (inputs.exerciseType === ExerciseType.CLOZE ||
-      inputs.exerciseType === ExerciseType.TRANSLATION ||
-      inputs.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION) &&
-    seedWord
-      ? inputs.grammarPoint.constructionVariants?.find((v) => v.id === seedWord)
-      : undefined;
+  // up its directive so the per-draft block names the sub-construction. The
+  // rule lives in `resolveConstructionVariant` (packages/shared) because the
+  // VALIDATION prompt resolves the same seed the same way — see the
+  // 2026-08-18 information-asymmetry fix. Do not re-inline it here.
+  const constructionVariant = resolveConstructionVariant(
+    inputs.grammarPoint,
+    inputs.exerciseType,
+    seedWord,
+  );
   const seedBlock =
     !digitForm && !baseWordCue && seedWord && seedWord.length > 0
       ? constructionVariant

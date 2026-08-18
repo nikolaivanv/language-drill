@@ -309,8 +309,8 @@ type SkipOutcomeReason =
   | 'cost-capped';
 
 type Outcome =
-  | { kind: 'no-change'; row: CandidateRow; result: ValidationResult }
-  | { kind: 'promote'; row: CandidateRow; result: ValidationResult }
+  | { kind: 'no-change'; row: CandidateRow; result: ValidationResult; seedWord: string | null }
+  | { kind: 'promote'; row: CandidateRow; result: ValidationResult; seedWord: string | null }
   | { kind: 'skip'; row: CandidateRow; reason: SkipOutcomeReason; detail?: string };
 
 function printSummary(
@@ -347,6 +347,30 @@ function printSummary(
     process.stdout.write('\nPromotions by cell:\n');
     for (const [cell, count] of [...byCell.entries()].sort()) {
       process.stdout.write(`  ${cell.padEnd(8)}  ${count}\n`);
+    }
+
+    // Promoted-vs-scanned per generation seed. On a construction-variant point
+    // the seed IS the sub-construction, so this says WHICH variants a pass
+    // recovered — the difference between "the validator stopped mis-vetoing a
+    // variant" and "some unrelated rows happened to re-score well". Rows with
+    // no seed group under `(unseeded)`, and are the natural control.
+    const scannedBySeed = new Map<string, number>();
+    const promotedBySeed = new Map<string, number>();
+    for (const o of outcomes) {
+      if (o.kind === 'skip') continue;
+      const seed = o.seedWord ?? '(unseeded)';
+      scannedBySeed.set(seed, (scannedBySeed.get(seed) ?? 0) + 1);
+      if (o.kind === 'promote') {
+        promotedBySeed.set(seed, (promotedBySeed.get(seed) ?? 0) + 1);
+      }
+    }
+    if (scannedBySeed.size > 1) {
+      process.stdout.write('\nPromoted / scanned by seed:\n');
+      for (const [seed, scanned] of [...scannedBySeed.entries()].sort()) {
+        process.stdout.write(
+          `  ${seed.padEnd(40)}  ${promotedBySeed.get(seed) ?? 0}/${scanned}\n`,
+        );
+      }
     }
   }
   if (skipped > 0) {
@@ -428,7 +452,14 @@ async function main(): Promise<void> {
         let result: ValidationResult;
         let callUsage: ClaudeUsageBreakdown;
         try {
-          const r = await validateDraft(client, recon.draft, recon.spec);
+          // Pass the row's stored generation seed so a construction-variant
+          // row is re-judged against the sub-construction it was generated
+          // for, exactly as the live generation path now does. Without it
+          // this pass would re-inflict the 2026-08-18 asymmetry on the
+          // stored pool. `null` for every unseeded row — no change there.
+          const r = await validateDraft(client, recon.draft, recon.spec, undefined, {
+            seedWord: recon.seedWord,
+          });
           result = r.result;
           callUsage = r.tokenUsage;
         } catch (err: unknown) {
@@ -461,7 +492,7 @@ async function main(): Promise<void> {
           return;
         }
         if (action.kind === 'no-change') {
-          outcomes[idx] = { kind: 'no-change', row, result };
+          outcomes[idx] = { kind: 'no-change', row, result, seedWord: recon.seedWord };
           return;
         }
 
@@ -480,7 +511,7 @@ async function main(): Promise<void> {
             return;
           }
         }
-        outcomes[idx] = { kind: 'promote', row, result };
+        outcomes[idx] = { kind: 'promote', row, result, seedWord: recon.seedWord };
       }),
     ),
   );

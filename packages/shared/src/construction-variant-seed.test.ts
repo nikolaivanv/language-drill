@@ -86,3 +86,80 @@ describe('pickVariantSeeds', () => {
     expect(pickVariantSeeds({ variants: VARIANTS, coverage: new Map(), count: 0 })).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// resolveConstructionVariant
+// ---------------------------------------------------------------------------
+
+import { ExerciseType } from './index';
+import { resolveConstructionVariant } from './construction-variant-seed';
+import type { GrammarPoint } from './curriculum-types';
+
+const POINT = {
+  key: 'es-b1-impersonal-plural',
+  kind: 'grammar',
+  name: 'Impersonal plural',
+  description: 'd',
+  cefrLevel: 'B1',
+  language: 'ES',
+  examplesPositive: ['a', 'b'],
+  examplesNegative: ['*c'],
+  commonErrors: ['e'],
+  constructionVariants: VARIANTS,
+} as unknown as GrammarPoint;
+
+const POINT_NO_VARIANTS = { ...POINT, constructionVariants: undefined } as GrammarPoint;
+
+describe('resolveConstructionVariant', () => {
+  it('resolves a seedWord that is a declared variant id', () => {
+    const v = resolveConstructionVariant(POINT, ExerciseType.CLOZE, 'adversity');
+    expect(v?.id).toBe('adversity');
+    expect(v?.directive).toBe('adversity');
+  });
+
+  it('resolves for every exercise type that seeds from the variant pool', () => {
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
+      expect(resolveConstructionVariant(POINT, type, 'hearsay')?.id).toBe('hearsay');
+    }
+  });
+
+  // The whole safety property: a seed that is an ordinary frequency lemma (or a
+  // conjugation verb, or an elicitation value) must resolve to nothing, so the
+  // caller renders nothing and the prompt stays byte-identical to today.
+  it('returns undefined for a frequency-word seed', () => {
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, 'restaurante')).toBeUndefined();
+  });
+
+  it('returns undefined for exercise types that do not seed from the variant pool', () => {
+    for (const type of [
+      ExerciseType.CONJUGATION,
+      ExerciseType.VOCAB_RECALL,
+      ExerciseType.DICTATION,
+      ExerciseType.FREE_WRITING,
+      ExerciseType.CONTEXTUAL_PARAPHRASE,
+    ]) {
+      expect(resolveConstructionVariant(POINT, type, 'hearsay')).toBeUndefined();
+    }
+  });
+
+  it('returns undefined when the point declares no variants', () => {
+    expect(
+      resolveConstructionVariant(POINT_NO_VARIANTS, ExerciseType.CLOZE, 'hearsay'),
+    ).toBeUndefined();
+  });
+
+  it('returns undefined for null, undefined and empty seedWords', () => {
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, null)).toBeUndefined();
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, undefined)).toBeUndefined();
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, '')).toBeUndefined();
+  });
+
+  it('does not match on a prefix or case variation of a variant id', () => {
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, 'hears')).toBeUndefined();
+    expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, 'Hearsay')).toBeUndefined();
+  });
+});

@@ -64,6 +64,15 @@ export type Reconstructed = {
   ok: true;
   draft: ExerciseDraft;
   spec: GenerationSpec;
+  /**
+   * The row's stored generation seed (`content_json.seedWord`), to hand back to
+   * `validateDraft` as `options.seedWord`. Without it a re-score is blind to
+   * the sub-construction the row was generated for and re-inflicts the exact
+   * asymmetry the 2026-08-18 fix removed from the live path — a stored
+   * non-headline variant would be re-judged against the point's prototype.
+   * `null` for the whole unseeded/legacy pool, which changes nothing.
+   */
+  seedWord: string | null;
 };
 
 export type ReconstructFailure = {
@@ -165,7 +174,12 @@ export function reconstructDraftAndSpec(
     count: 1,
     batchSeed: ZERO_UUID,
   };
-  return { ok: true, draft, spec };
+  // Writer-only field (see `validate-and-insert.ts`) — absent on legacy rows
+  // and on every non-seeded type, hence the defensive read.
+  const rawSeed = (exerciseContent as { seedWord?: unknown }).seedWord;
+  const seedWord = typeof rawSeed === 'string' && rawSeed.length > 0 ? rawSeed : null;
+
+  return { ok: true, draft, spec, seedWord };
 }
 
 // ---------------------------------------------------------------------------

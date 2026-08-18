@@ -178,6 +178,11 @@ const EXISTING_VALIDATION_PROPERTIES = {
     description:
       'Free-text reasons that go into exercises.flagged_reasons when the draft routes to "flagged". Add anything that future-you would want to see when reviewing manually.',
   },
+  constructionVariant: {
+    type: "string",
+    description:
+      "The id of the sub-construction this draft ACTUALLY realizes, chosen from the list the user prompt gives. Report what you see, not what was requested. Descriptive only — like `coverage`, it never affects approval. Omit when the user prompt lists none, or when none of the listed ids fits.",
+  },
   coverage: {
     type: "object",
     description:
@@ -273,6 +278,14 @@ export function buildValidationTool(exerciseType: ExerciseType): Anthropic.Tool 
 export type ValidateDraftOptions = {
   modelOverride?: string;
   systemPromptOverride?: string;
+  /**
+   * The seed this draft was generated from — `spec.seedWords[ordinal]` at
+   * generation time, `content_json.seedWord` when re-scoring a stored row.
+   * Only a construction-variant id changes the prompt; anything else renders
+   * nothing. Omitted by callers that have no seed, which keeps their prompt
+   * byte-identical to the pre-2026-08-18 text.
+   */
+  seedWord?: string | null;
 };
 
 export type ValidationResult = {
@@ -308,6 +321,18 @@ export type ValidationResult = {
    * values present in `COVERAGE_AXIS_VALUES` survive parsing.
    */
   coverage: CoverageTags;
+  /**
+   * The construction-variant id the draft actually realizes, when the point
+   * declares variants and the user prompt asked for it. Strictly
+   * non-load-bearing, exactly like `coverage`: `routeValidationResult` ignores
+   * it and `parseValidationResult` coerces anything malformed to `undefined`.
+   *
+   * This is the reverse leg of the 2026-08-18 information-asymmetry fix. The
+   * requested variant goes IN via the validation user prompt; the realized one
+   * comes back here, so variant drift becomes measurable from the pool instead
+   * of needing a `backfill:variant-seeds` classification pass after the fact.
+   */
+  constructionVariant?: string;
   /**
    * The validator's adjudicated candidate fills (cloze only). Strictly
    * non-load-bearing: `routeValidationResult` ignores it and
@@ -382,6 +407,17 @@ function coerceStringArray(
  * throws — coverage never gates routing, so a malformed value must not cost
  * the draft.
  */
+function coerceConstructionVariant(
+  raw: Record<string, unknown>,
+): string | undefined {
+  const v = raw.constructionVariant;
+  // Not validated against the point's declared ids on purpose: this is a
+  // descriptive tag, and silently dropping an id the judge invented would hide
+  // exactly the disagreement the field exists to surface. Consumers compare it
+  // against `constructionVariants` themselves.
+  return typeof v === "string" && v.length > 0 ? v : undefined;
+}
+
 function coerceCoverage(raw: Record<string, unknown>): CoverageTags {
   const v = raw.coverage;
   if (!isObject(v)) return {};
@@ -462,6 +498,7 @@ export function parseValidationResult(input: unknown): ValidationResult {
 
   // Non-load-bearing coverage object — coerced leniently, never throws.
   const coverage = coerceCoverage(raw);
+  const constructionVariant = coerceConstructionVariant(raw);
 
   // Non-load-bearing candidateFillers array — coerced leniently, never throws.
   const candidateFillers = coerceCandidateFillers(raw);
@@ -475,6 +512,7 @@ export function parseValidationResult(input: unknown): ValidationResult {
     culturalIssues,
     flaggedReasons,
     coverage,
+    ...(constructionVariant !== undefined ? { constructionVariant } : {}),
     candidateFillers,
   };
 }
@@ -594,7 +632,7 @@ export async function validateDraft(
       ? buildDictationValidationUserPrompt(draft.contentJson, spec)
       : draft.contentJson.type === ExerciseType.FREE_WRITING
         ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
-        : buildValidationUserPrompt(draft, spec);
+        : buildValidationUserPrompt(draft, spec, options?.seedWord);
 
   // Per-model request shaping (see evaluate.ts:399-411 for the same guards):
   //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
