@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
+import type { ClozeContent, TranslationContent } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -320,27 +321,43 @@ describe('CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT', () => {
 });
 
 describe('rowSurfaceFor', () => {
-  it('renders a cloze as stem plus answer', () => {
-    const s = rowSurfaceFor(ExerciseType.CLOZE, {
-      sourceText: 'Dijo que ___ cansada.',
-      correctAnswer: 'estaba',
-    });
+  // These fixtures are pinned to the SHARED content types with `satisfies`, not
+  // written as free-form literals. The first version of this suite used
+  // `sourceText` for cloze — which is the TRANSLATION field; the real one is
+  // `ClozeContent.sentence`. The tests passed and every real cloze row
+  // surfaced as null in production, so the whole cloze half of the audit
+  // classified as unresolved and silently produced no findings. Pinning the
+  // field names means a future rename breaks the build instead of the sweep.
+  const clozeFields = {
+    sentence: 'Dijo que ___ cansada.',
+    correctAnswer: 'estaba',
+  } satisfies Pick<ClozeContent, 'sentence' | 'correctAnswer'>;
+
+  const translationFields = {
+    sourceText: 'She said she was tired.',
+    referenceTranslation: 'Dijo que estaba cansada.',
+  } satisfies Pick<TranslationContent, 'sourceText' | 'referenceTranslation'>;
+
+  it('renders a cloze from the sentence plus the answer', () => {
+    const s = rowSurfaceFor(ExerciseType.CLOZE, { ...clozeFields });
     expect(s).toContain('Dijo que ___ cansada.');
     expect(s).toContain('estaba');
   });
 
+  it('does not read the translation stem field for a cloze', () => {
+    // Regression guard for the production defect described above.
+    expect(rowSurfaceFor(ExerciseType.CLOZE, { sourceText: 'x', correctAnswer: 'y' })).toBeNull();
+  });
+
   it('renders a translation as source plus reference', () => {
-    const s = rowSurfaceFor(ExerciseType.TRANSLATION, {
-      sourceText: 'She said she was tired.',
-      referenceTranslation: 'Dijo que estaba cansada.',
-    });
+    const s = rowSurfaceFor(ExerciseType.TRANSLATION, { ...translationFields });
     expect(s).toContain('She said she was tired.');
     expect(s).toContain('Dijo que estaba cansada.');
   });
 
   it('returns null when the fields are missing or not strings', () => {
     expect(rowSurfaceFor(ExerciseType.CLOZE, {})).toBeNull();
-    expect(rowSurfaceFor(ExerciseType.CLOZE, { sourceText: 5, correctAnswer: 'x' })).toBeNull();
+    expect(rowSurfaceFor(ExerciseType.CLOZE, { sentence: 5, correctAnswer: 'x' })).toBeNull();
   });
 });
 

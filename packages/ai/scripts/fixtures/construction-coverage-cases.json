@@ -15,11 +15,128 @@
           "Dijo que tenía mucho sueño.",
           "El profesor dice que hagamos los deberes."
         ],
-        "examplesNegative": ["*Dijo que tiene mucho sueño."],
+        "examplesNegative": [
+          "*Dijo que tiene mucho sueño."
+        ],
         "commonErrors": [
           "Keeping the present tense in the reported clause after a past-tense reporting verb (\"*dijo que tiene sueño\" instead of \"dijo que tenía sueño\").",
           "Reporting a command with the infinitive instead of que + present subjunctive (\"*dice hacer los deberes\" instead of \"dice que hagamos los deberes\").",
           "Using the indicative for a reported command instead of switching to the subjunctive (\"*dice que vienes\" instead of \"dice que vengas\" when relaying an order)."
+        ]
+      },
+      "expectedMustRepresentCount": 2,
+      "expectedMechanism": "construction-variants"
+    },
+    {
+      "name": "es-b1-adjective-de-infinitive",
+      "grammarPointKey": "es-b1-adjective-de-infinitive",
+      "note": "Hand-labelled by the repo owner, 2026-08-19. adj + de + infinitive (subject is understood object) vs. impersonal es + adj + infinitive with no de. The adjective list (facil/dificil/imposible/duro/complicado) is lexical variation of one pattern, not separate constructions. Snapshot of the live curriculum entry at that date — if the description is later reworded, re-label rather than assuming this still holds.",
+      "grammarPoint": {
+        "key": "es-b1-adjective-de-infinitive",
+        "kind": "grammar",
+        "name": "Fácil/difícil de + infinitive",
+        "description": "Adjective + de + infinitive when the sentence subject is the understood object of the infinitive (Este libro es fácil de leer; Su conducta es difícil de comprender), vs. the impersonal pattern es + adjective + infinitive with the object expressed after the verb and no de (Es difícil comprender su conducta). Works with fácil, difícil, imposible, duro, complicado.",
+        "cefrLevel": "B1",
+        "language": "ES",
+        "examplesPositive": [
+          "Este libro es fácil de leer.",
+          "Su conducta es difícil de comprender.",
+          "Es difícil comprender su conducta.",
+          "Esa mancha es imposible de quitar."
+        ],
+        "examplesNegative": [
+          "*Es difícil de encontrar trabajo aquí."
+        ],
+        "commonErrors": [
+          "Inserting de in the impersonal pattern (\"*es difícil de encontrar trabajo\" instead of \"es difícil encontrar trabajo\").",
+          "Omitting de when the subject is the understood object (\"*este libro es fácil leer\" instead of \"este libro es fácil de leer\").",
+          "Adding a redundant object pronoun after the infinitive (\"*su conducta es difícil de comprenderla\" instead of \"su conducta es difícil de comprender\")."
+        ]
+      },
+      "expectedMustRepresentCount": 2,
+      "expectedMechanism": "construction-variants"
+    },
+    {
+      "name": "es-b1-ser-location-events",
+      "grammarPointKey": "es-b1-ser-location-events",
+      "note": "Hand-labelled by the repo owner, 2026-08-19. ser for where/when an EVENT takes place vs. estar for the location of people and things. The point is the two-way contrast. Snapshot of the live curriculum entry at that date — if the description is later reworded, re-label rather than assuming this still holds.",
+      "grammarPoint": {
+        "key": "es-b1-ser-location-events",
+        "kind": "grammar",
+        "name": "Ser for the location of events",
+        "description": "Events (parties, meetings, classes, concerts) take ser — not estar — for where and when they happen (La reunión es en la sala 2; El examen es a las diez), while people and things keep estar for location (La sala 2 está en la primera planta): \"to take place\" versus \"to be located\".",
+        "cefrLevel": "B1",
+        "language": "ES",
+        "examplesPositive": [
+          "La fiesta es en casa de Marta.",
+          "¿Dónde es el concierto? — Es en el teatro, que está en el centro."
+        ],
+        "examplesNegative": [
+          "*La fiesta está en casa de Marta.",
+          "*El examen está a las diez."
+        ],
+        "commonErrors": [
+          "Extending the \"estar for location\" rule to events, producing \"*la reunión está en la sala 2\" instead of \"la reunión es en la sala 2\".",
+          "Using estar for the time of an event, producing \"*el examen está a las diez\" instead of \"el examen es a las diez\".",
+          "Overcorrecting and using ser for the location of physical things or people, producing \"*el teatro es en el centro\" instead of \"el teatro está en el centro\"."
+        ]
+      },
+      "expectedMustRepresentCount": 2,
+      "expectedMechanism": "construction-variants"
+    },
+    {
+      "name": "es-a2-hace-ago",
+      "grammarPointKey": "es-a2-hace-ago",
+      "note": "Hand-labelled by the repo owner, 2026-08-19. hace + period with a past tense (ago) vs. desde hace + period with a present tense (still-ongoing). \"hace never changes form\" is a property of the marker, not a third construction. Snapshot of the live curriculum entry at that date — if the description is later reworded, re-label rather than assuming this still holds.",
+      "grammarPoint": {
+        "key": "es-a2-hace-ago",
+        "kind": "grammar",
+        "name": "Hace + time period = \"ago\"",
+        "description": "Hace + period with a past tense to place an event a period back from now (Llegué hace dos años; Hace una semana vimos esa película), contrasted with desde hace + period for a still-ongoing duration (Vivo aquí desde hace un año); hace never changes form in this use.",
+        "cefrLevel": "A2",
+        "language": "ES",
+        "examplesPositive": [
+          "Llegué a España hace dos años.",
+          "Hace una semana vimos esa película.",
+          "Trabajo aquí desde hace seis meses."
+        ],
+        "examplesNegative": [
+          "*Llegué a España dos años hace.",
+          "*Hacen dos años que llegué."
+        ],
+        "commonErrors": [
+          "Placing hace after the period on the model of English \"two years ago\", producing \"*dos años hace\" instead of \"hace dos años\".",
+          "Pluralizing hace to agree with the period, producing \"*hacen dos años\" instead of \"hace dos años\".",
+          "Confusing the \"ago\" pattern with the duration pattern, producing \"*la vi desde hace dos días\" when \"la vi hace dos días\" (ago) is meant."
+        ]
+      },
+      "expectedMustRepresentCount": 2,
+      "expectedMechanism": "construction-variants"
+    },
+    {
+      "name": "es-b1-influence-verbs-infinitive",
+      "grammarPointKey": "es-b1-influence-verbs-infinitive",
+      "note": "Hand-labelled by the repo owner, 2026-08-19. dative clitic + infinitive vs. the interchangeable que + subjunctive. The four verbs (dejar/permitir/prohibir/hacer) are lexical variation of one pattern; \"never que + indicative\" is a constraint, not a construction. Snapshot of the live curriculum entry at that date — if the description is later reworded, re-label rather than assuming this still holds.",
+      "grammarPoint": {
+        "key": "es-b1-influence-verbs-infinitive",
+        "kind": "grammar",
+        "name": "Dejar, permitir, hacer + infinitive",
+        "description": "Influence and causation with a dative clitic + infinitive: dejar (no me dejan salir), permitir (le permitieron entrar), prohibir (le prohibieron fumar), and causative hacer (me hizo llorar); interchangeable with que + subjunctive (le permitieron que entrara), never que + indicative.",
+        "cefrLevel": "B1",
+        "language": "ES",
+        "examplesPositive": [
+          "Mis padres no me dejan salir entre semana.",
+          "El médico le prohibió fumar.",
+          "Esa película siempre me hace llorar."
+        ],
+        "examplesNegative": [
+          "*Mis padres no dejan que salgo.",
+          "*Me hace a llorar."
+        ],
+        "commonErrors": [
+          "Using que + indicative after an influence verb, producing \"*no dejan que salgo\" instead of \"no dejan que salga\" or \"no me dejan salir\".",
+          "Inserting a before the infinitive after hacer, producing \"*me hace a llorar\" instead of \"me hace llorar\".",
+          "Dropping the dative clitic that marks the affected person, producing \"*mis padres no dejan salir\" instead of \"mis padres no me dejan salir\"."
         ]
       },
       "expectedMustRepresentCount": 2,
