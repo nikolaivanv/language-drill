@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import {
   createAuthenticatedFetch,
   useCurriculum,
+  useDiversity,
   useGenerationStats,
   usePoolStatus,
   useTheoryCoverage,
@@ -14,9 +15,18 @@ import {
 import type { PoolStatusTheoryItem } from '@language-drill/api-client';
 import { ExerciseType } from '@language-drill/shared';
 import { PoolCoverageTable } from './_components/pool-coverage-table';
+import { DiversityGlossary } from './_components/diversity-glossary';
 import { GrammarPointCombobox } from '../../../../components/admin/grammar-point-combobox';
 import { FilterSelect } from '../../../../components/admin/filter-select';
 import { DataTable, Th, Td } from '../../../../components/admin/data-table';
+import {
+  DIVERSITY_FILTER_GROUPS,
+  diversityByCellKey,
+  isDiversityFilter,
+  matchesDiversityFilter,
+  poolCellKey,
+  type DiversityFilter,
+} from '../../../../lib/admin/diversity-status';
 
 type Tab = 'exercises' | 'theory';
 const EXERCISE_TYPES = Object.values(ExerciseType);
@@ -52,7 +62,16 @@ function PoolPageInner() {
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
   const searchParams = useSearchParams();
   const [tab, setTab] = useState<Tab>(searchParams.get('tab') === 'theory' ? 'theory' : 'exercises');
-  const [filters, setFilters] = useState<{ language?: string; level?: string; type?: string; grammarPoint?: string }>({});
+  const [filters, setFilters] = useState<{
+    language?: string;
+    level?: string;
+    type?: string;
+    grammarPoint?: string;
+    diversity?: DiversityFilter;
+  }>(() => {
+    const d = searchParams.get('diversity');
+    return d && isDiversityFilter(d) ? { diversity: d } : {};
+  });
 
   const poolStatus = usePoolStatus({ fetchFn, params: { language: filters.language, level: filters.level }, enabled: tab === 'exercises' });
   const stats = useGenerationStats({ fetchFn, enabled: tab === 'exercises' });
@@ -62,6 +81,19 @@ function PoolPageInner() {
     params: { language: filters.language, level: filters.level },
     enabled: tab === 'theory',
   });
+  // Scoped by language/level only — the mechanism filter runs client-side so
+  // every visible row can still render its own chips (a server-side narrow
+  // would blank the chips on non-matching rows rather than hide those rows).
+  const diversity = useDiversity({
+    fetchFn,
+    params: { language: filters.language, level: filters.level },
+    enabled: tab === 'exercises',
+  });
+  const diversityByCell = useMemo(
+    () => (diversity.data ? diversityByCellKey(diversity.data.items) : undefined),
+    [diversity.data],
+  );
+
   const curriculum = useCurriculum({ fetchFn, params: { language: filters.language, level: filters.level } });
   const grammarOptions = useMemo(
     () => (curriculum.data?.items ?? []).map((e: { key: string; name: string }) => ({ key: e.key, name: e.name })),
@@ -75,19 +107,31 @@ function PoolPageInner() {
     return [...filtered].sort((a, b) => theoryStatusRank(a) - theoryStatusRank(b) || a.grammarPointKey.localeCompare(b.grammarPointKey));
   }, [theoryPool.data, filters.grammarPoint]);
 
-  const setFilter = (key: keyof typeof filters, value: string) => {
+  const setFilter = (key: 'language' | 'level' | 'type' | 'grammarPoint', value: string) => {
     setFilters((f) => {
       const next = { ...f, [key]: value || undefined };
       if (key === 'language' || key === 'level') next.grammarPoint = undefined;
       return next;
     });
   };
+  const setDiversityFilter = (value: string) =>
+    setFilters((f) => ({
+      ...f,
+      diversity: isDiversityFilter(value) ? value : undefined,
+    }));
   const clearFilters = () => setFilters({});
-  const hasFilters = Boolean(filters.language || filters.level || filters.type || filters.grammarPoint);
+  const hasFilters = Boolean(
+    filters.language || filters.level || filters.type || filters.grammarPoint || filters.diversity,
+  );
 
-  // pool-status filters language/level server-side; type + grammar point are client-side.
+  // pool-status filters language/level server-side; type, grammar point and
+  // the diversity mechanism are client-side.
   const items = (poolStatus.data ?? []).filter(
-    (i) => (!filters.type || i.type === filters.type) && (!filters.grammarPoint || i.grammarPointKey === filters.grammarPoint),
+    (i) =>
+      (!filters.type || i.type === filters.type) &&
+      (!filters.grammarPoint || i.grammarPointKey === filters.grammarPoint) &&
+      (!filters.diversity ||
+        matchesDiversityFilter(diversityByCell?.get(poolCellKey(i))?.status, filters.diversity)),
   );
   const approvalRates = (stats.data?.approvalRates ?? []).filter(
     (r) =>
@@ -122,10 +166,26 @@ function PoolPageInner() {
           {THEORY_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
         </FilterSelect>
         {tab === 'exercises' ? (
-          <FilterSelect aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
-            <option value="">All types</option>
-            {EXERCISE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-          </FilterSelect>
+          <>
+            <FilterSelect aria-label="type" value={filters.type ?? ''} onChange={(e) => setFilter('type', e.target.value)}>
+              <option value="">All types</option>
+              {EXERCISE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </FilterSelect>
+            <FilterSelect
+              aria-label="diversity"
+              value={filters.diversity ?? ''}
+              onChange={(e) => setDiversityFilter(e.target.value)}
+            >
+              <option value="">All diversity</option>
+              {DIVERSITY_FILTER_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </FilterSelect>
+          </>
         ) : null}
         <div className="min-w-[220px]">
           <GrammarPointCombobox options={grammarOptions} value={filters.grammarPoint ?? ''} onChange={(key) => setFilter('grammarPoint', key)} />
@@ -141,10 +201,13 @@ function PoolPageInner() {
           : poolStatus.isError ? <p className="text-ink-soft text-[13px]">Failed to load pool status.</p>
           : (
             <>
-              {items.length === 0 ? (
+              <DiversityGlossary />
+              {filters.diversity && diversity.isLoading ? (
+                <p className="text-ink-soft text-[13px]">Loading diversity data…</p>
+              ) : items.length === 0 ? (
                 <p className="text-ink-soft text-[13px]">No matching cells.</p>
               ) : (
-                <PoolCoverageTable items={items} />
+                <PoolCoverageTable items={items} diversityByCell={diversityByCell} />
               )}
               <section className="flex flex-col gap-2">
                 <h2 className="font-display text-[18px] font-semibold text-ink">Generation quality (30d)</h2>

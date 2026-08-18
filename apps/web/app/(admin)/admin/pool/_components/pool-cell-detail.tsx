@@ -6,7 +6,6 @@ import {
   usePoolCell,
   useGenerateCell,
   useRevalidateCell,
-  useDiversity,
   type RevalidateResponse,
 } from '@language-drill/api-client';
 import { REASON_LABELS, type GenerationReasonCode } from '@language-drill/shared';
@@ -45,19 +44,22 @@ function seedSourceSummary(seed: DiversityCell['seed']): string {
   }
 }
 
-export function PoolCellDetail({ item, fetchFn }: { item: PoolStatusItem; fetchFn: AuthenticatedFetch }) {
+export function PoolCellDetail({
+  item,
+  fetchFn,
+  diversityCell,
+}: {
+  item: PoolStatusItem;
+  fetchFn: AuthenticatedFetch;
+  /** Resolved once by the page and passed down, so expanding N rows no longer
+   *  fires N copies of the same full-pool diversity query. `undefined` while
+   *  that fetch is unresolved — never coerce it to "no diversity data". */
+  diversityCell?: DiversityCell;
+}) {
   const detail = usePoolCell({
     fetchFn,
     cell: { language: item.language, level: item.level, type: item.type, grammarPoint: item.grammarPointKey },
   });
-
-  const diversity = useDiversity({
-    fetchFn,
-    params: { language: item.language, level: item.level },
-  });
-  const diversityCell = diversity.data?.items
-    .find((p) => p.key === item.grammarPointKey)
-    ?.cells.find((cc) => cc.type === item.type);
 
   const generate = useGenerateCell({ fetchFn });
   const [refillCount, setRefillCount] = useState(() =>

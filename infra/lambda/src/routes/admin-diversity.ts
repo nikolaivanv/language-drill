@@ -9,6 +9,11 @@
  * `unlabelledRows`). Without them a zero is ambiguous — an axis at 0 across a
  * whole cell usually means missing TAGS, not missing content — and acting on
  * the wrong reading demotes sound rows.
+ *
+ * Scoping only (`language`/`level`/`kind`): the sole consumer is the
+ * `/admin/pool` table, which needs a mechanism chip on EVERY row in scope and
+ * so filters by mechanism client-side. Narrowing here would silently blank the
+ * chips on the rows that didn't match rather than hide those rows.
  */
 import {
   ALL_CURRICULA,
@@ -33,10 +38,6 @@ const DiversityQuerySchema = z.object({
   language: z.enum(['ES', 'DE', 'TR']).optional(),
   level: z.enum(['A1', 'A2', 'B1', 'B2']).optional(),
   kind: z.string().optional(),
-  mechanism: z
-    .enum(['variants', 'curated-seeds', 'frequency-band', 'coverage-spec', 'none'])
-    .optional(),
-  issuesOnly: z.coerce.boolean().optional(),
 });
 
 export const adminDiversity = new Hono<{
@@ -72,7 +73,57 @@ type BuiltCell = {
   axes: BuiltAxis[];
   seed: BuiltSeed;
   shortfalls: Array<{ axis: string; value: string; floor: number; actual: number }>;
+  /** Deficiencies this cell's own denominators PROVE (see `countCellIssues`). */
+  provenIssues: number;
+  /** Deficiencies that may be measurement gaps rather than missing content. */
+  unknowns: number;
 };
+
+/**
+ * The four deficiencies a cell's own numbers can expose, split into what its
+ * denominators PROVE and what is merely UNMEASURED. Same rules, same
+ * arithmetic as before they moved here from the point loop — a point's counts
+ * are now the sum over its cells, which is what the pool table renders per row.
+ *
+ * The proven/unknown split is load-bearing, not cosmetic: a below-floor value
+ * far more often means missing TAGS than missing content, and demoting on an
+ * unknown destroys sound rows. See docs/admin-panel.md → "Reading a zero".
+ */
+function countCellIssues(
+  cell: Omit<BuiltCell, 'provenIssues' | 'unknowns'>,
+): { provenIssues: number; unknowns: number } {
+  let provenIssues = 0;
+  let unknowns = 0;
+
+  if (cell.seed.kind === 'construction-variants') {
+    for (const v of cell.seed.variants) {
+      if (v.count > 0) continue;
+      if (cell.seed.unlabelledRows === 0) provenIssues += 1;
+      else unknowns += 1;
+    }
+  }
+  if (
+    cell.seed.kind === 'curated' &&
+    cell.seed.poolSize > 0 &&
+    cell.seed.usedCount >= cell.seed.poolSize &&
+    !cell.atTarget
+  ) {
+    // Bounded pool fully covered — pickSeeds returns nulls and the cell
+    // silently stops generating. A cell already at target isn't trying to
+    // generate anyway, so exhaustion there isn't a live issue.
+    provenIssues += 1;
+  }
+  for (const s of cell.shortfalls) {
+    const axis = cell.axes.find((a) => a.name === s.axis);
+    if ((axis?.untagged ?? 0) > 0) unknowns += 1;
+    else provenIssues += 1;
+  }
+  // At target with unmet floors: no deficit, so the scheduler never revisits
+  // the cell and the floors never fire. Needs demote:pool.
+  if (cell.atTarget && cell.shortfalls.length > 0) provenIssues += 1;
+
+  return { provenIssues, unknowns };
+}
 
 adminDiversity.get('/admin/diversity', async (c) => {
   const parsed = DiversityQuerySchema.safeParse(c.req.query());
@@ -86,7 +137,7 @@ adminDiversity.get('/admin/diversity', async (c) => {
       400,
     );
   }
-  const { language, level, kind, mechanism, issuesOnly } = parsed.data;
+  const { language, level, kind } = parsed.data;
 
   const APPROVED = sql`review_status IN ('auto-approved', 'manual-approved')`;
   // MUST be lowercased. `buildCellKey` lowercases every part, so the canonical
@@ -247,7 +298,7 @@ adminDiversity.get('/admin/diversity', async (c) => {
       };
     });
 
-    return {
+    const built: Omit<BuiltCell, 'provenIssues' | 'unknowns'> = {
       cellKey: key,
       type: cell.exerciseType,
       level: cell.cefrLevel,
@@ -258,6 +309,8 @@ adminDiversity.get('/admin/diversity', async (c) => {
       seed: buildSeed(cell, mech.seed, seedCounts, totals.unlabelledRows),
       shortfalls: shortfall?.shortfalls ?? [],
     };
+
+    return { ...built, ...countCellIssues(built) };
   }
 
   const cellsByPoint = new Map<string, BuiltCell[]>();
@@ -270,63 +323,19 @@ adminDiversity.get('/admin/diversity', async (c) => {
     cellsByPoint.set(cell.grammarPoint.key, list);
   }
 
-  function matchesMechanism(
-    m: string,
-    point: (typeof ALL_CURRICULA)[number],
-    cells: BuiltCell[],
-  ): boolean {
-    if (m === 'coverage-spec') return !!point.coverageSpec;
-    if (m === 'variants') return cells.some((c) => c.seed.kind === 'construction-variants');
-    if (m === 'curated-seeds') return cells.some((c) => c.seed.kind === 'curated');
-    if (m === 'frequency-band') return cells.some((c) => c.seed.kind === 'frequency-band');
-    return cells.every((c) => c.seed.kind === 'none');
-  }
-
   const items: Array<{
     key: string; name: string; language: string; cefrLevel: string; kind: string;
     targetOverride: number | null; provenIssues: number; unknowns: number; cells: BuiltCell[];
   }> = [];
 
-  // Points that matched the (language, level, kind) query scope, before the
-  // `mechanism`/`issuesOnly` filters narrow `items` further — the page's
-  // "N of total" line needs this, not `items.length` again, or the count
-  // is trivially always "N of N" whenever a filter is active.
-  let totalInScope = 0;
-
   for (const point of ALL_CURRICULA) {
     const cells = cellsByPoint.get(point.key);
     if (!cells || cells.length === 0) continue;
-    totalInScope += 1;
 
-    let provenIssues = 0;
-    let unknowns = 0;
-    for (const cell of cells) {
-      if (cell.seed.kind === 'construction-variants') {
-        for (const v of cell.seed.variants) {
-          if (v.count > 0) continue;
-          if (cell.seed.unlabelledRows === 0) provenIssues += 1;
-          else unknowns += 1;
-        }
-      }
-      if (cell.seed.kind === 'curated' && cell.seed.poolSize > 0
-          && cell.seed.usedCount >= cell.seed.poolSize && !cell.atTarget) {
-        // Bounded pool fully covered — pickSeeds returns nulls and the cell
-        // silently stops generating. A cell already at target isn't trying
-        // to generate anyway, so exhaustion there isn't a live issue.
-        provenIssues += 1;
-      }
-      for (const s of cell.shortfalls) {
-        const axis = cell.axes.find((a) => a.name === s.axis);
-        if ((axis?.untagged ?? 0) > 0) unknowns += 1;
-        else provenIssues += 1;
-      }
-      // At target with unmet floors: no deficit, so the scheduler never
-      // revisits the cell and the floors never fire. Needs demote:pool.
-      if (cell.atTarget && cell.shortfalls.length > 0) provenIssues += 1;
-    }
-
-    if (mechanism && !matchesMechanism(mechanism, point, cells)) continue;
-    if (issuesOnly && provenIssues === 0 && unknowns === 0) continue;
+    // The point-level counts are exactly the sum of its cells' — the same
+    // numbers as before this became per-cell, just no longer recomputed here.
+    const provenIssues = cells.reduce((n, c) => n + c.provenIssues, 0);
+    const unknowns = cells.reduce((n, c) => n + c.unknowns, 0);
 
     items.push({
       key: point.key,
@@ -341,5 +350,5 @@ adminDiversity.get('/admin/diversity', async (c) => {
     });
   }
 
-  return c.json({ items, total: totalInScope });
+  return c.json({ items });
 });

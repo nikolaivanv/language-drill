@@ -62,6 +62,10 @@ export const DiversityCellSchema = z.object({
       actual: z.number(),
     }),
   ),
+  // Per-cell issue counts. A point's counts are the sum over its cells, so
+  // the pool table can badge a single (language, level, type, point) row.
+  provenIssues: z.number(),
+  unknowns: z.number(),
 });
 
 export const DiversityPointSchema = z.object({
@@ -78,7 +82,6 @@ export const DiversityPointSchema = z.object({
 
 export const DiversityResponseSchema = z.object({
   items: z.array(DiversityPointSchema),
-  total: z.number(),
 });
 
 export type DiversityAxis = z.infer<typeof DiversityAxisSchema>;
@@ -86,10 +89,10 @@ export type DiversitySeed = z.infer<typeof DiversitySeedSchema>;
 export type DiversityCell = z.infer<typeof DiversityCellSchema>;
 export type DiversityPoint = z.infer<typeof DiversityPointSchema>;
 
+/** Scoping only — mechanism filtering happens client-side, on the full
+ *  in-scope set, so every row can still render its own mechanism chips. */
 export type DiversityQuery = {
   language?: string;
   level?: string;
   kind?: string;
-  mechanism?: string;
-  issuesOnly?: boolean;
 };

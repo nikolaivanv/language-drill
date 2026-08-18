@@ -1,7 +1,7 @@
 // apps/web/app/(admin)/admin/pool/__tests__/page.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { PoolStatusItem } from '@language-drill/api-client';
+import type { DiversityCell, DiversityPoint, PoolStatusItem } from '@language-drill/api-client';
 
 vi.mock('@clerk/nextjs', () => ({ useAuth: () => ({ getToken: vi.fn() }) }));
 vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams('') }));
@@ -11,6 +11,7 @@ const mockGenStats = vi.fn();
 const mockTheoryCoverage = vi.fn();
 const mockCurriculum = vi.fn();
 const mockTheoryPool = vi.fn();
+const mockDiversity = vi.fn();
 vi.mock('@language-drill/api-client', async () => {
   const actual = await vi.importActual<typeof import('@language-drill/api-client')>('@language-drill/api-client');
   return {
@@ -21,6 +22,7 @@ vi.mock('@language-drill/api-client', async () => {
     useTheoryCoverage: (a: unknown) => mockTheoryCoverage(a),
     useCurriculum: (a: unknown) => mockCurriculum(a),
     useTheoryPoolStatus: (a: unknown) => mockTheoryPool(a),
+    useDiversity: (a: unknown) => mockDiversity(a),
   };
 });
 // Render the rich cell detail as a stub so the test focuses on the page shell.
@@ -40,6 +42,40 @@ const poolItems: PoolStatusItem[] = [
     targetSize: 75, generationTarget: 30, coverageDistribution: null,
     status: 'target-reached', lastJob: null },
 ];
+// One diversity cell per pool row above. The TR row declares NEITHER family
+// (the case the missing-* filters exist to find); the ES row declares both.
+function cell(overrides: Partial<DiversityCell>): DiversityCell {
+  return {
+    cellKey: 'x', type: 'cloze', level: 'A1', approved: 5, target: 20,
+    atTarget: false, axes: [], seed: { kind: 'none' }, shortfalls: [],
+    provenIssues: 0, unknowns: 0,
+    ...overrides,
+  };
+}
+const diversityPoints: DiversityPoint[] = [
+  {
+    key: 'tr-a1-ki-relativizer', name: 'ki relativizer', language: 'TR',
+    cefrLevel: 'A1', kind: 'grammar', targetOverride: null,
+    provenIssues: 0, unknowns: 0,
+    cells: [cell({ cellKey: 'tr:a1:cloze:tr-a1-ki-relativizer' })],
+  },
+  {
+    key: 'es-b1-ser-estar', name: 'ser vs estar', language: 'ES',
+    cefrLevel: 'B1', kind: 'grammar', targetOverride: null,
+    provenIssues: 2, unknowns: 0,
+    cells: [
+      cell({
+        cellKey: 'es:b1:translation:es-b1-ser-estar',
+        type: 'translation',
+        level: 'B1',
+        provenIssues: 2,
+        axes: [{ name: 'person', role: 'controlled', values: [{ value: '3sg', count: 4, floor: 6 }], untagged: 0 }],
+        seed: { kind: 'frequency-band', band: 'verb', rankMax: 2000, distinctSeeds: 12, unlabelledRows: 0 },
+      }),
+    ],
+  },
+];
+
 const genStats = {
   costThisWeekUsd: 1, costThisMonthUsd: 2,
   jobsThisWeek: { succeeded: 1, failed: 0, running: 0, queued: 0 },
@@ -52,7 +88,8 @@ const genStats = {
 beforeEach(() => {
   mockPoolStatus.mockReset(); mockGenStats.mockReset();
   mockTheoryCoverage.mockReset(); mockCurriculum.mockReset();
-  mockTheoryPool.mockReset();
+  mockTheoryPool.mockReset(); mockDiversity.mockReset();
+  mockDiversity.mockReturnValue({ isLoading: false, isError: false, data: { items: diversityPoints } });
   mockTheoryPool.mockReturnValue({ isLoading: false, isError: false, data: [
     { language: 'TR', level: 'A1', grammarPointKey: 'tr-a1-approved', name: 'approved pt', hasApprovedPage: true, flaggedCount: 0, lastGeneratedAt: null },
     { language: 'TR', level: 'A1', grammarPointKey: 'tr-a1-flagged', name: 'flagged pt', hasApprovedPage: false, flaggedCount: 3, lastGeneratedAt: null },
@@ -67,6 +104,50 @@ beforeEach(() => {
     { key: 'tr-a1-ki-relativizer', name: 'ki relativizer' },
     { key: 'es-b1-ser-estar', name: 'ser vs estar' },
   ] } });
+});
+
+describe('PoolPage — diversity mechanisms', () => {
+  it('renders a mechanism chip per row, joining on the lowercased cell key', () => {
+    render(<PoolPage />);
+    // Two rows → two spec chips. A broken (unlowercased) join would silently
+    // render '—' for every row instead.
+    const specChips = screen.getAllByTestId('mechanism-spec');
+    expect(specChips).toHaveLength(2);
+    expect(specChips.map((c) => c.textContent)).toEqual(
+      expect.arrayContaining([expect.stringContaining('spec —'), expect.stringContaining('spec 1ax')]),
+    );
+  });
+
+  it('narrows to the rows with no mechanism at all', () => {
+    render(<PoolPage />);
+    fireEvent.change(screen.getByLabelText('diversity'), { target: { value: 'missing-all' } });
+    expect(screen.getByRole('button', { name: /tr-a1-ki-relativizer/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /es-b1-ser-estar/i })).not.toBeInTheDocument();
+  });
+
+  it('narrows to the rows with proven issues', () => {
+    render(<PoolPage />);
+    fireEvent.change(screen.getByLabelText('diversity'), { target: { value: 'proven-issues' } });
+    expect(screen.getByRole('button', { name: /es-b1-ser-estar/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /tr-a1-ki-relativizer/i })).not.toBeInTheDocument();
+  });
+
+  it('filters positively by seed kind', () => {
+    render(<PoolPage />);
+    fireEvent.change(screen.getByLabelText('diversity'), { target: { value: 'has-frequency-band' } });
+    expect(screen.getByRole('button', { name: /es-b1-ser-estar/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /tr-a1-ki-relativizer/i })).not.toBeInTheDocument();
+  });
+
+  // Filtering on an unresolved response would hide every row and read as
+  // "nothing is missing a mechanism" — the opposite of the truth.
+  it('says it is still loading rather than reporting an empty result', () => {
+    mockDiversity.mockReturnValue({ isLoading: true, isError: false, data: undefined });
+    render(<PoolPage />);
+    fireEvent.change(screen.getByLabelText('diversity'), { target: { value: 'missing-all' } });
+    expect(screen.getByText(/loading diversity data/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no matching cells/i)).not.toBeInTheDocument();
+  });
 });
 
 describe('PoolPage', () => {
