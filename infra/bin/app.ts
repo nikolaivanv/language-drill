@@ -46,6 +46,13 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-08-19): pause the nightly exercise pre-generation cron while
+  // more `constructionVariants` are being added to the curriculum — generating
+  // against the current variant lists would only deepen the pool's collapse.
+  // This drops only the exercise-refill EventBridge rule; the weekly
+  // theory-generation cron and the email cron stay on `enableScheduledJobs`.
+  // Revert (delete this line and comment) in a follow-up PR to resume.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
