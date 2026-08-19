@@ -49,7 +49,7 @@ import {
 
 import { createDb, type Db } from '../client';
 import { ALL_CURRICULA } from '../curriculum';
-import type { CurriculumCefrLevel } from '../curriculum';
+import type { CurriculumCefrLevel, GrammarPoint } from '../curriculum';
 import { exerciseTags, exercises, generationJobs, vocabLemma, vocabTarget } from '../schema/index';
 // The mock client lives in scripts/ because its fixtures do; cross-boundary
 // import is acceptable for test infrastructure.
@@ -292,11 +292,27 @@ async function invokeRunOneCellWithClient(
 // ---------------------------------------------------------------------------
 
 describe('seedKindFor', () => {
+  // `seedKindFor` is a pure function of the point's own flags, so these cases
+  // use a SYNTHETIC point rather than a real curriculum entry. They used to
+  // read `es-b1-present-subjunctive` as a stand-in for "a point with no
+  // seeding flags"; when that point gained `constructionVariants` on
+  // 2026-08-19 the frequency cases started returning 'construction-variants',
+  // and flipping the assertions would have silently stopped testing the
+  // default path. Any real entry is one curriculum edit away from the same
+  // problem — the fixture should carry only the flags under test.
+  const BARE_POINT: GrammarPoint = {
+    ...ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!,
+    constructionVariants: undefined,
+    selfRevealingElicitation: undefined,
+    conjugationSeedKind: undefined,
+    conjugationSeedWords: undefined,
+  };
+
   const cellOf = (exerciseType: ExerciseType): Cell => ({
     language: Language.ES as LearningLanguage,
     cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
     exerciseType,
-    grammarPoint: ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!,
+    grammarPoint: BARE_POINT,
     cellKey: 'es:b1:x:es-test',
   });
 
@@ -317,7 +333,7 @@ describe('seedKindFor', () => {
     // Nominal-inflection points (possessive/case/copula) decline a noun, not a
     // verb, so their conjugation cell seeds from the NOUN band — varying the
     // declined head keeps the pool's distinct-identity space from exhausting.
-    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const base = BARE_POINT;
     const nominalCell: Cell = {
       language: Language.ES as LearningLanguage,
       cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
@@ -331,7 +347,7 @@ describe('seedKindFor', () => {
   it('returns predicate-nominal for a copular conjugation cell (conjugationSeedKind: predicate-nominal)', () => {
     // The copula makes a "subject IS <predicate>" sentence, so it seeds from the
     // curated predicate pool — distinct from the generic noun band.
-    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const base = BARE_POINT;
     const copularCell: Cell = {
       language: Language.ES as LearningLanguage,
       cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
@@ -347,7 +363,7 @@ describe('seedKindFor', () => {
   });
 
   it('returns null for a conjugation cell that opts out of seeding (legacy conjugationSeedKind: none)', () => {
-    const base = ALL_CURRICULA.find((g) => g.key === TEST_GRAMMAR_POINT_KEY)!;
+    const base = BARE_POINT;
     const unseededCell: Cell = {
       language: Language.ES as LearningLanguage,
       cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
