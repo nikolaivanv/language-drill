@@ -49,6 +49,10 @@ import {
 
 const IN_SCOPE_TYPES = [ExerciseType.CLOZE, ExerciseType.TRANSLATION] as const;
 
+/** Enumeration attempts per point before recording a failure. See the re-roll
+ *  rationale at the stage-1 dispatch. */
+export const ENUMERATION_ATTEMPTS = 2;
+
 export type AuditConstructionsFilters = {
   language?: string;
   cefr?: string;
@@ -266,6 +270,13 @@ const ESTIMATED_ENUMERATION_INPUT_TOKENS = 900;
 const ESTIMATED_ENUMERATION_OUTPUT_TOKENS = 500;
 const ESTIMATED_CLASSIFICATION_BATCH_INPUT_TOKENS = 1800; // per batch of up to DEFAULT_CLASSIFICATION_BATCH_SIZE rows
 const ESTIMATED_CLASSIFICATION_BATCH_OUTPUT_TOKENS = 400;
+// Stage 4. Omitting this is what made the 2026-08-19 ES sweep come in at $7.16
+// against a "conservative upper bound" of $5.72: 162 findings meant 162
+// unpriced snippet-authoring calls. Proposals are output-heavy (a paste-ready
+// curriculum fragment), so they cost more per call than either other stage.
+// The bound assumes the worst case — every classified cell yields a finding.
+const ESTIMATED_PROPOSAL_INPUT_TOKENS = 1200;
+const ESTIMATED_PROPOSAL_OUTPUT_TOKENS = 900;
 
 function roughCostUsd(inputTokens: number, outputTokens: number): number {
   return (
@@ -281,6 +292,10 @@ const ESTIMATED_ENUMERATION_COST_USD = roughCostUsd(
 const ESTIMATED_CLASSIFICATION_BATCH_COST_USD = roughCostUsd(
   ESTIMATED_CLASSIFICATION_BATCH_INPUT_TOKENS,
   ESTIMATED_CLASSIFICATION_BATCH_OUTPUT_TOKENS,
+);
+const ESTIMATED_PROPOSAL_COST_USD = roughCostUsd(
+  ESTIMATED_PROPOSAL_INPUT_TOKENS,
+  ESTIMATED_PROPOSAL_OUTPUT_TOKENS,
 );
 
 export type Budget = {
@@ -740,7 +755,10 @@ async function main(): Promise<void> {
     );
     const estimatedCostUsd =
       examinable.length * ESTIMATED_ENUMERATION_COST_USD +
-      classificationBatches * ESTIMATED_CLASSIFICATION_BATCH_COST_USD;
+      classificationBatches * ESTIMATED_CLASSIFICATION_BATCH_COST_USD +
+      // Worst case: every classified cell produces a finding and therefore a
+      // proposal call. Cells, not findings — findings are not knowable here.
+      cellCount * ESTIMATED_PROPOSAL_COST_USD;
     console.log(
       `[audit-constructions] DRY RUN — no API calls, no cost.\n` +
         `  points to enumerate: ${examinable.length}\n` +
@@ -748,9 +766,9 @@ async function main(): Promise<void> {
         `  rows that would be sampled (upper bound): ${sampled}\n` +
         `  thin cells skipped (< ${filters.minRows} rows): ${thinCells.length}\n` +
         `  rough upper-bound cost estimate: $${estimatedCostUsd.toFixed(2)} ` +
-        `(conservative — assumes every cell needs classification and ignores\n` +
-        `        prompt-cache discounts after each stage's first call; the real\n` +
-        `        cost is typically well below this)\n` +
+        `(upper bound — assumes every cell needs classification AND yields a\n` +
+        `        proposal, and ignores prompt-cache discounts after each stage's\n` +
+        `        first call)\n` +
         `  NOTE: classification runs only for points with >=2 must-represent\n` +
         `        constructions, so the real cost is well below this bound.`,
     );
@@ -776,20 +794,39 @@ async function main(): Promise<void> {
     examinable.map((gp) =>
       limit(async () => {
         if (!budget.left()) return;
-        try {
-          const { enumeration, usage } = await enumeratePointConstructions(
-            client,
-            gp,
-            undefined,
-            filters.enumerationModel,
-          );
-          budget.spend(estimateCallCostUsd(usage));
-          enumerations.set(gp.key, enumeration);
-        } catch (err) {
-          enumerationErrors.push({
-            grammarPointKey: gp.key,
-            message: err instanceof Error ? err.message : String(err),
-          });
+        // One re-roll on failure. Enumeration failures observed on the
+        // 2026-08-19 ES sweep were intermittent serialization faults, not
+        // properties of the point: Anthropic tool-use sometimes returns
+        // `constructions` as a JSON string, and sometimes that string carries
+        // unescaped inner quotes ('indicative ("in case")') that defeat even
+        // jsonrepair's delimiter heuristic — the shape @language-drill/shared's
+        // decodeMaybeRepaired documents as unrepairable. Its recovery path is a
+        // regenerate retry, and the same one works here: two of the three
+        // failures re-rolled clean on the very next call. A retry costs one
+        // extra call only on the failing point, against losing that point from
+        // the sweep entirely.
+        for (let attempt = 1; attempt <= ENUMERATION_ATTEMPTS; attempt++) {
+          try {
+            const { enumeration, usage } = await enumeratePointConstructions(
+              client,
+              gp,
+              undefined,
+              filters.enumerationModel,
+            );
+            budget.spend(estimateCallCostUsd(usage));
+            enumerations.set(gp.key, enumeration);
+            break;
+          } catch (err) {
+            // Record only once the last attempt is spent, so a point that
+            // recovers on the re-roll leaves no error behind and does not
+            // latch `partial`.
+            if (attempt === ENUMERATION_ATTEMPTS) {
+              enumerationErrors.push({
+                grammarPointKey: gp.key,
+                message: `${err instanceof Error ? err.message : String(err)} (after ${ENUMERATION_ATTEMPTS} attempts)`,
+              });
+            }
+          }
         }
       }),
     ),

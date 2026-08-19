@@ -20,7 +20,7 @@ import type Anthropic from '@anthropic-ai/sdk';
 import { ExerciseType } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
 
-export const CONSTRUCTION_COVERAGE_PROMPT_VERSION = 'construction-coverage@2026-08-18';
+export const CONSTRUCTION_COVERAGE_PROMPT_VERSION = 'construction-coverage@2026-08-19';
 
 /** A mustRepresent construction at or below this share of classified rows is a
  *  finding. At the default sample of 24 this means 0 or 1 row — the cliff is
@@ -222,6 +222,10 @@ You are NOT shown the exercise pool. Enumerate what the point CLAIMS, not what y
 
 For each construction, decide \`mustRepresent\`. It is TRUE only when ALL THREE hold:
 
+Never use a double-quote character inside \`label\` or \`rationale\`. Use single quotes if you need to quote a gloss ('in case'), because an unescaped inner double quote can corrupt the tool payload.
+
+Every \`id\` must be ASCII kebab-case — lowercase a-z, digits and hyphens only. Transliterate accented characters rather than emitting them (\`tú\` becomes \`tu\`). When two items would collide once transliterated, disambiguate them by MEANING rather than by the accent (\`tu-possessive\` and \`tu-subject-pronoun\`, never \`tu\` and \`tu-tu\`).
+
 1. **Distinct form** — realizing it makes the learner produce a materially different structure, not merely a different word. A list of lexical variants of one pattern (hinein/herein/hinaus/heraus) is ONE construction, not four.
 2. **Actually claimed** — the description or a positive example asserts it, rather than mentioning it in passing.
 3. **Cell-realizable** — a single fill-in-the-blank or translate-this-sentence item can exercise it. Discourse-level phenomena spanning several sentences fail this test.
@@ -293,7 +297,23 @@ export function parsePointEnumeration(input: unknown, grammarPointKey: string): 
     throw new Error(`unknown mechanism '${String(mechanism)}'`);
   }
 
-  const raw = input.constructions;
+  // Anthropic's tool-use occasionally serializes a nested array as a JSON
+  // string literal instead of a native array. `parseTheoryTopicJson` in
+  // @language-drill/shared already defends against exactly this (documented
+  // there at ~75% of theory-generation runs); this parser did not, and it cost
+  // 3 of 114 points on the 2026-08-19 ES sweep — all three returned
+  // `stop_reason: 'tool_use'` with output well under the token cap, so it is
+  // the serialization, not truncation. Decode before the array check; anything
+  // that does not decode to an array falls through to it unchanged.
+  let raw = input.constructions;
+  if (typeof raw === 'string') {
+    try {
+      const decoded: unknown = JSON.parse(raw);
+      if (Array.isArray(decoded)) raw = decoded;
+    } catch {
+      // leave as-is; the array check below produces the actionable error
+    }
+  }
   if (!Array.isArray(raw)) throw new Error('constructions must be an array');
 
   const seen = new Set<string>();
