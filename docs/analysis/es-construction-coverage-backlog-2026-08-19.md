@@ -2,11 +2,16 @@
 
 Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08-19`, prompt `construction-coverage@2026-08-18`, seed `default`, sample cap 24), then re-grouped 2026-08-19 by what each point actually needs.
 
-**STATUS 2026-08-19: authoring is COMPLETE.** Buckets A and B are cleared across
-#674–#682 and the batch-10 PR; all **90** points now declare a
-`constructionVariants` list, and every remaining item is the same single job —
-the #631 repass, in the order given below. Nothing in this document is an
-authoring task any more.
+**STATUS 2026-08-20: the repass has RUN.** Buckets A and B were cleared across
+#674–#683; all **90** points declare a `constructionVariants` list. The retrofit
+then ran against prod on 2026-08-20: prompts verified in sync (no drift, nothing
+to push), **6,532 of 9,134** approved ES cloze/translation rows labelled with the
+variant they realize, and **3,070 rows demoted `pool-hygiene`** to open headroom.
+Nightly pre-generation stays PAUSED (#672) by explicit decision, so that headroom
+is not refilled yet — resuming is the one step left.
+
+The only authoring work still open is the four points below, which the
+pre-#673 enumeration faults had skipped and which were re-audited on 2026-08-20.
 
 **Not every finding is authoring work.** A point whose variants are already declared is collapsed because its pool PREDATES them — the remedy there is the retrofit repass PR #631 never ran, not a second variant list. The three buckets below are ordered by how much work they are.
 
@@ -20,14 +25,25 @@ authoring task any more.
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **0** · needs topping up: **0** · needs only the repass: **90**
+- Needs authoring: **4** (the re-examined points below) · needs topping up: **0** · needs only the repass: **90**
 
-### Never examined — re-run after the enumeration fixes in #673
+### Never examined — RE-RUN 2026-08-20, all four now examined
 
-- `es-a2-diacritic-pairs` — id 'tu-tú' must be kebab-case
-- `es-a2-si-present-conditional` — constructions must be an array
-- `es-b2-conditional-connectors` — constructions must be an array
-- `es-b2-correlative-comparison` — constructions must be an array
+The four points the pre-#673 enumeration faults skipped were re-audited on
+2026-08-20 (`reaudit-<key>-2026-08-20` in `audit-runs/`, $0.30 total). All four
+are collapsed and **all four need variants authored** — they are the only
+authoring work left in this document.
+
+| point | enumeration fault (pre-#673) | what the pool shows now |
+|---|---|---|
+| `es-a2-diacritic-pairs` | id `tu-tú` not kebab-case | `tú/tu` (19 of 48) and `sé/se` (18) took the pool; `mí/mi` **0**, `sí/si` **0**, `más/mas` **0**, `dé/de` **0** — four of the nine pairs the description names never appear |
+| `es-a2-si-present-conditional` | constructions not an array | the three apodosis types are healthy (17/17/13), but `si` + perfect **0**, the past-habitual `si` **0**, and the `si`/`sí` accent contrast 1 |
+| `es-b2-conditional-connectors` | constructions not an array | `siempre que`/`con tal de que` took **43 of 48**; `por si (acaso)` 1, `salvo si` **0**, conditional `como` + subjunctive **0**, `de` + infinitive **0** |
+| `es-b2-correlative-comparison` | constructions not an array | `cuanto más/menos` 12 and the future-reference subjunctive 10; `cada vez más/menos` **0** |
+
+`es-a2-diacritic-pairs` is the sharpest: it is a point about NINE accent pairs
+whose pool tests two of them. The audit proposes `coverage-spec` there and
+`construction-variants` for the other three.
 
 ## Bucket A — no variants declared: author them
 
