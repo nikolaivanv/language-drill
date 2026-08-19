@@ -375,6 +375,58 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-gender-agreement',
+    // Measured 2026-08-19 (`audit:constructions`): 21 of 35 sampled rows were a
+    // gentilicio (español/española). Both invariable classes were 0 — the
+    // -í gentilicios (marroquí) and the compound/noun-derived colours (naranja,
+    // verde oscuro), each of which owns a commonError on this point.
+    //
+    // Two of the audit's proposed constructions are REJECTED.
+    // `postnominal-position` is a property EVERY row of every variant below
+    // already realizes — the general construction the specific ones absorb, not
+    // a member of the axis. `collective-noun-agreement` (la gente es amable) is
+    // singular by construction, so it would collide with the number
+    // coverageSpec's "target word form MUST be plural" on a third of its
+    // ordinals; it stays in commonErrors instead.
+    //
+    // The number spec below is KEPT: number is orthogonal to adjective class,
+    // which is the case the coexistence rule allows (see
+    // `es-b1-imperative-negative-pronouns`). Every directive is deliberately
+    // number-neutral so the two MUSTs stay jointly satisfiable. Worth watching
+    // in `coverage_outcome` after the repass: three of these five variants are
+    // invariable classes, whose plural is unmarked ON THE ADJECTIVE (los coches
+    // estándar), so a plural target that can only be read off the noun is the
+    // shape that goes unrealizable.
+    constructionVariants: [
+      {
+        id: 'descriptive-adjective-agreement-default',
+        directive:
+          'a plain descriptive adjective agreeing in gender and number with the noun it follows (un coche rojo, una casa roja, unos zapatos negros, unas sillas nuevas)',
+        share: 3,
+      },
+      {
+        id: 'variable-gentilicio-agreement',
+        directive:
+          'a gentilicio that adds -a in the feminine (español/española, francés/francesa, alemán/alemana): Tengo un amigo español y una amiga española',
+        share: 2,
+      },
+      {
+        id: 'invariable-gentilicio-agreement',
+        directive:
+          'a gentilicio ending in -í or -e that does NOT add -a (marroquí, iraní, israelí, belga, estadounidense): El chico marroquí y la chica marroquí viven aquí',
+        share: 2,
+      },
+      {
+        id: 'invariable-compound-colour-adjectives',
+        directive:
+          'a colour adjective that never agrees — a noun-derived colour (naranja, rosa, violeta) or a compound (verde oscuro, azul claro): Llevo una camisa verde oscuro; Compré tres botones naranja',
+        share: 2,
+      },
+      {
+        id: 'fully-invariable-adjectives',
+        directive:
+          'an adjective invariable for both gender and number (estándar, gratis, macho, hembra): el modelo estándar, los coches estándar, las entradas gratis',
+      },
+    ],
     coverageSpec: {
       axes: [
         // Gender is not a coverage axis, so number is the pinnable half —
@@ -760,6 +812,30 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-querer-poder-infinitive',
+    // Measured 2026-08-19 (`audit:constructions`): 38 of 38 sampled rows were
+    // querer/poder + infinitive. The other two constructions the description
+    // names — the infinitive as subject taking masculine singular agreement,
+    // and creer que + indicative, each with its own commonError — were 0 of 38.
+    constructionVariants: [
+      {
+        id: 'querer-poder-infinitive',
+        directive:
+          'querer or poder followed directly by an infinitive with no linking preposition (Quiero aprender español este año; ¿Puedes ayudarme un momento?)',
+        share: 3,
+      },
+      {
+        id: 'infinitive-as-subject-masc-sg-adjective',
+        directive:
+          'an infinitive (or a clause) as the subject, with the predicate adjective in the masculine singular regardless of what the sentence is about (Viajar solo es caro; Es absurdo hacerlo así)',
+        share: 2,
+      },
+      {
+        id: 'creer-que-indicative',
+        directive:
+          'creer que + INDICATIVE to state a belief, never the subjunctive (Creo que puedes hacerlo sin problema; Creemos que es verdad)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Querer and poder with the infinitive',
     description:
@@ -1470,15 +1546,61 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-imperative-affirmative',
-    coverageSpec: {
-      axes: [
-        // Direct analogue of the collapsed TR imperative (PR #588): tú
-        // (incl. the eight irregulars di/haz/pon…) vs subjunctive-based
-        // usted/ustedes are different morphologies. No polarity axis — the
-        // negative imperative is es-b1-imperative-negative-pronouns.
-        { name: 'person', floors: { '2sg': 10, '3sg': 8, '3pl': 8 } },
-      ],
-    },
+    // Measured 2026-08-19 (`audit:constructions`): the cloze pool was 18/24
+    // regular tú and the translation pool 11/24 enclitic; the vosotros
+    // imperative was 0 of 48 sampled rows across both cells and usted/ustedes
+    // 1 of 48 — the two paradigms a learner cannot derive from the tú form.
+    //
+    // The `person` coverageSpec this point carried (2sg 10 / 3sg 8 / 3pl 8,
+    // added 2026-07-17 as the analogue of the collapsed TR imperative in #588)
+    // is REMOVED, for the reason spelled out on
+    // `es-b1-imperative-negative-pronouns`: three of the six variants below
+    // hard-code a person (the eight irregulars are 2sg-only, vosotros is 2pl,
+    // usted/ustedes is 3sg/3pl), so the spec's per-ordinal "target grammatical
+    // person" MUST and the variant's "MUST use this sub-construction" MUST
+    // would arrive in the same user prompt from two seeders that never consult
+    // each other. Here the overlap is not incidental — person IS the
+    // morphological axis of the affirmative imperative, so it cannot be left to
+    // the orthogonal mechanism. The floors were aspirational rather than
+    // realized in any case (the spec asked for 16 of 30 rows on 3sg+3pl; the
+    // pool held 1 of 48). Shares put usted/ustedes level with regular tú so the
+    // formal half keeps the largest single slice the spec was reaching for.
+    constructionVariants: [
+      {
+        id: 'imperative-tu-regular',
+        directive:
+          'the regular affirmative tú imperative of an -ar/-er/-ir verb, with no pronoun attached (Habla más despacio; Come toda la verdura; Abre la ventana)',
+        share: 3,
+      },
+      {
+        id: 'imperative-tu-irregular',
+        directive:
+          'one of the eight irregular affirmative tú imperatives — di, haz, pon, sal, ten, ven, sé, ve — with no pronoun attached (Pon la mesa antes de cenar; Ten paciencia; Ve al médico mañana)',
+        share: 2,
+      },
+      {
+        id: 'imperative-vosotros',
+        directive:
+          'the vosotros imperative in -ad/-ed/-id, addressing a group informally (Hablad más despacio; Comed toda la fruta; Venid pronto)',
+      },
+      {
+        id: 'imperative-usted-ustedes',
+        directive:
+          'the usted or ustedes imperative built on the present subjunctive, in a context that makes the formal register clear (Hable con el médico, por favor; Compren los billetes con antelación). Alternate between the singular usted and the plural ustedes',
+        share: 3,
+      },
+      {
+        id: 'imperative-enclitic-pronoun',
+        directive:
+          'an affirmative imperative with one or two pronouns attached to the end of the verb as a suffix, carrying the written accent the addition forces (Cómpralo en la farmacia; Dímelo ahora; Póntelo)',
+        share: 2,
+      },
+      {
+        id: 'imperative-pronominal-estar',
+        directive:
+          'the pronominal imperative of estar with an adjective or adverb complement (Estate quieto un momento; Estense tranquilos)',
+      },
+    ],
     kind: 'grammar',
     name: 'Affirmative imperative',
     description:
@@ -1806,6 +1928,46 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-personal-a',
+    // Measured 2026-08-19 (`audit:constructions`): 45 of 48 sampled rows were
+    // the plain "a before a specific named person" case. The OMISSION half of
+    // the rule — the contrast the point exists to teach, and the one carrying
+    // its own commonError (*busco a un médico) — was 0 of 48, as were the
+    // tonic-pronoun-plus-clitic pattern and the querer/tener sense shift.
+    constructionVariants: [
+      {
+        id: 'personal-a-specific-person',
+        directive:
+          'personal a before a direct object naming a specific person or a pet (Vi a Juan en el parque; No conozco a tu hermana; Llevé al perro al veterinario)',
+        share: 3,
+      },
+      {
+        id: 'personal-a-omitted-indefinite',
+        directive:
+          'personal a correctly OMITTED because the human direct object is unspecified — no particular individual is meant (Busco un médico que hable inglés; La empresa necesita un fontanero)',
+        share: 2,
+      },
+      {
+        id: 'personal-a-alguien-nadie-quien',
+        directive:
+          'the obligatory personal a before alguien, nadie or quién, where it survives even though the referent is non-specific (No veo a nadie en la oficina; ¿A quién llamaste?)',
+        share: 2,
+      },
+      {
+        id: 'personal-a-tonic-pronoun-clitic',
+        directive:
+          'a + tonic pronoun (él, ella, ellos…) as direct object, which does not replace the clitic but is added to it (Lo vi a él en el mercado; La invitaron a ella, no a mí)',
+      },
+      {
+        id: 'personal-a-querer-tener-sense-shift',
+        directive:
+          'querer or tener where the presence of a shifts the sense — querer a un hijo = love him vs. querer un hijo = want one (Quiere mucho a su hijo; Quieren tener un hijo)',
+      },
+      {
+        id: 'personal-a-collective-or-place',
+        directive:
+          'the place-name/collective contrast: no a before a place name after visitar, abandonar, ver (Visité Madrid en abril), but a before a collective noun read as people (Admiro al pueblo cubano)',
+      },
+    ],
     kind: 'grammar',
     name: 'Personal a',
     description:
@@ -2187,6 +2349,50 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-indefinites-double-negation',
+    // Measured 2026-08-19 (`audit:constructions`): the cloze pool ran 13/24 on
+    // the post-verbal `no … nada` pattern and the translation pool 12/24 on the
+    // pre-verbal one, while `ni siquiera` and `algunos de los…` — both named in
+    // the description, the second with its own commonError — were 0 of 48.
+    //
+    // The audit also proposed `indefinite-negative-pair-selection` ("choosing
+    // the correct indefinite vs. negative word"). REJECTED as non-disjoint:
+    // every row of every variant below already makes that choice, so it is the
+    // general construction the specific ones absorb, not a member of the axis.
+    // Same reasoning as `clitic-shift` (#674) and `gender-agreement` (#675).
+    constructionVariants: [
+      {
+        id: 'post-verbal-negative-double-negation',
+        directive:
+          'a negative word (nada, nadie, ninguno/a, nunca) standing AFTER the verb, which forces a preceding no (No veo nada interesante en la tele; No conozco a nadie en esta ciudad)',
+        share: 3,
+      },
+      {
+        id: 'pre-verbal-negative-no-dropped',
+        directive:
+          'a negative word or negative expression standing BEFORE the verb, which drops the no entirely (Nunca voy al cine los lunes; Nadie vino a la fiesta; En mi vida he visto algo así)',
+        share: 2,
+      },
+      {
+        id: 'algun-ningun-apocopation',
+        directive:
+          'the apocopated algún/ningún immediately before a masculine singular noun, typically as a question and its negative answer (¿Tienes algún problema? — No, no tengo ninguno; No queda ningún billete)',
+      },
+      {
+        id: 'algunos-de-phrase',
+        directive:
+          'algunos/algunas de + a definite noun phrase, the only quantifier Spanish allows there — never *unos de los (Algunos de los estudiantes no entendieron la explicación)',
+      },
+      {
+        id: 'adverbial-nada-not-at-all',
+        directive:
+          "adverbial nada meaning 'not at all', modifying a verb or an adjective after no (No me gusta nada este ruido; No estoy nada cansado)",
+      },
+      {
+        id: 'ni-siquiera',
+        directive:
+          "ni siquiera meaning 'not even', placed before the verb or the element it emphasises, needing no additional no (Ni siquiera me llamó para avisarme; Ni siquiera intentó disculparse)",
+      },
+    ],
     kind: 'grammar',
     name: 'Indefinite/negative pairs and double negation',
     description:
@@ -2836,6 +3042,52 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-preterite-imperfect-meaning',
+    // Measured 2026-08-19 (`audit:constructions`): 25 of 48 sampled rows were
+    // saber (supe/sabía). tener and estar — both named in the description —
+    // were 0 of 48, and conocer, the pair every course opens this point with,
+    // had 3 rows per cell.
+    //
+    // The audit proposed a `coverageSpec` on a new `verb` axis. Declared as
+    // constructionVariants instead: each verb here is a distinct MEANING
+    // contrast this point exists to teach rather than lexical variety, the
+    // variants need no new coverage axis (a new axis name has to be threaded
+    // through `renderCoverageBlock` and `legalAxesFor` by hand), and the
+    // variant directive is a per-draft MUST where a floor is only a deficit
+    // signal. conocer and saber keep the larger shares as the canonical pair.
+    constructionVariants: [
+      {
+        id: 'conocer-pret-vs-imperf',
+        directive:
+          'conocer: conocí = met for the first time, conocía = already knew (Conocí a mi mejor amiga en 2015; No conocía a nadie en la fiesta)',
+        share: 2,
+      },
+      {
+        id: 'saber-pret-vs-imperf',
+        directive:
+          'saber: supe = found out at a moment, sabía = knew as an ongoing state (Lo supe ayer por tu hermana; No sabía que vivías aquí)',
+        share: 2,
+      },
+      {
+        id: 'poder-pret-vs-imperf',
+        directive:
+          'poder: pude = managed to on a specific occasion, podía = was able to / had the capacity (Al final pude abrir la puerta; De joven podía correr diez kilómetros)',
+      },
+      {
+        id: 'querer-neg-pret-vs-imperf',
+        directive:
+          'negated querer: no quise = refused, an acted-on decision, vs. no quería = did not want to, an unacted desire (No quiso firmar el contrato; No quería molestarte, por eso no llamé)',
+      },
+      {
+        id: 'tener-pret-vs-imperf',
+        directive:
+          'tener: tuve = got, received, or had to at a moment, tenía = had as a standing state (Tuve una noticia estupenda ayer; Tenía dos hermanos mayores)',
+      },
+      {
+        id: 'estar-pret-vs-imperf',
+        directive:
+          'estar: estuvo = a state finally reached, typical after hasta que / una vez que, vs. estaba = was, ongoing (No descansó hasta que estuvo delante de mí; Estaba muy cansada aquella tarde)',
+      },
+    ],
     kind: 'grammar',
     name: 'Meaning-changing preterite vs. imperfect',
     description:
@@ -3100,6 +3352,55 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-verb-preposition-regime',
+    // Measured 2026-08-19 (`audit:constructions`): 34 of 48 sampled rows were a
+    // verb + preposition pair. The adjective and noun regimes the description
+    // also names were 0 of 48, as was the preposition retained before a
+    // que-clause — the queísmo commonError this point is largely written for.
+    //
+    // The axis is the CATEGORY that governs the preposition, and the two
+    // complement shapes are split from it: `verb-prep-regime` takes a noun
+    // complement, `prep-infinitive-not-gerund` is where the complement is a
+    // verb. Without that split the two overlap on every row like "se negó a
+    // firmar" and the classifier can only label one of them. `dequeismo` (from
+    // the audit's enumeration) is REJECTED as a variant: it names an error to
+    // avoid rather than a construction a draft can realize; it rides in the
+    // `prep-retained-before-que` directive instead.
+    constructionVariants: [
+      {
+        id: 'verb-prep-regime',
+        directive:
+          'the fixed prepositional regime of a verb with a NOUN complement — hablar de, pensar en, soñar con, depender de, casarse con, saber/oler a, contar con (Siempre habla de sus viajes; Anoche soñé con mi antiguo colegio). Not jugar a, which has its own variant',
+        share: 3,
+      },
+      {
+        id: 'jugar-a-article-contraction',
+        directive:
+          'jugar a + the definite article before a game or sport, contracted to al in the masculine singular (De pequeños jugábamos al ajedrez; Juegan al fútbol en el patio)',
+      },
+      {
+        id: 'adj-prep-regime',
+        directive:
+          'the fixed prepositional regime of an ADJECTIVE (amable con, harto de, capaz de, responsable de, contento con): Es muy amable con los clientes; Estoy harto de este ruido',
+        share: 2,
+      },
+      {
+        id: 'noun-prep-regime',
+        directive:
+          'the fixed prepositional regime of a NOUN (miedo a, amor por/hacia, ganas de, interés en): Le tiene miedo a la oscuridad; Siente un gran amor por los animales',
+      },
+      {
+        id: 'prep-infinitive-not-gerund',
+        directive:
+          'an INFINITIVE (never a gerund) as the complement of a governed preposition, including the double complementation of invitar a (Se negó a firmar el contrato; Estoy harto de esperar; Me invitó a cenar el sábado)',
+        share: 2,
+      },
+      {
+        id: 'prep-retained-before-que',
+        directive:
+          'the governed preposition retained before a que-clause, the form queísmo drops (Me di cuenta de que había cometido un error; Estoy seguro de que vendrá). Never insert a spurious de after a verb of saying (dice que, not *dice de que)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Verb + preposition regime',
     description:
@@ -3185,6 +3486,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-superlatives-comparisons',
+    // Measured 2026-08-19 (`audit:constructions`): 39 of 48 sampled rows were
+    // the relative superlative el más/menos … de. The elative -ísimo — half of
+    // this point's own title, and the source of its riquísimo spelling
+    // commonError — appeared once, and never on an adverb; igual de … que
+    // appeared once.
+    constructionVariants: [
+      {
+        id: 'relative-superlative-de',
+        directive:
+          'the relative superlative el/la/los/las + más/menos + adjective + de, ranking something within a group (Es el restaurante más caro de la ciudad; Son los días más largos del año)',
+        share: 3,
+      },
+      {
+        id: 'elative-isimo-adjective',
+        directive:
+          'the elative suffix -ísimo/-ísima/-ísimos/-ísimas on an adjective, with no muy and no comparison — including a base whose spelling changes (rico → riquísimo, largo → larguísimo, fácil → facilísimo)',
+        share: 2,
+      },
+      {
+        id: 'elative-isimo-adverb',
+        directive:
+          'the elative on an ADVERB: -ísima- infixed inside a -mente adverb (clarísimamente, rapidísimamente) or an irregular form such as lejísimos or cerquísima (Vive lejísimos del centro)',
+      },
+      {
+        id: 'equality-igual-de-que',
+        directive:
+          'the equality comparison igual de + adjective + que (Es igual de alto que su hermano; Este piso es igual de caro que el otro)',
+        share: 2,
+      },
+      {
+        id: 'quantity-comparison-mas-menos-de',
+        directive:
+          'más/menos de before a bare quantity or numeral, where que would be wrong (Tiene más de cien libros en casa; Costó menos de veinte euros)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Superlatives and comparisons: el más/menos…de, -ísimo, igual de…que, más/menos de',
     description:
@@ -3745,6 +4082,44 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-passive-voice',
+    // Measured 2026-08-19 (`audit:constructions`): 30 of 47 classified rows were
+    // estar + participle and 17 ser + participle. The se-passive with a
+    // postverbal bare-noun subject (Se venden pisos) and the sin/por/a medio +
+    // infinitive passive were 0 of 47 — the two constructions with no English
+    // counterpart to fall back on.
+    //
+    // Three of the audit's proposed constructions are REJECTED.
+    // `participle-gender-number-agreement-ser` is a property every ser-passive
+    // row already realizes, not a member of the axis. `no-indirect-object-
+    // passive` and `no-prepositional-passive` name calques Spanish does NOT
+    // have (*ella fue enviada una carta) — a draft cannot realize a
+    // construction that does not exist; they stay in commonErrors.
+    constructionVariants: [
+      {
+        id: 'ser-participle-action-passive',
+        directive:
+          'the action passive ser + past participle, the participle agreeing in gender and number with the subject, usually with a por-agent (La ciudad fue destruida por un terremoto en 1985; Las obras fueron inauguradas por el alcalde)',
+        share: 3,
+      },
+      {
+        id: 'estar-participle-resultant-state',
+        directive:
+          'estar + past participle for the state that results from an earlier action, not the action itself (Cuando llegamos, la ciudad ya estaba destruida; La puerta estaba abierta desde por la mañana)',
+        share: 2,
+      },
+      {
+        id: 'se-passive-postverbal-bare-noun',
+        directive:
+          'a se-passive or existential whose bare, article-less subject stays AFTER the verb and controls its number (Se venden pisos en esta calle; Han llegado trenes con retraso)',
+        share: 2,
+      },
+      {
+        id: 'sin-por-a-medio-infinitive-passive',
+        directive:
+          'passive force carried by sin/por/a medio + infinitive, describing something not yet done (La botella sigue sin abrir; Eso está por ver; Dejó las maletas a medio hacer)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Passive voice: ser vs estar + participle',
     description:
@@ -4002,6 +4377,46 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-perception-verbs',
+    // Measured 2026-08-19 (`audit:constructions`): 38 of 48 sampled rows were
+    // the gerund pattern. ver/oír que + finite clause — the neutral alternative
+    // the description names — was 0 of 48, as was the dative le with an
+    // infinitive that carries its own object.
+    //
+    // `perception-verb-infinitive` is narrowed to an infinitive with NO object
+    // of its own, which is what keeps it disjoint from
+    // `le-dative-infinitive-own-object`: "le oyó cantar un aria" is an
+    // infinitive row too, and undivided the two would compete for the same
+    // label with the specific one absorbing the general.
+    constructionVariants: [
+      {
+        id: 'perception-verb-infinitive',
+        directive:
+          'ver/oír + an accusative clitic (lo, la, los, las) or an a + noun object + a bare infinitive that has NO object of its own, reporting a completed action (La vi entrar en el banco; Los oí llegar de madrugada)',
+        share: 3,
+      },
+      {
+        id: 'perception-verb-gerund',
+        directive:
+          'ver/oír + object + GERUND, catching the action in progress rather than reporting it whole (Oí a los vecinos discutiendo anoche; La vi fumando en el balcón)',
+        share: 2,
+      },
+      {
+        id: 'perception-verb-que-clause',
+        directive:
+          'ver/oír que + a finite clause, the neutral alternative to the infinitive and gerund patterns (Vi que entraba en el banco; Oyó que alguien llamaba a la puerta)',
+        share: 2,
+      },
+      {
+        id: 'le-dative-infinitive-own-object',
+        directive:
+          'the dative le/les with a perception verb whose infinitive carries its OWN direct object (Juan le oyó cantar un aria; Les vimos preparar la cena)',
+      },
+      {
+        id: 'extended-verbs-gerund',
+        directive:
+          'the gerund pattern extended beyond ver/oír — pillar, dejar, encontrar or hay + object + gerund (Lo pillé robando manzanas; Dejamos a Andrés durmiendo; Hay gente esperando fuera)',
+      },
+    ],
     kind: 'grammar',
     name: 'Ver/oír + infinitive or gerund',
     description:
