@@ -457,6 +457,49 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-articles',
+    // Measured 2026-08-19 (`audit:constructions`): the article before the
+    // subject of gustar took 16 of 33 classified rows and the mandatory
+    // contractions al/del — the point's first commonError — had 1.
+    //
+    // The number spec below is KEPT: number is the axis four of the eight
+    // claimed forms live on, and four of the five variants are free to be
+    // either. `contraction-al-del` is the exception — al/del contract only the
+    // MASCULINE SINGULAR el — so its directive says explicitly where to put a
+    // plural if the coverage controller also asks for one on that ordinal.
+    // That is the one place these two mechanisms touch, and it is resolved in
+    // the directive rather than by dropping either.
+    constructionVariants: [
+      {
+        id: 'definite-article-gender-number',
+        directive:
+          'a definite article el/la/los/las before a specific noun (La profesora explica la lección a los estudiantes)',
+        share: 3,
+      },
+      {
+        id: 'indefinite-article-gender-number',
+        directive:
+          'an indefinite article un/una/unos/unas introducing a non-specific noun (Tengo una pregunta; Compré unos libros nuevos)',
+        share: 2,
+      },
+      {
+        id: 'contraction-al-del',
+        directive:
+          'a mandatory contraction — al (a + el) or del (de + el), never *a el / *de el (Venimos del mercado y vamos al parque). The contraction exists only in the masculine singular, so if this draft is also asked for a plural target, carry the plural on another noun in the sentence',
+        share: 2,
+      },
+      {
+        id: 'gustar-definite-article',
+        directive:
+          'the definite article before the subject of gustar or a verb like it — encantar, molestar, interesar (Me gusta la música clásica; Nos encantan los deportes)',
+        share: 2,
+      },
+      {
+        id: 'hay-no-article',
+        directive:
+          'impersonal hay followed by a noun with NO article at all (Hay leche en la nevera; Hay sillas libres en la sala)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         // Four of the eight claimed forms are plural (los/las/unos/unas);
@@ -481,6 +524,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-demonstratives',
+    // Measured 2026-08-19 (`audit:constructions`): 29 of 32 sampled rows were a
+    // demonstrative ADJECTIVE before a noun. The pronoun uses — gendered
+    // (Prefiero aquella) and neuter (Eso no me parece bien) — had 1 and 2, even
+    // though the neuter/gendered confusion is one of the point's commonErrors.
+    //
+    // The audit's `no-article-with-demonstrative` is REJECTED: "the
+    // demonstrative replaces the article" is a property EVERY row of every
+    // variant realizes, not a member of the axis — the general construction the
+    // specific ones absorb. It stays a commonError.
+    // Note this point is `clozeUnsuitable`, so the rotation drives the
+    // translation cell only.
+    constructionVariants: [
+      {
+        id: 'demonstrative-adjective-three-distances',
+        directive:
+          'a demonstrative ADJECTIVE before its noun — este (near the speaker), ese (near the listener) or aquel (distant), with the context making the distance clear (Este libro es mío; Ese coche es muy rápido; Aquella montaña se ve desde aquí)',
+        share: 3,
+      },
+      {
+        id: 'demonstrative-pronoun-gendered',
+        directive:
+          'a GENDERED demonstrative pronoun standing alone in place of a noun already understood, with no noun after it (¿Te gusta esta camisa? Prefiero aquella; Este es mi profesor)',
+        share: 2,
+      },
+      {
+        id: 'demonstrative-pronoun-neuter',
+        directive:
+          'a NEUTER demonstrative pronoun esto/eso/aquello, referring to an idea, a situation or something unidentified — never to a known noun (¿Qué es eso que tienes en la mano?; Eso no me parece bien)',
+        share: 2,
+      },
+      {
+        id: 'deictic-adverbs-aqui-ahi-alli',
+        directive:
+          'the place adverbs aquí / ahí / allí mirroring the same three distances, at least two of them contrasted in one sentence (Aquí construiremos la casa, ahí el garaje y allí la piscina)',
+      },
+    ],
     kind: 'grammar',
     name: 'Demonstratives',
     description:
@@ -611,6 +690,35 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-interrogatives',
+    // Measured 2026-08-19 (`audit:constructions`): the translation cell was 20
+    // of 20 wh-questions and the cloze cell 15 of 19 rows classified as the
+    // accent property. The yes/no question — the third thing this point's
+    // description names, and its own commonError — was 0 of 39.
+    //
+    // The audit's `accent-on-question-words` is REJECTED as a variant: every
+    // interrogative word in every row carries the accent, so it is a property
+    // of the whole point rather than a member of the axis. It rides in the
+    // wh-question directive instead.
+    constructionVariants: [
+      {
+        id: 'wh-question-verb-subject',
+        directive:
+          'a wh-question with qué, quién(es), dónde, cómo or por qué — all written with an accent — and the verb BEFORE the subject (¿Dónde vives tú?; ¿Por qué llegó tarde tu hermano?)',
+        share: 3,
+      },
+      {
+        id: 'yes-no-question-intonation-inversion',
+        directive:
+          'a YES/NO question formed by intonation or by putting the verb first, with no helper verb of any kind (¿Hablas español?; ¿Vive aquí tu familia?)',
+        share: 2,
+      },
+      {
+        id: 'cuanto-gender-number-agreement',
+        directive:
+          'cuánto/cuánta/cuántos/cuántas agreeing in gender and number with the noun it asks about (¿Cuántas manzanas quieres?; ¿Cuánto tiempo tenemos?)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Question words',
     description:
@@ -1597,6 +1705,45 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-preterito-perfecto',
+    // Measured 2026-08-19 (`audit:constructions`): 43 of 48 sampled rows were
+    // classified as the time-marker use — an ILLUSTRATIVE construction here —
+    // and the irregular participles that carry this point's first commonError
+    // (hecho, escrito, visto, puesto, roto…) were 0 of 48.
+    //
+    // Two of the audit's proposals are REJECTED because they name prohibitions
+    // rather than constructions: `no-participle-agreement-with-subject` and
+    // `no-ellipsis-of-participle` are things a correct draft simply does not do,
+    // and its own directives asked for an "error-correction format" these
+    // exercise types do not have. The adverb rule survives as its positive
+    // form — where the adverb DOES go — instead.
+    //
+    // The `person` coverageSpec below is KEPT: no variant here pins a person,
+    // so the two mechanisms stay orthogonal.
+    constructionVariants: [
+      {
+        id: 'haber-plus-regular-participle',
+        directive:
+          'haber + a REGULAR past participle in -ado/-ido (He comido demasiado; ¿Has dormido bien?). Do not use hecho, escrito, visto, dicho, puesto, vuelto, abierto, roto or muerto here',
+        share: 3,
+      },
+      {
+        id: 'haber-plus-irregular-participle',
+        directive:
+          'haber + one of the IRREGULAR participles hecho, escrito, visto, dicho, puesto, vuelto, abierto, roto, muerto (Hoy he hecho mucho ejercicio; Todavía no he escrito la carta)',
+        share: 3,
+      },
+      {
+        id: 'present-perfect-with-time-markers',
+        directive:
+          'the perfect anchored by a present-oriented marker — ya, todavía no, hoy, esta mañana, este año (Esta mañana me he levantado a las seis; ¿Ya has llamado a tu madre?)',
+        share: 2,
+      },
+      {
+        id: 'adverb-outside-haber-participle',
+        directive:
+          'an adverb placed OUTSIDE the haber + participle unit, which nothing may split — before haber or after the participle (Siempre he dicho lo mismo; Lo he repetido muchas veces)',
+      },
+    ],
     kind: 'grammar',
     name: 'Pretérito perfecto',
     description:
@@ -3556,6 +3703,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-deber-obligation-probability',
+    // Measured 2026-08-19 (`audit:constructions`): 39 of 48 sampled rows were
+    // deber de + infinitivo (probability) and only 5 were plain deber
+    // (obligation) — the pool inverted the very contrast this point is named
+    // for, and the commonError it exists to prevent is using deber de FOR
+    // obligation. Softened deberías had 1 row and epistemic poder 0.
+    constructionVariants: [
+      {
+        id: 'deber-infinitivo-obligation',
+        directive:
+          'plain deber + infinitive for an OBLIGATION or duty, with no de (Debes terminar el informe antes del viernes; Los pasajeros deben abrocharse el cinturón)',
+        share: 3,
+      },
+      {
+        id: 'deber-de-infinitivo-probability',
+        directive:
+          'deber de + infinitive for PROBABILITY or conjecture about a present fact (Deben de ser las cinco ya; Debe de estar enfermo, no ha venido)',
+        share: 3,
+      },
+      {
+        id: 'deberias-softened-advice',
+        directive:
+          'the conditional deberías/debería + infinitive for softened advice rather than a flat obligation (Deberías descansar más si estás cansado)',
+        share: 2,
+      },
+      {
+        id: 'modal-haber-participle-past',
+        directive:
+          'a modal — deber, deber de, poder — + haber + participle for PAST reference (Debería haberlo hecho la semana pasada; Deben de haber salido ya)',
+        share: 2,
+      },
+      {
+        id: 'poder-epistemic-probability',
+        directive:
+          'epistemic poder/podría + infinitive for speculation about what may be the case (No contesta; podría estar durmiendo todavía)',
+      },
+    ],
     kind: 'grammar',
     name: 'Deber + infinitivo vs. deber de + infinitivo',
     description:
@@ -4188,6 +4371,59 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-relative-clauses-advanced',
+    // Measured 2026-08-19 (`audit:constructions`): preposition + article + que
+    // took 26 of 46 classified rows. donde was 2 across both cells, the
+    // explicativa 4 (all in translation, 0 in cloze), and the
+    // indicative/subjunctive antecedent contrast — one of the point's four
+    // commonErrors — 4.
+    //
+    // `lo-que-relative` is declared here AND on `es-b2-lo-nominalizer`;
+    // both descriptions claim it, and variant ids are point-scoped. The rows
+    // differ by which point frames them, and the dedup index prevents identical
+    // sentences from landing in both pools.
+    constructionVariants: [
+      {
+        id: 'prep-article-que-relative',
+        directive:
+          'a relative clause introduced by a preposition + gendered article + que — de la que, en el que, con los que, a las que — with the preposition FRONTED, never stranded (Esa es la casa de la que te hablé el otro día)',
+        share: 3,
+      },
+      {
+        id: 'explicativa-comma-relative',
+        directive:
+          'a NON-RESTRICTIVE (explicativa) relative clause set off by commas, adding parenthetical information about an already-identified antecedent (Mi vecina, que es médica, trabaja en el hospital central)',
+        share: 2,
+      },
+      {
+        id: 'quien-relative',
+        directive:
+          'quien or quienes as the relative pronoun, with an explicit antecedent or as a free relative (No conozco a nadie con quien pueda compartir esto; Quien avisa no es traidor)',
+        share: 2,
+      },
+      {
+        id: 'donde-relative',
+        directive:
+          'donde introducing a relative clause of place, real or figurative (Quiero mudarme a una ciudad donde haya menos tráfico; el punto donde se cruzan las dos calles)',
+        share: 2,
+      },
+      {
+        id: 'lo-que-relative',
+        directive:
+          'lo que as a neuter free relative standing for an idea or an unspecified thing rather than a noun (No entendí nada de lo que dijeron en la reunión)',
+        share: 2,
+      },
+      {
+        id: 'indicative-vs-subjunctive-relative',
+        directive:
+          'the antecedent-specificity contrast as the tested thing: INDICATIVE for an antecedent the speaker has in mind, SUBJUNCTIVE for one that is merely hypothetical (Busco el piso que tiene terraza / Busco un piso que tenga terraza)',
+        share: 2,
+      },
+      {
+        id: 'cuando-nonrestrictive-relative',
+        directive:
+          'relative cuando in a NON-RESTRICTIVE clause referring to a known time, where a restrictive clause would need (en) que instead (Recuerdo aquel verano, cuando todo parecía más sencillo)',
+      },
+    ],
     kind: 'grammar',
     name: 'Advanced relative clauses',
     description:
@@ -4232,15 +4468,48 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-nosotros-imperative',
-    coverageSpec: {
-      axes: [
-        // Both poles have distinct surface behavior: -s drop before the
-        // enclitic (sentémonos) vs proclitic negative (no nos sentemos) —
-        // commonError 3 is exactly the negative-clitic trap. Person axis
-        // pointless (1pl by definition).
-        { name: 'polarity', floors: { affirmative: 8, negative: 8 } },
-      ],
-    },
+    // Measured 2026-08-19 (`audit:constructions`): the bare affirmative took 29
+    // of 48 sampled rows. The two forms that carry this point's commonErrors
+    // split badly by cell — the enclitic -s drop (sentémonos) was 9 in cloze and
+    // 0 in translation, the negative 0 in cloze and 9 in translation — so a
+    // learner drilling either cell alone met only half the paradigm.
+    //
+    // The `polarity` coverageSpec this point carried (affirmative 8 /
+    // negative 8) is REMOVED: every variant here hard-codes a polarity, which
+    // is the exact collision documented on `es-b1-imperative-negative-pronouns`
+    // — and the same polarity shape. The floors are subsumed: at the B2 target
+    // of 50 the shares below give ~27 affirmative and ~14 negative rows against
+    // floors of 8 and 8, and unlike the floors they arrive as a per-draft MUST.
+    constructionVariants: [
+      {
+        id: 'nosotros-imperative-affirmative-no-pronoun',
+        directive:
+          'an affirmative nosotros command in the present subjunctive with NO clitic attached (Empecemos la reunión, que es tarde; Salgamos por la otra puerta)',
+        share: 3,
+      },
+      {
+        id: 'nosotros-imperative-affirmative-nos-clitic',
+        directive:
+          'an affirmative nosotros command with enclitic nos, which DROPS the verb-final -s (Sentémonos aquí, cerca de la ventana; Levantémonos temprano). Never *sentémosnos',
+        share: 3,
+      },
+      {
+        id: 'nosotros-imperative-negative',
+        directive:
+          'a NEGATIVE nosotros command, where nos goes before the verb instead of attaching to it (No nos sentemos tan lejos; No lo toquemos todavía)',
+        share: 3,
+      },
+      {
+        id: 'vamonos-irregular',
+        directive:
+          'the irregular pair vámonos (affirmative) versus no nos vayamos (negative), the only verb whose affirmative nosotros command is not the plain subjunctive (Vámonos ya; No nos vayamos todavía)',
+      },
+      {
+        id: 'vamos-a-infinitive-colloquial',
+        directive:
+          'the colloquial alternative vamos a + infinitive, in a context where the one-word command would be the more formal choice (Vamos a empezar por el principio)',
+      },
+    ],
     kind: 'grammar',
     name: 'Nosotros imperative (¡Empecemos!)',
     description:
@@ -4757,6 +5026,29 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-gradual-gerund',
+    // Measured 2026-08-19 (`audit:constructions`): 43 of 48 sampled rows were
+    // ir + gerundio. venir + gerundio had 5 and andar + gerundio — named in the
+    // description with its own exemplar — was 0 of 48.
+    constructionVariants: [
+      {
+        id: 'ir-gerundio-gradual',
+        directive:
+          'ir + gerundio for a gradual, accumulating development, in the present or in a past tense (Poco a poco voy entendiendo la gramática; Los precios fueron subiendo durante todo el año)',
+        share: 3,
+      },
+      {
+        id: 'venir-gerundio-up-to-now',
+        directive:
+          'venir + gerundio for a process that has been running UP TO NOW, usually with a since-phrase (Lo vengo diciendo desde enero; Venimos observando este problema desde hace años)',
+        share: 2,
+      },
+      {
+        id: 'andar-gerundio-intermittent',
+        directive:
+          "andar + gerundio for an intermittent or habitual 'going around doing' (Siempre anda buscando camorra; Anda escribiendo una novela desde hace meses)",
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Ir/venir + gerundio (gradual action)',
     description:
@@ -4974,6 +5266,46 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-lo-nominalizer',
+    // Measured 2026-08-19 (`audit:constructions`): lo + adjective + que took 41
+    // of 48 sampled rows — the exclamatory intensifier, which is the LAST of the
+    // four constructions in this point's title. The abstract nominalizer lo +
+    // adjective, which is the first, had 1.
+    constructionVariants: [
+      {
+        id: 'lo-adj-abstract-noun',
+        directive:
+          'lo + a MASCULINE SINGULAR adjective as an abstract noun (Lo importante es que digan la verdad; Lo mejor del viaje fue la comida)',
+        share: 3,
+      },
+      {
+        id: 'lo-que-relative',
+        directive:
+          'lo que introducing a clause that works as a noun phrase (Lo que me dijiste me sorprendió mucho; No creo nada de lo que cuenta)',
+        share: 2,
+      },
+      {
+        id: 'lo-de-noun-phrase',
+        directive:
+          "lo de + a noun phrase for 'the business/matter of' (¿Ya resolviste lo del contrato?; Lo de ayer fue un malentendido)",
+        share: 2,
+      },
+      {
+        id: 'lo-adj-que-intensifier',
+        directive:
+          'lo + adjective + que as an exclamatory intensifier, the adjective AGREEING with the noun it describes (No sabes lo cansada que estaba; No imaginas lo orgullosas que estaban)',
+        share: 2,
+      },
+      {
+        id: 'el-porque-noun',
+        directive:
+          "el porqué as a noun meaning 'the reason', written as one word with an accent (Nadie conoce el porqué de su decisión)",
+      },
+      {
+        id: 'lo-antes-posible-superlative-time',
+        directive:
+          'a superlative expression built on neuter lo + adverb (Envíamelo lo antes posible; Llega lo más tarde que puedas)',
+      },
+    ],
     kind: 'grammar',
     name: 'Lo as nominalizer: lo + adjective, lo de, lo que, lo + adj + que',
     description:
@@ -5083,6 +5415,59 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-quantifiers-advanced',
+    // Measured 2026-08-19 (`audit:constructions`): cualquier + noun and
+    // attenuating algo took 39 of 48 sampled rows between them. The standalone
+    // pronoun cualquiera — the other half of the apocope contrast this point's
+    // first commonError is about — had 1, and the partitive, multiplicative and
+    // ratio constructions had 4, 3 and 1 across both cells.
+    constructionVariants: [
+      {
+        id: 'cualquier-before-noun',
+        directive:
+          'the apocopated cualquier immediately before a noun, never *cualquiera + noun (Cualquier libro de esa estantería te servirá)',
+        share: 3,
+      },
+      {
+        id: 'cualquiera-standalone-pronoun',
+        directive:
+          'cualquiera standing alone as a pronoun, with no noun following, where the final -a is kept (Cualquiera podría hacerlo mejor que él)',
+        share: 2,
+      },
+      {
+        id: 'algo-adjective-attenuating',
+        directive:
+          "attenuating algo + ADJECTIVE meaning 'rather / somewhat' — not the A2 pronoun 'something' (Es algo pesado, pero se puede llevar; La respuesta me pareció algo brusca)",
+        share: 2,
+      },
+      {
+        id: 'partitive-fraction',
+        directive:
+          'a partitive fraction — la mitad de, un tercio de, una cuarta parte de — before a noun phrase (La mitad de los invitados llegó tarde; Casi un tercio de la población vive en la capital)',
+        share: 2,
+      },
+      {
+        id: 'multiplicative-doble-de',
+        directive:
+          'the multiplicative el doble/el triple + de before a quantified noun phrase, where que would be wrong (Este piso cuesta el doble de lo que esperábamos; Hay el doble de habitantes que en 1990)',
+        share: 2,
+      },
+      {
+        id: 'ratio-tres-de-cada',
+        directive:
+          'the ratio pattern N de cada N + noun, in statistics-style phrasing (Tres de cada cinco personas prefieren el tren)',
+        share: 2,
+      },
+      {
+        id: 'ambos-no-article',
+        directive:
+          'ambos/ambas with NO article, since it already means los dos (Ambas chicas aprobaron el examen; Ambos países firmaron el acuerdo)',
+      },
+      {
+        id: 'medio-invariable-adverb',
+        directive:
+          'adverbial medio before an adjective, invariable however the subject agrees — distinct from adjectival media hora (Están medio dormidas; La puerta quedó medio abierta)',
+      },
+    ],
     kind: 'grammar',
     name: 'Advanced quantifiers: cualquier(a), partitives, multiplicatives, algo + adjective',
     description:
