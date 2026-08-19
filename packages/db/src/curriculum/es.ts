@@ -263,6 +263,44 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-a1-noun-gender',
+    // Measured 2026-08-19: the pool over-tested the EXCEPTIONS (11 rows on el
+    // problema / la mano) while the default -o/-a pattern the point is built on
+    // had 3, and heteronym pairs, profession feminisation and invariable
+    // profession nouns were all 0. Country gender and the generic masculine
+    // plural are left out as lexical inventory rather than distinct structures.
+    constructionVariants: [
+      {
+        id: 'masc-o-fem-a-default',
+        directive:
+          'the default pattern: a noun in -o taking a masculine article and one in -a taking a feminine article (el libro, la mesa, el bolígrafo, la ventana)',
+        share: 2,
+      },
+      {
+        id: 'gender-of-e-or-consonant-nouns',
+        directive:
+          'a noun ending in -e or a consonant, whose gender has to be learned with the article (el coche, la clase, el árbol, la ciudad)',
+      },
+      {
+        id: 'gender-exceptions-masc-a-fem-o',
+        directive:
+          'a common exception: a masculine noun in -a (el problema, el día, el mapa) or a feminine noun in -o (la mano, la foto, la moto)',
+      },
+      {
+        id: 'heteronym-pairs',
+        directive:
+          'a heteronym pair where the masculine and feminine are different words (el padre / la madre, el hombre / la mujer, el yerno / la nuera)',
+      },
+      {
+        id: 'profession-o-a-feminisation',
+        directive:
+          'a profession noun in -o forming its feminine in -a (el arquitecto / la arquitecta, el enfermero / la enfermera)',
+      },
+      {
+        id: 'invariable-profession-nouns',
+        directive:
+          'an invariable profession or role noun where only the article marks sex (el/la juez, el/la estudiante, el/la periodista)',
+      },
+    ],
     kind: 'grammar',
     name: 'Noun gender',
     description:
@@ -287,6 +325,38 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-noun-plural',
+    // Measured 2026-08-19: only the two easy classes appeared (-s after a vowel
+    // and -es after a consonant, 6 rows each). Stressed final -s, the
+    // invariable unstressed-vowel+s class and the z -> c spelling change were
+    // all 0. Loanwords, surnames, noun+noun compounds and stress-shifting
+    // plurals are left out as lexical inventory rather than distinct classes.
+    constructionVariants: [
+      {
+        id: 'plural-s-after-vowel',
+        directive:
+          'a noun ending in an unstressed vowel taking -s (mesa → mesas, libro → libros, coche → coches)',
+      },
+      {
+        id: 'plural-es-after-consonant',
+        directive:
+          'a noun ending in a consonant taking -es (árbol → árboles, ciudad → ciudades, profesor → profesores)',
+      },
+      {
+        id: 'plural-es-stressed-final-s',
+        directive:
+          'a noun with a STRESSED final syllable in -s taking -es and losing its written accent (país → países, inglés → ingleses, autobús → autobuses)',
+      },
+      {
+        id: 'plural-invariable-unstressed-vowel-s',
+        directive:
+          'a noun in an UNSTRESSED vowel + s, invariable in the plural — only the article changes (el lunes / los lunes, la crisis / las crisis, el paraguas / los paraguas)',
+      },
+      {
+        id: 'plural-z-to-c-spelling',
+        directive:
+          'a noun ending in -z, spelling the plural with c before -es (lápiz → lápices, luz → luces, vez → veces)',
+      },
+    ],
     kind: 'grammar',
     name: 'Noun plural',
     description:
@@ -1083,6 +1153,48 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-a2-present-irregular-stem-changes',
+    // Measured 2026-08-19: the three classic stem changes were present (4/5/6
+    // rows) but every irregular yo-form and every orthographic or boot pattern
+    // was 0 — the pool taught the vowel alternation and none of the spelling.
+    // The nosotros/vosotros exemption is a property of all seven, not a
+    // construction of its own, so it stays out of the variant axis.
+    constructionVariants: [
+      {
+        id: 'stem-change-e-ie',
+        directive:
+          'an e→ie stem-changing verb in the present (pensar → pienso; querer → quiere; empezar → empiezan)',
+      },
+      {
+        id: 'stem-change-o-ue',
+        directive:
+          'an o→ue stem-changing verb in the present (poder → puedo; volver → vuelve; dormir → duermen)',
+      },
+      {
+        id: 'stem-change-e-i',
+        directive:
+          'an e→i stem-changing -ir verb in the present (pedir → pido; seguir → sigue; repetir → repiten)',
+      },
+      {
+        id: 'irregular-yo-saber-dar',
+        directive:
+          'the irregular yo-form of saber (sé) or dar (doy), contrasted with its regular other persons (Yo sé la respuesta pero él no sabe)',
+      },
+      {
+        id: 'orthographic-yo-ger-gir-guir',
+        directive:
+          'an orthographic yo-form change before o: -ger/-gir → -jo (coger → cojo; dirigir → dirijo) or -guir → -go (seguir → sigo; distinguir → distingo)',
+      },
+      {
+        id: 'boot-iar-uar-accent',
+        directive:
+          'an -iar/-uar verb that takes a written accent on the í/ú inside the boot (enviar → envío; actuar → actúo; continuar → continúas) — but not cambiar, which keeps cambio',
+      },
+      {
+        id: 'boot-uir-y-insertion',
+        directive:
+          'a -uir verb inserting y inside the boot (construir → construyo, construyes, construye, construyen; incluir → incluyo)',
+      },
+    ],
     kind: 'grammar',
     name: 'Present indicative — irregular stem changes',
     description:
@@ -1388,6 +1500,35 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-estar-gerundio',
+    // Measured 2026-08-19: all three gerund FORMATION classes were at 0 — the
+    // pool never once used leyendo, durmiendo or pidiendo — while the present
+    // continuous took 14 rows and enclitic pronouns 0.
+    //
+    // This point tangles THREE orthogonal axes: gerund form (regular /
+    // y-insertion / stem change), the tense of estar (present / past / future),
+    // and clitic placement (leyéndolo / lo estoy leyendo). Only one can be the
+    // variant axis — a row is simultaneously a point on all three, and
+    // non-disjoint variants make the single-label coverage measurement read the
+    // general one as absent. Gerund formation is chosen because it is the
+    // morphology this point exists to teach and it is where the pool measured
+    // 0/0/0; tense and clitic placement are carried in the directives instead.
+    constructionVariants: [
+      {
+        id: 'gerund-regular-formation',
+        directive:
+          'estar + a REGULAR gerund in -ando/-iendo (Estoy trabajando; Estábamos comiendo). Vary the tense of estar across drafts — present, imperfect, preterite or future',
+      },
+      {
+        id: 'gerund-y-insertion',
+        directive:
+          'estar + a gerund whose -iendo becomes -yendo after a vowel (leyendo, creyendo, oyendo, construyendo). Vary the tense of estar across drafts',
+      },
+      {
+        id: 'gerund-stem-change',
+        directive:
+          'estar + a stem-changing gerund from an -ir verb (durmiendo, pidiendo, sirviendo, diciendo, siguiendo). Vary the tense of estar across drafts, and attach the pronoun to the gerund in some drafts (pidiéndolo)',
+      },
+    ],
     kind: 'grammar',
     name: 'Estar + gerundio',
     description:
@@ -1753,6 +1894,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-articles-use',
+    // Measured 2026-08-19: zero article after ser with an unqualified
+    // profession took 10 of 24 rows; el before a tonic-a feminine noun, the
+    // clothing/possession definite article and the zero article with
+    // unspecified mass nouns were all 0.
+    constructionVariants: [
+      {
+        id: 'el-before-tonic-a-feminine',
+        directive:
+          'el or un before a FEMININE noun beginning with a stressed a-/ha-, with feminine agreement elsewhere (el aula nueva; el agua fría; un águila)',
+      },
+      {
+        id: 'definite-article-clothing-possessions',
+        directive:
+          'the definite article — not a possessive — with clothing or body parts in an action (Se puso el abrigo; Me duele la cabeza; Levantó la mano)',
+      },
+      {
+        id: 'definite-article-days-of-week',
+        directive:
+          'the definite article with a day of the week: el lunes for one occasion, los lunes for a habit (El lunes tengo cita; Los lunes voy al gimnasio)',
+      },
+      {
+        id: 'zero-article-unqualified-profession',
+        directive:
+          'NO article after ser with an unqualified profession or role (Es profesora; Mi padre es ingeniero) — the article returns once it is qualified (Es una profesora excelente)',
+      },
+      {
+        id: 'zero-article-mass-plural-unspecified',
+        directive:
+          'NO article with an unspecified mass or plural noun (Bebe agua; Compramos naranjas; Hay niños en el parque)',
+      },
+      {
+        id: 'generic-definite-article-abstract-mass',
+        directive:
+          'the definite article with an abstract or mass noun used generically (El chocolate es malo para los perros; La paciencia es una virtud)',
+      },
+    ],
     kind: 'grammar',
     name: 'Article use and omission',
     description:
@@ -1924,6 +2101,41 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-exclamatives-impersonals',
+    // Measured 2026-08-19: ¡Qué + noun + tan/más + adj! took 11 rows while the
+    // bare ¡Qué + noun!, the fixed exhortative and estamos a + grados were 0
+    // and impersonal hacer had 1.
+    constructionVariants: [
+      {
+        id: 'que-adjective-adverb',
+        directive:
+          'an exclamative ¡Qué + adjective or adverb! on its own (¡Qué caro!; ¡Qué bien!; ¡Qué interesante!)',
+      },
+      {
+        id: 'que-bare-noun',
+        directive:
+          'an exclamative ¡Qué + noun! with NO article (¡Qué vida!; ¡Qué suerte!; ¡Qué calor!)',
+      },
+      {
+        id: 'que-noun-tan-mas-adjective',
+        directive:
+          'an exclamative ¡Qué + noun + tan or más + adjective! (¡Qué día tan bonito!; ¡Qué película más aburrida!)',
+      },
+      {
+        id: 'que-fixed-exhortative',
+        directive:
+          'a fixed exhortative with que + subjunctive, wishing something on someone (¡Que aproveche!; ¡Que te mejores!; ¡Que tengas buen viaje!)',
+      },
+      {
+        id: 'impersonal-hacer-weather',
+        directive:
+          'impersonal hacer + a weather noun, with no subject (Hace calor; Hacía mucho frío; Hoy hace sol)',
+      },
+      {
+        id: 'estar-a-temperature',
+        directive:
+          'estamos a + a number + grados for the temperature (Estamos a quince grados; Mañana estaremos a treinta)',
+      },
+    ],
     kind: 'grammar',
     name: 'Exclamatives with qué and impersonal weather expressions',
     description:
@@ -2065,6 +2277,36 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-mente-adverbs',
+    // Measured 2026-08-19: only -mente on a feminine base appeared (9 rows).
+    // The invariable base, the coordination drop, suppletive bien/mal and the
+    // invariable adjective-adverbs were all 0.
+    constructionVariants: [
+      {
+        id: 'mente-feminine-base',
+        directive:
+          '-mente added to the FEMININE form of an adjective that has one (rápida → rápidamente; lenta → lentamente; clara → claramente)',
+      },
+      {
+        id: 'mente-invariable-base',
+        directive:
+          '-mente added to an adjective with no separate feminine, keeping any written accent on the base (fácil → fácilmente; feliz → felizmente; cortés → cortésmente)',
+      },
+      {
+        id: 'mente-coordination-drop',
+        directive:
+          'two or more coordinated -mente adverbs where all but the LAST drop the suffix (Habló lenta y claramente; Actuó rápida pero cuidadosamente)',
+      },
+      {
+        id: 'suppletive-bien-mal',
+        directive:
+          'the suppletive adverbs bien and mal, never *buenamente/*malamente in this sense (Habla bien español; Dormí mal anoche)',
+      },
+      {
+        id: 'adjective-adverb-set-verbs',
+        directive:
+          'an invariable adjective used adverbially with its set verb (hablar claro, comprar barato, respirar hondo, trabajar duro) — no -mente here',
+      },
+    ],
     kind: 'grammar',
     name: 'Adverbs in -mente',
     description:
@@ -2799,6 +3041,41 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-aspectual-periphrases',
+    // Measured 2026-08-19: seguir + gerundio (8) and estar a punto de (7) took
+    // the pool; ponerse a, quedarse/acabar + gerundio and resultative tener +
+    // participle were 0 and dejar de had 1.
+    constructionVariants: [
+      {
+        id: 'dejar-de-infinitivo',
+        directive:
+          'dejar de + infinitive for stopping an action (Dejé de fumar hace un año; No dejes de llamarme)',
+      },
+      {
+        id: 'ponerse-a-infinitivo',
+        directive:
+          'ponerse a + infinitive for suddenly starting an action (Se puso a llover; Se puso a gritar sin motivo)',
+      },
+      {
+        id: 'estar-a-punto-de-infinitivo',
+        directive:
+          'estar a punto de + infinitive for something about to happen (Estaba a punto de salir cuando llamaste)',
+      },
+      {
+        id: 'seguir-gerundio',
+        directive:
+          'seguir (or continuar) + gerundio for an action still going on (Sigo estudiando alemán; Continúa lloviendo)',
+      },
+      {
+        id: 'quedarse-acabar-gerundio',
+        directive:
+          'quedarse or acabar + gerundio for how something ended up (Me quedé ayudándolos hasta tarde; Acabó cediendo)',
+      },
+      {
+        id: 'tener-participle-agreement',
+        directive:
+          'resultative tener + a past participle AGREEING with the object (Ya tengo compradas las entradas; Tenemos hechos los deberes)',
+      },
+    ],
     kind: 'grammar',
     name: 'Aspectual periphrases: dejar de, ponerse a, estar a punto de, seguir + gerundio',
     description:
@@ -2852,6 +3129,39 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-discourse-connectors',
+    // Measured 2026-08-19: only aunque + indicative appeared (6 rows); sin
+    // embargo, o sea que / así que, fronted causal como and causal por +
+    // infinitivo were all 0. The additive/dismissive/emphatic/contrastive
+    // families the description also lists are deliberately NOT variants: they
+    // are lexical choices within one adverbial-connector pattern rather than
+    // distinct structures, so they vary inside the directives instead.
+    constructionVariants: [
+      {
+        id: 'sin-embargo-adversative',
+        directive:
+          'adversative sin embargo joining two clauses, or opening the second sentence (Es caro; sin embargo, vale la pena). Other adverbial connectors of the same shape may stand in: no obstante, en cambio, por otra parte',
+      },
+      {
+        id: 'o-sea-que-resumptive',
+        directive:
+          'resumptive o sea que or así (es) que drawing a conclusion from what precedes (No contestó, o sea que no le interesa; Llovía, así que nos quedamos en casa)',
+      },
+      {
+        id: 'fronted-causal-como',
+        directive:
+          'causal como opening the sentence, with the reason BEFORE the main clause (Como no venías, empecé sin ti; Como hacía frío, cerramos la ventana). Never porque in this fronted position',
+      },
+      {
+        id: 'causal-por-infinitivo',
+        directive:
+          'causal por + infinitive giving the reason for something (Lo hizo por no molestarte; Lo suspendieron por no estudiar)',
+      },
+      {
+        id: 'aunque-indicative-known-fact',
+        directive:
+          'concessive aunque + INDICATIVE, where the speaker treats the fact as known and true (Aunque llueve, salgo; Aunque es caro, lo compro)',
+      },
+    ],
     kind: 'grammar',
     name: 'Discourse connectors: sin embargo, o sea que, causal como, por + infinitivo, aunque + indicative',
     description:
@@ -3590,6 +3900,35 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-clitic-advanced',
+    // Measured 2026-08-19: fronted-object doubling took 16 of 24 rows while
+    // leísmo de persona, neuter ello and le with creer/pegar/obedecer were 0.
+    constructionVariants: [
+      {
+        id: 'neuter-lo-predicate-echo',
+        directive:
+          'neuter lo echoing the predicate of ser/estar in a reply (¿Estás cansada? — Lo estoy; ¿Son caros? — No lo son)',
+      },
+      {
+        id: 'fronted-object-doubling',
+        directive:
+          'a determined direct object fronted before the verb, with the obligatory redundant clitic (Los libros los tiene Juan; A tu hermana la vi ayer)',
+      },
+      {
+        id: 'leismo-de-persona-masculine',
+        directive:
+          'accepted leísmo de persona: le for a MASCULINE human direct object (Le vimos a Luis en el parque), alongside the equally correct lo. Never for a feminine referent',
+      },
+      {
+        id: 'ello-after-preposition',
+        directive:
+          'neuter ello as the complement of a preposition, referring to a whole idea (No hablemos de ello; Por ello decidí quedarme)',
+      },
+      {
+        id: 'le-with-specific-verbs-inanimate-subject',
+        directive:
+          'le for a human object with creer, pegar or obedecer, or where the subject is inanimate (No le creo a Juan; Le espera una catástrofe)',
+      },
+    ],
     kind: 'grammar',
     name: 'Advanced clitics: neuter lo, fronted-object doubling, leísmo de persona',
     description:
