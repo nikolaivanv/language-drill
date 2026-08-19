@@ -255,7 +255,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * backlog for a second night (14 cells, 134 requested, 29 approved on the
  * first). See docs/analysis/generation-run-2026-08-18.md.
  */
-export const CURRICULUM_VERSION_ES = '2026-08-18';
+export const CURRICULUM_VERSION_ES = '2026-08-19';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1395,6 +1395,59 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-periphrases-obligation-aspect',
+    // Measured 2026-08-19 (`audit:constructions`) and confirmed against all 59
+    // approved rows: acabar de took 37 of them (63%), while volver a and
+    // recién + participle sat at literally 0, soler at 1 and empezar a at 2.
+    //
+    // The audit also enumerated a `clitic-shift` construction (verlo / lo +
+    // conjugated verb). It is deliberately NOT a variant here: clitic placement
+    // is orthogonal to which periphrasis is used, so a "volver a verlo" row
+    // realizes both, and non-disjoint variants make the single-label coverage
+    // measurement read the general one as absent. It is folded into the
+    // directives of the periphrases that can carry it instead, which keeps the
+    // variant axis one-per-periphrasis and mutually exclusive.
+    //
+    // Shares: obligation is the point's headline, so tener que and hay que hold
+    // 2 each against 1 for the aspectuals.
+    constructionVariants: [
+      {
+        id: 'tener-que-infinitive',
+        directive:
+          'tener que + infinitive for a personal obligation, with a specific subject (Tengo que estudiar esta noche; Tienes que llamar al médico)',
+        share: 2,
+      },
+      {
+        id: 'hay-que-infinitive',
+        directive:
+          'hay que + infinitive for an impersonal necessity that applies to people in general, with no specific subject — hay never changes form (Hay que llegar temprano; Hay que reservar antes)',
+        share: 2,
+      },
+      {
+        id: 'acabar-de-infinitive',
+        directive:
+          'acabar de + infinitive for something that finished moments ago (Acabo de comer; Acabamos de llegar). The clitic may attach to the infinitive or precede the conjugated verb (acabo de verlo / lo acabo de ver)',
+      },
+      {
+        id: 'empezar-a-infinitive',
+        directive:
+          'empezar a (or comenzar a) + infinitive for the start of an action (Empecé a trabajar en marzo; Está empezando a llover)',
+      },
+      {
+        id: 'volver-a-infinitive',
+        directive:
+          'volver a + infinitive for doing something again (Volví a leer el libro; No vuelvas a hacerlo). The clitic may attach to the infinitive or precede the conjugated verb (vuelvo a verlo / lo vuelvo a ver)',
+      },
+      {
+        id: 'soler-infinitive',
+        directive:
+          'soler + infinitive for a habitual action, in the present or imperfect (Suelo desayunar a las ocho; Solíamos ir a la playa)',
+      },
+      {
+        id: 'recien-participle',
+        directive:
+          'recién + past participle for something newly done, agreeing with the noun (recién pintado, recién casados, una casa recién construida) — no infinitive in this one',
+      },
+    ],
     kind: 'grammar',
     name: 'Obligation and aspect periphrases',
     description:
@@ -2026,6 +2079,58 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b1-present-subjunctive',
+    // Measured 2026-08-19 (`audit:constructions`, ES sweep): 21/23 approved
+    // clozes and 23/24 approved translations realized the volitional-trigger
+    // frame alone, and every other construction this description names sat at
+    // literally 0 — confirmed against all 148 approved rows by substring match,
+    // not just the sample. Note the point already carried a person `coverageSpec`
+    // with satisfied floors: an axis spec is no defence against construction
+    // collapse, which is why the audit is deliberately spec-blind.
+    //
+    // Shares: the trigger frame is genuinely the commonest real usage, so it
+    // keeps the plurality at 3/9 (~33%) rather than being levelled down to an
+    // equal sixth. `indicative-after-a-lo-mejor` deliberately elicits the
+    // INDICATIVE — the contrast is what stops learners over-applying the
+    // subjunctive, and since #670 the validator is told which variant was
+    // requested, so an indicative draft here is no longer judged off-point.
+    constructionVariants: [
+      {
+        id: 'subj-after-trigger-verb',
+        directive:
+          'a que-clause in the subjunctive after a wish, doubt, emotion, or impersonal-judgement trigger (Quiero que vengas; Dudo que sea verdad; Me alegro de que estés aquí; Es importante que llegues a tiempo)',
+        share: 3,
+      },
+      {
+        id: 'subj-with-ojala',
+        directive:
+          'an independent wish introduced by ojalá (que) + present subjunctive (Ojalá que encuentres trabajo pronto; Ojalá haga sol mañana)',
+      },
+      {
+        id: 'subj-with-quiza-tal-vez',
+        directive:
+          'quizá, quizás or tal vez followed by the present subjunctive to mark real uncertainty (Quizá venga mañana; Tal vez no sepan la respuesta)',
+      },
+      {
+        id: 'indicative-after-a-lo-mejor',
+        directive:
+          'a lo mejor + the INDICATIVE, never the subjunctive — the exception that contrasts with quizá/tal vez (A lo mejor llueve esta tarde; A lo mejor no viene). The correct answer here is an indicative form.',
+      },
+      {
+        id: 'noun-de-que-subj',
+        directive:
+          'an abstract noun + de que + present subjunctive (la esperanza de que llueva; el miedo de que se enteren; la posibilidad de que cierren)',
+      },
+      {
+        id: 'fronted-el-hecho-de-que-subj',
+        directive:
+          'a fronted el hecho de que (or bare el que) clause in the subjunctive, placed before the main clause (El hecho de que no haya venido me molesta; El que digas eso me sorprende)',
+      },
+      {
+        id: 'que-wish-command',
+        directive:
+          'an independent que-clause used as a wish or third-person command, with no main verb (¡Que te vaya bien!; Que entren de uno en uno; Que descanses)',
+      },
+    ],
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
