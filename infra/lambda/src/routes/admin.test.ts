@@ -245,8 +245,15 @@ describe('GET /admin/pool-status', () => {
       // A few narrow ES conjugation points set targetOverride to match their curated
       // conjugationSeedWords list (2026-07-11): yo-go/yo-spelling = 12/15,
       // stem-spelling = 16.
+      // Cells whose point declares `constructionVariants` are additionally
+      // raised to `variants.length * MIN_PER_VARIANT` (= 4). Adding a variant
+      // list to a point can therefore introduce a target this list has never
+      // seen — 6 variants = 24, added 2026-08-19 with the first ES
+      // construction-coverage batches. Extend this list when that happens; it
+      // is a sanity check that targets resolve to a KNOWN value, not a claim
+      // that the set is closed.
       // Assert it resolved to a known target.
-      expect([5, 6, 8, 10, 12, 15, 16, 20, 25, 30, 48, 50, 75]).toContain(item.generationTarget);
+      expect([5, 6, 8, 10, 12, 15, 16, 20, 24, 25, 30, 48, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction', 'dictation', 'free_writing', 'conjugation', 'contextual_paraphrase']).toContain(item.type);
