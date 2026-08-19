@@ -1,0 +1,5663 @@
+{
+ "generated": "2026-08-20",
+ "database": "prod",
+ "reason": "pool-hygiene",
+ "note": "Row ids captured BEFORE demotion. demote:pool writes no rollback artifact; restore with UPDATE exercises SET review_status=<prior>, demotion_reason=NULL WHERE id IN (...). Prior status for every row here was auto-approved or manual-approved.",
+ "groups": [
+  {
+   "cell": "A1:cloze:es-a1-articles",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "7e4b64d7-c199-5f75-8559-9ba9035bcac0",
+    "804b67fd-c3d2-5aff-8759-9ee305950662",
+    "a3ddc678-32bb-5f2a-aa81-7886fad08d67"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-articles",
+   "phase": "surplus",
+   "variant": "gustar-definite-article",
+   "planned": 6,
+   "ids": [
+    "73732886-2493-5800-8aa4-78acc720acc5",
+    "71732560-26cc-538a-8ca4-7be6c959e867",
+    "74732a19-a5af-55c5-8ba4-7a4946040ef4",
+    "7b73351e-2d78-5628-82a4-6bc4d0059b4d",
+    "7c7336b1-ae94-53ed-83a4-6d614ee8fd7c",
+    "7a4b5e8b-c60b-5689-8159-953507ce4204"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-articles",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "7434ce6c-5ddd-5f82-ab48-0c7e4d0cdd17"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-articles",
+   "phase": "surplus",
+   "variant": "gustar-definite-article",
+   "planned": 4,
+   "ids": [
+    "8e9db4c5-edbb-5e4b-8643-b9e7d660b136",
+    "909db7eb-de2a-5d85-9043-ca09d899ecd8",
+    "7334ccd9-e132-58d1-a648-046dc5448c60",
+    "7634d192-5ba3-53f8-a948-09444ad3a175"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-articles",
+   "phase": "surplus",
+   "variant": "hay-no-article",
+   "planned": 2,
+   "ids": [
+    "899dace6-682c-5972-8943-bebe530ad7c3",
+    "8d9db332-6c9e-5086-8543-b84a577d4f07"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-coordination-basic",
+   "phase": "surplus",
+   "variant": "pero-contrast",
+   "planned": 3,
+   "ids": [
+    "84c39372-ee99-539a-9f1c-172677ea52db",
+    "83c391df-6d7c-55d5-9e1c-1589f4947968",
+    "4f479ed2-b545-5414-9400-1898e18e65c1"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-coordination-basic",
+   "phase": "surplus",
+   "variant": "pero-contrast",
+   "planned": 2,
+   "ids": [
+    "0d558a6d-6930-5b2d-8da4-db712e23dbcc",
+    "0c5588da-e814-5d68-8ca4-d9d4af40799d"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-demonstratives",
+   "phase": "surplus",
+   "variant": "demonstrative-adjective-three-distances",
+   "planned": 10,
+   "ids": [
+    "07976341-595a-5a0b-b7ef-b847a83d3246",
+    "0a9767fa-d3cb-5532-baef-bd1e24e758d3",
+    "0597601b-5721-5e81-b5ef-b50da603f6a4",
+    "069761ae-d83e-5c46-b6ef-b6aa2959d017",
+    "04975e88-d605-50bc-b4ef-b37027209475",
+    "0b97698d-54e8-52f7-bbef-bebba3cabb02",
+    "089764d4-d192-59a8-b8ef-b9e422ae1d31",
+    "fe975516-cf59-5e1e-beef-c392323ebe9f",
+    "09976667-52af-576d-b9ef-bb81a1917f60",
+    "64518ae3-de10-5e67-b4bc-97fbdcd09056"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-gender-agreement",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "aeb4a7a0-2e4c-5bfa-8e57-ab96366af107",
+    "b5b4b2a5-b1a2-5549-8957-a385aea2a050",
+    "b7b4b5cb-b84d-57e7-8757-a04bbe3341be",
+    "9f63d5db-2da4-540f-926f-f953a409f99e"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-gender-agreement",
+   "phase": "surplus",
+   "variant": "descriptive-adjective-agreement-default",
+   "planned": 6,
+   "ids": [
+    "b2b4adec-32be-530e-8a57-a52231f879c3",
+    "b0b4aac6-2c13-5070-8c57-a85c3431b565",
+    "b6b4b438-3731-5a22-8657-9eae3f4fdf8f",
+    "9763c943-3689-5237-8a6f-ec6b9b250b16",
+    "9863cad6-b333-58e8-876f-e7941a086d45",
+    "9a63cdfc-b9df-5b86-856f-e45a17cf31a3"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-gender-agreement",
+   "phase": "surplus",
+   "variant": "descriptive-adjective-agreement-default",
+   "planned": 6,
+   "ids": [
+    "9fecd2b0-d39b-5bb8-8de6-9b543fc8ebc1",
+    "a1ecd5d6-d5d4-5742-8fe6-9e8e42022763",
+    "a5ecdc22-da46-5e56-8be6-981a46749ea7",
+    "a3ecd8fc-d80d-52cc-89e6-94e0443b6305",
+    "aaece401-4e0c-56df-98e6-ad13c9ca781a",
+    "a9ece26e-ccef-591a-97e6-ab764ae715eb"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-gender-agreement",
+   "phase": "surplus",
+   "variant": "variable-gentilicio-agreement",
+   "planned": 2,
+   "ids": [
+    "c9d4b2c6-60ab-5bce-a10e-12125a667907",
+    "c7d4afa0-5e72-5044-9f0e-0ed8582d3d65"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-hay-estar",
+   "phase": "surplus",
+   "variant": "estar-definite-location",
+   "planned": 1,
+   "ids": [
+    "66ea0578-38f7-5ffc-b8fc-0bb08154ca5d"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-hay-estar",
+   "phase": "surplus",
+   "variant": "hay-indefinite-existential",
+   "planned": 2,
+   "ids": [
+    "88cd8ddd-1e51-5417-84a4-ceab835b8692",
+    "86cd8ab7-1c18-588d-82a4-cb7181224af0"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-interrogatives",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "7dd816f4-946b-507c-acba-fdf0bcf0714d"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-interrogatives",
+   "phase": "surplus",
+   "variant": "wh-question-verb-subject",
+   "planned": 7,
+   "ids": [
+    "6d5b144a-1ac6-52ce-9a33-0282424dcfe7",
+    "675b0ad8-141a-5030-9c33-05bc3ba21d01",
+    "6b5b1124-188d-5744-9832-ff4840149445",
+    "6a5b0f91-9770-597f-9f33-0a93bcbebad2",
+    "645b061f-a28e-5331-9132-f3fdc7dce4fc",
+    "165e2439-40ff-50f1-b848-512d29754a40",
+    "155e22a6-bfe3-532c-b748-4f90aa91e811"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-interrogatives",
+   "phase": "surplus",
+   "variant": "wh-question-verb-subject",
+   "planned": 11,
+   "ids": [
+    "7979694e-6617-534c-84dd-2a40feba1721",
+    "7d796f9a-61a5-5c38-88dd-30b4032c8e65",
+    "77796628-6851-5ed6-86dd-2d7a00f352c3",
+    "7a796ae1-e734-5111-85dd-2bdd7d9d7950",
+    "7b796c74-63de-57c2-8add-33ee0565ca07",
+    "7c796e07-e4fb-5587-8bdd-358b84492c36",
+    "9e232703-a910-5b65-a2cf-dd59c77ff760",
+    "a0232a29-ab4a-56ef-a4cf-e093c9b93302",
+    "a2232d4f-ad83-5279-9ecf-d6e5cbf26ea4",
+    "a1232bbc-2c66-54b4-9dcf-d5484d0f0c75",
+    "a623339b-b1f5-598d-9acf-d071d064e5e8"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-locative-prepositions",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 11,
+   "ids": [
+    "d6c013a0-25bd-57ca-865d-b3b67fd32cf7",
+    "dac019ec-2a30-5ede-825d-ad427b60b5b3",
+    "e3c02817-b431-5acb-bb5d-a1f70329066a",
+    "e2c02684-3315-5d06-ba5d-a05a8445a43b",
+    "3b68ba0d-5ca3-5561-8220-cf4d6343ad80",
+    "3468af08-d94d-5c12-8720-d75eeb0bfe37",
+    "3668b22e-d714-5088-8520-d424e8d2c295",
+    "489a41ea-03a1-5202-8d6b-aa7eef5afa0b",
+    "479a4057-8284-543d-8c6b-a8e16c052098",
+    "499a437d-84bd-5fc7-8e6b-ac1b6e3e5c3a",
+    "7e7f5013-1382-5d69-a9c2-8a45e00976fc"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-negation-tampoco",
+   "phase": "surplus",
+   "variant": "tampoco-agreement-negative",
+   "planned": 5,
+   "ids": [
+    "6bc5bfe5-6a72-50a5-a0e2-fba91fbf8474",
+    "67c5b999-6ee4-57b9-9ce2-f5351b4d0d30",
+    "64c5b4e0-f001-557e-9de2-f6d29ea2e6a3",
+    "65c5b673-711d-5343-9ee2-f86f1d8648d2",
+    "73c5cc7d-7356-5ecd-98e2-eec128a472fc"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-negation-tampoco",
+   "phase": "surplus",
+   "variant": "tambien-agreement-affirmative",
+   "planned": 4,
+   "ids": [
+    "6ac5be52-e955-52e0-9fe2-fa0ca0dc2245",
+    "72c5caea-f23a-5108-97e2-ed24a9c110cd",
+    "7d4cfc4f-c33e-53a9-a72f-e5d51ae8af84",
+    "7f4cff75-c577-5f33-a92f-e90f1d21eb26"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-negation-tampoco",
+   "phase": "surplus",
+   "variant": "tampoco-agreement-negative",
+   "planned": 5,
+   "ids": [
+    "0e243a6d-9e5c-5e57-b97e-ba7b7230c472",
+    "0a243421-a2ce-556b-b57e-b40776a33bb6",
+    "04242aaf-933e-54a5-bf7e-c42978dc7758",
+    "93034ec2-830e-57ec-b76d-efb091a4bcb1",
+    "91034b9c-8547-5376-b96d-f2ea93ddf853"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-negation-tampoco",
+   "phase": "surplus",
+   "variant": "tambien-agreement-affirmative",
+   "planned": 4,
+   "ids": [
+    "0324291c-1221-56e0-be7e-c28cf9f91529",
+    "94035055-042b-55b1-b86d-f14d10881ee0",
+    "92034d2f-0664-513b-ba6d-f48712c15a82",
+    "8e0346e3-01f1-5a27-be6d-fafb1733d1c6"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-noun-gender",
+   "phase": "surplus",
+   "variant": "gender-exceptions-masc-a-fem-o",
+   "planned": 9,
+   "ids": [
+    "abb1c749-ec29-5443-bef5-4ddf7481c42e",
+    "aab1c5b6-6b0c-567e-bdf5-4c42f59e61ff",
+    "a9b1c423-e9f0-58b9-bcf5-4aa57248888c",
+    "adb1ca6f-e57d-51a5-80f5-51196dd61148",
+    "b2b1d24e-73f1-54a6-b5f5-3f5aecb97377",
+    "c1dd037b-a1c1-537f-80be-ba93447f827e",
+    "c0dd01e8-20a4-55ba-bfbe-b8f6c59c204f",
+    "c3dd06a1-9f88-57f5-bebe-b759424646dc",
+    "b8dcf550-2989-53e2-b7be-ac0ebcb731c7"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-gender",
+   "phase": "surplus",
+   "variant": "gender-exceptions-masc-a-fem-o",
+   "planned": 11,
+   "ids": [
+    "58d991b1-e6f0-5711-a579-3c8dc9866fe8",
+    "56d98e8b-e929-529b-a779-3fc7cbbfab8a",
+    "55d98cf8-680d-54d6-a679-3e2a4cdc495b",
+    "5ad994d7-e4b7-5b87-ab79-463bd03222ce",
+    "5cd997fd-e27d-5ffd-a979-4301cdf8e72c",
+    "4ed981f3-e044-5473-af79-4cafc2dabd02",
+    "727baece-6a64-5ed2-a49c-2fdee740e2ab",
+    "717bad3b-e947-510d-a39c-2e4163eb0938",
+    "757bb387-edba-5821-9f9c-27cd685d807c",
+    "747bb1f4-6c9d-5a5c-9e9c-2630e97a1e4d",
+    "6b7ba3c9-e29c-5e6f-ad9c-3e635d3f5652"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-noun-modifiers-de",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "14019f53-ea8b-5bc9-bc6a-9e8553887d9c",
+    "1501a0e6-6ba7-598e-bd6a-a022d6de570f",
+    "1f01b0a4-6de1-5518-b76a-9674c74db5a1",
+    "44c01599-d701-50bb-88d7-09679fa9a1f6"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-noun-modifiers-de",
+   "phase": "surplus",
+   "variant": "con-permanent-feature-contents",
+   "planned": 1,
+   "ids": [
+    "cde17ebb-87ef-5ed9-ae17-cb65b55a585c"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-modifiers-de",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "046e0fac-c4a7-5d82-a71b-587e3390466f"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-modifiers-de",
+   "phase": "surplus",
+   "variant": "de-compound-noun",
+   "planned": 4,
+   "ids": [
+    "066e12d2-c26e-51f8-a51b-554431570acd",
+    "076e1465-438b-5fbd-a61b-56e1b03a6cfc",
+    "026e0c86-c6e1-590c-a11b-4ed02ce49389",
+    "006e0960-c91a-5496-a31b-520a2f1dcf2b"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-modifiers-de",
+   "phase": "surplus",
+   "variant": "con-permanent-feature-contents",
+   "planned": 1,
+   "ids": [
+    "056e113f-45c4-5b47-a81b-5a1bb273a89e"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-noun-plural",
+   "phase": "surplus",
+   "variant": "plural-s-after-vowel",
+   "planned": 7,
+   "ids": [
+    "655a7118-dca2-555a-83f6-32a6b6090ca7",
+    "6a5a78f7-6231-5a33-80f6-2dcf3079f792",
+    "675a743e-da68-59d0-81f6-2f6cb3cfd105",
+    "685a75d1-5b85-5795-82f6-310932b33334",
+    "6c5a7c1d-5ff7-5ea9-bef6-2a952e40bbf0",
+    "5e5a6613-66a3-5147-bcf6-275b3dd15d5e",
+    "b56021f8-2798-5c92-ba2f-9bfea19fe247"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-noun-plural",
+   "phase": "surplus",
+   "variant": "plural-es-after-consonant",
+   "planned": 5,
+   "ids": [
+    "6b5a7a8a-dedb-50e4-bdf6-28f8af5d59c1",
+    "b760251e-255e-5108-b82f-98c49f66a6a5",
+    "ba6029d7-ad27-516b-b72f-97271c10cd32",
+    "817b2482-13d6-5ffc-9d96-8200fac291c9",
+    "807b22ef-972c-594b-a096-86d77bdf2f9a"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-plural",
+   "phase": "surplus",
+   "variant": "plural-s-after-vowel",
+   "planned": 6,
+   "ids": [
+    "7cd4b6bf-ec5f-595d-acde-478191d22d90",
+    "7bd4b52c-6b42-5b98-abde-45e412eecb61",
+    "7ed4b9e5-ee98-54e7-aede-4abb940b6932",
+    "7dd4b852-6d7c-5722-adde-491e15280703",
+    "85d4c4ea-6497-58fa-b5de-56061e0cf58b",
+    "78de43d9-73b8-589f-ae9c-10d3cd8f89d2"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-noun-plural",
+   "phase": "surplus",
+   "variant": "plural-es-after-consonant",
+   "planned": 6,
+   "ids": [
+    "7ad4b399-f30b-5bfb-aade-4447987de076",
+    "79d4b206-71ee-5e36-a9de-42aa199a7e47",
+    "75de3f20-f062-5f50-ab9c-0bfc4c72ec01",
+    "79de456c-f4d5-5664-a79c-058850e56345",
+    "7fde4ede-fb80-5902-a59c-024e5791162b",
+    "f899a946-67c1-527e-9556-44021b76ee4f"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-porque-para",
+   "phase": "surplus",
+   "variant": "para-infinitive-purpose",
+   "planned": 3,
+   "ids": [
+    "5210f2b7-0dff-571f-a8f8-b273420f8f76",
+    "4f10edfe-8f1c-54e4-a1f8-a728bc807a61",
+    "5010ef91-1039-52a9-a2f8-a8c53b63dc90"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-porque-para",
+   "phase": "surplus",
+   "variant": "para-infinitive-purpose",
+   "planned": 3,
+   "ids": [
+    "532fb5fc-522f-5c60-8b93-9d3c2687e809",
+    "302f682c-a2b4-5798-a90f-f154a58b6681",
+    "2d2f6373-2843-5c71-a60f-ec7d28e13ff4"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-possessives-atonic",
+   "phase": "surplus",
+   "variant": "possessive-before-single-noun",
+   "planned": 6,
+   "ids": [
+    "98ff0ab8-907e-5836-9af2-34ba9a3ca083",
+    "9bff0f71-0f61-5a71-99f2-331d16e6c710",
+    "9aff0dde-8e45-5cac-98f2-3180980364e1",
+    "94ff046c-8327-52fa-a6f2-4816a794064f",
+    "5a88166f-091d-5a9f-8bc9-6103838c6dd6",
+    "5b881802-85c7-5150-88c9-5c2c026fd005"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-present-indicative-regular",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 15,
+   "ids": [
+    "0dce86b4-b028-55c0-af08-57ece1d691d1",
+    "0cce8521-37f1-5623-ae08-564f6765a6e6",
+    "0fce89da-b262-514a-b108-5b26e40fcd73",
+    "0ace81fb-35b7-5a99-ac08-5315652c6b44",
+    "0ece8847-3145-5385-b008-598960b9f400",
+    "06ce7baf-3a2a-51ad-a808-4ca1699ee288",
+    "421dc4f2-bcf6-5d3a-be75-c1264f795153",
+    "3c1dbb80-bf2f-58c4-b875-b77851b28cf5",
+    "481dce64-c3a2-5fd8-b475-b10456250439",
+    "7fad15b3-8290-50f1-84c7-8dddc9f6254c",
+    "82ad1a6c-fd01-5c18-87c7-92b446a04bd9",
+    "83ad1bff-7e1e-59dd-88c7-9451c583ae08",
+    "e9b8c2d3-e6ea-54a3-bf6e-49efb14ef072",
+    "ebb8c5f9-e4b1-5919-bd6e-46b5af15b4d0",
+    "c6c04d59-6711-5ff9-a22b-93157d9f0fd0"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-present-indicative-regular",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 9,
+   "ids": [
+    "b18cf5b8-c03a-5ff2-be46-38fec9469357",
+    "b68cfd97-45c9-54cb-bb46-342743b77e42",
+    "2410c147-537a-5053-9fdd-173ff20a004a",
+    "2010bafb-4f08-593f-a3dd-1db3f67c778e",
+    "2110bc8e-cbb2-5ff0-a0dd-18dc755fd9bd",
+    "1b10b31c-db42-50b6-96dd-08ba6a41af93",
+    "8c1c6b41-47fc-5c4b-8cac-27c79685b656",
+    "8a1c681b-45c3-50c1-8aac-248d944c7ab4",
+    "042ab20b-9ea0-5773-adcc-12ff38294d62"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-present-indicative-regular",
+   "phase": "surplus",
+   "variant": "present-for-habitual-actions",
+   "planned": 6,
+   "ids": [
+    "b38cf8de-be01-5468-bc46-35c4c70d57b5",
+    "b88d00bd-4390-5941-b946-30ed417e42a0",
+    "b28cf74b-4157-5db7-bf46-3a9b4829f586",
+    "b78cff2a-c273-5b7c-b846-2f50c29ae071",
+    "b58cfc04-c4ad-5706-ba46-328ac4d41c13",
+    "ac8cedd9-3639-5405-8546-44494ed5a86c"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-quantifiers-muy-mucho",
+   "phase": "surplus",
+   "variant": "muy-intensifier",
+   "planned": 3,
+   "ids": [
+    "0c99ac0e-9855-52dc-ac49-8990b87c8501",
+    "43a44946-097b-586a-a309-ccf63175689b",
+    "44a44ad9-8a98-562f-a409-ce93b058caca"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-querer-poder-infinitive",
+   "phase": "surplus",
+   "variant": "querer-poder-infinitive",
+   "planned": 11,
+   "ids": [
+    "04930cf1-782d-5c77-abfb-69ebb60294aa",
+    "03930b5e-f710-5eb2-aafb-684e371f327b",
+    "ff930512-f29e-579e-aefb-6ec232acbb37",
+    "8684b56e-8363-544e-8d8c-f682918c20bf",
+    "8484b248-812a-58c4-8b8c-f3488f52e51d",
+    "8a84bbba-7ef0-5d3a-918c-fcf68d19a97b",
+    "8b84bd4d-000d-5aff-928c-fe930bfd0baa",
+    "8884b894-7cb7-51b0-8f8c-f9bc8ae06dd9",
+    "8984ba27-fdd4-5f75-908c-fb5909c3d008",
+    "7f84aa69-0d65-503b-868c-eb37078a9466",
+    "524feb4e-bae6-51ba-b45f-30e603cc1d73"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-querer-poder-infinitive",
+   "phase": "surplus",
+   "variant": "querer-poder-infinitive",
+   "planned": 11,
+   "ids": [
+    "351f6435-e328-53f9-8a3e-9505f27cfda8",
+    "331f610f-e561-5f83-8c3e-983ff4b6394a",
+    "321f5f7c-6445-51be-8b3e-96a275d2d71b",
+    "2f1f5ac3-e0ef-586f-903e-9eb3f928b08e",
+    "341f62a2-620c-5634-893e-936873999b79",
+    "301f5c56-5d99-5f20-8d3e-99dc780c12bd",
+    "3a1f6c14-6d2a-5fe6-833e-89ba6cede893",
+    "336304a4-5c07-5846-b5f8-e98ab2cb091b",
+    "356307ca-59ce-5cbc-b3f8-e650b091cd79",
+    "34630637-dd24-560b-b6f8-eb2731ae6b4a",
+    "3062ffeb-d8b1-5ef7-baf8-f19b3620e28e"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-ser-estar-basic",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "099c161f-b337-5b37-a738-131b98dd037e"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-ser-estar-basic",
+   "phase": "surplus",
+   "variant": "estar-condition",
+   "planned": 1,
+   "ids": [
+    "0a9c17b2-2fe1-51e8-a438-0e4417c065ad"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-ser-estar-basic",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "63538588-102d-5fbc-8d19-6a503ce6af45",
+    "c5122b67-43fe-587d-99b2-0c41397b53f0"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-ser-estar-basic",
+   "phase": "surplus",
+   "variant": "estar-location",
+   "planned": 1,
+   "ids": [
+    "c6122cfa-c51a-5642-9ab2-0ddebcd12d63"
+   ]
+  },
+  {
+   "cell": "A1:cloze:es-a1-subject-pronouns",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 5,
+   "ids": [
+    "d7ed4b39-3e88-5613-9341-acffe635d706",
+    "dbed5185-3a16-5eff-9741-b373e1c35fc2",
+    "f38d1f2b-ad2c-5fef-9ff3-c9f3b6d8d116",
+    "f98d289d-af66-5b79-99f3-c045b02d1e30",
+    "eb8d1293-b611-5e17-97f3-bd0bbfbdbf9e"
+   ]
+  },
+  {
+   "cell": "A1:translation:es-a1-subject-pronouns",
+   "phase": "surplus",
+   "variant": "pronoun-explicit-emphasis-contrast",
+   "planned": 10,
+   "ids": [
+    "16c3d40e-9d1f-50f8-bba2-97547e7a83d5",
+    "17c3d5a1-1e3b-5ebd-bca2-98f1fd5de604",
+    "10c3ca9c-9ae5-556e-81a2-a102852636bb",
+    "11c3cc2f-1c02-5333-82a2-a29f040998ea",
+    "864e8cd5-a95c-5657-9f4b-3acb785b56f2",
+    "854e8b42-2840-5892-9e4b-392ef977f4c3",
+    "844e89af-a723-5acd-9d4b-379176221b50",
+    "824e8689-adcf-5d6b-9b4b-34577ccdce36",
+    "804e8363-ab96-51e1-994b-311d7a949294",
+    "7f4e81d0-2a79-541c-984b-2f80fbb13065"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-articles-use",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 10,
+   "ids": [
+    "8e0223b3-921f-5b8f-91a8-25836976641e",
+    "9102286c-1575-54de-8ca8-1d72e6208aab",
+    "94022d25-9458-5719-8ba8-1bd562cab138",
+    "115baa35-7693-5cb1-b041-c82db5c5f958",
+    "105ba8a2-f577-5eec-af41-c69036e29729",
+    "9f634584-ff5b-54f0-be3f-a20cfb9ea899",
+    "a16348aa-0194-507a-803f-a546fdd7e43b",
+    "7ba4beba-d685-5aec-aa48-7340b0943a01",
+    "ac4f16ef-b9c2-50d9-8a7b-4b35b81a7e4c",
+    "55a2263b-fbef-5ae3-85eb-714f872e64b2"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-articles-use",
+   "phase": "surplus",
+   "variant": "zero-article-unqualified-profession",
+   "planned": 5,
+   "ids": [
+    "8d022220-1102-5dca-90a8-23e6ea9301ef",
+    "9602304b-9b04-59b7-89a8-189b60917596",
+    "95022eb8-19e7-5bf2-88a8-16fee1ae1367",
+    "0d5ba3e9-7221-559d-b441-cea1ba38709c",
+    "a2634a3d-82b1-5e3f-813f-a6e37cbb466a"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-articles-use",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "f69cc32b-c7bf-5a21-afa6-401dab1bbc1c",
+    "f39cbe72-3b84-52aa-bca6-5516211a2fc3",
+    "f29a7e48-5732-54fe-bba4-16c2eebb2fbb",
+    "8decf5eb-44e7-5701-8ec6-828df7c4a31c"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-articles-use",
+   "phase": "surplus",
+   "variant": "zero-article-unqualified-profession",
+   "planned": 12,
+   "ids": [
+    "cef59f1d-dfab-5173-a138-2bdf8900cede",
+    "c9f5973e-5a1c-5c9a-a438-30b605aaf56b",
+    "c8f595ab-d900-5ed5-a338-2f1982551bf8",
+    "cdf59d8a-5e8f-53ae-a038-2a420a1d6caf",
+    "ccf59bf7-dd72-55e9-9f38-28a586c7933c",
+    "c2f58c39-e41e-5887-9d38-256b7ba96912",
+    "fb9ccb0a-4469-50d2-b4a6-482e29ff1e4b",
+    "fc9ccc9d-c586-5e97-b5a6-49cba8e2807a",
+    "fa9cc977-c34c-530d-b3a6-4691a6a944d8",
+    "f79cc4be-48db-57e6-b0a6-41ba2e71958f",
+    "f59cc198-46a2-5c5c-aea6-3e802c3859ed",
+    "f39a7fdb-d84f-52c3-bca4-185f6d9e91ea"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-cada-mismo",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 5,
+   "ids": [
+    "a43df28e-22c7-571e-b95d-7e5201633d57",
+    "4c8522ad-9996-5a2b-aed4-e5b71bd4ae46",
+    "49851df4-1641-50dc-abd4-e0e09ab81075",
+    "c4820dfe-290a-5508-b2d1-e0f45f7421e5",
+    "c6821124-2fb6-57a6-b0d1-ddba5d3ae643"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-cada-mismo",
+   "phase": "surplus",
+   "variant": "mismo-agreeing",
+   "planned": 16,
+   "ids": [
+    "a53df421-a3e4-54e3-ba5d-7fef80469f86",
+    "a23def68-208e-5b94-b75d-7b18ff2a01b5",
+    "a63df5b4-1c1b-5480-bb5d-818cfab78a71",
+    "a93dfa6d-9f71-5dcf-be5d-86637bd42842",
+    "9c3de5f6-2bac-5546-b15d-716a0a482bdf",
+    "9d3de789-acc9-530b-b25d-7307892b8e0e",
+    "4b85211a-187a-5c66-add4-e41a9cf14c17",
+    "4a851f87-975d-5ea1-acd4-e27d199b72a4",
+    "47851ace-1407-5552-b1d4-ea8e987ed4d3",
+    "48851c61-9524-5317-b2d4-ec2b17623702",
+    "458517a8-11ce-59c8-afd4-e75496459931",
+    "43851482-0f95-5e3e-b5d4-f102a5d63a9f",
+    "c5820f91-aa27-52cd-b3d1-e291de578414",
+    "c3820c6b-ac60-5e57-b5d1-e5cbe090bfb6",
+    "c2820ad8-2b43-5092-b4d1-e42e61ad5d87",
+    "c98215dd-ae99-59e1-afd1-dc1dd9e50cd0"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-cada-mismo",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 19,
+   "ids": [
+    "d0062d45-e980-57e9-8783-cb85501dc3e0",
+    "cd06288c-6a9d-55ae-8883-cd22d3739d53",
+    "ca0623d3-e747-5c5f-8d83-d53356c976c6",
+    "cf062bb2-6864-5a24-8683-c9e8d13a61b1",
+    "c9062240-662a-5e9a-8c83-d396d7e61497",
+    "cc0626f9-e50e-50d5-8b83-d1f954903b24",
+    "7db22187-04f9-565b-8fa1-d7a721a09702",
+    "7fb224ad-02c0-5ad1-8da1-d46d1f675b60",
+    "78b219a8-7f6a-5182-92a1-dc7ea72fac17",
+    "79b21b3b-0086-5f47-93a1-de1b26130e46",
+    "7ab21cce-7d31-55f8-90a1-d944a4f67075",
+    "7bb21e61-fe4d-53bd-91a1-dae123d9d2a4",
+    "eeb98f2f-1589-5efd-949f-a301e4236cd0",
+    "edb98d9c-946c-5138-939f-a16465400aa1",
+    "efb990c2-96a6-5cc2-959f-a49e67794643",
+    "e9b98750-98df-584c-8f9f-9af069b281e5",
+    "ebb98a76-9b18-53d6-919f-9e2a6bebbd87",
+    "f6b99bc7-0ca4-50d5-9c9f-afe9ed085b58",
+    "ab39f151-c99d-5dab-aa06-7687cac3bb1e"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-cada-mismo",
+   "phase": "surplus",
+   "variant": "mismo-agreeing",
+   "planned": 2,
+   "ids": [
+    "d60636b7-f49e-519b-8183-c1d75b3bee0a",
+    "d5063524-7382-53d6-8083-c03adc588bdb"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-comparatives-superlatives",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "f4abd601-ad08-5737-a242-24eb67ee33aa"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-comparatives-superlatives",
+   "phase": "surplus",
+   "variant": "irregular-comparatives",
+   "planned": 12,
+   "ids": [
+    "9e58829b-8618-526d-88bf-cfe10bc2d5e0",
+    "9da803a3-4dff-57af-9840-e8f301401fb6",
+    "9fa806c9-4bc6-5c25-9640-e5b9ff06e414",
+    "a3a80d15-5038-5339-9240-df45fa946cd0",
+    "a2a80b82-cf1c-5574-9140-dda87bb10aa1",
+    "168df9d9-84e2-50df-a741-653393523d62",
+    "39866f53-0508-5c35-89ff-7cd95fa25cc0",
+    "c37b6365-317d-5011-a4b5-477dbd4bccb0",
+    "daef3b88-2791-5520-bb5e-216c7877fc91",
+    "c441380f-016f-5059-97f5-bf6555929044",
+    "c341367c-8052-5294-96f5-bdc8d6af2e15",
+    "bf413030-7bdf-5b80-9af5-c43cd23cb6d1"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-comparatives-superlatives",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "132c01eb-6a1b-589b-a2a7-b587eb981b22",
+    "8050a172-2497-5f0e-a699-f4e24ce4d407",
+    "7d509cb9-a142-55bf-ab99-fcf3c755bef2",
+    "0753b48e-efff-5628-9992-5b446659ebb5",
+    "0a53b947-77c7-568b-9892-59a7e3041242",
+    "0b55f971-5c19-5437-9995-667bfeb26592",
+    "0555efff-556d-5199-9b95-69b509d08fbc",
+    "0455ee6c-d451-53d4-9a95-68188aed2d8d"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-comparatives-superlatives",
+   "phase": "surplus",
+   "variant": "irregular-comparatives",
+   "planned": 7,
+   "ids": [
+    "162c06a4-e48c-53c2-a5a7-ba5e71273037",
+    "172c0837-65a9-5187-a6a7-bbfbf00a9266",
+    "182c09ca-e253-5838-a3a7-b7246eedf495",
+    "192c0b5d-636f-55fd-a4a7-b8c1edd156c4",
+    "142c037e-e6c5-5f4c-9fa7-b0b06a7b7d51",
+    "8150a305-a5b4-5cd3-a799-f67fcbc83636",
+    "7f509fdf-a37b-5149-a599-f345c98efa94"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-comparatives-superlatives",
+   "phase": "surplus",
+   "variant": "comparative-inferiority",
+   "planned": 4,
+   "ids": [
+    "122c0058-e8ff-5ad6-a1a7-b3ea6cb4b8f3",
+    "8850ae0a-2d7c-5d36-9e99-e7fa55c9c28f",
+    "0553b168-f238-51b2-9b92-5e7e68932757",
+    "0653b2fb-7355-5f77-9c92-601be7768986"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-comparatives-superlatives",
+   "phase": "surplus",
+   "variant": "equality-adjective-adverb",
+   "planned": 3,
+   "ids": [
+    "152c0511-67e2-5d11-a0a7-b24de95edf80",
+    "7e509e4c-225e-5384-a499-f1a84aab9865",
+    "7b509993-9f08-5a35-a999-f9b9c51c8350"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-comparatives-superlatives",
+   "phase": "surplus",
+   "variant": "comparative-superiority",
+   "planned": 2,
+   "ids": [
+    "0e2bfa0c-dba7-559a-ada7-c7467a0c1ebf",
+    "0f2bfb9f-5cc4-535f-aea7-c8e3f8ef80ee"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-connectors",
+   "phase": "surplus",
+   "variant": "por-eso-entonces-consequence",
+   "planned": 5,
+   "ids": [
+    "6ade83de-f4f6-5980-bfe3-73ec7470a9c5",
+    "69de824b-784b-52cf-82e3-78c3f58d4796",
+    "6ede8a2a-f968-5094-bbe3-6d786ffe3281",
+    "6fde8bbd-7a85-5e59-bce3-6f15eee194b0",
+    "60de7420-0014-5332-b9e3-6a3e7f8ed3ef"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-connectors",
+   "phase": "surplus",
+   "variant": "y-to-e-substitution",
+   "planned": 2,
+   "ids": [
+    "214762e8-ec2a-57ec-98fa-1b301853aeb5",
+    "27476c5a-e9f0-5c62-9efa-24de161a7313"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-connectors",
+   "phase": "surplus",
+   "variant": "o-to-u-substitution",
+   "planned": 2,
+   "ids": [
+    "6bde8571-7612-5745-80e3-7589f3540bf4",
+    "68de80b8-f72f-550a-81e3-772676a9e567"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-connectors",
+   "phase": "surplus",
+   "variant": "por-eso-entonces-consequence",
+   "planned": 19,
+   "ids": [
+    "15200cda-e2e9-5cae-9d6e-f1828f451ea7",
+    "102004fb-5d5a-57d5-a06e-f659077ccdf0",
+    "1120068e-de77-559a-a16e-f7f68ad2a763",
+    "0f200368-dc3e-5a10-9f6e-f4bc88996bc1",
+    "12200821-5f94-535f-a26e-f99309b60992",
+    "16200e6d-6406-5a73-9e6e-f31f0e2880d6",
+    "132009b4-e0b0-5124-9b6e-ee488d0be305",
+    "14200b47-61cd-5ee9-9c6e-efe50bef4534",
+    "0a1ffb89-6879-5187-9a6e-ecab129af81a",
+    "996cb2c3-6c02-576b-b008-bbf7413e3742",
+    "9b6cb5e9-69c8-5be1-ae08-b8bd3f04fba0",
+    "9a6cb456-e8ac-5e1c-ad08-b720c0219971",
+    "9d6cb90f-678f-5057-b408-c26b45b0ae86",
+    "9c6cb77c-e672-5292-b308-c0cec6cd4c57",
+    "9f6cbc35-6556-54cd-b208-bf31437772e4",
+    "9e6cbaa2-e439-5708-b108-bd94c49410b5",
+    "a16cbf5b-631d-5943-b808-c8df4a2325ca",
+    "a06cbdc8-e200-5b7e-b708-c742cb3fc39b",
+    "2865451b-a224-5865-8300-87795ab34ef0"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-direct-object-pronouns",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "3ab047d2-d498-580a-b80d-ba9615e2df3b"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-direct-object-pronouns",
+   "phase": "surplus",
+   "variant": "dop-proclisis",
+   "planned": 16,
+   "ids": [
+    "9bc7473a-0e79-5e3a-9754-f77614496f1b",
+    "96c73f5b-91cf-5789-9254-ef6595660cec",
+    "98c74281-9408-5313-9454-f29f979f488e",
+    "93c73aa2-175e-5c62-8f54-ea8e0b648093",
+    "94c73c35-987a-5a27-9054-ec2b8a47e2c2",
+    "ccb7e96d-1b1f-5dc1-a215-ea3d052d9af8",
+    "c6b7dffb-18e6-5237-a815-f3eb0bd94dde",
+    "c5b7de68-97c9-5472-a715-f24e8cf5ebaf",
+    "c8b7e321-16ad-56ad-a615-f0b109a0123c",
+    "c7b7e18e-9590-58e8-a515-ef148abcb00d",
+    "38b044ac-d25f-5c80-b60d-b75c13a9a399",
+    "39b0463f-537b-5a45-b70d-b8f9928d05c8",
+    "3bb04965-55b5-55cf-b90d-bc3394c6416a",
+    "34b03e60-d6d1-5394-b20d-b0e8181c1add",
+    "35b03ff3-57ee-5159-b30d-b28596ff7d0c",
+    "37b04319-5a27-5ce3-b50d-b5bf9938b8ae"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-direct-object-pronouns",
+   "phase": "surplus",
+   "variant": "dop-proclisis",
+   "planned": 20,
+   "ids": [
+    "8858b257-bf85-5023-bd58-12af6691268a",
+    "8a58b57d-bd4c-5499-bb58-0f756457eae8",
+    "7c589f73-c3f8-5737-b958-0c3b621eaf46",
+    "7b589de0-42db-5972-b858-0a9ee33b4d17",
+    "929720e1-5583-507b-be20-73a7dba0c25e",
+    "91971f4e-d466-52b6-bd20-720a5cbd602f",
+    "8f971c28-d22d-572c-bb20-6ed05a84248d",
+    "9697272d-5110-5967-8220-7a1bd72e4b1a",
+    "9597259a-cff4-5ba2-8120-787e584ae8eb",
+    "94972407-4ed7-5ddd-8020-76e1d4f50f78",
+    "8a971449-4c9e-5253-8620-808fd2bbd3d6",
+    "989968ea-0a89-53b0-9019-0c0ce7e38f5d",
+    "97996757-8ddf-5cff-9319-10e369002d2e",
+    "99996a7d-8ba6-5175-9119-0da966c6f18c",
+    "9499629e-0efc-5ac4-8c19-0598e3711819",
+    "95996431-9018-5889-8d19-073562547a48",
+    "92995f78-1135-564e-8e19-08d2e5aa53bb",
+    "90995c52-136e-51d8-8818-ff24defea0d5",
+    "91995de5-948b-5f9d-8919-00c15de20304",
+    "3e163e8d-fe36-5f51-b63a-4d9dff8e30e0"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-estar-gerundio",
+   "phase": "surplus",
+   "variant": "gerund-regular-formation",
+   "planned": 13,
+   "ids": [
+    "7a218adb-aaac-504b-a77f-b787e46d1c32",
+    "79218948-2990-5286-a67f-b5ea6589ba03",
+    "7d218f94-251d-5b72-aa7f-bc5e69fc3147",
+    "71217cb0-20ab-545e-ae7f-c2d26e6ea88b",
+    "27cb67e8-76d4-540e-b608-60b26d364aa3",
+    "2ccb6fc7-f37f-5abf-bb08-68c3f08c2416",
+    "99d2d723-0881-5a75-bc06-2da9ae9c82a0",
+    "9bd2da49-0aba-55ff-be06-30e3b0d5be42",
+    "9ed2df02-8e10-5f4e-b906-28d23664d357",
+    "11416ce6-97f3-5104-ade3-7b48652cee69",
+    "15417332-9381-59f0-b1e3-81bc699f65ad",
+    "12416e79-1910-5ec9-aee3-7ce5e4105098",
+    "1341700c-95ba-557a-b3e3-84f66bd8a14f"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-estar-gerundio",
+   "phase": "surplus",
+   "variant": "gerund-regular-formation",
+   "planned": 8,
+   "ids": [
+    "99b13ec5-cf17-57c7-acd1-588bf1d81f72",
+    "95b13879-d389-5edb-a8d1-5217f64a96b6",
+    "98b13d32-4dfa-5a02-abd1-56ee72f4bd43",
+    "96b13a0c-4bc1-5e78-a9d1-53b470bb81a1",
+    "9cb1437e-4988-52ee-afd1-5d62804c230f",
+    "e8f952e2-b52f-503e-86ae-8762c19a4467",
+    "e6f94fbc-b2f6-54b4-84ae-8428bf6108c5",
+    "e4f94c96-b0bc-592a-8aae-8dd6bd27cd23"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-exclamatives-impersonals",
+   "phase": "surplus",
+   "variant": "que-noun-tan-mas-adjective",
+   "planned": 10,
+   "ids": [
+    "be08a9d4-4157-569e-be1f-c4727c116573",
+    "bb08a51b-be01-5d4f-831f-cc83ff673ee6",
+    "ba08a388-3ce4-5f8a-821f-cae68083dcb7",
+    "c108ae8d-c03a-58d9-bd1f-c2d5f8bb8c00",
+    "9b9c05d7-3f9c-531d-bf4d-4001838fd7d0",
+    "919bf619-3d62-5793-854d-49af9320793e",
+    "9f9e4aba-fb4e-58f0-8f45-06ac24cd4035",
+    "a09e4c4d-7c6a-56b5-9045-0849a3b0a264",
+    "989e3fb5-854f-54dd-8844-fb61ac9590ec",
+    "6d4bc6be-7b95-5eb8-bd9d-1d549839341d"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-exclamatives-impersonals",
+   "phase": "surplus",
+   "variant": "que-adjective-adverb",
+   "planned": 4,
+   "ids": [
+    "bf08ab67-c273-5463-bf1f-c60ffaf4c7a2",
+    "bc08a6ae-3aab-5400-801f-c7ac7e4aa115",
+    "999c02b1-4647-55bb-bd4d-3cc78a3b8ab6",
+    "9a9c0444-be7f-5558-be4d-3e6404ac75a1"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-exclamatives-impersonals",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "22ce01b1-79de-50b7-9bd2-141b14513c6a",
+    "1ccdf83f-7332-5e19-9dd2-17550da58984",
+    "1bcdf6ac-f215-5054-9cd2-15b88ec22755",
+    "d34f72c2-7479-5806-b8d8-549a1d007b1f",
+    "d44f7455-f596-55cb-b9d8-56379be3dd4e",
+    "cd4f6950-6dcd-5568-bad8-57d41654c839",
+    "3c3bf5a4-d1e2-5ff6-8417-f5da13421063",
+    "3f3bfa5d-50c5-5231-8317-f43d8fec36f0"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-exclamatives-impersonals",
+   "phase": "surplus",
+   "variant": "que-noun-tan-mas-adjective",
+   "planned": 3,
+   "ids": [
+    "1caf1988-a935-5a06-b0b6-f07a0fcb6bc3",
+    "8ca77b13-6074-58c5-84af-8c19a823e5a0",
+    "90a7815f-64e7-5fd9-80af-85a5ac965ce4"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-gustar-type-verbs",
+   "phase": "surplus",
+   "variant": "a-tonic-reduplication",
+   "planned": 16,
+   "ids": [
+    "f76efd2b-746d-51bb-a57f-d9b76aa56b9a",
+    "fc6f050a-eca4-5158-a67f-db54edfb450d",
+    "fb6f0377-6ffa-5aa7-a97f-e02b6f17e2de",
+    "fd6f069d-6dc1-5f1d-a77f-dcf16cdea73c",
+    "f06ef226-e832-5a44-aa7f-e1c8e0a3df41",
+    "f16ef3b9-694f-5809-ab7f-e3655f874170",
+    "f16cb522-9760-5ed2-af87-6e7ed013b61b",
+    "f26cb6b5-187d-5c97-b087-701b4ef7184a",
+    "ef6cb1fc-9527-5348-ad87-6b44cdda7a79",
+    "f06cb38f-1644-510d-ae87-6ce14cbddca8",
+    "ee6cb069-1cef-53ab-ac87-69a753698f8e",
+    "ec6cad43-1ab6-5821-aa87-666d513053ec",
+    "ed6caed6-9bd3-55e6-ab87-680ad4862d5f",
+    "eb6cabb0-9999-5a5c-a987-64d0d24cf1bd",
+    "fa6cc34d-0f98-5e6f-b887-7d03461229c2",
+    "d11b9c8b-f908-56d1-8033-83addb2c64a4"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-gustar-type-verbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 20,
+   "ids": [
+    "5aa46779-54da-57e3-a14d-e27fca781956",
+    "5ba4690c-cd12-5780-a24d-e41c44e90441",
+    "5ca46a9f-4e2e-5545-a34d-e5b9c3cc6670",
+    "58a46453-52a1-5c59-9f4d-df45c83eddb4",
+    "65a478ca-d830-5132-9c4d-da6e50072e6b",
+    "66a47a5d-594d-5ef7-9d4d-dc0bceea909a",
+    "6bd60726-32ca-5da2-b7ae-4f8e622e8243",
+    "6cd608b9-b3e7-5b67-b8ae-512be111e472",
+    "69d60400-3091-5218-b5ae-4c545ff546a1",
+    "6ad60593-b1ae-5fdd-b6ae-4df1ded8a8d0",
+    "6fd60d72-373d-54b6-b3ae-491a66a0f987",
+    "70d60f05-b859-527b-b4ae-4ab7e5845bb6",
+    "6dd60a4c-3504-592c-b1ae-45e06467bde5",
+    "73d613be-29e5-5f7a-bfae-5c766b1370cb",
+    "74d61551-ab02-5d3f-80ae-5e13e9f6d2fa",
+    "85d3f17d-c477-5409-bdab-4e05a394ba40",
+    "83d3ee57-c6b0-5f93-bfab-513fa5cdf5e2",
+    "82d3ecc4-4594-51ce-beab-4fa226ea93b3",
+    "81d3eb31-c005-5cf5-81ab-5479a8073184",
+    "80d3e99e-3ee8-5f30-80ab-52dc2923cf55"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-hace-ago",
+   "phase": "surplus",
+   "variant": "hace-ago",
+   "planned": 12,
+   "ids": [
+    "7f7a80b4-4ec8-54e6-b780-cc8a02ce4813",
+    "827a856d-cdab-5721-b680-caed7f786ea0",
+    "817a83da-4c8f-595c-b580-c95000950c71",
+    "7c7a7bfb-cb72-5b97-bc80-d49b86242186",
+    "7b7a7a68-4a55-5dd2-bb80-d2fe0740bf57",
+    "7e7a7f21-c939-500d-ba80-d16183eae5e4",
+    "787a75af-c700-5483-8080-db0f8a9698ca",
+    "777a741c-45e3-56be-bf80-d9720bb3369b",
+    "32d8515f-e491-5473-85ca-49afd25dbdc2",
+    "33d852f2-613b-5b24-82ca-44d851411ff1",
+    "2dd84980-5f02-5f9a-88ca-4e8657ecd2d7",
+    "2ed84b13-e01e-5d5f-89ca-5023d6d03506"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-hace-ago",
+   "phase": "surplus",
+   "variant": "hace-ago",
+   "planned": 12,
+   "ids": [
+    "a5bcb72a-0324-56d6-84a1-d07a00fe8a97",
+    "a4bcb597-8208-5911-83a1-cedd7da8b124",
+    "a2bcb271-7fce-5d87-89a1-d88b7b6f7582",
+    "a1bcb0de-feb2-5fc2-88a1-d6eefc8c1353",
+    "a3bcb404-00eb-5b4c-82a1-cd40fec54ef5",
+    "a0bcaf4b-7d95-51fd-87a1-d551793639e0",
+    "9fbcadb8-fc78-5438-86a1-d3b4fa52d7b1",
+    "9dbcaa92-fa3f-58ae-8ca1-dd6209e3791f",
+    "9ebcac25-7b5c-5673-8da1-deff88c6db4e",
+    "02143dee-0cb7-5cfe-830d-07623c1b9d57",
+    "03143f81-8dd4-5ac3-840d-08ffbafeff86",
+    "00143ac8-0a7e-5174-810d-042839e261b5"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-imperative-affirmative",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "c2cbfdbf-dd1d-5ccf-8f3d-44d3eec709de"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-imperative-affirmative",
+   "phase": "surplus",
+   "variant": "imperative-usted-ustedes",
+   "planned": 9,
+   "ids": [
+    "4b4d5d03-ecc3-56ff-9f48-11f3d39e6b1e",
+    "4e4d61bc-7018-504e-9a48-09e2504891ab",
+    "4c4d5e96-696d-5db0-9c48-0d1c5281cd4d",
+    "4f4d634f-f135-5e13-9b48-0b7fcf2bf3da",
+    "514d6675-eefc-5289-9948-0845ccf2b838",
+    "524d6808-748b-5762-9648-036e4bd61a67",
+    "bcc9b5b6-23a4-5286-b944-a5fa5435545f",
+    "c1c9bd95-a04f-5937-be44-ae0bcea63f4a",
+    "bfc9ba6f-9e15-5dad-bc44-aad1cc6d03a8"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperative-affirmative",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "1510fc7c-d6ca-54ba-83c3-b2e669656ab7"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperative-affirmative",
+   "phase": "surplus",
+   "variant": "imperative-usted-ustedes",
+   "planned": 7,
+   "ids": [
+    "cbe9cf27-a88c-5741-a119-44ad7c4ffa34",
+    "cce9d0ba-29a8-5506-a219-464affa5d3a7",
+    "c7e9c8db-a419-502d-a519-4b2177dd82f0",
+    "c9e9cc01-a652-5bb7-a719-4e5b7a16be92",
+    "c2e9c0fc-1e8a-5b54-a819-4ff80651868d",
+    "18110135-55ae-56f5-82c3-b149e60f9144",
+    "1710ffa2-d491-5930-81c3-afac672c2f15"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperative-affirmative",
+   "phase": "surplus",
+   "variant": "imperative-enclitic-pronoun",
+   "planned": 1,
+   "ids": [
+    "cae9cd94-276f-597c-a019-4310fd6c9805"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-imperfect",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "dc10d483-71e6-5baf-b599-b4339a41f366",
+    "a48adcf5-badd-5c05-8ae5-6c894f5ae3a4",
+    "8af80637-b867-5097-8bc1-f44bdfbc1b86"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-imperfect",
+   "phase": "surplus",
+   "variant": "imperfect-habitual-past",
+   "planned": 5,
+   "ids": [
+    "df10d93c-f53c-54fe-b099-ac2216ec19f3",
+    "de10d7a9-6fad-5025-b399-b0f99808b7c4",
+    "e110dc62-f303-5974-ae99-a8e814b2de51",
+    "dd10d616-ee91-5260-b299-af5c19255595",
+    "e910e8fa-fbe8-579c-a699-9c001d97ccd9"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-imperfect",
+   "phase": "surplus",
+   "variant": "imperfect-irregular-ser-ir-ver",
+   "planned": 4,
+   "ids": [
+    "e210ddf5-7420-5739-af99-aa8593964080",
+    "db10d2f0-f0ca-5dea-b499-b2961b5e9137",
+    "9e8ad383-c189-5ea3-88e5-694f4d21a802",
+    "a38adb62-39c1-5e40-89e5-6aecd0778175"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperfect",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 5,
+   "ids": [
+    "f17a0164-12b9-5b70-a115-171cfecb84f1",
+    "5f816a53-3e91-56af-ab1d-7a6368ac46b6",
+    "5e8168c0-bd74-58ea-aa1d-78c6e9c8e487",
+    "66817558-c659-5712-a21d-6bdef2add30f",
+    "c4d2ea35-77c9-56d7-8753-b44b9daf45aa"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperfect",
+   "phase": "surplus",
+   "variant": "imperfect-irregular-ser-ir-ver",
+   "planned": 8,
+   "ids": [
+    "2b2d694b-7bc4-5249-8aa8-a895f195ff44",
+    "2d2d6c71-7dfe-5dd3-8ca8-abcff3cf3ae6",
+    "2c2d6ade-fce1-500e-8ba8-aa3274ebd8b7",
+    "302d712a-f86f-58fa-8fa8-b0a670796173",
+    "f079ffd1-9a81-5bd3-a015-157f845a9a06",
+    "e579ee80-2010-50ac-9515-03c00c22eabd",
+    "e679f013-a12d-5e71-9615-055d8b064cec",
+    "61816d79-3c58-5b25-a91d-772966730b14"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-imperfect",
+   "phase": "surplus",
+   "variant": "imperfect-habitual-past",
+   "planned": 1,
+   "ids": [
+    "2f2d6f97-7752-5b35-8ea8-af09ed238800"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-indefinites-double-negation",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "d70bdf03-54db-57db-882d-f3b71507d35a",
+    "69047614-2903-5c9c-be26-5ef025bd179d",
+    "4420e8fb-d56a-52b5-903d-2cc9dcbb6420"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-indefinites-double-negation",
+   "phase": "surplus",
+   "variant": "post-verbal-negative-double-negation",
+   "planned": 5,
+   "ids": [
+    "db40cb06-1511-5452-a9fc-692ec6df989b",
+    "e040d2e5-9aa0-592b-a6fc-64574a35720e",
+    "df40d152-1983-5b66-a5fc-62bacb520fdf",
+    "d940c7e0-12d7-58c8-a7fc-65f4c4a65cf9",
+    "e30bf1e7-4784-529f-942e-071310955c16"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-indefinites-double-negation",
+   "phase": "surplus",
+   "variant": "algun-ningun-apocopation",
+   "planned": 4,
+   "ids": [
+    "dd40ce2c-174a-5fdc-a3fc-5f80c918d43d",
+    "dc0be6e2-cd13-5778-892d-f554985daccd",
+    "d60bdd70-d3bf-5a16-872d-f21a9624712b",
+    "6a0477a7-aa1f-5a61-bf26-608da4a079cc"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-indefinites-double-negation",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "fe8a2727-bc5a-5c5b-8d44-40479f3777ca",
+    "c57b8156-79f9-56a6-991b-f7ea9fc45a2f",
+    "d57dd91d-4be7-5fdd-9513-9e51a9cdeb8c"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-indefinites-double-negation",
+   "phase": "surplus",
+   "variant": "pre-verbal-negative-no-dropped",
+   "planned": 11,
+   "ids": [
+    "fa8a20db-b7e8-5547-9144-46bba3a9ef0e",
+    "f58a18fc-3258-506e-9444-4b92176f2713",
+    "ca7b8935-f6a3-5d57-9e1b-fffb1a35451a",
+    "c77b847c-734d-5408-9b1b-fb249918a749",
+    "c67b82e9-fb15-546b-9a1b-f9871ea7bc5e",
+    "c37b7e30-77bf-5b1c-971b-f4b09d8b1e8d",
+    "d17b943a-6ca1-516a-a51c-0b46926cf463",
+    "d07dd13e-cf3d-592c-9013-964026781219",
+    "d47dd78a-caca-5218-9413-9cb42aea895d",
+    "d27dd464-cd04-5da2-9613-9fee2d23c4ff",
+    "d37dd5f7-4e20-5b67-9713-a18bac07272e"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-indirect-object-pronouns-se",
+   "phase": "surplus",
+   "variant": "clitic-doubling-named-io",
+   "planned": 12,
+   "ids": [
+    "89caccbd-438b-515d-94f8-03a175ec05f4",
+    "84cac4de-c6e1-5aac-8ff7-fb90f2962c81",
+    "7fcabcff-3cdf-5ebf-9ef8-13c3810a301e",
+    "693b6ebf-6332-50e9-b723-25e5c19c2ae4",
+    "673b6b99-60f9-555f-bd23-2f93bf62ef42",
+    "663b6a06-dfdc-579a-bc23-2df6407f8d13",
+    "643b66e0-dda3-5c10-ba23-2abc3e465171",
+    "723b7cea-ed33-5cd6-b023-1a9a4dd6f2df",
+    "6f3db6c8-403e-53d2-ad1b-911e60a057a7",
+    "703db85b-c15b-5197-ae1b-92bbdf83b9d6",
+    "753dc03a-4278-5f5c-a71b-877059f4a4c1",
+    "763dc1cd-c394-5d21-a81b-890dd8d806f0"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-indirect-object-pronouns-se",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "85176b11-64f6-5c17-b5bb-354bbc81a652",
+    "88176fca-e84b-5566-b0bb-2d3a4210bb67",
+    "7d175e79-5c11-5def-bdbb-4233c56694da",
+    "36d63c04-38f8-57ec-97fc-d7409c9f1cc5",
+    "39d640bd-bc4d-513b-9afc-dc171dbbba96",
+    "2bd62ab3-acbd-5075-a4fc-ec391ff4f638",
+    "c1b62af5-17f0-5a13-bb10-2ccf9159e89e",
+    "c0b62962-96d4-5c4e-ba10-2b321276866f"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-indirect-object-pronouns-se",
+   "phase": "surplus",
+   "variant": "clitic-doubling-named-io",
+   "planned": 5,
+   "ids": [
+    "831767eb-62bc-508d-b3bb-3211ba486ab0",
+    "86176ca4-e612-59dc-aebb-2a003fd77fc5",
+    "87176e37-672f-57a1-afbb-2b9dbebae1f4",
+    "a7dda9ac-d65c-502a-ad05-4c46832a0517",
+    "35d63a71-b7db-5a27-9efc-e28b19494352"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-ir-a-future",
+   "phase": "surplus",
+   "variant": "ir-a-infinitive",
+   "planned": 12,
+   "ids": [
+    "4467cba0-5e33-5916-b012-faaa21ba27db",
+    "4b67d6a5-d8a4-543d-b312-ff81a2d6c5ac",
+    "4667cec6-5bfa-5d8c-ae12-f7701f80ec39",
+    "4767d059-dd16-5b51-af12-f90d9e644e68",
+    "4a67d512-5787-5678-b212-fde423f3637d",
+    "4967d37f-dadd-5fc7-b513-02bba510014e",
+    "4867d1ec-59c1-5202-b413-011e262c9f1f",
+    "cb6acd42-85da-5dac-9498-e24022fe3859",
+    "cc6aced5-06f6-5b71-9598-e3dda1e19a88",
+    "c96aca1c-8813-5936-9698-e57a253773fb",
+    "ca6acbaf-092f-56fb-9798-e717a41ad62a",
+    "c86ac889-0284-545d-9998-ea51a65411cc"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-ir-a-future",
+   "phase": "surplus",
+   "variant": "ir-a-infinitive",
+   "planned": 12,
+   "ids": [
+    "6823f294-99dd-5d1c-964e-c18018972e7d",
+    "6923f427-1afa-5ae1-974e-c31d977a90ac",
+    "6423ec48-956b-5608-9a4e-c7f41424b739",
+    "6623ef6e-97a4-5192-9c4e-cb2e165df2db",
+    "6123e78f-1215-5cb9-9f4e-d0058e95a224",
+    "6023e5fc-90f8-5ef4-9e4e-ce680fb23ff5",
+    "9496f82c-d52f-5edc-ad0e-78f0a83e05dd",
+    "9696fb52-d768-5a66-af0e-7c2aaa77417f",
+    "9796fce5-5885-582b-b00e-7dc7295aa3ae",
+    "9096f1e0-d0bc-57c8-b10e-7f64a3cb8e99",
+    "9296f506-d2f5-5352-b30e-829ea604ca3b",
+    "9c9704c4-cc4a-50b4-b50e-85d89f591755"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-mente-adverbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "a7903f98-8441-588a-84c0-3f764f24486f"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-mente-adverbs",
+   "phase": "surplus",
+   "variant": "mente-feminine-base",
+   "planned": 17,
+   "ids": [
+    "23cb4079-ba92-5fd5-8515-2ee9dad3727c",
+    "27cb46c5-bf04-56e9-8115-2875d660fb38",
+    "26cb4532-3de8-5924-8015-26d8577d9909",
+    "20cb3bc0-3bae-5d9a-8615-30865e294bef",
+    "11fd9f00-0589-5bee-8c1f-c782f1f7482b",
+    "17fda872-fedd-5950-8e1f-cabcf43083cd",
+    "12fda093-86a6-59b3-8d1f-c91f70daaa5a",
+    "18fdaa05-7ffa-5715-8f1f-cc597313e5fc",
+    "15fda54c-0117-54da-901f-cdf6f669bf6f",
+    "2dfb8c7d-2ab6-548f-9827-5f83552c570a",
+    "2bfb8957-287c-5905-9627-5c4952f31b68",
+    "2afb87c4-a760-5b40-9527-5aacd40fb939",
+    "29fb8631-2f28-5ba3-9427-590f599ece4e",
+    "28fb849e-ae0c-5dde-9327-5772dabb6c1f",
+    "25fb7fe5-339b-52b7-9027-529b4c476882",
+    "24fb7e52-b27e-54f2-8f27-50fecd640653",
+    "a29037b9-0c09-58ed-bbc0-30f1c2e98074"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-mente-adverbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "8f4c0e9a-2d5c-5dca-bf0b-a83650cf082b",
+    "b2b37d75-e7e4-5da9-87c6-a06526e04228"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-mente-adverbs",
+   "phase": "surplus",
+   "variant": "mente-coordination-drop",
+   "planned": 12,
+   "ids": [
+    "894c0528-2f95-5954-b90b-9e88530843cd",
+    "8d4c0b74-2b23-5240-bd0b-a4fc4e95cc89",
+    "3aac04c8-be45-5df4-bfbf-0ed8c81daa8d",
+    "3bac065b-3f61-5bb9-80bf-107547010cbc",
+    "3cac07ee-c07e-597e-81bf-1212ca56e62f",
+    "3dac0981-419a-5743-82bf-13af493a485e",
+    "3eac0b14-b9d2-56e0-83bf-154cc3ab3349",
+    "40ac0e3a-bc0b-526a-85bf-1886c5e46eeb",
+    "32abf830-c729-5c1c-b7bf-01f0bf38bc05",
+    "aeb37729-e371-5695-8bc6-a6d92b52b96c",
+    "adb37596-6255-58d0-8ac6-a53cac6f573d",
+    "b0b37a4f-ea1d-5933-89c6-a39f29197dca"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-mente-adverbs",
+   "phase": "surplus",
+   "variant": "mente-feminine-base",
+   "planned": 1,
+   "ids": [
+    "8a4c06bb-b0b2-5719-ba0b-a025d1eba5fc"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-periphrases-obligation-aspect",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "4b1da57b-f6a2-5805-a87c-d289389d4548"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-periphrases-obligation-aspect",
+   "phase": "surplus",
+   "variant": "acabar-de-infinitive",
+   "planned": 8,
+   "ids": [
+    "ea9b3685-bcc2-5255-a19a-51291403851c",
+    "176abfd7-818f-5441-bee0-6a4df44b8fe4",
+    "156abcb1-7f56-58b7-84e0-73fbf2125442",
+    "886322f5-d981-59f5-97e2-cf592f8f7e74",
+    "0973143c-d214-52ea-9d0d-57160b504d0f",
+    "571ea9f9-a3ee-53c1-bb7a-f9ed0674c778",
+    "5d1eb36b-9d42-5123-857b-0a0fffc91492",
+    "4d1da8a1-f8db-538f-aa7c-d5c33ad680ea"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-periphrases-obligation-aspect",
+   "phase": "surplus",
+   "variant": "hay-que-infinitive",
+   "planned": 5,
+   "ids": [
+    "eb9b3818-4b36-5556-969a-3f6a8a01f8c3",
+    "ef9b3e64-46c3-5e42-9a9a-45de8e747007",
+    "0e6ab1ac-f78e-5854-85e0-75987e4d1c3d",
+    "8d632ad4-6383-55e2-90e2-c40ebbca466f",
+    "591ead1f-a1b4-5837-817b-039b0d207a5e"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-periphrases-obligation-aspect",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "18b5221a-5487-5cb2-aa20-0cde553f91eb",
+    "bfcd996c-67f0-5764-8404-56d83bf7476d",
+    "cacdaabd-f42b-5edb-bf04-4ec7b42ef6b6"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-periphrases-obligation-aspect",
+   "phase": "surplus",
+   "variant": "acabar-de-infinitive",
+   "planned": 15,
+   "ids": [
+    "3b928bf3-594a-596d-8690-7f3183151d50",
+    "3c928d86-da66-5732-8790-80ce066af6c3",
+    "3d928f19-5b83-54f7-8890-826b854e58f2",
+    "3a928a60-d82d-5ba8-8590-7d940431bb21",
+    "429296f8-cf48-5d80-8d90-8a7c0d16a9a9",
+    "4392988b-5065-5b45-8e90-8c198bfa0bd8",
+    "8ab203f9-00e3-5d91-981c-e49d8dc0db60",
+    "87b1ff40-81ff-5b56-991c-e63a1116b4d3",
+    "8eb20a45-fc70-567d-9c1c-eb11923352a4",
+    "8cb2071f-feaa-5207-9e1c-ee4b946c8e46",
+    "92b21091-f7fe-5f69-a01c-f18596a5c9e8",
+    "10b51582-4ba2-5e8a-b220-19c64c5aa363",
+    "11b51715-ccbf-5c4f-b320-1b63cb3e0592",
+    "0cb50f36-5015-559e-ae20-135250cd1aa7",
+    "c2cd9e25-eb46-50b3-8704-5bafbd13e53e"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-personal-a",
+   "phase": "surplus",
+   "variant": "personal-a-specific-person",
+   "planned": 18,
+   "ids": [
+    "9bf8198a-9355-5eba-9233-e0d625e28853",
+    "9af817f7-1238-50f5-9133-df39a28caee0",
+    "99f81664-911c-5330-9033-dd9c23a94cb1",
+    "98f814d1-18e4-5393-8f33-dbffa93861c6",
+    "93f80cf2-9c3a-5ce2-8a33-d3ee2ec776db",
+    "96f811ab-16ab-5809-8d33-d8c5a6ff2624",
+    "94f80e85-1d56-5aa7-8b33-d58badaad90a",
+    "4792c7d7-0b17-5bcb-bdb4-061743fbc552",
+    "4992cafd-08de-5041-bbb4-02dd41c289b0",
+    "4392c18b-06a5-54b7-81b4-0c8b486e3c96",
+    "4492c31e-834f-5b68-beb4-07b4c7519ec5",
+    "3e92b9ac-8116-5fde-84b4-1162cdfd51ab",
+    "3f92bb3f-0232-5da3-85b4-12ff4ce0b3da",
+    "bd8b32d4-c902-5d28-87ac-9194592380d9",
+    "b8cff41b-c061-5219-92b1-3b556c7b61a4",
+    "b1cfe916-4a62-5e06-8bb1-300af8b6299f",
+    "b5cfef62-45f0-56f2-8fb1-367ef443b25b",
+    "8646b066-553f-5c06-84d5-689a2b7a18ff"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-personal-a",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "7d87a349-3cd4-58c9-a69a-67d54d0a4c80"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-personal-a",
+   "phase": "surplus",
+   "variant": "personal-a-specific-person",
+   "planned": 18,
+   "ids": [
+    "a7fb442c-3c83-559e-b648-e2725e30e913",
+    "a3fb3de0-3810-5e8a-ba48-e8e662a36057",
+    "a4fb3f73-b92d-5c4f-bb48-ea83e186c286",
+    "aafb48e5-bb66-57d9-b548-e0d5dadb0fa0",
+    "acfb4c0b-c212-5a77-b348-dd9bea6bb10e",
+    "fe849cc5-fdcc-59a7-9ba2-a93bc1e41d52",
+    "8087a802-b745-53f0-a99a-6cacd2996195",
+    "7c87a1b6-bbb7-5b04-a59a-6638ce26ea51",
+    "7a879e90-bdf0-568e-a79a-6972d06025f3",
+    "26364833-fa17-5707-b8c6-402bf970b48e",
+    "29364cec-7d6d-5056-b3c6-381a761adb1b",
+    "2c3651a5-fc50-5291-b2c6-367df2c501a8",
+    "34365e3d-f36b-5469-bac6-4365e9e01320",
+    "2b365012-7b33-54cc-b1c6-34e073e19f79",
+    "29802719-f4e6-5fb1-9dc3-352dadc231c8",
+    "278023f3-f71f-5b3b-9fc3-3867affb6d6a",
+    "2d802d65-f074-589d-a1c3-3ba1b234a90c",
+    "2a8028ac-7190-5662-a2c3-3d3e358a827f"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-por-para",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 6,
+   "ids": [
+    "1271789a-afb6-5a7c-9e50-c74099e36df1",
+    "f0ae1aa5-7d86-53c1-b4f0-0fcd6facc268",
+    "ecae1459-7913-5cad-b8f0-1641741f39ac",
+    "a64af125-9088-5ff3-af2b-34cf1cd41d1e",
+    "fae564f9-8509-5c57-84cc-d97b95a4bbb2",
+    "4147734e-29f1-5c22-984e-816e7f085783"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-por-para",
+   "phase": "surplus",
+   "variant": "para-recipient",
+   "planned": 2,
+   "ids": [
+    "0d7170bb-2e9a-5cb7-a550-d28b1f728306",
+    "10717574-b1f0-5606-a050-ca7a9c1ca993"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-por-para",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "2137d0fe-4078-5a56-ac81-90ca395a7257",
+    "1d37cab2-3320-551a-b881-a4263dcce99b",
+    "1e37cc45-b43d-52df-b981-a5c3bcb04bca",
+    "11d54fd5-a9ef-5293-9830-165f7c004f86"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-por-para",
+   "phase": "surplus",
+   "variant": "para-recipient",
+   "planned": 2,
+   "ids": [
+    "2437d5b7-bae9-557d-af81-95a1b19221a0",
+    "2237d291-c194-581b-ad81-9267b83dd486"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-present-irregular-stem-changes",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "fba4b994-cff0-5730-aca0-046c74706ef9",
+    "47bb7384-68ee-5414-8a0d-3f9850f0fe35",
+    "45bb705e-66b5-588a-900d-49464eb7c293"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-present-irregular-stem-changes",
+   "phase": "surplus",
+   "variant": "stem-change-e-i",
+   "planned": 8,
+   "ids": [
+    "d837acae-c41c-5d42-a1fa-306ecd98409b",
+    "db37b167-4771-5691-9cfa-285d4eb4de6c",
+    "fda4bcba-d229-52ba-aea0-07a676a9aa9b",
+    "fea4be4d-5346-507f-afa0-0943f58d0cca",
+    "f8a4b4db-557f-5c09-a99f-ff95f7c6486c",
+    "f7a274b1-f91b-5f41-949d-a0fdb80fe298",
+    "fba27afd-f4a8-582d-989d-a771bc8259dc",
+    "f8a27644-75c5-55f2-999d-a90e3fd8334f"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-present-irregular-stem-changes",
+   "phase": "surplus",
+   "variant": "stem-change-o-ue",
+   "planned": 4,
+   "ids": [
+    "d737ab1b-42ff-5f7d-a0fa-2ed14a426728",
+    "d937ae41-4538-5b07-a2fa-320b4c7ba2ca",
+    "da37afd4-c655-58cc-9bfa-26c0cfd17c3d",
+    "d037a016-bb37-5f1a-a9fa-3d56c4b35213"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-present-irregular-stem-changes",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "739805eb-3df5-59fd-9021-1741834a1d50",
+    "da418539-e3c9-55cb-9e2e-aa678ab25e9e",
+    "2f53b530-a1e3-549a-99d4-99965e967e7f"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-present-irregular-stem-changes",
+   "phase": "surplus",
+   "variant": "stem-change-e-ie",
+   "planned": 3,
+   "ids": [
+    "2d6dd52e-6256-5ddc-8acb-b0d0f7f76039",
+    "0ceba3d9-5f2a-58b9-a1ab-87c526422ba8",
+    "9ef34574-0ff8-50ac-8ba9-2790708d522d"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-present-irregular-stem-changes",
+   "phase": "surplus",
+   "variant": "stem-change-o-ue",
+   "planned": 3,
+   "ids": [
+    "2c6dd39b-e5ac-572b-8dcb-b5a77913fe0a",
+    "276dcbbc-5738-542a-98cb-c766f5be2497",
+    "09eb9f20-e047-567e-a2ab-8962a998051b"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-preterite-irregular",
+   "phase": "surplus",
+   "variant": "preterite-tener-hacer-estar",
+   "planned": 11,
+   "ids": [
+    "12c4a156-8663-51f0-b832-39ec6c09fe15",
+    "11c49fc3-09b9-5b3f-bb32-3ec3ed269be6",
+    "10c49e30-889c-5d7a-ba32-3d266e4339b7",
+    "13c4a2e9-0780-5fb5-b932-3b89eaed6044",
+    "16c4a7a2-8ad5-5904-b432-3378679786d1",
+    "17c4a935-0bf2-56c9-b532-3515e67ae900",
+    "19c4ac5b-129e-5967-b332-31dbf60b8a6e",
+    "e987c863-aae6-5a01-b10f-8acd29463c14",
+    "e887c6d0-29c9-5c3c-b00f-8930aa62d9e5",
+    "ef87d1d5-a8ac-5e77-b70f-947b270d0072",
+    "ee87d042-2790-50b2-b60f-92dea8299e43"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-irregular",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 6,
+   "ids": [
+    "fa4c595e-cced-51de-acbc-cec2dc1c84b7",
+    "fe4c5faa-c87a-5aca-b0bc-d536d7aa0d73",
+    "f03cc451-0287-5b5d-a2a6-af712f15dbd4",
+    "dc35e910-c2ac-5844-ae9e-6fa8cbe0ccf5",
+    "e935fd87-483b-5d1d-ab9e-6ad14f36a668",
+    "54591381-d31a-5241-aff3-209da0899430"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-irregular",
+   "phase": "surplus",
+   "variant": "preterite-tener-hacer-estar",
+   "planned": 2,
+   "ids": [
+    "ff4c613d-4997-588f-b1bc-d6d3568d6fa2",
+    "fc4c5c84-c641-5f40-aebc-d1fcd570d1d1"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-preterite-strong-stems",
+   "phase": "surplus",
+   "variant": "u-stem-preterite",
+   "planned": 6,
+   "ids": [
+    "698d28a7-a55b-5803-9b03-8aeffa9e583a",
+    "6a8d2a3a-2205-5eb4-9803-86187981ba69",
+    "6b8d2bcd-a322-5c79-9903-87b5f8651c98",
+    "648d20c8-1fcc-532a-9e03-8fc6802d6d4f",
+    "618d1c0f-ae40-562b-9303-7e07f1b969b2",
+    "ba349dac-12ca-52c6-99b4-a31a5619352b"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-preterite-strong-stems",
+   "phase": "surplus",
+   "variant": "j-stem-preterite",
+   "planned": 4,
+   "ids": [
+    "688d2714-243f-5a3e-9a03-89527bbaf60b",
+    "658d225b-a0e9-50ef-9f03-9163ff10cf7e",
+    "678d2581-9eb0-5565-9d03-8e29fcd793dc",
+    "668d23ee-1d93-57a0-9c03-8c8c7df431ad"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-strong-stems",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 5,
+   "ids": [
+    "1f51e321-3216-553f-a5d9-8373286138fa",
+    "f4f01baa-a3ce-5722-94db-f9beaa9e0d2b",
+    "e9edcbc2-b8d1-56d8-95d9-bea471935a3d",
+    "e5edc576-bd43-5dec-91d9-b8306d20e2f9",
+    "e3edc250-bf7d-5976-93d9-bb6a6f5a1e9b"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-strong-stems",
+   "phase": "surplus",
+   "variant": "j-stem-preterite",
+   "planned": 3,
+   "ids": [
+    "2251e7da-b56b-5e8e-a0d9-7b62adf04e0f",
+    "1d51dffb-2fdc-59b5-a3d9-80392627fd58",
+    "1c51de68-aec0-5bf0-a2d9-7e9ca7449b29"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-strong-stems",
+   "phase": "surplus",
+   "variant": "u-stem-preterite",
+   "planned": 2,
+   "ids": [
+    "2151e647-344f-50c9-9fd9-79c52a9a749c",
+    "2351e96d-3688-5c53-a1d9-7cff2cd3b03e"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-preterite-yo-spelling",
+   "phase": "surplus",
+   "variant": "car-que",
+   "planned": 5,
+   "ids": [
+    "9a8e83d6-02de-5976-a482-14faaf2da70f",
+    "9d8e888f-7d4f-549d-a782-19d127655658",
+    "b42a54a6-a718-53f6-9f8c-886a09c6c95f",
+    "b22a5180-a4de-586c-9d8c-8530078d8dbd",
+    "b62a57cc-a06c-5158-a18c-8ba4031b1679"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterite-yo-spelling",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 7,
+   "ids": [
+    "56330af9-45e7-58e1-9af0-619dc61d4858",
+    "58330e1f-43ae-5d57-a0f0-6b4bccc8fb3e",
+    "7d57befa-1be0-56b4-90cb-3a58633940e1",
+    "70556bec-cd48-56cc-8fd2-bd6054e2535d",
+    "bf8a93d9-bfb7-5bf1-a71e-940dfdb37ca8",
+    "246aab82-b680-52a8-ab72-bb74f739803d",
+    "226aa85c-b8b9-5e32-ad72-beaef972bbdf"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-preterito-perfecto",
+   "phase": "surplus",
+   "variant": "present-perfect-with-time-markers",
+   "planned": 21,
+   "ids": [
+    "c77bcb7e-c9cc-5c8c-a347-7e0078e917d1",
+    "cc7bd35d-4676-533d-a847-8611fc3ef144",
+    "c67bc9eb-4d22-55db-a647-82d7fa05b5a2",
+    "c57bc858-cc05-5816-a547-813a7b225373",
+    "ca7bd037-48af-5ec7-aa47-894bfe782ce6",
+    "c97bcea4-c792-5102-a947-87ae7f94cab7",
+    "c07bc079-4203-5c29-ac47-8c8500b16888",
+    "bf7bbee6-c0e7-5e64-ab47-8ae881ce0659",
+    "55e10bca-221d-58ac-9a56-9370a78d7bb1",
+    "54e10a37-a573-51fb-9d56-984728aa1982",
+    "51e1057e-1dab-5198-9e56-99e4abfff2f5",
+    "4fe10258-1fe4-5d22-a056-9d1eae392e97",
+    "50e103eb-a101-5ae7-a156-9ebb2d1c90c6",
+    "4ee100c5-9a55-5849-a356-a1f52f55cc68",
+    "4de0ff32-1938-5a84-a256-a058b0726a39",
+    "4edec22e-c867-5f12-a75e-2d0e8e186403",
+    "4ddec09b-474a-514d-a65e-2b710ac28a90",
+    "4cdebf08-c62d-5388-a55e-29d48bdf2861",
+    "53deca0d-4df6-53eb-a45e-2837116e3d76",
+    "51dec6e7-4bbc-5861-a25e-24fd0f3501d4",
+    "50dec554-caa0-5a9c-a15e-236090519fa5"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-preterito-perfecto",
+   "phase": "surplus",
+   "variant": "present-perfect-with-time-markers",
+   "planned": 17,
+   "ids": [
+    "1eaed403-eca1-5841-95ea-e3cd5c992b04",
+    "1faed596-6dbd-5606-96ea-e56adfef0477",
+    "1daed270-6b84-5a7c-94ea-e230ddb5c8d5",
+    "22aeda4f-e82e-512d-99ea-ea415826b3c0",
+    "21aed8bc-6711-5368-98ea-e8a4d9435191",
+    "23aedbe2-694b-5ef2-9aea-ebdedb7c8d33",
+    "26aee09b-e3bc-5a19-9dea-f0b5657e198c",
+    "25aedf08-629f-5c54-9cea-ef18e69ab75d",
+    "fa34fac0-de66-587c-beee-9a00dba973f5",
+    "fb34fc53-5f83-5641-bfee-9b9d5a8cd624",
+    "fe35010c-d9f3-5168-82ee-a074d736fcb1",
+    "00350432-dc2d-5cf2-84ee-a3aed9703853",
+    "013505c5-5d49-5ab7-85ee-a54b58539a82",
+    "033508eb-569e-5819-87ee-a8856371c4ac",
+    "8c3c9c5b-941b-5f27-8cf7-03bb4117be76",
+    "8f3ca114-1771-5876-87f6-fbaabdc1e503",
+    "923ca5cd-9654-5ab1-86f6-fa0d3a6c0b90"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-reflexive-verbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "96060029-fd8b-5bcf-b0a0-0f532a3cc52a"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-reflexive-verbs",
+   "phase": "surplus",
+   "variant": "reflexive-preverbal-pronoun",
+   "planned": 18,
+   "ids": [
+    "990604e2-80e1-551e-aba0-0742afcbda3f",
+    "9a060675-01fd-52e3-aca0-08df2eaf3c6e",
+    "9505fe96-7c6e-5e0a-afa0-0db6ab5962fb",
+    "9806034f-ffc4-5759-aaa0-05a52c7600cc",
+    "970601bc-7ea7-5994-a9a0-0408ad929e9d",
+    "9305fb70-7a35-5280-ada0-0a7ca9202759",
+    "9405fd03-fb52-5045-aea0-0c1928038988",
+    "a206130d-0ae2-510b-a49f-fbf725ca4de6",
+    "bc7bde9f-cad6-535f-ad2e-69938d5deebe",
+    "bb7bdd0c-49b9-559a-ac2e-67f60e7a8c8f",
+    "bd7be032-4780-5a10-aa2e-64bc0c4150ed",
+    "b87bd853-cf48-5a73-a92e-631f88eb777a",
+    "b77bd6c0-4e2c-5cae-a82e-61820a08154b",
+    "c37be9a4-529e-53c2-a42e-5b0e05959e07",
+    "4b7470f7-248c-5cf9-a026-cff5a6d3066c",
+    "4c74728a-a5a9-5abe-a126-d1922a28dfdf",
+    "46746918-9efd-5820-a326-d4cc237d2cf9",
+    "47746aab-201a-55e5-a426-d669a2608f28"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-reflexive-verbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "7cc3bec3-ca88-5153-88b6-977f82b2700a",
+    "82c3c835-c3dd-5eb5-8ab6-9ab984ebabac"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-reflexive-verbs",
+   "phase": "surplus",
+   "variant": "reflexive-preverbal-pronoun",
+   "planned": 18,
+   "ids": [
+    "250448fc-3cba-578e-9af1-9432ece13b7b",
+    "28044db5-bb9d-59c9-99f1-9295698b6208",
+    "26044a8f-bdd7-5553-9bf1-95cf6bc49daa",
+    "22044443-b964-5e3f-9ff1-9c43703714ee",
+    "24044769-b72b-52b5-9df1-99096dfdd94c",
+    "2d045594-459f-55b6-92f1-874ae3fc4cf3",
+    "97c1aaad-6e98-5c2f-93be-fc6367041cba",
+    "95c1a787-6c5f-50a5-91be-f92964cae118",
+    "93c1a461-730b-5343-8fbe-f5ef6b7693fe",
+    "92c1a2ce-f1ee-557e-8ebe-f452ec9331cf",
+    "91c1a13b-70d2-57b9-8dbe-f2b5693d585c",
+    "90c19fa8-efb5-59f4-8cbe-f118ea59f62d",
+    "8fc19e15-777d-5a57-8bbe-ef7b5e1f2e32",
+    "8ec19c82-f661-5c92-8abe-eddedf3bcc03",
+    "7dc3c056-4732-5804-85b6-92a80195d239",
+    "7bc3bd30-496c-538e-87b6-95e203cf0ddb",
+    "81c3c6a2-42c0-50f0-89b6-991c0608497d",
+    "7fc3c37c-44f9-5c7a-8bb6-9c560841851f"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-saber-poder-ability",
+   "phase": "surplus",
+   "variant": "saber-infinitive-learned-skill",
+   "planned": 3,
+   "ids": [
+    "41cfceaf-9726-5e21-8412-99bd0eae5564",
+    "3ccfc6d0-1197-5948-8712-9e948b587bf1",
+    "3fcfcb89-94ed-5297-8a12-a36b0c7519c2"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-saber-poder-ability",
+   "phase": "surplus",
+   "variant": "saber-poder-contrast-one-sentence",
+   "planned": 1,
+   "ids": [
+    "42cfd042-1843-5be6-8512-9b5a92042ed7"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-saber-poder-ability",
+   "phase": "surplus",
+   "variant": "saber-poder-contrast-one-sentence",
+   "planned": 19,
+   "ids": [
+    "f241ff9b-782a-5b47-b251-6cdb467a3a06",
+    "f842090d-7a63-56d1-ac51-632d3fce8720",
+    "f44202c1-75f0-5fbd-b051-69a14440fe64",
+    "f141fe08-f70d-5d82-b151-6b3ec796d7d7",
+    "f742077a-f946-590c-ab51-6190c0eb24f1",
+    "f64205e7-7c9c-525b-ae51-66674207c2c2",
+    "f5420454-fb7f-5496-ad51-64cac3246093",
+    "ec41f629-6d0b-5195-b851-76894d25ecec",
+    "eb41f496-ebef-53d0-b751-74ecce428abd",
+    "0ee7c23a-8d8e-56e8-8a55-1be41fa77115",
+    "0ce7bf14-8fc7-5272-8c55-1f1e21e0acb7",
+    "0fe7c3cd-0eaa-54ad-8b55-1d819e8ad344",
+    "0de7c0a7-10e4-5037-8d55-20bba0c40ee6",
+    "0ae7bbee-9200-5dfc-8655-15701b34f9d1",
+    "0be7bd81-131d-5bc1-8755-170d9a185c00",
+    "08e7b8c8-9439-5986-8855-18aa1d6e3573",
+    "07e7b735-05c5-5685-9355-2a69a76fc1cc",
+    "07e5789e-c226-5fce-975c-b582948141e7",
+    "06e5770b-4109-5209-965c-b3e5112b6874"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-temporal-clauses",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "07921f14-75db-5f0a-bf82-c0c60ccfcf8f",
+    "039218c8-7a4d-561e-bb82-ba52085d584b"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-temporal-clauses",
+   "phase": "surplus",
+   "variant": "antes-de-infinitive",
+   "planned": 7,
+   "ids": [
+    "06921d81-f930-5859-ba82-b8b585077ed8",
+    "1c0b9751-92b7-5435-b8ec-19e905aca29c",
+    "190b9298-13d4-51fa-b9ec-1b8689027c0f",
+    "1f0b9c0a-160d-5d84-b3ec-11d88256c929",
+    "200b9d9d-9729-5b49-b4ec-1375013a2b58",
+    "130b8926-1a7f-5498-afec-0b647de451e5",
+    "15094db5-5c94-533b-a5f3-7fe7ec378aee"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-temporal-clauses",
+   "phase": "surplus",
+   "variant": "despues-de-infinitive",
+   "planned": 6,
+   "ids": [
+    "0992223a-73a1-5380-bd82-bd8c0a9693ed",
+    "05921bee-7814-5a94-b982-b71806241ca9",
+    "1a0b942b-94f0-5fbf-baec-1d2307e5de3e",
+    "1d0b98e4-1846-590e-b5ec-1512849004cb",
+    "0f094443-55e8-509d-a7f3-8321e58bd808",
+    "0e0942b0-d4cc-52d8-a6f3-818466a875d9"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-todo-otro-quantifiers",
+   "phase": "surplus",
+   "variant": "demasiado-adjective-agreement",
+   "planned": 20,
+   "ids": [
+    "1fbcbf10-d591-5352-a4f2-d04e0de33e2f",
+    "22bcc3c9-5474-558d-a3f2-ceb18a8d64bc",
+    "26bcca15-58e7-5ca1-9ff2-c83d861aed78",
+    "21bcc236-d358-57c8-a2f2-cd140baa028d",
+    "24bcc6ef-5b20-582b-a1f2-cb778854291a",
+    "23257105-8b96-579d-86b4-f4b1d209877c",
+    "20256c4c-0cb3-5562-87b4-f64e555f60ef",
+    "21256ddf-8dcf-5327-88b4-f7ebd442c31e",
+    "1c256600-1125-5c76-83b4-efda50ece9ab",
+    "1d256793-9242-5a3b-84b4-f177cfd04bda",
+    "2b257d9d-82b1-5975-8eb5-0199c92498f4",
+    "1c232769-31df-5e03-93bc-8e4fb8946fce",
+    "1b2325d6-b0c3-503e-92bc-8cb239b10d9f",
+    "1a232443-2fa6-5279-91bc-8b15b65b342c",
+    "192322b0-ae89-54b4-90bc-89783777d1fd",
+    "1f232c22-ac50-592a-96bc-9326353e965b",
+    "1d2328fc-aa17-5da0-94bc-8fec33055ab9",
+    "24233401-3ac4-5c2b-8bbc-8167afaf8146",
+    "c4c30aef-da82-5133-8689-ae8fb9f2ff12",
+    "c3c3095c-5965-536e-8589-acf23b0f9ce3"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-todo-otro-quantifiers",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "d1c2894e-5c99-5786-913a-6cfa8031a3af"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-todo-otro-quantifiers",
+   "phase": "surplus",
+   "variant": "demasiado-adjective-agreement",
+   "planned": 9,
+   "ids": [
+    "d7e32437-4ec3-5b7d-b7a3-9ba10972f778",
+    "d8e325ca-cfdf-5942-b8a3-9d3e8cc8d0eb",
+    "d5e32111-556e-5e1b-b5a3-9867101eaa5e",
+    "d4e31f7e-d452-5056-b4a3-96ca913b482f",
+    "d78f68b0-0102-58bc-95ef-bf708492b40d",
+    "dd8f7222-fec9-5d32-9bef-c91e8259786b",
+    "6c970f04-3128-5a8e-a6f7-5f8266ab251b",
+    "659703ff-bb29-567b-9ff7-5437dca998c2",
+    "c9c27cb6-53b4-595e-993a-79e2774cb527"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-todo-otro-quantifiers",
+   "phase": "surplus",
+   "variant": "nada-nadie-negative-pronouns",
+   "planned": 3,
+   "ids": [
+    "d3e31deb-5335-5291-b3a3-952d0de56ebc",
+    "cee3160c-c4c1-5f90-bea3-a6ec81aaa6c1",
+    "d98f6bd6-033b-5446-97ef-c2aa86cbefaf"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-tonic-pronouns-prepositions",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "2a345fb0-2698-5940-b132-d17cdb435dc1",
+    "2c3462d6-28d1-54ca-b332-d4b6dd7c9963"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-tonic-pronouns-prepositions",
+   "phase": "surplus",
+   "variant": "tonic-mi-ti-after-preposition",
+   "planned": 12,
+   "ids": [
+    "9742159c-f7d2-5582-b473-085e6e343477",
+    "b91b8c4c-4773-5692-bba9-9f5ec3825dff",
+    "b61b8793-cd02-5b6b-b8a9-9a873df348ea",
+    "b71b8926-49ac-521c-b5a9-95b0bcd6ab19",
+    "c11b98e4-3e8e-586a-83a9-ac46ba9d6f77",
+    "4a232c54-5803-5f34-80a6-9c3814541c4d",
+    "4d23310d-db59-5883-83a6-a10f9570ba1e",
+    "4723279b-d4ad-55e5-85a6-a4498ec50738",
+    "46232608-5391-5820-84a6-a2ac0fe1a509",
+    "4823292e-55ca-53aa-86a6-a5e6121ae0ab",
+    "4323214f-e205-5b21-b9a6-90ed8a528ff4",
+    "67983a1d-13df-586f-b128-9f43c15caf3a"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-tonic-pronouns-prepositions",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 9,
+   "ids": [
+    "8ce6d48b-92b4-5d65-adc6-9d3987a84c48",
+    "91e6dc6a-1843-523e-aac6-98620f709cff",
+    "86e6cb19-9dd2-5717-a7c6-938b80fc9962",
+    "91632bfd-a336-5ac7-9d6e-5aab7b9a47aa",
+    "8b63228b-a56f-5651-976e-50fd7dd3834c",
+    "8a60e261-b3c6-5369-a26b-5785cc6c05f8",
+    "8160d436-3b8e-53cc-996b-490044a3b541",
+    "716fbe66-e94d-5b78-874e-384408c84a45",
+    "cdbdadae-5773-5158-a182-2e9475610345"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-tonic-pronouns-prepositions",
+   "phase": "surplus",
+   "variant": "tonic-mi-ti-after-preposition",
+   "planned": 8,
+   "ids": [
+    "8de6d61e-13d1-5b2a-aec6-9ed60afe25bb",
+    "92e6ddfd-9960-5003-abc6-99ff8e53ff2e",
+    "8ee6d7b1-94ed-58ef-afc6-a07389e187ea",
+    "90e6dad7-9727-5479-a9c6-96c58c1ac38c",
+    "8fe6d944-160a-56b4-a8c6-95280d37615d",
+    "85e6c986-1cb6-5952-a6c6-91ee02193733",
+    "90632a6a-2219-5d02-9c6e-590efcb6e57b",
+    "8f6328d7-a0fc-5f3d-9b6e-577179610c08"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-aspectual-periphrases",
+   "phase": "surplus",
+   "variant": "seguir-gerundio",
+   "planned": 16,
+   "ids": [
+    "d53ac9f1-2a6f-529f-993c-3bc3b46cd322",
+    "d23ac538-a719-5950-963c-36ec33503551",
+    "d33ac6cb-2836-5715-973c-3889b2339780",
+    "d93ad03d-2ee2-59b3-953c-354fb8df4a66",
+    "d63acb84-ab8c-5064-923c-307837c2ac95",
+    "cc3abbc6-b237-5302-903c-2d3e3e6e5f7b",
+    "82897ede-aef0-5126-ab29-af0a9c231d77",
+    "81897d4b-2dd4-5361-aa29-ad6d18cd4404",
+    "7e897892-a199-5bea-b729-c266a09594bb",
+    "7d873868-bd47-5e3e-b627-8412eabba023",
+    "0184369d-55a0-5743-ba24-7f4f52632646",
+    "0595860a-07a1-5f80-be22-490cd52dd065",
+    "fb95764c-12bf-5932-b822-3f5ee04bfa8f",
+    "43be8f34-e087-5f7c-b1dc-8980399f1c9d",
+    "42be8da1-5f6a-51b7-b8dc-94cbb649432a",
+    "41be8c0e-de4d-53f2-b7dc-932e3765e0fb"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-aspectual-periphrases",
+   "phase": "surplus",
+   "variant": "estar-a-punto-de-infinitivo",
+   "planned": 6,
+   "ids": [
+    "d43ac85e-a953-54da-983c-3a26358970f3",
+    "83898071-300d-5eeb-ac29-b0a71b067fa6",
+    "80897bb8-acb7-559c-a929-abd099e9e1d5",
+    "7f897a25-22b5-59af-b829-c4031f78f6ea",
+    "7f873b8e-bb0e-52b4-b427-80d8e8826481",
+    "7e8739fb-3e64-5c03-b727-85af699f0252"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-aspectual-periphrases",
+   "phase": "surplus",
+   "variant": "estar-a-punto-de-infinitivo",
+   "planned": 29,
+   "ids": [
+    "ec5caf5b-0370-59b7-ada1-434ba44095c6",
+    "eb5cadc8-8253-5bf2-aca1-41ae255d3397",
+    "ef5cb414-86c6-5306-a8a1-3b3a20eabc53",
+    "f15cb73a-848c-577c-a6a1-38001eb180b1",
+    "e45ca2c3-fa8b-5b8f-b5a1-5033ad25844e",
+    "e35ca130-796e-5dca-b4a1-4e962e42221f",
+    "7ae5dd68-efcd-564a-9e26-dbe677089657",
+    "7be5defb-70ea-540f-9f26-dd83f5ebf886",
+    "7de5e221-6eb0-5885-9d26-da49f3b2bce4",
+    "7fe5e547-755c-5b23-9b26-d70ff1798142",
+    "80e5e6da-f206-51d4-9826-d238705ce371",
+    "73e5d263-79cf-5237-9726-d09bfed0e70e",
+    "eced4ca3-a50d-5551-8424-753db86ece54",
+    "ebed4b10-23f1-578c-8324-73a0398b6c25",
+    "eeed4fc9-a747-50db-8624-7877baa809f6",
+    "eded4e36-262a-5316-8524-76da3bc4a7c7",
+    "f0ed52ef-a09b-5e3d-8824-7bb1b3fc5710",
+    "efed515c-1f7e-5078-8724-7a143518f4e1",
+    "f2ed5615-a2d4-59c7-8a24-7eebb63592b2",
+    "f1ed5482-21b8-5c02-8924-7d4e37523083",
+    "f4ed593b-9c29-5729-8c24-8225c153bcdc",
+    "86ea6d7a-36ba-5bb8-8a21-73b41ddd18d5",
+    "87ea6f0d-b7d7-597d-8b21-75519cc07b04",
+    "84ea6a54-38f3-5742-8c21-76ee20165477",
+    "85ea6be7-ba10-5507-8d21-788b9ef9b6a6",
+    "82ea672e-3b2d-52cc-8621-6d40196aa191",
+    "83ea68c1-bc49-5091-8721-6edd984e03c0",
+    "81ea659b-be83-5c1b-8921-72179a873f62",
+    "7eea60e2-2dd5-5d90-9221-809c26c2075d"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-aspectual-periphrases",
+   "phase": "surplus",
+   "variant": "seguir-gerundio",
+   "planned": 1,
+   "ids": [
+    "f05cb5a7-07e2-50cb-a9a1-3cd79fce1e82"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-deber-obligation-probability",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "90b19553-049a-5ddb-8497-5987307369c2"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-deber-obligation-probability",
+   "phase": "surplus",
+   "variant": "deber-de-infinitivo-probability",
+   "planned": 17,
+   "ids": [
+    "2b622be3-55ee-565d-a7e2-29b10b402278",
+    "2a622a50-d4d1-5898-a6e2-28148c5cc049",
+    "37623ec7-517b-5f49-abe2-302506cdab34",
+    "b292a1ea-785f-5a96-98d0-288aa640a5ef",
+    "ae929b9e-73ed-5382-9cd0-2efea1ce2eab",
+    "a892922c-6d41-50e4-9ed0-32389b227bc5",
+    "a99293bf-ee5e-5ea9-9fd0-33d51a05ddf4",
+    "229a0dff-9d8c-5337-a4d7-c08b0975b4ce",
+    "239a0f92-1a36-59e8-a1d7-bbb4885916fd",
+    "1e9a07b3-a1fe-5a4b-a0d7-ba1705033d8a",
+    "1d9a0620-20e2-5c86-9fd7-b87a861fdb5b",
+    "299a1904-138a-574a-abd7-cbd681ad6417",
+    "1a97c2d0-2cff-5e14-a8d5-8a486caac3ad",
+    "2097cc42-2ac6-528a-aed5-93f66a71880b",
+    "2197cdd5-abe3-504f-afd5-9593e954ea3a",
+    "1f97caaf-a9aa-54c5-add5-9259e71bae98",
+    "2497d28e-381e-57c6-a2d5-809a65ff10c7"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-deber-obligation-probability",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "794ad14e-4434-5a00-a734-d75c91bb6c2d",
+    "eef06c3e-19cf-5b4c-9229-9640136fa0a1"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-deber-obligation-probability",
+   "phase": "surplus",
+   "variant": "deber-de-infinitivo-probability",
+   "planned": 29,
+   "ids": [
+    "026d73a1-4974-5ff9-9c7e-95d5ac4195d8",
+    "006d707b-4bad-5b83-9e7e-990fae7ad17a",
+    "ff6d6ee8-ca90-5dbe-9d7e-97722f976f4b",
+    "066d79ed-4501-58e5-a07e-9c49b0b40d1c",
+    "056d785a-c3e4-5b20-9f7e-9aac31d0aaed",
+    "036d7534-c61e-56aa-a17e-9de63409e68f",
+    "046d76c7-473a-546f-a27e-9f83b2ed48be",
+    "fa6d6709-5258-5e21-947e-88eda35ca750",
+    "7e4ad92d-c9c3-5ed9-a434-d2850c2c5718",
+    "7a4ad2e1-c551-57c5-a834-d8f9109ece5c",
+    "764acc95-d2a8-5d01-9c34-c59d03476890",
+    "f747c611-fe5c-57bf-b13d-3aa3f2b73f6a",
+    "f647c47e-7d3f-59fa-b03d-390673d3dd3b",
+    "f547c2eb-fc22-5c35-af3d-3769f07e03c8",
+    "f447c158-7b06-5e70-ae3d-35cc719aa199",
+    "fa47caca-81b1-510e-ac3d-32927846547f",
+    "f847c7a4-7f78-5584-aa3d-2f58760d18dd",
+    "ee47b7e6-8624-5822-a83d-2c1e6aeeeeb3",
+    "ef47b979-0740-55e7-a93d-2dbbe9d250e2",
+    "f1457e08-254d-5446-973a-057ae674726b",
+    "f345812e-2314-58bc-953a-0240e43b36c9",
+    "f5458454-20db-5d32-9b3a-0beeeae6e9af",
+    "f745877a-1ea1-51a8-993a-08b4e8adae0d",
+    "f845890d-9fbe-5f6d-9a3a-0a516791103c",
+    "e9457170-1c68-561e-9f3a-1262dd8f83e3",
+    "fb56d6e7-2141-5ce9-a542-6f354be2bcec",
+    "fd56da0d-237a-5873-a742-726f4e1bf88e",
+    "fc56d87a-a25d-5aae-a642-70d2cf38965f",
+    "f756d09b-1cce-55d5-a942-75a9477045a8"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-discourse-connectors",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "2bfdb1d5-4e88-5663-9831-493fcd7a3f8e"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-discourse-connectors",
+   "phase": "surplus",
+   "variant": "fronted-causal-como",
+   "planned": 11,
+   "ids": [
+    "6d263eb7-b39e-54bd-b632-62d15614ea68",
+    "6c263d24-3281-56f8-b532-6134d7318839",
+    "682636d8-36f4-5e0c-b132-5ac0dba3ff7d",
+    "6926386b-b810-5bd1-b232-5c5d5a8761ac",
+    "df377e7b-8ac7-5f35-a94b-ea094faf3868",
+    "e739c9aa-f6e1-5d44-a14e-e858ec7a2989",
+    "e139c038-f4a8-51ba-a74e-f206f325dc6f",
+    "dd39b9ec-0200-56f6-9b4e-deaae5ce76a3",
+    "dd2870cb-69a7-5df1-8f3c-b6cd1cc5090c",
+    "de28725e-eac4-5bb6-903c-b86aa01ae27f",
+    "df2873f1-6be0-597b-913c-ba071efe44ae"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-discourse-connectors",
+   "phase": "surplus",
+   "variant": "sin-embargo-adversative",
+   "planned": 4,
+   "ids": [
+    "6f2641dd-b5d7-5047-b832-660b584e260a",
+    "58346b5f-350f-550b-9249-883716a4857a",
+    "573469cc-b3f2-5746-9149-869a97c1234b",
+    "e53787ed-9173-51d3-a74b-e6cf565aeb4e"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-discourse-connectors",
+   "phase": "surplus",
+   "variant": "aunque-indicative-known-fact",
+   "planned": 2,
+   "ids": [
+    "6426308c-299c-58d0-bd32-6e1cce4c99b1",
+    "6526321f-aab9-5695-be32-6fb94d2ffbe0"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-discourse-connectors",
+   "phase": "surplus",
+   "variant": "aunque-indicative-known-fact",
+   "planned": 38,
+   "ids": [
+    "319062bb-c3e2-598f-9c03-7ee397e50fae",
+    "3290644e-408c-5040-9903-7a0c16c871dd",
+    "339065e1-c1a9-5e05-9a03-7ba995abd40c",
+    "36906a9a-44ff-5754-9503-73981255fa99",
+    "30906128-42c6-5bca-9b03-7d461901ad7f",
+    "37906c2d-c61c-5519-9603-753591395cc8",
+    "34906774-4738-52de-9703-76d2148f363b",
+    "35906907-c855-50a3-9803-786f9372986a",
+    "2a9057b6-4971-5e68-9103-6d240de38355",
+    "2b905949-ca8e-5c2d-9203-6ec18cc6e584",
+    "fd504803-467c-5fc9-909e-65d5050110fc",
+    "fc504670-c560-5204-8f9e-6438861daecd",
+    "ff504b29-48b6-5b53-929e-690f073a4c9e",
+    "fe504996-c799-5d8e-919e-67728856ea6f",
+    "01504e4f-420a-58b5-949e-6c49008e99b8",
+    "00504cbc-c0ed-5af0-939e-6aac81ab3789",
+    "02504fe2-c327-567a-959e-6de683e4732b",
+    "0550549b-4f61-5df1-889e-58edfc1c2274",
+    "04505308-ce45-502c-879e-57507d38c045",
+    "8b48d8c8-b4d0-5962-8aa1-675e354bf07f",
+    "8c48da5b-35ec-5727-8ba1-68fbb42f52ae",
+    "8e48dd81-33b3-5b9d-89a1-65c1b1f6170c",
+    "8d48dbee-b296-5dd8-88a1-64243312b4dd",
+    "8f48df14-b942-5076-86a1-60ea30d9793b",
+    "9048e0a7-3a5f-5e3b-87a1-6287afbcdb6a",
+    "8348cc30-abeb-5b3a-92a1-74462c6701f7",
+    "8448cdc3-2d07-58ff-93a1-75e3ab4a6426",
+    "914b20d1-2323-52fb-84a3-9a67cfdda5fe",
+    "904b1f3e-a206-5536-83a3-98ca50fa43cf",
+    "8f4b1dab-20ea-5771-82a3-972dcda46a5c",
+    "954b271d-1eb0-5be7-88a3-a0dbcb6b2eba",
+    "944b258a-9d94-5e22-87a3-9f3e4c87cc8b",
+    "934b23f7-1c77-505d-86a3-9da1c931f318",
+    "894b1439-1a3e-54d3-8ca3-a74fc6f8b776",
+    "924b2264-9b5b-5298-85a3-9c044a4e90e9",
+    "884b12a6-9921-570e-8ba3-a5b248155547",
+    "8f57e99e-6de2-53f4-8e91-9608466748f9",
+    "9057eb31-eeff-51b9-8f91-97a5c54aab28"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-futuro-simple",
+   "phase": "surplus",
+   "variant": "futuro-simple-regular",
+   "planned": 12,
+   "ids": [
+    "5ca5bf76-0f3b-5c16-b0c7-5deae952c1df",
+    "5ea5c29c-088f-5978-b2c7-6124e2a70ef9",
+    "5fa5c42f-89ac-573d-b3c7-62c1618a7128",
+    "60a5c5c2-0ac9-5502-b4c7-645ee4e04a9b",
+    "1af8e0d9-c000-5075-8faf-3bb95b66c5bc",
+    "24f8f097-cf90-513b-85af-2b9750489b92",
+    "aaf174c4-10f7-5c68-bfa7-9d4465705719",
+    "abf17657-9213-5a2d-80a7-9ee1e453b948",
+    "a9f17331-98bf-5ccb-bea7-9ba7eaff6c2e",
+    "a3f169bf-892e-5c05-88a7-abc9db6ecac0",
+    "adf3b814-0066-53c6-baaa-a06a8357e60b",
+    "a7f3aea2-f548-5a14-80aa-aa187839bbe1"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-futuro-simple",
+   "phase": "surplus",
+   "variant": "futuro-simple-irregular",
+   "planned": 5,
+   "ids": [
+    "5ba5bde3-8e1e-5e51-afc7-5c4d65fce86c",
+    "68a5d25a-01e4-56da-bcc7-7146dbfb5c13",
+    "1bf8e26c-458f-554e-8caf-36e2da4a27eb",
+    "23f8ef04-4e74-5376-84af-29fad1653963",
+    "adf1797d-944c-55b7-82a7-a21be68cf4ea"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-futuro-simple",
+   "phase": "surplus",
+   "variant": "futuro-simple-regular",
+   "planned": 8,
+   "ids": [
+    "d39fb140-859b-5b3e-90e1-8622877bc0fb",
+    "d49fb2d3-06b7-5903-91e1-87bf065f232a",
+    "e09fc5b7-0b2a-5017-8de1-814b01ecabe6",
+    "327084fd-cc15-539b-8fe2-1ad7a112acbe",
+    "3170836a-4af8-55d6-8ee2-193a222f4a8f",
+    "307081d7-c9dc-5811-8de2-179d9ed9711c",
+    "2e707eb1-c7a2-5c87-93e2-214b9ca0357a",
+    "2d707d1e-4686-5ec2-92e2-1fae1dbcd34b"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-futuro-simple",
+   "phase": "surplus",
+   "variant": "futuro-simple-irregular",
+   "planned": 7,
+   "ids": [
+    "d99fbab2-7eef-58a0-92e1-895c89b4fc9d",
+    "d89fb91f-0245-51ef-95e1-8e330ad19a6e",
+    "da9fbc45-000c-5665-93e1-8af908985ecc",
+    "d69fb5f9-047e-5d79-8fe1-84850425e788",
+    "d59fb466-8361-5fb4-8ee1-82e885428559",
+    "df9fc424-8a0d-5252-8ce1-7fae830949b7",
+    "297076d2-4213-57ae-96e2-2622194a5c07"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-imperative-negative-pronouns",
+   "phase": "surplus",
+   "variant": "negative-double-clitic",
+   "planned": 9,
+   "ids": [
+    "8f45b5cc-4bdc-5fa0-a821-071c6562cd09",
+    "9445bdab-da50-52a1-9d20-f55ddfd3b7f4",
+    "1a3e41d8-3fbe-5e12-9f24-03ce190385ff",
+    "1c3e44fe-3d85-5288-9d24-009416ca4a5d",
+    "1d3e4691-bea2-504d-9e24-023195adac8c",
+    "1f3e49b7-c54d-52eb-9c23-fef7937470ea",
+    "203e4b4a-41f7-599c-9923-fa201257d319",
+    "213e4cdd-c314-5761-9a23-fbbd913b3548",
+    "123e3540-36d9-5fea-a724-10b6101e9777"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-imperative-negative-pronouns",
+   "phase": "surplus",
+   "variant": "negative-double-clitic",
+   "planned": 13,
+   "ids": [
+    "3b21eb83-9191-50bd-9d49-bdb1df5eeb28",
+    "3d21eea9-93ca-5c47-9f49-c0ebe19826ca",
+    "4121f4f5-983c-535b-9b49-ba77e60a9e0e",
+    "cd661115-677a-5e6d-84f6-bf9165be1ddc",
+    "cb660def-69b3-59f7-86f6-c2cb67f7597e",
+    "ca684af3-c851-5249-95f9-e635a1020c6c",
+    "d7685f6a-4de0-5722-92f9-e15e17008013",
+    "d56a9adb-b34e-5293-94fc-214fba77241a",
+    "d46a9948-3231-54ce-93fc-1fb23b93c1eb",
+    "d96aa127-aedb-5b7f-98fc-27c3bee99b5e",
+    "da6aa2ba-2b86-5230-95fc-22ec3dccfd8d",
+    "cd6a8e43-bc33-50bb-8cfc-1467b1923592",
+    "cc6a8cb0-3b16-52f6-8bfc-12ca32aed363"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-impersonal-plural",
+   "phase": "surplus",
+   "variant": "hearsay-dicen-que",
+   "planned": 2,
+   "ids": [
+    "84d12f9f-b289-55f3-9421-e21f8aaa8d1a",
+    "0ad67fbf-f73d-5fd7-861c-839b382ac27e"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-impersonal-plural",
+   "phase": "surplus",
+   "variant": "hearsay-dicen-que",
+   "planned": 7,
+   "ids": [
+    "e0673215-fd46-5851-a0c8-2afdfde92e40",
+    "6464304a-8848-5c1a-b0c5-3996fcc48b6b",
+    "656431dd-0964-59df-b1c5-3b337ba7ed9a",
+    "5e6426d8-8a81-57a4-aac5-2fe8fefdc70d",
+    "5f64286b-0b9d-5569-abc5-31857de1293c",
+    "606429fe-8cba-532e-acc5-3322013702af",
+    "61642b91-0dd7-50f3-adc5-34bf801a64de"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-indirect-questions",
+   "phase": "surplus",
+   "variant": "indirect-wh-finite",
+   "planned": 17,
+   "ids": [
+    "55bef4e8-4402-51ea-8113-24e6177e08ef",
+    "5cbeffed-c758-5b39-bc13-1cd58fb5b838",
+    "56bef67b-c51f-5faf-8213-268396616b1e",
+    "57bef80e-41c9-5660-bf13-21ac1544cd4d",
+    "5abefcc7-c991-56c3-be13-200f91eef3da",
+    "59befb34-4875-58fe-bd13-1e72130b91ab",
+    "47a2e269-1507-50b3-99e0-3d6f145974ae",
+    "48a2e3fc-8d3e-5050-9ae0-3f0c8eca5f99",
+    "46a2e0d6-93ea-52ee-98e0-3bd29576127f",
+    "4da2ebdb-1bb2-5351-8fe0-2d4d093b4a84",
+    "4ca2ea48-9a96-558c-8ee0-2bb08a57e855",
+    "d69b74c1-0004-50fd-90e2-6ba14d64279c",
+    "cc9b6503-f958-5e5f-9ae2-7bc346b874b6",
+    "d99db811-ef74-585b-8be5-6ec76b4bb68e",
+    "d89db67e-6e57-5a96-8ae5-6d2aec68545f",
+    "dd9dbe5d-eb02-5147-8fe5-753b66d93f4a",
+    "db9dbb37-e8c8-55bd-8de5-720164a003a8"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-indirect-questions",
+   "phase": "surplus",
+   "variant": "indirect-wh-infinitive",
+   "planned": 4,
+   "ids": [
+    "4fbeeb76-4aae-5488-b713-14c40c5fdec5",
+    "45a2df43-12ce-5529-97e0-3a351220390c",
+    "d39b7008-8121-5ec2-91e2-6d3ed0ba010f",
+    "d59b732e-7ee8-5338-8fe2-6a04ce80c56d"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-indirect-questions",
+   "phase": "surplus",
+   "variant": "indirect-wh-finite",
+   "planned": 12,
+   "ids": [
+    "d99608e0-873f-5f68-abd3-4a443564f0e9",
+    "dd960f2c-8bb2-567c-a7d3-43d039d7682d",
+    "5c3225e6-cb85-528c-a0e1-4e904b880979",
+    "5a3222c0-cdbe-5e16-a2e1-51ca4dc1451b",
+    "6432327e-c2a0-5464-a8e1-5b7842a31af1",
+    "e3353902-9761-514a-bbe3-b6d6890533ab",
+    "e235376f-1644-5385-bae3-b53905af5a38",
+    "df3532b6-9bd3-585e-b7e3-b0628d77aaef",
+    "ec35472d-2162-5d37-b4e3-ab8bff03a752",
+    "e8377f78-8497-5d1e-b4e6-b6c216649e7b",
+    "eb378431-037b-5f59-b3e6-b525930ec508",
+    "ed378757-0142-53cf-b9e6-bed399ba77ee"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-indirect-questions",
+   "phase": "surplus",
+   "variant": "indirect-wh-infinitive",
+   "planned": 2,
+   "ids": [
+    "5d322779-4ca1-5051-a1e1-502dca6b6ba8",
+    "60322c32-c712-5b78-a4e1-55044ffa80bd"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-llevar-time-expressions",
+   "phase": "surplus",
+   "variant": "hace-period-que-present",
+   "planned": 30,
+   "ids": [
+    "561814e0-2fb7-5d78-9f0b-e4c478900261",
+    "57181673-b0d4-5b3d-a00b-e661f7736490",
+    "f5f4f51d-e0d3-51a5-9c28-27898f735924",
+    "f3f4f1f7-e30d-5d2f-9e28-2ac391ac94c6",
+    "5af7d2b3-ce0a-5d79-952b-2775cab747b4",
+    "5ff7da92-4ab4-542a-9a2b-2f86499aa9e3",
+    "5df7d76c-487b-58a0-982b-2c4c47616e41",
+    "5ef7d8ff-c997-5665-992b-2de9c644d070",
+    "63f7e0de-580b-5966-8e2b-1c2a56f20faf",
+    "60fa1abc-3c5d-5712-8f2d-5a7edb6c8bf7",
+    "63fa1f75-bb41-594d-8e2d-58e15816b284",
+    "5cfa1470-40d0-5e26-8b2d-540ad6fa14b3",
+    "69fa28e7-b495-56af-982d-69036334dcae",
+    "57e8c370-720c-5068-8a30-5da4d0d99121",
+    "59e8c696-7445-5bf2-8c30-60ded312ccc3",
+    "5ae8c829-f562-59b7-8d30-627b51f62ef2",
+    "be1fde79-f710-5b15-a55b-74891e466b44",
+    "bc1fdb53-f949-569f-a75b-77c3207fa6e6",
+    "bb1fd9c0-782d-58da-a65b-7626a19c44b7",
+    "bd1fdce6-75f3-5d50-a45b-72ec9f630915",
+    "8a5b59fb-b34b-592d-a34d-d2a154a803f0",
+    "c51fe97e-7ed8-5b78-9c5b-6604a847f79d",
+    "8f28a4e2-e9ed-5ae0-8388-4cec81822835",
+    "e7621b01-c173-5057-8090-897b8857e492",
+    "8e28a34f-6d43-542f-8688-51c3029ec606",
+    "8c28a029-6f7c-5fb9-8088-4815fbf31320",
+    "9728b17a-f2d2-5908-bb88-40048a6716bd",
+    "90fe1fac-a3ec-5b0e-9365-f352c0ebe0f3",
+    "8ffe1e19-1e5d-5635-9665-f82942087ec4",
+    "4610e6a0-8ff0-550e-bb74-73c2391abcd3"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-llevar-time-expressions",
+   "phase": "surplus",
+   "variant": "llevar-period-gerund",
+   "planned": 35,
+   "ids": [
+    "012e6695-0c6e-5f0d-8654-b1819a73d14c",
+    "c553e8ea-c2ab-5e24-81ed-8e189a8c0241",
+    "c653ea7d-43c7-5be9-82ed-8fb5196f6470",
+    "c353e5c4-c4e4-59ae-83ed-91529cc53de3",
+    "c453e757-4600-5773-84ed-92ef1ba8a012",
+    "c153e29e-be38-5710-85ed-948c9efe7985",
+    "c253e431-3f55-54d5-86ed-96291de1dbb4",
+    "bf53df78-c071-529a-87ed-97c6a137b527",
+    "c053e10b-418e-505f-88ed-9963201b1756",
+    "bd53dc52-cb90-5c4c-b9ed-8130a370f0c9",
+    "be53dde5-4cac-5a11-baed-82cd225452f8",
+    "8319d737-8ba3-52fd-be40-89914b6c1840",
+    "8219d5a4-0a87-5538-bd40-87f4cc88b611",
+    "8519da5d-8ddc-5e87-8040-8ccb4da553e2",
+    "8419d8ca-0cc0-50c2-bf40-8b2ecec1f1b3",
+    "7f19d0eb-9016-5a11-ba40-831d4fde8f84",
+    "7e19cf58-0ef9-5c4c-b940-8180d0fb2d55",
+    "8119d411-924f-559b-bc40-86575217cb26",
+    "8019d27e-1132-57d6-bb40-84bad33468f7",
+    "7b19ca9f-82be-54d5-8640-9679545106c8",
+    "7a19c90c-01a2-5710-8540-94dcd56da499",
+    "7112ff1c-f9f6-5c96-b843-8b1a0a05e043",
+    "721300af-7b13-5a5b-b943-8cb788e94272",
+    "73130242-f7bd-510c-b643-87e007cca4a1",
+    "741303d5-78da-5ed1-b743-897d86b006d0",
+    "6d12f8d0-f584-5582-bc43-918e0e785787",
+    "6e12fa63-76a1-5347-bd43-932b8d5bb9b6",
+    "6f12fbf6-f34b-59f8-ba43-8e540c3f1be5",
+    "7012fd89-7467-57bd-bb43-8ff18b227e14",
+    "79130bb4-f111-5e6e-8043-980212eacecb",
+    "7a130d47-722e-5c33-8143-999f91ce30fa",
+    "77154725-44b6-5d8f-9245-f1c3a49795c2",
+    "76154592-c399-5fca-9145-f02625b43393",
+    "751543ff-427d-5205-9045-ee89a25e5a20",
+    "7415426c-c160-5440-8f45-ecec237af7f1"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-nominalizers",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "ded01ed5-0e3f-59cf-a7f1-6133934aae4a",
+    "410594c6-4388-5932-9d2f-29ce35c9c413",
+    "d281cf83-a126-5b9d-8e8d-ce61e73fa2a0"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-nominalizers",
+   "phase": "surplus",
+   "variant": "article-que-nominalizer",
+   "planned": 8,
+   "ids": [
+    "17ff46ad-7f9a-5b93-9c84-985f21628386",
+    "13ff4061-7b27-547f-a084-9ed31cf00c42",
+    "11ff3d3b-78ee-58f5-9e84-9b991ab6d0a0",
+    "0fff3a15-887f-59bb-9484-8b772a47720e",
+    "63dc2927-04cf-5b6f-b0e9-eb13ca1c2596",
+    "64dc2aba-8179-5220-ade9-e63c48ff87c5",
+    "5edc2148-8825-54be-abe9-e30246c64c23",
+    "60dc246e-85ec-5934-a9e9-dfc8448d1081"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-nominalizers",
+   "phase": "surplus",
+   "variant": "article-que-nominalizer",
+   "planned": 10,
+   "ids": [
+    "66e08493-8887-5bcb-96b8-1e87cdefefa2",
+    "67e08626-0531-527c-93b8-19b04cd351d1",
+    "65e08300-076a-5e06-95b8-1cea4f0c8d73",
+    "68e087b9-864d-5041-94b8-1b4dcbb6b400",
+    "6be08c72-00be-5b68-97b8-20245145c915",
+    "9670cc99-4071-5727-9e09-8d3b0cc72032",
+    "9470c973-3e38-5b9d-9c09-8a010a8de490",
+    "9a70d2e5-44e4-5e3b-9a09-86c711399776",
+    "9970d152-c3c7-5076-9909-852a92563547",
+    "9870cfbf-42ab-52b1-9809-838d0f005bd4"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-passive-se",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "fbc4336c-6fd4-54d0-840d-482c4668beb1",
+    "f7c42d20-7447-5be4-800d-41b84adb35f5"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-passive-se",
+   "phase": "surplus",
+   "variant": "passive-se-agreeing",
+   "planned": 8,
+   "ids": [
+    "f7c1ee89-274e-5f61-ac0a-e4bd8a083250",
+    "f5c1eb63-2987-5aeb-ae0a-e7f78c416df2",
+    "fbc1f4d5-22dc-584d-b00a-eb318e7aa994",
+    "fac1f342-a1bf-5a88-af0a-e9940f974765",
+    "f9c1f1af-2515-53d7-b20a-ee6b90b3e536",
+    "f8c1f01c-a3f8-5612-b10a-ecce11d08307",
+    "fec1f98e-9d4d-5374-b30a-f0081409bea9",
+    "fdc43692-720e-505a-860d-4b6648a1fa53"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-passive-se",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "a19d4487-78ea-5d97-885d-66abcfb015a6",
+    "a59f896a-e504-5ba6-805f-967a6c7b06c7"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-passive-se",
+   "phase": "surplus",
+   "variant": "passive-se-agreeing",
+   "planned": 6,
+   "ids": [
+    "60b06add-311f-5ffd-875a-0c513ae03c0c",
+    "12a4b22f-897a-5639-8d5a-63852081d3f4",
+    "11a4b09c-085d-5874-8c5a-61e8a19e71c5",
+    "14a4b555-8bb3-51c3-8f5a-66bf22bb0f96",
+    "13a4b3c2-0a96-53fe-8e5a-6522a3d7ad67",
+    "0ea4abe3-8507-5f25-915a-69f91c0f5cb0"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-past-narration",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 9,
+   "ids": [
+    "721bd75a-6719-587e-8c49-39b2e51cab0f",
+    "6e1bd10e-62a7-516a-9049-4026e0aa33cb",
+    "6d1bcf7b-e18a-53a5-8f49-3e895d545a58",
+    "79cc7a43-ffad-55db-962f-6507038c2bea",
+    "7fcc83b5-f901-533d-982f-684105c5678c",
+    "7ecc8222-77e5-5578-972f-66a486e2055d",
+    "395d7ceb-5639-5efd-8cd5-5ed12a014550",
+    "3c5d81a4-d98f-584c-87d5-56c0af905a65",
+    "3d5d8337-5aac-5611-88d5-585d2e73bc94"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-past-narration",
+   "phase": "surplus",
+   "variant": "imperfecto-indefinido-interplay",
+   "planned": 11,
+   "ids": [
+    "711bd5c7-e5fd-5ab9-8b49-381561c6d19c",
+    "6f1bd2a1-e3c3-5f2f-9149-41c35f8d95fa",
+    "6b1bcc55-f11b-546b-8549-2e675b1b1eb6",
+    "6c1bcde8-606e-55e0-8e49-3cecde70f829",
+    "0bd41bde-2713-5a06-9421-c6ba1b51716f",
+    "0cd41d71-a82f-57cb-9521-c8579a34d39e",
+    "0ad41a4b-a5f6-5c41-9321-c51d97fb97fc",
+    "0ed42097-a184-552d-9721-cb91938920b8",
+    "04d1d242-37a3-52a8-991f-9214ddd4473d",
+    "03d1d0af-baf9-5bf7-9c1f-96eb5ef0e50e",
+    "02d1cf1c-39dc-5e32-9b1f-954ee00d82df"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-past-narration",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "3702da71-6606-5ecd-8bc8-fd911e6dd07c"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-past-narration",
+   "phase": "surplus",
+   "variant": "imperfecto-indefinido-interplay",
+   "planned": 6,
+   "ids": [
+    "919c44cb-c454-5eab-aad7-98875a6b995a",
+    "959c4b17-bfe1-5797-aed7-9efb5ede109e",
+    "949c4984-3ec5-59d2-add7-9d5edffaae6f",
+    "979c4e3d-bda8-5c0d-acd7-9bc15ca4d4fc",
+    "969c4caa-3c8c-5e48-abd7-9a24ddc172cd",
+    "899c3833-bb6f-5083-b2d7-a56f5186aad2"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-past-narration",
+   "phase": "surplus",
+   "variant": "conato-iba-a-infinitive-interrupted",
+   "planned": 5,
+   "ids": [
+    "939c47f1-c21b-5321-a8d7-954d58325db8",
+    "adfd8598-a26e-52ae-9ace-5db265f48c0b",
+    "b0fd8a51-2152-54e9-99ce-5c15e29eb298",
+    "b3fd8f0a-9bc3-5010-9cce-60ec682dc7ad",
+    "b2fd8d77-1f19-595f-9fce-65c3e94a657e"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-present-subjunctive",
+   "phase": "surplus",
+   "variant": "subj-after-trigger-verb",
+   "planned": 50,
+   "ids": [
+    "7f52dbe9-a788-53d9-9d21-3125e6933908",
+    "8852ea14-2d18-58b2-9a21-2c4e65769b37",
+    "8952eba7-ae34-5677-9b21-2debe459fd66",
+    "d3756e9a-c646-5ef6-8e9b-fe9a726a540f",
+    "d2756d07-4529-5131-8d9b-fcfdef147a9c",
+    "d1756b74-c40d-536c-8c9b-fb607031186d",
+    "d07569e1-42f0-55a7-939c-06abecdb3efa",
+    "cf75684e-c1d3-57e2-929c-050e6df7dccb",
+    "ce7566bb-40b7-5a1d-919c-0371eaa20358",
+    "cd756528-bf9a-5c58-909c-01d46bbea129",
+    "cc756395-3e7d-5e93-979c-0d1fe868c7b6",
+    "cb756202-bd61-50ce-969c-0b8269856587",
+    "ba7785d6-fc69-5ff0-a193-ca1c8bdf6bbd",
+    "bb778769-7d85-5db5-a293-cbb90ac2cdec",
+    "b87782b0-fea2-5b7a-a393-cd568e18a75f",
+    "b9778443-7fbf-593f-a493-cef30cfc098e",
+    "be778c22-00db-5704-9d93-c3a8876cf479",
+    "bf778db5-81f8-54c9-9e93-c545065056a8",
+    "bc7788fc-0314-528e-9f93-c6e289a6301b",
+    "bd778a8f-8431-5053-a093-c87f0889924a",
+    "c277926e-054e-5e18-9993-bd3482fa7d35",
+    "c3779401-866a-5bdd-9a93-bed101dddf64",
+    "bf79cc4c-e99f-5bc4-9a96-ca08a78dbf0d",
+    "c279d105-6cf5-5513-9d96-cedf28aa5cde",
+    "c179cf72-ebd9-574e-9c96-cd42a9c6faaf",
+    "bc79c793-6649-5275-9f96-d21921fea9f8",
+    "bb79c600-e52d-54b0-9e96-d07ca31b47c9",
+    "be79cab9-6883-5dff-a196-d5532437e59a",
+    "bd79c926-e766-503a-a096-d3b6a554836b",
+    "c879da77-73a1-57b1-9396-bebd1d8c32b4",
+    "c779d8e4-f284-59ec-9296-bd209ea8d085",
+    "b6687500-6ec8-50e6-8d8f-306a32b3ee3b",
+    "b7687693-efe5-5eab-8e8f-3207b197506a",
+    "b8687826-6c8f-555c-8b8f-2d30307ab299",
+    "b96879b9-edac-5321-8c8f-2ecdaf5e14c8",
+    "ba687b4c-6a56-59d2-918f-36de3726657f",
+    "bb687cdf-eb72-5797-928f-387bb609c7ae",
+    "bd688005-e939-5c0d-908f-3541b3d08c0c",
+    "be688198-65e3-52be-958f-3d5229ceffb3",
+    "2b182335-350f-5d8f-9eb4-1593f4862c5a",
+    "62c83e67-fb79-5aff-ab0a-1c93e9d6518e",
+    "f9795e3d-7f78-52b9-b7dc-0005f65b8468",
+    "41626fd4-2da9-5438-bef6-9464c5d3e309",
+    "42627167-aec5-51fd-bff6-960144b74538",
+    "436272fa-2fe2-5fc2-80f6-979ec80d1eab",
+    "40626e41-b571-549b-bdf6-92c74b62f81e",
+    "3f626cae-3455-56d6-bcf6-912acc7f95ef",
+    "3c6267f5-a81a-5f5f-89f6-a6233e0b9252",
+    "3b626662-26fd-519a-88f6-a486bf283023",
+    "ddfab3fe-7c18-5f3a-bbd2-b3b6d26f0b8b"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-present-subjunctive",
+   "phase": "surplus",
+   "variant": "subj-after-trigger-verb",
+   "planned": 48,
+   "ids": [
+    "0d180a3a-c24c-58f6-9df7-1c9ac1ce23bf",
+    "0e180bcd-4368-56bb-9ef7-1e3740b185ee",
+    "ff17f430-b2bb-5830-a7f7-2cbcb23d8251",
+    "0017f5c3-33d8-55f5-a8f7-2e593120e480",
+    "0d1a48d1-29f3-5ff1-99f9-52dd55b42658",
+    "0c1a473e-a8d7-522c-98f9-5140d6d0c429",
+    "0b1a45ab-2c2c-5b7b-9bf9-561757ed61fa",
+    "0a1a4418-ab10-5db6-9af9-547ad909ffcb",
+    "111a4f1d-2581-58dd-9df9-59515a269d9c",
+    "101a4d8a-a464-5b18-9cf9-57b4db433b6d",
+    "0f1a4bf7-27ba-5467-9ff9-5c8b5c5fd93e",
+    "0e1a4a64-a69d-56a2-9ef9-5aeedd7c770f",
+    "051a3c39-210e-51c9-a1f9-5fc54ccf37d0",
+    "041a3aa6-9ff2-5404-a0f9-5e28cdebd5a1",
+    "0b27119e-0a6c-5eae-abf1-eb42385600df",
+    "0c271331-8b89-5c73-acf1-ecdfb739630e",
+    "09270e78-0833-5324-a9f1-e808361cc53d",
+    "0a27100b-894f-50e9-aaf1-e9a5b500276c",
+    "0f2717ea-05f9-579a-aff1-f1b633e3899b",
+    "1027197d-8716-555f-b0f1-f353b2c6ebca",
+    "0d2714c4-03c0-5c10-adf1-ee7c31aa4df9",
+    "0e271657-84dd-59d5-aef1-f019b08db028",
+    "03270506-1351-5cd6-a3f1-de5a2f711257",
+    "04270699-946d-5a9b-a4f1-dff7ae547486",
+    "1aa496f1-2aed-5669-94b7-09b5902faa18",
+    "17a49238-ac0a-542e-95b7-0b521385838b",
+    "1da49baa-a55e-5190-97b7-0e8c15bebf2d",
+    "18a493cb-2d26-51f3-96b7-0cef9268e5ba",
+    "19a4955e-a9d0-58a4-93b7-0818114c47e9",
+    "1ba49884-a797-5d1a-99b7-11c617f7facf",
+    "11a488c6-b2b5-56cc-8bb6-fb3008675961",
+    "b21951d3-3ee8-577d-b04a-5b91b6a472a8",
+    "12a48a59-33d2-5491-8cb6-fccd874abb90",
+    "b1195040-bdcc-59b8-af4a-59f437c11079",
+    "b41954f9-4122-5307-b24a-5ecbb8ddae4a",
+    "b3195366-c005-5542-b14a-5d2e39fa4c1b",
+    "b519568c-c23e-50cc-ab4a-53803c3387bd",
+    "b8195b45-4594-5a1b-ae4a-5857bd50258e",
+    "ba195e6b-3604-5955-b84a-6879adbf8420",
+    "4211e5be-ab02-558c-a84d-59e07304ff09",
+    "4311e751-2c1f-5351-a94d-5b7df1e86138",
+    "4411e8e4-a8c9-5a02-ae4d-638e79b0b1ef",
+    "7a84a6bb-c15c-54c3-8e8f-c83f065fd43a",
+    "7e84ad07-bcea-5daf-928f-ceb30ad24b7e",
+    "7984a528-403f-56fe-8d8f-c6a2877c720b",
+    "02ed4b95-5e56-58d5-82ef-4029a256b2dc",
+    "01ed4a02-dd39-5b10-81ef-3e8c237350ad",
+    "ffed46dc-df72-569a-83ef-41c625ac8c4f"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-preterite-imperfect-meaning",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "ccb52c5d-598d-5809-b07a-bac517c24458",
+    "2abbf289-d7d9-506b-ac0a-fad7a1bade8e",
+    "28bbef63-d5a0-54e1-aa0a-f79d9f81a2ec"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-preterite-imperfect-meaning",
+   "phase": "surplus",
+   "variant": "saber-pret-vs-imperf",
+   "planned": 15,
+   "ids": [
+    "9b6bf79e-3f38-5d20-8929-a9bc4aabf005",
+    "946bec99-c939-590d-8229-9e71d27440bc",
+    "40f8ffb9-e5be-5273-9039-8b9f71f7a4e6",
+    "41f9014c-5df6-5210-9139-8d3cec688fd1",
+    "43f90472-602f-5d9a-9339-9076eea1cb73",
+    "46f9092b-ec6a-5511-8639-7b7d78a357cc",
+    "cdf18eeb-d2f5-5e47-893b-bd0bad3b9376",
+    "cff19211-d0bc-52bd-873b-b9d1ab0257d4",
+    "d0f193a4-564b-5796-843b-b4fa29e5ba03",
+    "d1f19537-d767-555b-853b-b697a8c91c32",
+    "d2f196ca-5412-5c0c-823b-b1c027ac7e61",
+    "c4f180c0-48f3-525a-903b-c856373d1fcf",
+    "52f49ee1-c02c-5a1b-823e-bcf7c8e9e6c6",
+    "50f49bbb-bdf2-5e91-803e-b9bdc6b0ab24",
+    "53f4a074-3863-59b8-833e-be94435ad1b1"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-preterite-imperfect-meaning",
+   "phase": "surplus",
+   "variant": "poder-pret-vs-imperf",
+   "planned": 3,
+   "ids": [
+    "a06bff7d-c4c7-51f9-8629-a4e5c51cdaf0",
+    "996bf478-4171-58aa-8b29-acf64ce52ba7",
+    "9e6bfc57-c700-5d83-8829-a81fc7561692"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-preterite-imperfect-meaning",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "e6efa555-3e1e-59d5-81e8-c3e9e5124acc"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-preterite-imperfect-meaning",
+   "phase": "surplus",
+   "variant": "saber-pret-vs-imperf",
+   "planned": 10,
+   "ids": [
+    "6529b21a-4cb3-5422-9798-161ebf7a0143",
+    "6029aa3b-d008-5d71-9298-0e0d40969f14",
+    "5b29a25c-4194-5a70-9d98-1fccc625b429",
+    "5c29a3ef-c2b1-5835-9e98-216945091658",
+    "5da12510-4f00-5192-a959-699e0a413e97",
+    "6aa3781e-1d15-5bda-be5b-c8364112b5e3",
+    "69a3768b-9bf8-5e15-bd5b-c699bdbcdc70",
+    "6ea37e6a-2187-52ee-ba5b-c1c245852d27",
+    "62a36b86-25fa-5a02-b65b-bb4e49f7a46b",
+    "6fa5be94-0a4c-57ae-b75d-f9a2ce7220b3"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-preterite-imperfect-meaning",
+   "phase": "surplus",
+   "variant": "poder-pret-vs-imperf",
+   "planned": 5,
+   "ids": [
+    "6629b3ad-cdcf-51e7-9898-17bb3e5d6372",
+    "6229ad61-d242-58fb-9498-114742cfdab6",
+    "63a12e82-5139-5d1c-a359-5ff003958bb1",
+    "6ca13cad-c971-5cb9-ac59-6e758b5ddc68",
+    "6da37cd7-a06b-5529-b95b-c025c22f53b4"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-que-vs-cual",
+   "phase": "surplus",
+   "variant": "cual-selection-from-set",
+   "planned": 20,
+   "ids": [
+    "65fb10ae-c267-53ac-9d52-f120c77cfdd1",
+    "75f8eb47-deaf-5e25-b15a-9609c1e5e3b8",
+    "74f8e9b4-5d93-5060-b05a-946c43028189",
+    "73f8e821-e55b-50c3-af5a-92cfc891969e",
+    "71f8e4fb-e322-5539-ad5a-8f95c6585afc",
+    "6ef8e042-68b1-5a12-aa5a-8abe3c56cea3",
+    "f1f5dce4-9629-58b6-9958-329a298d69db",
+    "f2f5de77-1746-567b-9a58-3437a870cc0a",
+    "f3f5e00a-93f0-5d2c-9758-2f6027542e39",
+    "eff5d9be-8f7d-5618-9b58-35d42bc6a57d",
+    "f0f5db51-109a-53dd-9c58-3771aaaa07ac",
+    "e9f5d04c-8d44-5a8e-a158-3f8220a87b53",
+    "eaf5d1df-0e61-5853-a258-411f9f8bdd82",
+    "ebf394db-03ce-5ed9-a75f-cdd58efbb45c",
+    "ecf3966e-84ea-5c9e-a85f-cf7212518dcf",
+    "eff39b27-ff5b-57c5-ab5f-d4498a893d18",
+    "f1f39e4d-0194-534f-ad5f-d7838cc278ba",
+    "e3f38843-0cb3-5d01-9f5f-c0ed8616c5d4",
+    "e2f386b0-8b96-5f3c-9e5f-bf50073363a5",
+    "ddbc1b27-7888-5b79-8ed3-2a95498f239c"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-que-vs-cual",
+   "phase": "surplus",
+   "variant": "cual-selection-from-set",
+   "planned": 25,
+   "ids": [
+    "8c49252b-f092-5c71-82b6-31ddd82b492c",
+    "8e492851-f2cb-57fb-84b6-3517da6484ce",
+    "8f4929e4-6b03-5798-85b6-36b454d56fb9",
+    "91492d0a-6d3c-5322-87b6-39ee570eab5b",
+    "92492e9d-ee59-50e7-88b6-3b8bd5f20d8a",
+    "83491700-6690-5084-89b6-3d285062f875",
+    "84491893-e7ad-5e49-8ab6-3ec5cf465aa4",
+    "fd5092d3-96db-52d7-8fbe-99fbbeb6317e",
+    "ff5095f9-94a2-574d-8dbe-96c1bc7cf5dc",
+    "fe509466-1385-5988-8cbe-95243d9993ad",
+    "0150991f-9b4e-59eb-8bbe-9387ba43ba3a",
+    "0050978c-1a31-5c26-8abe-91ea3b60580b",
+    "03509c45-9914-5e61-89be-904db80a7e98",
+    "02509ab2-17f8-509c-88be-8eb039271c69",
+    "04509dd8-0cda-56ea-96be-a54636ede0c7",
+    "174e7d2a-2888-593e-95bb-987224247bff",
+    "154e7a04-264f-5db4-93bb-953821eb405d",
+    "134e76de-2416-522a-99bb-9ee61fb204bb",
+    "124e754b-a2f9-5465-98bb-9d499c5c2b48",
+    "0f4e7092-316d-5766-8dbb-8b8a1b3f8d77",
+    "104e7225-b28a-552b-8ebb-8d279a22efa6",
+    "8955ec65-b9c0-5801-83c3-ce8dcfd189f8",
+    "8855ead2-38a4-5a3c-82c3-ccf050ee27c9",
+    "8755e93f-bbfa-538b-85c3-d1c7d20ac59a",
+    "8555e619-b54e-50ed-87c3-d501d444013c"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-reported-speech",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "f3d6ff70-cfbf-58f0-94bb-2b7c3d6eb189",
+    "fce3d98e-108b-5bf8-89bd-5674e5f14055"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-reported-speech",
+   "phase": "surplus",
+   "variant": "past-report-imperfect-backshift",
+   "planned": 4,
+   "ids": [
+    "84dc60e1-0dec-50b7-85b5-cb5b67990d7a",
+    "f1d4bdb3-fb23-5c8b-beb8-cb47a2dcfc0a",
+    "fed710c1-5bf9-5067-8fbb-236bb5a660d2",
+    "f4e3ccf6-07a6-5dd0-91bd-635ceed62edd"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-ser-estar-uses",
+   "phase": "surplus",
+   "variant": "estar-a-price-date",
+   "planned": 19,
+   "ids": [
+    "28e01624-2935-5760-9cab-fbacd9d24941",
+    "29e017b7-aa52-5525-9dab-fd4958b5ab70",
+    "26e012fe-2fe1-59fe-9aab-f872e07dfc27",
+    "25e0116b-aec4-5c39-99ab-f6d55d2822b4",
+    "23e00e45-b570-5ed7-97ab-f39b63d3d59a",
+    "22e00cb2-3453-5112-96ab-f1fee4f0736b",
+    "f9c81ca1-9868-5187-927a-20db0ed43972",
+    "f6c817e8-1513-5838-8f7a-1c048db79ba1",
+    "fcc8215a-1bbe-5ad6-8d7a-18ca94634e87",
+    "fdc822ed-9cdb-589b-8e7a-1a671346b0b6",
+    "fac81e34-1985-5f4c-8b7a-1590922a12e5",
+    "f1c81009-8f83-535f-9a7a-2dc317b927fa",
+    "6ec50339-a486-5315-9b77-f2a9d5c98684",
+    "79c5148a-30c1-5a8c-8e77-ddb05b589b99",
+    "6dc2c30f-bbc2-5e55-9e74-ec4943f7a470",
+    "6fc2c635-bdfb-59df-a074-ef834630e012",
+    "68c2bb30-3f18-57a4-9974-e438c986b985",
+    "69c2bcc3-c034-5569-9a74-e5d5486a1bb4",
+    "74c2ce14-438a-5eb8-9574-ddc4cdf930c9"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-ser-estar-uses",
+   "phase": "surplus",
+   "variant": "estar-de-occupation",
+   "planned": 6,
+   "ids": [
+    "27e01491-b0fd-57c3-9bab-fa0f5f615e56",
+    "2be01add-ac8b-50af-9fac-00835aeee712",
+    "2ae0194a-2b6e-52ea-9eab-fee6dc0b84e3",
+    "f8c81b0e-174c-53c2-917a-1f3e8ff0d743",
+    "f7c8197b-962f-55fd-907a-1da10c9afdd0",
+    "fbc81fc7-9aa2-5d11-8c7a-172d110d7514"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-estar-uses",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 10,
+   "ids": [
+    "4f4e67fe-b931-50d8-9e13-b054147045e5",
+    "9a68d938-05e0-551a-bdc8-f986dbf42167",
+    "9c68dc5e-03a7-5990-bbc8-f64cd9bae5c5",
+    "13705378-311f-5834-aac5-cfa8a75be5bd",
+    "1470550b-b23c-55f9-abc5-d145263f47ec",
+    "a76d6add-cdea-584d-aac3-92f101ac0614",
+    "9f6d5e45-c505-5a25-b2c3-9fd90a90f49c",
+    "1874d885-09ec-5c77-afc0-8fcbc42edbe2",
+    "1774d6f2-88d0-5eb2-aec0-8e2e454b79b3",
+    "716f24da-6922-515c-8025-e750527e1821"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-estar-uses",
+   "phase": "surplus",
+   "variant": "estar-a-price-date",
+   "planned": 14,
+   "ids": [
+    "504e6991-3a4d-5e9d-9f13-b1f19353a814",
+    "534e6e4a-bda3-57ec-9a13-a9e00ffdcea1",
+    "514e6b24-bfdd-5376-9c13-ad1a12370a43",
+    "464e59d3-33a2-5bff-a913-c2139e71d23e",
+    "9e68df84-0a53-5c2e-b9c8-f312d781aa23",
+    "9b68dacb-86fd-52df-bec8-fb235ad78396",
+    "9f68e117-8b6f-59f3-bac8-f4af56650c52",
+    "a068e2aa-0819-50a4-b7c8-efd8d5486e81",
+    "9368ce33-8fe2-5107-b6c8-ee3b63bc721e",
+    "0c704873-bb21-5421-a3c5-c45d1d5a5964",
+    "10704ebf-b6ae-5d0d-a7c5-cad118e7e220",
+    "127051e5-b8e7-5897-a9c5-ce0b1b211dc2",
+    "a46d6624-4f07-5612-abc3-948e8501df87",
+    "1674d55f-07b3-50ed-adc0-8c91c1f5a040"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-estar-uses",
+   "phase": "surplus",
+   "variant": "estar-de-occupation",
+   "planned": 4,
+   "ids": [
+    "4d4e64d8-bb6a-5c62-a013-b38e16a98187",
+    "9d68ddf1-84c3-5755-bcc8-f7e9589e47f4",
+    "a168e43d-8936-5e69-b8c8-f175542bd0b0",
+    "9268cca0-0ec5-5342-b5c8-ec9ee4d90fef"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-ser-location-events",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 13,
+   "ids": [
+    "e023873e-2741-5fb2-8339-4c2ecc36cf1b",
+    "de238418-2508-5428-8139-48f4c9fd9379",
+    "e3fa63d7-3109-52e7-8368-312b681a491e",
+    "e2fa6244-afec-5522-8268-2f8ee936e6ef",
+    "e4fa656a-adb3-5998-8068-2c54e6fdab4d",
+    "dbfa573f-2824-54bf-8b68-3e135f355a96",
+    "5ef5154a-dc2b-5018-8662-ee1487267ae5",
+    "e4ed9977-1d91-5b45-906f-cac9262aa7a8",
+    "dfed9198-a0e7-5494-8b6f-c2b8abb9bcbd",
+    "deed9005-28af-54f7-8a6f-c11b1f7ef4c2",
+    "9e5882cf-fc6e-5c6f-af89-fd337c3054be",
+    "1f107376-a1ce-57dc-b651-b500e007bfa1",
+    "20107509-22eb-55a1-b751-b69d5eeb21d0"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-ser-location-events",
+   "phase": "surplus",
+   "variant": "ser-event-location",
+   "planned": 14,
+   "ids": [
+    "e5238f1d-acd0-548b-8039-47574f8ca88e",
+    "e3238bf7-aa97-5901-be39-441d4d536cec",
+    "e12388d1-a85e-5d77-8439-4dcb4b1a314a",
+    "dc2380f2-22cf-589e-8739-52a2c7c457d7",
+    "dffa5d8b-357b-59fb-bf68-2ab763a7d1da",
+    "defa5bf8-b45f-5c36-be68-291ae4c46fab",
+    "e0fa5f1e-b226-50ac-bc68-25e0e28b3409",
+    "dafa55ac-a707-56fa-8a68-3c76e051f867",
+    "52f2c3cf-fc71-5a01-b660-978df340784c",
+    "53f2c562-7d8d-57c6-b760-992a769651bf",
+    "4df2bbf0-76e2-5528-b960-9c646fea9ed9",
+    "4ff2bf16-791b-50b2-bb60-9f9e7223da7b",
+    "5af2d067-f38c-5bd9-be60-a475ea5b89c4",
+    "57f50a45-5462-5fb5-8f62-fc990eeecb9c"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-location-events",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 7,
+   "ids": [
+    "99167113-e1aa-50bf-8f94-cde3c60c0aee",
+    "b65dff04-3264-5f60-8b05-9f6c7ba254e9",
+    "a1601c8c-8c1a-58fa-85fe-12b69dfc5b1f",
+    "2d633787-f3c2-5ff5-8200-48f928fd6f30",
+    "2c6335f4-72a5-5230-8100-475caa1a0d01",
+    "2451e03b-bf2a-570f-850d-e8e3fc33c366",
+    "e33e5b5d-45f6-5743-9d57-279f845be996"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-location-events",
+   "phase": "surplus",
+   "variant": "ser-event-location",
+   "planned": 10,
+   "ids": [
+    "9e1678f2-62c7-5e84-8894-c298407cf5d9",
+    "9f167a85-e3e3-5c49-8994-c435bf605808",
+    "9c1675cc-6500-5a0e-8a94-c5d242b6317b",
+    "9d16775f-e61d-57d3-8b94-c76fc19993aa",
+    "98166f80-608e-52fa-8e94-cc464728a8bf",
+    "9b167439-df71-5535-8d94-caa9c3d2cf4c",
+    "b95e03bd-b5b9-58af-8e05-a443fcbef2ba",
+    "b85e022a-349d-5aea-8d05-a2a67ddb908b",
+    "b55dfd71-ba2c-5fc3-8a05-9dcf013169fe",
+    "b25df8b8-36d6-5674-8705-98f88014cc2d"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-ser-location-events",
+   "phase": "surplus",
+   "variant": "estar-physical-location-contrast",
+   "planned": 1,
+   "ids": [
+    "9a1672a6-5e54-5770-8c94-c90c44ef6d1d"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-subjunctive-adverbial",
+   "phase": "surplus",
+   "variant": "antes-de-que-subjunctive",
+   "planned": 19,
+   "ids": [
+    "bf81f677-f193-5efd-98bc-89c1aa369b90",
+    "bb946b4f-de4f-50ed-a027-89e1fdd7da50",
+    "c39477e7-d56a-52c5-a827-96c906bcc8d8",
+    "4c9c0b57-12e8-59d3-ad2f-237fe462c2a2",
+    "4d9c0cea-8f92-5084-aa2f-1ea8634624d1",
+    "489c050b-0e75-52bf-b12f-29f3e8d539e6",
+    "479c0378-8d58-54fa-b02f-285669f1d7b7",
+    "4a9c0831-0c3c-5735-af2f-26b9e69bfe44",
+    "4799c4e1-25b1-5dff-b42c-f213570357d2",
+    "4499c028-a25b-54b0-b12c-ed3cd5e6ba01",
+    "4599c1bb-2378-5275-b22c-eed954ca1c30",
+    "4a99c99a-a907-574e-af2c-ea02dc926ce7",
+    "4899c674-a6ce-5bc4-ad2c-e6c8da593145",
+    "3e99b6b6-ad79-5e62-ab2c-e38ee104e42b",
+    "3f99b849-2e96-5c27-ac2c-e52b5fe8465a",
+    "488cfa81-cbfa-5465-b120-20a93d8e4024",
+    "478cf8ee-4ade-56a0-b020-1f0cbeaaddf5",
+    "468cf75b-ce33-5fef-b320-23e33fc77bc6",
+    "458cf5c8-4d17-522a-b220-2246c0e41997"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-subjunctive-adverbial",
+   "phase": "surplus",
+   "variant": "para-que-subjunctive",
+   "planned": 5,
+   "ids": [
+    "ba81ee98-74e8-584c-93bc-81b02fc5b0a5",
+    "bb81f02b-f605-5611-94bc-834daea912d4",
+    "bc81f1be-7722-53d6-95bc-84ea31feec47",
+    "b781e9df-e8ae-50d5-a0bc-96a9b31b8a18",
+    "4b9c09c4-91cb-5c0e-ac2f-21e2657f6073"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-subjunctive-adverbial",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "fe7c5827-0f72-5b5f-8ace-35835e14b556",
+    "bbc0f5d1-793c-5065-b4a4-6d49d8c4bdf4",
+    "b2c0e7a6-0105-50c8-aba4-5ec462c64a4d",
+    "b4beac35-4319-5f6b-a1ac-a1c7bf4fa646",
+    "aabc5de0-d939-5ce6-a3a9-99ca204b7983",
+    "b7bc7257-4cfe-556f-b0a9-aec3ac86417e",
+    "acba226f-009f-5111-a19c-c9fd468e8d84",
+    "49becd84-4ce0-5172-a28d-6eae8f88762f"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-subjunctive-adverbial",
+   "phase": "surplus",
+   "variant": "antes-de-que-subjunctive",
+   "planned": 15,
+   "ids": [
+    "fc7c5501-11ac-56e9-84ce-2bd557690270",
+    "007c5b4d-0d39-5fd5-88ce-32495bdb79b4",
+    "ff7c59ba-8c1d-5210-87ce-30acdcf81785",
+    "fb7c536e-908f-5924-83ce-2a38d885a041",
+    "f97c5048-92c8-54ae-85ce-2d72dabedbe3",
+    "bac0f43e-f820-52a0-b3a4-6bac59e15bc5",
+    "b9c0f2ab-7b76-5bef-b6a4-7083dafdf996",
+    "bec0fa8a-fc92-59b4-afa4-6538556ee481",
+    "bfc0fc1d-7daf-5779-b0a4-66d5d45246b0",
+    "bcc0f764-fecb-553e-b1a4-687257a82023",
+    "b3c0e939-8221-5e8d-aca4-6061e1a9ac7c",
+    "b1bea77c-bfc4-561c-9eac-9cf03e330875",
+    "adbea130-bb51-5f08-a2ac-a36439c09131",
+    "b1bc68e5-53aa-580d-a6a9-9ea1a1681754",
+    "b0bc6752-d28d-5a48-a5a9-9d042284b525"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-superlatives-comparisons",
+   "phase": "surplus",
+   "variant": "relative-superlative-de",
+   "planned": 27,
+   "ids": [
+    "83a11b2f-96be-578d-9769-8ac13eaff360",
+    "82a1199c-15a1-59c8-9669-8924bfcc9131",
+    "85a11e55-98f7-5317-9969-8dfb40e92f02",
+    "80a11676-1c4d-5c66-9469-85eac6784417",
+    "81a11809-9d69-5a2b-9569-8787455ba646",
+    "8ba127c7-8dd9-5965-9f69-97a94794e1e8",
+    "559db1cd-345f-5d71-b645-26cd029db450",
+    "549db03a-b342-5fac-b545-253083ba5221",
+    "4e9da6c8-b109-5422-bb45-2ede8a660507",
+    "bba090f6-7f1e-5e6a-9047-8d76c1377c53",
+    "baa08f63-fe02-50a5-8f47-8bd93de1a2e0",
+    "b9a08dd0-7ce5-52e0-8e47-8a3cbefe40b1",
+    "c0a098d5-04ae-5343-8d47-889f448d55c6",
+    "c0a2d76c-6c55-5a3e-8949-bee2dce5cfa3",
+    "c2a2da92-6a1c-5eb4-8749-bba8daac9401",
+    "c3a2dc25-eb38-5c79-8849-bd45598ff630",
+    "bda2d2b3-e8ff-50ef-8e49-c6f3603ba916",
+    "bca2d120-67e3-532a-8d49-c556e15846e7",
+    "bfa2d5d9-e6c6-5565-8c49-c3b95e026d74",
+    "bea2d446-65a9-57a0-8b49-c21cdf1f0b45",
+    "b9918346-5dfe-5d26-b637-8bba8e4d4cf7",
+    "ba9184d9-df1b-5aeb-b737-8d570d30af26",
+    "bb91866c-5752-5a88-b837-8ef487a19a11",
+    "bc9187ff-d86f-584d-b937-90910684fc40",
+    "c0918e4b-d3fd-5139-bd37-970513dc620c",
+    "cecf90bc-36a3-56ec-8fad-cbd0390bf955",
+    "e39ad72f-220f-5c35-99dc-9bf97407a968"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-superlatives-comparisons",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "a0741927-b5a6-5bbd-87fa-8341230d3990",
+    "9e80e1f4-04d8-53ca-95e7-b6d6a6ee4257",
+    "a4d6c2b5-1216-58b1-b7a9-3d7d76365ec8"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-superlatives-comparisons",
+   "phase": "surplus",
+   "variant": "relative-superlative-de",
+   "planned": 20,
+   "ids": [
+    "65bd99d1-432b-5225-87a7-5589fdccf904",
+    "63bd96ab-4564-5daf-89a7-58c3000634a6",
+    "69bda01d-479d-5939-83a7-4f15f95a81c0",
+    "67bd9cf7-49d6-54c3-85a7-524ffb93bd62",
+    "5dbd8d39-4c0f-504d-bfa7-48a106b1e78c",
+    "09793ba0-5e8e-5d64-90f5-49d8dff8f545",
+    "0c794059-e1e4-56b3-93f5-4eaf61159316",
+    "0b793ec6-60c8-58ee-92f5-4d12e23230e7",
+    "0e79437f-db39-5415-95f5-51e95a69e030",
+    "0d7941ec-5a1c-5650-94f5-504cdb867e01",
+    "0f794512-5c55-51da-96f5-5386ddbfb9a3",
+    "127949cb-e890-5951-89f5-3e8d67c145fc",
+    "9971cf8b-cf1b-5287-8cf7-801b0e0a9926",
+    "9871cdf8-4dfe-54c2-8bf7-7e7e8f2736f7",
+    "9c71d444-5271-5bd6-87f7-780a8ab4bfb3",
+    "9d71d5d7-d38d-599b-88f7-79a7099821e2",
+    "9e71d76a-5037-504c-85f7-74d0887b8411",
+    "9f71d8fd-d154-5e11-86f7-766d075ee640",
+    "9071c160-4519-569a-93f7-8b66980c257f",
+    "9171c2f3-c636-545f-94f7-8d0316ef87ae"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-verb-preposition-regime",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "1aa8b656-09b5-5996-88b7-427a964cc7df",
+    "18a8b330-077c-5e0c-86b7-3f4094138c3d",
+    "6441a834-4af5-5874-97e5-7e780186b75d"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-verb-preposition-regime",
+   "phase": "surplus",
+   "variant": "prep-infinitive-not-gerund",
+   "planned": 16,
+   "ids": [
+    "dbfd3969-f151-595f-9a66-c083325af18a",
+    "a8a1471b-e24f-556b-8ac4-e0c70cd66ada",
+    "aaa14a41-e016-59e1-88c4-dd8d0a9d2f38",
+    "aca14d67-dddd-5e57-8ec4-e73b1148e21e",
+    "aea1508d-dba3-52cd-8cc4-e4010f0fa67c",
+    "9fa138f0-584d-597e-91c4-ec12850e1a23",
+    "1799a713-1872-5665-9dbc-ac4997fc9a08",
+    "1899a8a6-998f-542a-9ebc-ade61b52737b",
+    "1a99abcc-9bc8-5fb4-98bc-a4381d8baf1d",
+    "1b99ad5f-1ce4-5d79-99bc-a5d59c6f114c",
+    "9c9cb709-05a9-5239-96bf-ac35b3aaed58",
+    "9b9cb576-848c-5474-95bf-aa9834c78b29",
+    "999cb250-86c5-5ffe-97bf-add23700c6cb",
+    "a09cbd55-0136-5b25-9abf-b2a9b81d649c",
+    "a39cc20e-8d71-529c-8dbf-9db02be29ca1",
+    "1ba8b7e9-8ad2-575b-89b7-441715302a0e"
+   ]
+  },
+  {
+   "cell": "B1:cloze:es-b1-verb-preposition-regime",
+   "phase": "surplus",
+   "variant": "verb-prep-regime",
+   "planned": 6,
+   "ids": [
+    "defd3e22-74a7-52ae-9566-b872b7ea069f",
+    "e2fd446e-7919-59c2-9166-b1feaa92a0d3",
+    "d9fd3643-ef18-5dd5-9866-bd493021b5e8",
+    "1c99aef2-9e01-5b3e-9abc-a7721fc4eabf",
+    "1d99b085-1f1e-5903-9bbc-a90f9ea84cee",
+    "1e99b218-a03a-56c8-94bc-9dc410344951"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-verb-preposition-regime",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "bc765d74-49e4-573e-b818-d532a3a9fdfb"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-verb-preposition-regime",
+   "phase": "surplus",
+   "variant": "verb-prep-regime",
+   "planned": 14,
+   "ids": [
+    "822d6379-bcfe-573d-9358-19417897f40c",
+    "832d650c-428d-5c16-9058-146af77b563b",
+    "842d669f-c3aa-59db-9158-1607765eb86a",
+    "862d69c5-c170-5e51-8f58-12cd74257cc8",
+    "882d6ceb-b652-549f-9d58-296371ec4126",
+    "296eba46-a161-554e-b925-a362e36063cf",
+    "286eb8b3-2045-5789-b825-a1c5600a8a5c",
+    "276eb720-9f28-59c4-b725-a028e127282d",
+    "326ec871-2b63-513b-b225-9817595ed776",
+    "316ec6de-aa46-5376-b125-967ada7b7547",
+    "307103e2-6cc9-5c68-ac1e-09c4fcd57b7d",
+    "2d70ff29-f258-5141-a91e-04ed77466668",
+    "3871107a-63e4-5e40-b41e-16acf3f08cf5",
+    "3971120d-e501-5c05-b51e-184972d3ef24"
+   ]
+  },
+  {
+   "cell": "B1:translation:es-b1-verb-preposition-regime",
+   "phase": "surplus",
+   "variant": "prep-infinitive-not-gerund",
+   "planned": 11,
+   "ids": [
+    "7f2d5ec0-3e1b-5502-9458-1adefbedcd7f",
+    "812d61e6-3be1-5978-9258-17a4f9b491dd",
+    "872d6b58-3536-56da-9c58-27c6f308def7",
+    "2a6ebbd9-227e-5313-ba25-a4ff6243c5fe",
+    "2e6ec225-1e0c-5bff-be25-ab735dd14eba",
+    "2c6ebeff-1bd2-5075-bc25-a8395b981318",
+    "31710575-ede6-5a2d-ad1e-0b617bb8ddac",
+    "2c70fd96-713c-537c-a81e-0350f8630439",
+    "2a70fa70-7375-5f06-aa1e-068afa9c3fdb",
+    "2b70fc03-f491-5ccb-ab1e-0827797fa20a",
+    "35734a58-5a00-583c-a521-09b01883cecd"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-adjective-position",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 21,
+   "ids": [
+    "aa66ea65-509d-5493-bd73-fcefb8bea3fe",
+    "a966e8d2-cf80-56ce-bc73-fb5239db41cf",
+    "a666e419-4c2a-5d7f-8174-0363b44c2cba",
+    "a2649f36-e010-5f70-8170-f82c1bf3b2dd",
+    "a364a0c9-612d-5d35-8270-f9c99ad7150c",
+    "a0649c10-e24a-5afa-8370-fb661e2cee7f",
+    "a1649da3-6366-58bf-8470-fd039d1050ae",
+    "ab64ad61-6a12-5b5d-ba70-ece191f22684",
+    "a257d343-9af6-55d5-856e-c1e9e96f97b8",
+    "a657d98f-9f69-5ce9-816e-bb75ede20efc",
+    "ac57e301-a614-5f87-bf6e-b83be2c3e4d2",
+    "ab57e16e-24f8-51c2-be6e-b69e63e082a3",
+    "98f640d1-152a-502f-9272-e983758ac652",
+    "97f63f3e-940d-526a-9172-e7e6f6a76423",
+    "9cf6471d-199c-5743-8e72-e30f79fd3d96",
+    "99f64264-9646-5df4-8b72-de38f8e09fc5",
+    "96f63dab-12f0-54a5-9072-e64973518ab0",
+    "3fef8617-0b74-5019-ae96-b1b5464d5cf4",
+    "3eef8484-8a57-5254-ad96-b018c769fac5",
+    "40ef87aa-8c90-5dde-af96-b352c9a33667",
+    "3bef7fcb-0701-5905-b296-b82941dae5b0"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-adjective-position",
+   "phase": "surplus",
+   "variant": "prenominal-meaning-shift",
+   "planned": 13,
+   "ids": [
+    "411ebf15-8e5d-5645-b3c3-88c91c3fadac",
+    "3b1eb5a3-9509-58e3-b1c3-858f1a06720a",
+    "3e1eba5c-0f7a-540a-b4c3-8a669f95871f",
+    "401ebd82-0d41-5880-b2c3-872c9d5c4b7d",
+    "3f1ebbef-9097-51cf-b5c3-8c031e78e94e",
+    "3a1eb410-13ec-5b1e-b0c3-83f29b230fdb",
+    "3c1eb736-11b3-5f94-aec3-80b898e9d439",
+    "471ec887-997c-5ff7-adc3-7f1b1593fac6",
+    "461ec6f4-185f-5232-acc3-7d7e96b09897",
+    "365f7804-bcb7-52a2-b576-2cbe751f305f",
+    "385f7b2a-ba7e-5718-b376-298472e5f4bd",
+    "355f7671-400d-5bf1-b076-24aded56dfa8",
+    "2e5f6b6c-b3d2-547a-bd76-39a66c3a41d7"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-causal-connectors",
+   "phase": "surplus",
+   "variant": "ya-que-puesto-que",
+   "planned": 14,
+   "ids": [
+    "170b406d-3f6f-538d-b6e2-b951c09919a4",
+    "9ea73ffe-2cfc-5402-b7bf-db4e381daea3",
+    "23aa4ff4-88ec-5926-acb8-44eac57d1973",
+    "21aa4cce-8240-5688-aeb8-4824c7b65515",
+    "22aa4e61-035d-544d-afb8-49c14699b744",
+    "0fac6f0f-d5e5-55a9-80ba-a1e562480a94",
+    "10ac70a2-5702-536e-81ba-a382e59de407",
+    "14aeb585-28f0-5ca5-85c7-7689bd219464",
+    "0daeaa80-ae7f-517e-82c7-71b23c04f693",
+    "c7c8c4c4-0202-5d7a-9f23-802612501d1f",
+    "c2c8bce5-89ca-5ddd-9623-71a186155524",
+    "81129c2e-91c7-58c0-9e40-6eec9c4628dd",
+    "7f129908-9400-544a-a040-72269e7f647f",
+    "83129f54-9872-5b5e-9c40-6bb29a0ced3b"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-causal-connectors",
+   "phase": "surplus",
+   "variant": "enunciative-porque",
+   "planned": 7,
+   "ids": [
+    "100b3568-c4ff-5866-b3e2-b47a3f7c7bd3",
+    "080b28d0-bc1a-5a3e-bbe2-c16248616a5b",
+    "1faa49a8-847a-5212-b0b8-4b5ec9ef90b7",
+    "11aeb0cc-aa0c-5a6a-86c7-782640776dd7",
+    "cac8c97d-80e6-5fb5-9e23-7e898efa43ac",
+    "c6c8c331-8558-56c9-9a23-78158a87cc68",
+    "c9c8c7ea-ffc9-51f0-9d23-7cec1016e17d"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-causal-connectors",
+   "phase": "surplus",
+   "variant": "enunciative-porque",
+   "planned": 20,
+   "ids": [
+    "76c0830a-e8cb-5db6-80d7-c5ea5bb42f97",
+    "73c07e51-6575-5467-85d7-cdfbd6251a82",
+    "71c07b2b-633c-58dd-83d7-cac1d3ebdee0",
+    "6ec07672-dfe6-5f8e-88d7-d2d264991e1f",
+    "6fc07805-6103-5d53-89d7-d46fe37c804e",
+    "3110dc57-696a-5fb7-b01d-323b572a07d6",
+    "2c10d478-ecc0-5906-ab1d-2a2ad3d42e63",
+    "9e093929-c0e7-5dc7-a914-d3cbe016fb62",
+    "a7094754-391f-5d64-aa14-d5686c51c35d",
+    "a80948e7-ba3c-5b29-ab14-d705eb35258c",
+    "a50b82c5-8cc3-5c85-bc17-fda9fdfe8a54",
+    "ac0b8dca-148c-5ce8-b317-ef24880016ad",
+    "3304138a-655d-585a-be24-cd7698903fd3",
+    "3404151d-e67a-561f-bf24-cf131773a202",
+    "31041064-6324-5cd0-bc24-ca3c96570431",
+    "2f040d3e-69d0-5f6e-ba24-c7029d02b717",
+    "30040ed1-eaec-5d33-bb24-c89f1be61946",
+    "2e040bab-e8b3-51a9-b924-c56519acdda4",
+    "2b0406f2-6e42-5682-b624-c08ea1752e5b",
+    "2c040885-ef5f-5447-b724-c22b2058908a"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-cleft-sentences",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "91fd5908-2077-5b2c-b3d2-4980d915ae3d"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-cleft-sentences",
+   "phase": "surplus",
+   "variant": "cleft-person-quien",
+   "planned": 14,
+   "ids": [
+    "98eb07e1-e87c-5d05-ad5f-f7b9c8688894",
+    "93eb0002-74b7-547c-a05f-e2c04df79da9",
+    "1b04ec78-c24e-5a7e-bcc5-8b7292b39583",
+    "2104f5ea-bba2-57e0-bec5-8eac94ecd125",
+    "2204f77d-3cbf-55a5-bfc5-904913d03354",
+    "2004f457-3ef8-512f-81c5-938316096ef6",
+    "1504e306-c8fa-5d1c-b2c5-7b50995f4869",
+    "1604e499-4a16-5ae1-b3c5-7ced1842aa98",
+    "1702a795-e77b-531f-88cd-2373f5e8a462",
+    "1602a602-665e-555a-87cd-21d677054233",
+    "12029fb6-6ad1-5c6e-83cd-1b627b77b977",
+    "91ff979f-1dd8-5feb-afca-be6768893992",
+    "8cff8fc0-9849-5b12-b2ca-c33eee184ea7",
+    "8fff9479-172c-5d4d-b1ca-c1a16ac27534"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-cleft-sentences",
+   "phase": "surplus",
+   "variant": "cleft-place-donde",
+   "planned": 1,
+   "ids": [
+    "9ceb0e2d-ecef-5419-a95f-f145c3f61150"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-cleft-sentences",
+   "phase": "surplus",
+   "variant": "cleft-neuter-lo-que",
+   "planned": 6,
+   "ids": [
+    "8c4a8f71-911e-5053-b294-5a4f923641b6",
+    "8b4a8dde-1002-528e-b194-58b21352df87",
+    "8e4a9297-8a73-5db5-b494-5d898b8a8ed0",
+    "a8581418-e2cd-5f04-8a4d-9528efb461e5",
+    "ae581d8a-e094-537a-904d-9ed6ed7b2643",
+    "195f81c0-8916-556a-9755-fd46d63f4a37"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-cleft-sentences",
+   "phase": "surplus",
+   "variant": "cleft-person-quien",
+   "planned": 4,
+   "ids": [
+    "814a7e20-16ad-552c-a794-489019fe926d",
+    "aa58173e-e506-5a8e-8c4d-9862f1ed9d87",
+    "ac581a64-de5a-57f0-8e4d-9b9ceb41eaa1",
+    "af581f1d-61b0-513f-914d-a0736c5e8872"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-cleft-sentences",
+   "phase": "surplus",
+   "variant": "cleft-place-donde",
+   "planned": 2,
+   "ids": [
+    "894a8ab8-0dc9-5704-af94-55781119a3e5",
+    "8a4a8c4b-8ee5-54c9-b094-57158ffd0614"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-clitic-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "0a424b78-6fda-519c-908e-a22014b7871d"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-clitic-advanced",
+   "phase": "surplus",
+   "variant": "fronted-object-doubling",
+   "planned": 29,
+   "ids": [
+    "6a4f0f0d-dafb-5981-8aa7-163db79bbeb8",
+    "654f072e-556c-54a8-8da7-1b143d2ad3cd",
+    "634f0408-57a6-5032-8fa7-1e4e3f640f6f",
+    "664f08c1-d689-526d-8ea7-1cb1bc0e35fc",
+    "684f0be7-dd35-550b-8ca7-1977b9d4fa5a",
+    "9968343a-53c0-50f8-aa96-c914e0a53a8d",
+    "95682dee-5833-580c-a696-c2a0dc32c349",
+    "986832a7-d716-5a47-ad96-cdeb61c1d85e",
+    "93682ac8-5a6c-5396-a896-c5dade6bfeeb",
+    "916827a2-4adb-52d0-b296-d5fcd7c04c05",
+    "96682f81-d94f-55d1-a796-c43d5b162578",
+    "9365ec31-7b26-5523-b89e-644f4613850e",
+    "9265ea9e-fa0a-575e-b79e-62b2c73022df",
+    "9065e778-f7d0-5bd4-b59e-5f78c4f6e73d",
+    "9665f0ea-f597-504a-bb9e-6926c2bdab9b",
+    "8d63a428-0cd3-5b8a-be9c-3146ab81cf8f",
+    "8a65de06-02ef-5586-af9e-55cabe4b3457",
+    "9163aa74-1146-529e-ba9c-2ad2a70f584b",
+    "8f63a74e-0a9a-5000-bc9c-2e0ca94893ed",
+    "9263ac07-9262-5063-bb9c-2c6f25f2ba7a",
+    "9363ad9a-0f0c-5714-b89c-2798a4d61ca9",
+    "85639790-15b8-59b2-b69c-245ea29ce107",
+    "86639923-96d5-5777-b79c-25fb21804336",
+    "9874fe9a-43a4-5ffa-bd8e-94964c35ce7b",
+    "d3d2cc71-9100-54f5-b33d-ffc9eba86af4",
+    "ccd2c16c-1f74-57f6-a83d-ee0a7370bbab",
+    "3fdce0bf-e9d5-5be5-ae00-bce952538d60",
+    "3ddcdd99-f081-5e83-ac00-b9af58ff4046",
+    "3bdcda73-ee47-52f9-aa00-b67556c604a4"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-clitic-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "d761d08c-550c-5e58-b51f-3524a883c109",
+    "7bfdb946-84d0-5f7c-aa65-6260d0454f59"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-clitic-advanced",
+   "phase": "surplus",
+   "variant": "fronted-object-doubling",
+   "planned": 30,
+   "ids": [
+    "d461cbd3-da9b-5331-b21f-304d2bd99a7c",
+    "d861d21f-d629-5c1d-b61f-36c127672338",
+    "e061deb7-cd44-5df5-be1f-43a91e8234b0",
+    "df61dd24-4c27-5030-bd1f-420c9f9ed281",
+    "cdfb9cad-a4b5-5757-8a58-a61bbd69525a",
+    "c6fb91a8-25d1-551c-8358-9ad040bf2bcd",
+    "c2fb8b5c-187a-5fe0-8f58-ae2c3367c601",
+    "3c03059c-c7a8-546e-9460-3ae222d79cdb",
+    "3b030409-4219-5f95-9760-3fb9a3f43aac",
+    "3802ff50-c336-5d5a-9860-4156274a141f",
+    "450313c7-51aa-505b-8d60-2f9798d61082",
+    "b6fff5a6-da72-589a-9b5e-09760729498b",
+    "b5fff413-5955-5ad5-9a5e-07d983d37018",
+    "bbfffd85-6001-5d73-985e-049f8a7f22fe",
+    "b8fff8cc-dcab-5424-955d-ffc80962852d",
+    "b9fffa5f-5dc7-51e9-965e-01658845e75c",
+    "38f3f659-01d8-5cc5-9951-39a96c97940c",
+    "c00003d1-6473-5487-945d-fe2b7d27bd32",
+    "35f3f1a0-82f4-5a8a-9a51-3b46efed6d7f",
+    "3bf3fb12-852d-5614-9451-3198e941ba99",
+    "3cf3fca5-064a-53d9-9551-333568251cc8",
+    "3ff4015e-89a0-5d28-9051-2b24e4cf4355",
+    "18497128-d8e0-5e74-95b6-11c8950c4645",
+    "1a49744e-db1a-59fe-97b6-1502974581e7",
+    "1d497907-558b-5525-9ab6-19d90f7d3130",
+    "13496949-651b-55eb-90b6-09b71f0dd29e",
+    "c4a47670-291b-573a-8bc2-96b6c6922ed7",
+    "c6a47996-26e2-5bb0-89c2-937cc458f335",
+    "c7a47b29-a7fe-5975-8ac2-9519433c5564",
+    "c9a47e4f-aeaa-5c13-88c2-91df410319c2"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-comparatives-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 5,
+   "ids": [
+    "92d32eb0-fa5e-51b8-9e91-fb64901184f9",
+    "27754376-4ef3-517c-9e85-767047670069",
+    "33d97443-1e14-5ac5-8b09-fe5990146920",
+    "a95c391a-8a22-5f88-af14-d10457fd4665",
+    "d042b8bc-2ca8-5512-ba2d-330ef41dfc2f"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-comparatives-advanced",
+   "phase": "surplus",
+   "variant": "de-lo-que-clausal",
+   "planned": 22,
+   "ids": [
+    "98d33822-0109-5456-9c91-f82a96bd37df",
+    "9cd33e6e-f3b2-5f1a-a892-0b868965d213",
+    "2f778ea5-2a3a-507f-ba87-e05303c78cca",
+    "2c7789ec-a6e4-5730-b787-db7c82aaeef9",
+    "2d778b7f-2801-54f5-b887-dd19018e5128",
+    "287783a0-ab57-5e44-b387-d508871d663d",
+    "29778533-2c73-5c09-b487-d6a50600c86c",
+    "367799aa-b203-50e2-b187-d1ce7bff3c13",
+    "28754509-d00f-5f41-9f85-780dc64a6298",
+    "267541e3-d248-5acb-a185-7b47c8839e3a",
+    "2c754b55-cb9d-582d-a385-7e81cabcd9dc",
+    "2a75482f-cdd6-53b7-a585-81bbccf6157e",
+    "307551a1-c72a-5119-a785-84f5bd657410",
+    "2f75500e-460e-5354-a685-83583e8211e1",
+    "a2723380-61bc-55a8-a582-76842bb8ad19",
+    "a3723513-e2d9-536d-a682-7821aa9c0f48",
+    "a47236a6-63f5-5132-a782-79be2df1e8bb",
+    "a5723839-e512-5ef7-a882-7b5bacd54aea",
+    "a67239cc-662e-5cbc-a182-7010302b245d",
+    "a7723b5f-e74b-5a81-a282-71adaf0e868c",
+    "a9723e85-e984-560b-a482-74e7b147c22e",
+    "aa724018-58d7-5780-ad82-836c22d3be91"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-comparatives-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 12,
+   "ids": [
+    "33edc48c-39f7-545e-8d04-7ab21d47005b",
+    "35edc7b2-37be-58d4-8b04-77781b0dc4b9",
+    "c1f55fdb-eac5-5c51-b702-1a7d631faf9c",
+    "c2f5616e-6be2-5a16-b802-1c1ae675890f",
+    "b9f55343-e1e0-5e29-bf02-27655a3ac114",
+    "bcf31965-fd8f-507d-bdff-1a9147715c4c",
+    "b7f31186-80e4-59cc-b8ff-1280c41b82d9",
+    "b5f30e60-831e-5556-baff-15bac654be7b",
+    "4afab4b4-448a-5dd8-bffc-e11417267cc9",
+    "48fab18e-4b36-5076-bdfc-ddda1dd22faf",
+    "44a36164-3f5b-54ce-8909-2a52194b5e13",
+    "43a35fd1-b9cc-5ff5-8c09-2f299a67fbe4"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-comparatives-advanced",
+   "phase": "surplus",
+   "variant": "de-lo-que-clausal",
+   "planned": 3,
+   "ids": [
+    "34edc61f-bb14-5223-8e04-7c4f9c2a628a",
+    "36edc945-b8db-5699-8c04-791599f126e8",
+    "38edcc6b-bf86-5937-8a04-75db97b7eb46"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-complex-conditionals",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "fb68efed-6592-56ef-b9f2-87d310f6583a"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-complex-conditionals",
+   "phase": "surplus",
+   "variant": "past-counterfactual-standard",
+   "planned": 28,
+   "ids": [
+    "6965cb80-fbb1-546a-bbef-7fd671f22b77",
+    "6a65cd13-7cce-522f-bcef-8173f0d58da6",
+    "6b65cea6-f978-58e0-b9ef-7c9c6fb8efd5",
+    "6c65d039-7a94-56a5-baef-7e39ee9c5204",
+    "7565de64-0908-59a6-afef-6c7a7664a2bb",
+    "7665dff7-8a25-576b-b0ef-6e17f54804ea",
+    "f368e355-6e77-5517-b1f2-7aeb081169b2",
+    "f268e1c2-ed5a-5752-b0f2-794e892e0783",
+    "f168e02f-6c3d-598d-aff2-77b105d82e10",
+    "f068de9c-eb21-5bc8-aef2-761486f4cbe1",
+    "ee68db76-f1cd-5e66-acf2-72da8da07ec7",
+    "ed68d9e3-70b0-50a1-abf2-713d0a4aa554",
+    "ec68d850-ef93-52dc-aaf2-6fa08b674325",
+    "fa68ee5a-e475-592a-b8f2-86369212f60b",
+    "8161741a-2309-50a8-abf4-adf4c6ab31b5",
+    "826175ad-a425-5e6d-acf4-af91458e93e4",
+    "7f6170f4-2542-5c32-adf4-b12ec8e46d57",
+    "80617287-a65f-59f7-aef4-b2cb47c7cf86",
+    "7d616dce-277b-57bc-a7f4-a780c238ba71",
+    "7e616f61-a898-5581-a8f4-a91d411c1ca0",
+    "7b616aa8-29b4-5346-a9f4-aabac471f613",
+    "7c616c3b-aad1-510b-aaf4-ac5743555842",
+    "79616782-1a24-5280-b3f4-badccf90203d",
+    "7a616915-9b40-5045-b4f4-bc794e73826c",
+    "6b1596c3-9815-5789-8cfa-9825116817b4",
+    "6a159530-16f8-59c4-8bfa-96889284b585",
+    "ac91cf44-34f3-5ad8-a1db-70142d0a5cc1",
+    "a891c8f8-3966-51ec-9ddb-69a0317cd405"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-complex-conditionals",
+   "phase": "surplus",
+   "variant": "past-counterfactual-standard",
+   "planned": 29,
+   "ids": [
+    "c17438a1-9c39-5f13-ab22-beefe4ae5b26",
+    "be7433e8-18e3-55c4-a822-ba186391bd55",
+    "bf74357b-9a00-5389-a922-bbb5e2751f84",
+    "c4743d5a-16aa-5a3a-ae22-c3c6615881b3",
+    "c5743eed-97c6-57ff-af22-c563e03be3e2",
+    "c2743a34-1470-5eb0-ac22-c08c5f1f4611",
+    "c3743bc7-958d-5c75-ad22-c229de02a840",
+    "b8742a76-2401-5f76-a222-b06a6eafe77f",
+    "b9742c09-a51e-5d3b-a322-b207ed9349ae",
+    "c6767f17-896f-5ae7-a424-f05b005cae76",
+    "c5767d84-0853-5d22-a324-eebe81794c47",
+    "c876823d-8736-5f5d-a224-ed21fe2372d4",
+    "c77680aa-061a-5198-a124-eb847f4010a5",
+    "c27678cb-8de2-51fb-a024-e9e7fbea3732",
+    "c1767738-0cc5-5436-9f24-e84a7d06d503",
+    "c4767bf1-8ba9-5671-9e24-e6adf9b0fb90",
+    "c3767a5e-0a8c-58ac-9d24-e5107acd9961",
+    "be76727f-808a-5cbf-ac24-fd4309419cfe",
+    "bd7670ec-ff6e-5efa-ab24-fba68a5e3acf",
+    "bc652638-3e01-5678-9e27-f1e476e65171",
+    "bd6527cb-bf1e-543d-9f27-f381f5c9b3a0",
+    "be65295e-403b-5202-a027-f51e791f8d13",
+    "bf652af1-c157-5fc7-a127-f6bbf802ef42",
+    "c0652c84-4274-5d8c-9a27-eb707b58c8b5",
+    "c1652e17-c390-5b51-9b27-ed0dfa3c2ae4",
+    "c2652faa-44ad-5916-9c27-eeaa7d920457",
+    "c365313d-c5ca-56db-9d27-f047fc756686",
+    "b46519a0-351c-5850-a627-fecc7fcb3ff9",
+    "b5651b33-b639-5615-a728-0069feaea228"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-conditional-perfect",
+   "phase": "surplus",
+   "variant": "conditional-perfect-si-pluperfect-subjunctive",
+   "planned": 52,
+   "ids": [
+    "3e323e84-800b-5d42-8343-148e6f1f8ce7",
+    "35323059-fa7c-5869-8643-1965f03c2ab8",
+    "34322ec6-795f-5aa4-8543-17c87158c889",
+    "433484fa-4e20-578a-9845-732617a21bb3",
+    "4434868d-cf3d-554f-9945-74c396857de2",
+    "413481d4-4be7-5c00-9645-6fec1568e011",
+    "42348367-cd04-59c5-9745-7189944c4240",
+    "3f347eae-5293-5e9e-9445-6cb21c1492f7",
+    "40348041-d3af-5c63-9545-6e4f9af7f526",
+    "3d347b88-5059-5314-9245-697819db5755",
+    "3e347d1b-d176-50d9-9345-6b1598beb984",
+    "3b347862-5705-55b2-9045-663e20870a3b",
+    "3c3479f5-d822-5377-9145-67db9f6a6c6a",
+    "a9376423-bc73-5123-9248-74afb233d132",
+    "a8376290-3b57-535e-9148-731233506f03",
+    "ab376749-ba3a-5599-9048-7175affa9590",
+    "aa3765b6-391e-57d4-8f48-6fd831173361",
+    "ad376a6f-b801-5a0f-9648-7b23b6a64876",
+    "ac3768dc-36e4-5c4a-9548-798637c2e647",
+    "af376d95-b5c8-5e85-9448-77e9b46d0cd4",
+    "ae376c02-34ab-50c0-9348-764c3589aaa5",
+    "b13770bb-c558-5f4b-8a48-67c7bb18bfba",
+    "b0376f28-443c-5186-8948-662a3c355d8b",
+    "af39ac2c-2ac7-5abc-bc36-3cb070cd9935",
+    "b039adbf-abe3-5881-bd36-3e4defb0fb64",
+    "b139af52-2d00-5646-be36-3fea7306d4d7",
+    "b239b0e5-ae1c-540b-bf36-4187f1ea3706",
+    "ab39a5e0-2654-53a8-8036-43246c5b21f1",
+    "ac39a773-a771-516d-8136-44c1eb3e8420",
+    "ad39a906-288d-5f32-8236-465e6e945d93",
+    "ae39aa99-a9aa-5cf7-8336-47fbed77bfc2",
+    "b739b8c4-21e2-5c94-8436-499879b287bd",
+    "d3009ec9-967e-5d7d-99cf-f9410e886734",
+    "e63c2ba2-7973-5854-9d12-f9e82a2aac41",
+    "e03c2230-773a-5cca-a313-039630d65f27",
+    "e53c2a0f-fcc9-51a3-a012-febfab474a12",
+    "e23c2556-7501-5140-a113-005c2e9d2385",
+    "e13c23c3-f857-5a8f-a413-0533afb9c156",
+    "e33c26e9-f61d-5f05-a213-01f9ad8085b4",
+    "ec3c3514-8492-5206-9712-f03a3548d66b",
+    "ed3c36a7-05ae-5fcb-9812-f1d7b42c389a",
+    "1cb6812d-b830-5d1f-8da4-acb3cb625fc2",
+    "1ab67e07-b5f7-5195-8ba4-a979c9292420",
+    "19b67c74-34da-53d0-8aa4-a7dc4a45c1f1",
+    "18b67ae1-bca3-5433-89a4-a63fcfd4d706",
+    "17b6794e-3b86-566e-88a4-a4a250f174d7",
+    "16b677bb-ba6a-58a9-87a4-a305cd9b9b64",
+    "15b67628-394d-5ae4-86a4-a1684eb83935",
+    "14b67495-c115-5b47-85a4-9fcbd4474e4a",
+    "13b67302-3ff9-5d82-84a4-9e2e5563ec1b",
+    "02b896d6-90ca-58f4-bf9d-117865f41541",
+    "01b89543-1420-5243-829d-164fe710b312"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-conditional-perfect",
+   "phase": "surplus",
+   "variant": "conditional-perfect-si-pluperfect-subjunctive",
+   "planned": 52,
+   "ids": [
+    "cde62ab8-77d1-5ada-bc79-95d61c60ba37",
+    "cee62c4b-f8ee-589f-bd79-97739b441c66",
+    "cfe62dde-7598-5f50-ba79-929c1a277e95",
+    "d0e62f71-f6b5-5d15-bb79-9439990ae0c4",
+    "d1e63104-7c44-51ee-b879-8f6217ee42f3",
+    "d2e63297-fd61-5fb3-b979-90ff96d1a522",
+    "d3e6342a-7a0b-5664-b679-8c2815b50751",
+    "d4e635bd-fb27-5429-b779-8dc594986980",
+    "c5e61e20-80b6-5902-b479-88ee2545a8bf",
+    "c6e61fb3-01d3-56c7-b579-8a8ba4290aee",
+    "d3e872c1-e625-5473-b67c-975fb6f26fb6",
+    "d2e8712e-6508-56ae-b57c-95c2380f0d87",
+    "d1e86f9b-e3eb-58e9-b47c-9425b4b93414",
+    "d0e86e08-62cf-5b24-b37c-928835d5d1e5",
+    "d7e8790d-e1b2-5d5f-ba7c-9dd3b27ff872",
+    "d5e875e7-df79-51d5-b87c-9a99b046bcd0",
+    "d4e87454-5e5c-5410-b77c-98fc31635aa1",
+    "cbe86629-ef0a-529b-ae7c-8a77bfd75e3e",
+    "cae86496-6ded-54d6-ad7c-88da40f3fc0f",
+    "d1f53b8e-5478-5e0c-a06a-5f602d7c12b1",
+    "d2f53d21-d595-5bd1-a16a-60fdac5f74e0",
+    "cff53868-56b1-5996-a26a-629a2fb54e53",
+    "d0f539fb-d7ce-575b-a36a-6437ae98b082",
+    "d5f541da-5005-56f8-a46a-65d431ee89f5",
+    "d6f5436d-d122-54bd-a56a-6771b0d1ec24",
+    "d3f53eb4-523f-5282-a66a-690e3427c597",
+    "d4f54047-d35b-5047-a76a-6aabb30b27c6",
+    "c9f52ef6-4b93-5fe4-a86a-6c4836610139",
+    "caf53089-ccb0-5da9-a96a-6de5b5446368",
+    "a301d73f-62cf-55ed-b445-c5d1b25824f0",
+    "4a8421da-7ea1-5eba-9c4b-33a68918b3e3",
+    "458419fb-01f6-5809-974b-2b950a3551b4",
+    "46841b8e-8313-55ce-984b-2d328d8b2b27",
+    "47841d21-0430-5393-994b-2ecf0c6e8d56",
+    "44841868-80da-5a44-964b-29f88b51ef85",
+    "4b84236d-ffbd-5c7f-9d4b-354307fc1612",
+    "48841eb4-7c67-5330-9a4b-306c86df7841",
+    "49842047-fd84-50f5-9b4b-320905c2da70",
+    "3e840ef6-8bf8-53f6-904b-204a967019af",
+    "3f841089-0d15-51bb-914b-21e715537bde",
+    "a5f9c1c3-c7ba-536f-8d4a-d163d020fe46",
+    "a7f9c4e9-c581-57e5-8b4a-ce29cde7c2a4",
+    "a6f9c356-4464-5a20-8a4a-cc8c4f046075",
+    "a9f9c80f-cc2c-5a83-894a-caefcbae8702",
+    "a8f9c67c-4b10-5cbe-884a-c9524ccb24d3",
+    "abf9cb35-c9f3-5ef9-874a-c7b5c9754b60",
+    "aaf9c9a2-48d7-5134-864a-c6184a91e931",
+    "adf9ce5b-d09f-5197-854a-c47bd905ecce",
+    "acf9ccc8-4f82-53d2-844a-c2de5a228a9f",
+    "33f25288-a054-5f44-bf42-67a86ab2b3c5",
+    "34f2541b-2171-5d09-8042-6945e99615f4",
+    "35f255ae-a28d-5ace-8142-6ae26cebef67"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-consecutives-intensity",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "50f41d29-02c1-58ab-a4b9-64b78161a74e"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-consecutives-intensity",
+   "phase": "surplus",
+   "variant": "tan-adjective-que",
+   "planned": 10,
+   "ids": [
+    "52f4204f-fc15-560d-a6b9-67f17ab5f468",
+    "4ff41b96-81a4-5ae6-a3b9-631a027e451f",
+    "5bf42e7a-744d-55aa-afb9-7676f526df53",
+    "4bf1d6b3-1117-55c3-afb6-6b3f41ab417a",
+    "4af1d520-8ffb-57fe-aeb6-69a2c2c7df4b",
+    "51f1e025-0a6c-5325-b1b6-6e7943e47d1c",
+    "50f1de92-894f-5560-b0b6-6cdcc5011aed",
+    "4ff1dcff-0ca5-5eaf-b3b6-71b3461db8be",
+    "55f1e671-17c3-5861-a5b6-5b1d368d1750",
+    "54f1e4de-96a7-5a9c-a4b6-5980b7a9b521"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-consecutives-intensity",
+   "phase": "surplus",
+   "variant": "tan-adjective-que",
+   "planned": 12,
+   "ids": [
+    "1ab409f8-1a6d-5516-971b-18aa9db5a0db",
+    "1db40eb1-9950-5751-961b-170d1a5fc768",
+    "16b403ac-0d16-5fda-a31b-2c0699432997",
+    "90bb7f7f-a7a7-5469-a118-1d95e38e501c",
+    "91bb8112-28c4-522e-a218-1f3266e4298f",
+    "8cbb7933-a335-5d55-a518-2409df1bd8d8",
+    "8bbb77a0-2218-5f90-a418-226c603876a9",
+    "8ebb7c59-a56e-58df-a718-2743e155147a",
+    "8dbb7ac6-2451-5b1a-a618-25a66271b24b",
+    "97bb8a84-2f70-54cc-9818-0f105bc5ff65",
+    "8bb93909-ba71-5895-a815-ec29c7dffccc",
+    "89b935e3-bcaa-541f-aa15-ef63ca19386e"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-cuyo",
+   "phase": "surplus",
+   "variant": "cuyo-nonrestrictive-comma-clause",
+   "planned": 24,
+   "ids": [
+    "27ec2c99-81b7-5969-a999-fb655ab370e8",
+    "25ec2973-83f0-54f3-ab99-fe9f5cecac8a",
+    "24ec27e0-02d3-572e-aa99-fd02de094a5b",
+    "2bec32e5-7d44-5255-ad9a-01d95f25e82c",
+    "29ec2fbf-7f7d-5ddf-af9a-0513615f23ce",
+    "2fec3931-8a9c-5791-a199-ee7d51ce8260",
+    "81ca4e0b-bb2e-567d-b26a-782148539858",
+    "80ca4c78-3a11-58b8-b16a-7684c9703629",
+    "82ca4f9e-3c4a-5442-b36a-79becba971cb",
+    "83ca5131-bd67-5207-b46a-7b5b4a8cd3fa",
+    "86ca55ea-40bd-5b56-af6a-734ad01be90f",
+    "79ca4173-b249-5855-ba6a-85093f6ea9d0",
+    "78ca3fe0-312c-5a90-b96a-836cc08b47a1",
+    "f0c2ae03-aa9d-5ddb-ad6d-7b4785d0c28a",
+    "efc2ac70-2981-5016-ac6d-79aa06ed605b",
+    "f1c2af96-2748-548c-aa6d-767004b424b9",
+    "f2c2b129-a864-5251-ab6d-780d839786e8",
+    "f3c2b2bc-250e-5902-b06d-801e0b5fd79f",
+    "f4c2b44f-a62b-56c7-b16d-81bb8a4339ce",
+    "f5c2b5e2-22d5-5d78-ae6d-7ce409269bfd",
+    "f6c2b775-a3f2-5b3d-af6d-7e818809fe2c",
+    "f7c2b908-209c-51ee-b46d-8692fe0871d3",
+    "f8c2ba9b-a1b8-5fb3-b56d-882f7cebd402",
+    "f5c4f479-7440-510f-866f-e053a17f15da"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-cuyo",
+   "phase": "surplus",
+   "variant": "cuyo-nonrestrictive-comma-clause",
+   "planned": 11,
+   "ids": [
+    "dc9c1edf-66dc-5b85-8b18-30e97d0485a8",
+    "de9c2205-6915-570f-8d18-34237f3dc14a",
+    "df9c2398-f316-52fc-be18-1bf0f9aeac35",
+    "e09c252b-7433-50c1-bf18-1d8d78920e64",
+    "9fbac706-3fa4-5348-b5fc-2fb4b063f96d",
+    "9ebac573-c2fa-5c97-b8fc-348b3180973e",
+    "9dbac3e0-41dd-5ed2-b7fc-32eeb29d350f",
+    "a4bacee5-c533-5821-b2fc-2add2ad4e458",
+    "a3bacd52-4416-5a5c-b1fc-2940abf18229",
+    "a8bad531-b7db-52e5-befc-3e3926626d14",
+    "a6bd10a2-2f14-5aa6-b0ff-32daede1239f"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-cuyo",
+   "phase": "surplus",
+   "variant": "cuyo-restrictive-clause",
+   "planned": 2,
+   "ids": [
+    "da9c1bb9-6d87-5e23-8918-2daf83b0388e",
+    "d79c1700-ea32-54d4-8618-28d802939abd"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-gerund-participle-constructions",
+   "phase": "surplus",
+   "variant": "predicative-participle-object-agreement",
+   "planned": 24,
+   "ids": [
+    "0c946bde-c459-546e-b250-ebb216a320df",
+    "0f947097-3eca-5f95-b550-f0898edad028",
+    "1094722a-bfe7-5d5a-b650-f2261230a99b",
+    "0b946a4b-433d-56a9-b150-ea15934d476c",
+    "09946725-49e8-5947-af50-e6db882f1d42",
+    "39b1e6f7-43ab-5e2b-b099-8f07060e191a",
+    "35b1e0ab-3f38-5717-b499-957b0a80905e",
+    "31b1da5f-3ac6-5003-b899-9beffd292a92",
+    "28ab106f-79ce-5f25-8391-5a8991344848",
+    "24ab0a23-7e40-5639-bf91-541595a6bf8c",
+    "2aad522c-e821-58be-bd94-5c123038750b",
+    "35ad637d-6fe9-5921-b494-4d8da3fdad10",
+    "b9a5e484-68d7-56cc-ac8b-ed808d4b3a7d",
+    "baa5e617-e9f4-5491-ad8b-ef1d0c2e9cac",
+    "23f1d8b6-0543-5f26-ad33-f85a68509ed7",
+    "25f1dbdc-fe97-5c88-af33-fb9461a4ebf1",
+    "18b3590b-2d6e-5ef9-8bd2-6955922638cc",
+    "4559db6b-27cc-5811-9e92-9ced7cb3c764",
+    "4a59e34a-a476-5ec2-a392-a4fefb972993",
+    "87745041-a32f-5e65-af87-108931343f94",
+    "4759de91-2a05-539b-a092-a0277eed0306",
+    "8a7454fa-2685-57b4-aa87-0878adde6621",
+    "89745367-a9db-5103-ad87-0d4f2efb03f2",
+    "3a0502ed-2d15-551d-887d-8ee1212f731c"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-gerund-participle-constructions",
+   "phase": "surplus",
+   "variant": "nada-mas-infinitive-sequence",
+   "planned": 3,
+   "ids": [
+    "0d946d71-4576-5233-b350-ed4f9586830e",
+    "0e946f04-bdad-51d0-b450-eeec0ff76df9",
+    "0a9468b8-c220-58e4-b050-e8781469e53d"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-gerund-participle-constructions",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "098f9684-bed0-5132-b53f-498ee0daef57",
+    "0a8f9817-3fed-5ef7-b63f-4b2b5fbe5186",
+    "54f84a37-2952-5bb1-8d31-2d3dce3c3cfc",
+    "4ff84258-a3c3-56d8-9031-32144ae66389",
+    "4ef840c5-22a6-5913-9731-3d5fc7908a16",
+    "bbfb2af3-63e7-53bf-a428-ff335dd4e36e",
+    "befd6e43-4a72-5cf5-9f2c-025972d783d8",
+    "c0fd7169-4cab-587f-a12c-05937510bf7a"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-gerund-participle-constructions",
+   "phase": "surplus",
+   "variant": "predicative-participle-object-agreement",
+   "planned": 5,
+   "ids": [
+    "008f8859-3941-5c59-b83f-4e6561f78d28",
+    "52f84711-2719-5027-9331-36ebcc03015a",
+    "befb2fac-e73d-5d0e-9f28-f722da7f09fb",
+    "c4fb391e-e976-5898-9928-ed74d3d35715",
+    "c3fd7622-d001-51ce-9c2b-fd82fa9fd48f"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-gerund-participle-constructions",
+   "phase": "surplus",
+   "variant": "nada-mas-infinitive-sequence",
+   "planned": 4,
+   "ids": [
+    "fe8f8533-3b7a-57e3-ba3f-519f6430c8ca",
+    "ff8f86c6-b825-5e94-b73f-4cc8e3142af9",
+    "c4fd77b5-511e-5f93-9d2b-ff1f798336be",
+    "bdfd6cb0-c956-5f30-9e2c-00bcf3f421a9"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-gradual-gerund",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "3895320e-94ed-57a2-b9ea-44de9fdd0c83",
+    "40977d3d-dcff-556d-b9f7-11717bd33424"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-gradual-gerund",
+   "phase": "surplus",
+   "variant": "ir-gerundio-gradual",
+   "planned": 16,
+   "ids": [
+    "492904b6-0837-5744-bf2a-17285fec13f1",
+    "47290190-0a70-52ce-812a-1a6262254f93",
+    "4b2907dc-05fe-5bba-852a-20d66697c6d7",
+    "4c29096f-871a-597f-862a-2273e57b2906",
+    "4e290c95-84e1-5df5-842a-1f39e341ed64",
+    "4d290b02-03c5-5030-832a-1d9c645e8b35",
+    "4f290e28-1355-50f6-b92a-0d7a6b0a3e1b",
+    "50290fbb-9472-5ebb-ba2a-0f17e9eda04a",
+    "aa8fd556-4bc6-56aa-8bee-db56f6cf4e63",
+    "a98fd3c3-caaa-58e5-8aee-d9b9737974f0",
+    "af8fdd35-d155-5b83-88ee-d67f7a2527d6",
+    "ac8fd87c-4dff-5234-85ee-d1a8f9088a05",
+    "b28fe1ee-54ab-54d2-83ee-ce6effb43ceb",
+    "b2922085-2699-5e09-bfe7-435500d8dfc0",
+    "ad9218a6-a10a-5930-82e7-482c8667f4d5",
+    "b9922b8a-ae62-5e6c-b6e7-34d08ada6c19"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-gradual-gerund",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "d074321d-98b8-572f-9966-e2039ddcbc02"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-gradual-gerund",
+   "phase": "surplus",
+   "variant": "ir-gerundio-gradual",
+   "planned": 20,
+   "ids": [
+    "cf74308a-179b-596a-9866-e0661ef959d3",
+    "cb742a3e-1c0d-507e-9466-d9f2236bd117",
+    "c9742718-19d4-54f4-9266-d6b821329575",
+    "cd742d64-1562-5de0-9666-dd2c1cc01e31",
+    "c3741da6-24f2-5ea6-8c66-cd0a2c50bf9f",
+    "c4741f39-a60f-5c6b-8d66-cea7ab3421ce",
+    "bae111a0-1193-57ba-84f0-8186ad3cff27",
+    "bde11659-9076-59f5-83f0-7fe929e725b4",
+    "bfe1197f-9722-5c93-81f0-7caf27adea12",
+    "c1e11ca5-94e9-5109-bff0-79752574ae70",
+    "c0e11b12-13cc-5344-bef0-77d8a6914c41",
+    "c3e11fcb-9b95-53a7-bdf0-763b35054fde",
+    "c2e11e38-1a78-55e2-bcf0-749eb621edaf",
+    "4ad9a58b-5e17-5c99-b8e8-1b05b7469084",
+    "4bd9a71e-df34-5a5e-b9e8-1ca23a9c69f7",
+    "4ed9abd7-59a5-5585-bce8-2179b2d41940",
+    "4fdbec01-4b4e-586d-b1eb-1af1d2f4e3d4",
+    "53dbf24d-4fc0-5f81-adeb-147dce826c90",
+    "52dbf0ba-cea4-51bc-aceb-12e04f9f0a61",
+    "51dbef27-51fa-5b0b-afeb-17b7d0bba832"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-lo-nominalizer",
+   "phase": "surplus",
+   "variant": "lo-adj-que-intensifier",
+   "planned": 38,
+   "ids": [
+    "f8acfa2d-916c-56f9-982e-9a959b49d908",
+    "f3acf24e-0bdd-5220-9b2e-9f6c20d8ee1d",
+    "f2acf0bb-8f32-5b6f-9e2e-a443a1f58bee",
+    "edace8dc-1b6d-52e6-912e-8f4a15bac3f3",
+    "89492b95-0a60-5abf-bc34-e463d67e43ba",
+    "88492a02-8944-5cfa-bb34-e2c6579ae18b",
+    "85492549-0ed3-51d3-b834-ddefdaf0bafe",
+    "83492223-0c99-5649-b634-dab5d8b77f5c",
+    "9149382d-1345-58e7-b434-d77bcd995532",
+    "8d4b7078-56e5-5f9e-b02c-7de2734934db",
+    "8e4b720b-d801-5d63-b12c-7f7ff22c970a",
+    "874b6706-5d90-523c-a62c-6dc0682b0ab1",
+    "884b6899-dead-5001-a72c-6f5de70e6ce0",
+    "964dbd3a-441b-5b72-a92f-7dce8ef7882b",
+    "934db881-c9aa-504b-a62f-78f7124d619e",
+    "924db6ee-488e-5286-a52f-775a9369ff6f",
+    "8c4dad7c-38fd-51c0-af2f-877c83d95e01",
+    "8b3c62c8-9b99-5982-aa3c-4bfe5ff4a0bf",
+    "8d3c65ee-995f-5df8-a83c-48c45dbb651d",
+    "8f3c6914-a00b-5096-a63c-458a5b82297b",
+    "833c5630-92b4-5b5a-b23c-58e6570fb237",
+    "85292d0b-630a-5b67-b6fd-782bf3a309e6",
+    "86292e9e-dfb4-5218-b3fd-735472866c15",
+    "8b29367d-6543-56f1-b0fd-6e7decf75700",
+    "8a2934ea-e427-592c-affd-6ce06e13f4d1",
+    "7f292399-57ec-51b5-bcfd-81d9fa4ebccc",
+    "882931c4-e660-54b6-b1fd-701a704d3073",
+    "e0d47bea-9baf-50c8-83e3-2854691cfb35",
+    "e1d47d7d-1ccc-5e8d-84e3-29f1e8005d64",
+    "dfd47a57-1f05-5a17-86e3-2d2bea399906",
+    "dcd4759e-a022-57dc-bfe3-21e064aa83f1",
+    "dad47278-a25b-5366-81e3-251a66e3bf93",
+    "dbd4740b-2377-512b-82e3-26b7e5c721c2",
+    "d9d470e5-13e7-5065-8ce3-36d9f0e54bec",
+    "d9d2324e-41f8-572e-90ea-c1f24fa7e387",
+    "ded23a2d-bea3-5ddf-95ea-ca03ca18ce72",
+    "ddd2389a-3d86-501a-94ea-c8664b356c43",
+    "dcd23707-bc69-5255-93ea-c6c9c7df92d0"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-lo-nominalizer",
+   "phase": "surplus",
+   "variant": "lo-adj-que-intensifier",
+   "planned": 26,
+   "ids": [
+    "863f6f7c-18d1-5364-9845-3c88943b13dd",
+    "873f710f-99ee-5129-9945-3e25131e760c",
+    "843f6c56-1698-57da-9e45-46369201d83b",
+    "853f6de9-97b4-559f-9f45-47d310e53a6a",
+    "823f6930-145e-5c50-9c45-42fc8fc89c99",
+    "913f80cd-a50c-5adb-9345-34770c72c326",
+    "833f6ac3-957b-5a15-9d45-44990eabfec8",
+    "15e3a705-d968-5c45-abba-8cd93d94ac5c",
+    "0ee39c00-5ef7-511e-a8ba-8802bc780e8b",
+    "1be3b077-e486-55f7-a5ba-832b36e8f976",
+    "a3dc37ca-b675-5f2e-a1b2-f812dc98d91f",
+    "a4dc395d-3791-5cf3-a2b2-f9af5b7c3b4e",
+    "a0dc3311-331f-55df-a6b3-00235709c40a",
+    "27df462d-228f-5d3d-99b5-27e174f152fc",
+    "23df3fe1-2701-5451-95b5-216d707edbb8",
+    "21df3cbb-293a-5fdb-97b5-24a772b8175a",
+    "1fdf3995-19aa-5f15-a1b5-34c96c0c6474",
+    "20df3b28-a81e-5216-96b5-230af3d4b52b",
+    "91d79e46-ff9b-5026-97c1-f13a85a6973f",
+    "9dd7b12a-f244-5aea-a3c2-0496784f3173",
+    "8fd79b20-fd62-549c-95c1-ee00836d5b9d",
+    "9ed7b2bd-7360-58af-a4c2-0633f73293a2",
+    "d4b177b0-c137-59e8-8ac6-37f4c02e9dd9",
+    "ef99f34b-1619-510d-b614-1881a9e244c0",
+    "ee99f1b8-94fc-5348-b514-16e42afee291",
+    "f299f804-996f-5a5c-b114-10702f7159d5"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-nosotros-imperative",
+   "phase": "surplus",
+   "variant": "nosotros-imperative-negative",
+   "planned": 11,
+   "ids": [
+    "78da7da6-62ff-5a1a-918a-43864b78e153",
+    "76da7a80-60c6-5e90-8f8a-404c493fa5b1",
+    "7ada80cc-6539-55a4-8b8a-39d84db21cf5",
+    "7cda83f2-6772-512e-8d8a-3d124feb5897",
+    "7eda8718-69ab-5cb8-878a-336452249439",
+    "caef24a3-f8e0-5ee5-8f0a-09a96f759d80",
+    "ccef27c9-fb19-5a6f-910a-0ce371aed922",
+    "d0ef2e15-ff8c-5183-8d0a-066f76215066",
+    "d2ef313b-01c5-5d0d-8709-fcc1785a8c08",
+    "daf5f998-41a0-5026-bb11-6e0a656c0c23",
+    "dcf5fcbe-3f67-549c-b911-6ad06332d081"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-nosotros-imperative",
+   "phase": "surplus",
+   "variant": "nosotros-imperative-affirmative-no-pronoun",
+   "planned": 10,
+   "ids": [
+    "77da7c13-e1e3-5c55-908a-41e9c82307e0",
+    "79da7f39-e41c-57df-928a-4523ca5c4382",
+    "7bda825f-e655-5369-8c8a-3b75cc957f24",
+    "7dda8585-e88e-5ef3-8e8a-3eafcecebac6",
+    "7fda88ab-eac8-5a7d-888a-3501d107f668",
+    "c9ef2310-77c3-5120-8e0a-080cf0923b51",
+    "cbef2636-79fd-5caa-900a-0b46f2cb76f3",
+    "cdef295c-7c36-5834-8a0a-0198f504b295",
+    "cfef2c82-7e6f-53be-8c0a-04d2f73dee37",
+    "d1ef2fa8-80a8-5f48-8609-fb24f97729d9"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-nosotros-imperative",
+   "phase": "surplus",
+   "variant": "nosotros-imperative-affirmative-no-pronoun",
+   "planned": 8,
+   "ids": [
+    "8ce85bf5-fc1b-5f9f-b6e4-21e334fcf052",
+    "25dcdff4-bc17-5c4e-aff5-89e2d7d11cdb",
+    "27dce31a-b9de-50c4-adf5-86a8d597e139",
+    "22dcdb3b-38c1-52ff-b4f5-91f35b26f64e",
+    "21dcd9a8-b7a5-553a-b3f5-9056dc43941f",
+    "96d54312-89b8-5ef2-a4ed-f37ef37f702b",
+    "93d53e59-0f47-53cb-a1ed-eea776d5499e",
+    "9cd54c84-7e9a-5540-aaed-fd2ce8614601"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-nosotros-imperative",
+   "phase": "surplus",
+   "variant": "nosotros-imperative-negative",
+   "planned": 8,
+   "ids": [
+    "92e86567-02c7-523d-ace4-11c13ba8a338",
+    "8fe860ae-8856-5716-a9e4-0ceac370f3ef",
+    "93e866fa-83e3-5002-ade4-135ebefe7cab",
+    "94e8688d-0500-5dc7-aee4-14fb3de1deda",
+    "90e86241-0972-54db-aae4-0e874254561e",
+    "8de85d88-861c-5b8c-a7e4-09b0c137b84d",
+    "8ee85f1b-0739-5951-a8e4-0b4d401b1a7c",
+    "28dce4ad-3afa-5e89-aef5-8845547b4368"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-nuanced-ser-estar",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 28,
+   "ids": [
+    "30cb7649-907d-590f-94a1-e3935cfb7a82",
+    "2dcb7190-0d27-5fc0-91a1-debcdbdedcb1",
+    "34cb7c95-94ef-5023-90a1-dd1f616df1c6",
+    "33cb7b02-13d3-525e-8fa1-db82e28a8f97",
+    "31cb77dc-119a-56d4-8da1-d848e05153f5",
+    "38cb82e1-9962-5737-8ca1-d6ab65e0690a",
+    "37cb814e-1845-5972-8ba1-d50ee6fd06db",
+    "c3486ef2-ed9e-56e2-b229-3c6ea6749fd3",
+    "c4487085-6ebb-54a7-b329-3e0b25580202",
+    "c1486bcc-eb65-5b58-b029-3934a43b6431",
+    "c2486d5f-6c81-591d-b129-3ad1231ec660",
+    "bf4868a6-f210-5df6-ae29-35faaae71717",
+    "c0486a39-732d-5bbb-af29-379729ca7946",
+    "bd486580-efd7-526c-ac29-32c0a8addb75",
+    "cb487b8a-e4b9-58ba-ba29-4956af598e5b",
+    "bd4626e9-7f4b-5d49-b827-0965e7dad7d0",
+    "bc462556-fe2e-5f84-b727-07c868f775a1",
+    "bb4623c3-8184-58d3-ba27-0c9fea141372",
+    "c0462ba2-f9bc-5870-bb27-0e3c6d69ece5",
+    "ba43e399-944d-5cff-8124-0cb3ce65c022",
+    "be43e9e5-98c0-5413-bd24-063fd2d83766",
+    "bf43eb78-19dc-51d8-b623-faf4562e10d9",
+    "c055362c-4cfa-57da-8321-d336e62b05a7",
+    "c3553ae5-cbdd-5a15-8221-d19962d52c34",
+    "c2553952-4ac1-5c50-8121-cffce3f1ca05",
+    "594361d9-b37b-5c21-b1bb-aa9d149f9bf0",
+    "435e888e-2670-52bc-9579-c3e0644594c1",
+    "475e8eda-21fd-5ba8-9979-ca5468b80c05"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-nuanced-ser-estar",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 21,
+   "ids": [
+    "b421881e-a3f2-5da8-9f59-2c6495301b35",
+    "aa217860-9d47-5b0a-a959-3c86a04e455f",
+    "2528f5c6-b8f5-5d5e-a856-2fb25c256847",
+    "2728f8ec-b249-5ac0-aa56-32ec5579b561",
+    "2928fc12-b482-564a-ac56-362657b2f103",
+    "2b28ff38-bfa1-5ffc-9e56-1f9062d11b2d",
+    "be26150a-c985-5600-ad53-fb0c3e3dd955",
+    "bf26169d-4aa2-53c5-ae53-fca9bd213b84",
+    "ba260ebe-cdf7-5d14-a953-f49839cb6211",
+    "bb261051-4f14-5ad9-aa53-f635b8aec440",
+    "b8260b98-d031-589e-ab53-f7d23c049db3",
+    "b9260d2b-514d-5663-ac53-f96fbae7ffe2",
+    "b6260872-d26a-5428-a553-ee244722c7dd",
+    "b7260a05-5387-51ed-a653-efc1c6062a0c",
+    "302d8445-14f3-5a6f-b350-f9830df2f9d2",
+    "2f2d82b2-93d6-5caa-b250-f7e68f0f97a3",
+    "2e2d811f-12ba-5ee5-b150-f6490bb9be30",
+    "2c2d7df9-1966-5183-af50-f30f12657116",
+    "2b2d7c66-9849-53be-ae50-f17293820ee7",
+    "2a2d7ad3-172c-55f9-ad50-efd5102c3574",
+    "292d7940-9610-5834-ac50-ee389148d345"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-nuanced-ser-estar",
+   "phase": "surplus",
+   "variant": "ser-estar-meaning-shift-adjectives",
+   "planned": 6,
+   "ids": [
+    "20bd6218-cc97-59ba-94b7-1286be8f8c17",
+    "23bd66d1-4b7a-5bf5-93b7-10e93b39b2a4",
+    "25bd69f7-5226-5e93-91b7-0daf39007702",
+    "27bd6d1d-4fec-5309-8fb7-0a7536c73b60",
+    "26bd6b8a-ced0-5544-8eb7-08d8b7e3d931",
+    "19bd5713-5698-55a7-8db7-073b4657dcce"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-passive-voice",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "7e2cfe8e-92b8-5626-90af-e57a682b432f",
+    "56c3af61-b5b5-5f75-bddc-51b9da282424",
+    "804d932b-8954-5131-b319-0dadf5df0e3c"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-passive-voice",
+   "phase": "surplus",
+   "variant": "estar-participle-resultant-state",
+   "planned": 21,
+   "ids": [
+    "7a2cf842-8560-50ea-9caf-f8d65ad3dd63",
+    "762cf1f6-89d3-57fe-98af-f2625f4654a7",
+    "782cf51c-8327-5560-9aaf-f59c589aa1c1",
+    "792cf6af-0444-5325-9baf-f739d77e03f0",
+    "7f2d0021-13d4-53eb-91af-e717e70ea55e",
+    "58c3b287-bc61-5213-bbdc-4e7fd7eee882",
+    "5ac3b5ad-ba27-5689-b9dc-4b45d5b5ace0",
+    "4cc39fa3-c0d3-5927-b7dc-480be5464e4e",
+    "c2bc0aa0-0239-5454-b1d4-b9b876f31545",
+    "c3bc0c33-8356-5219-b2d4-bb55f5d67774",
+    "c4bc0dc6-0472-5fde-b3d4-bcf2792c50e7",
+    "c7bc127f-7ee3-5b05-b6d4-c1c9f1640030",
+    "c8bc1412-0000-58ca-b7d4-c36674b9d9a3",
+    "cbbc18cb-8c3b-5041-aad4-ae6dfebb65fc",
+    "c7be5116-ef70-5028-aad7-b9a404528015",
+    "c6be4f83-72c6-5977-add7-be7b856f1de6",
+    "c5be4df0-f1a9-5bb2-acd7-bcde068bbbb7",
+    "ccbe58f5-74ff-5501-a7d7-b4cd7ec36b00",
+    "c9be543c-f61c-52c6-a8d7-b66a02194473",
+    "d0be5f41-67a8-5fc5-b3d7-c8298c1ad0cc",
+    "c6cb1b76-4927-59c2-ade4-8b0e1dc797c3"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-passive-voice",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 24,
+   "ids": [
+    "63a60ff3-cb3e-59d3-a538-516f44408192",
+    "62a60e60-4a22-5c0e-a438-4fd2c55d1f63",
+    "65a61319-c905-5e49-a338-4e35420745f0",
+    "6aa61af8-5307-5a36-9c38-42eace420deb",
+    "a16acff9-2ad1-52af-aadb-464317e22f42",
+    "a06ace66-a9b5-54ea-a9db-44a698fecd13",
+    "9e6acb40-a77c-5960-a7db-416c96c59171",
+    "a56ad645-2f44-59c3-a6db-3fcf1c54a686",
+    "a26ad18c-abee-5074-a3db-3af89b3808b5",
+    "a86adafe-b29a-5312-a1db-37bea1e3bb9b",
+    "276de182-036b-5e84-9cd3-ab08b273e4c1",
+    "246ddcc9-8016-5535-a1d3-b31935c9be34",
+    "216dd810-0132-52fa-a2d3-b4b6b91f97a7",
+    "2d70298b-71bf-581d-96d5-de11beb6b1c0",
+    "2c7027f8-f0a2-5a58-95d5-dc743fd34f91",
+    "30702e44-f515-516c-91d5-d6004445c6d5",
+    "337032fd-786a-5abb-94d5-dad7c56264a6",
+    "3270316a-f74e-5cf6-93d5-d93a467f0277",
+    "24701b60-e7bd-5c30-9dd5-e95c48b83e19",
+    "34727327-3d26-5f37-99e3-7dfb203bee76",
+    "357274ba-b9d1-55e8-96e3-79249f1f50a5",
+    "2f726b48-c07c-5886-94e3-75ea9ce61503",
+    "2b7264fc-b325-534a-a0e3-8946aa3d7acf",
+    "e7e11d6c-37fe-5972-83a0-a4ae9830c0af"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-passive-voice",
+   "phase": "surplus",
+   "variant": "estar-participle-resultant-state",
+   "planned": 9,
+   "ids": [
+    "66a614ac-45af-54fa-a838-5646c9cf96a7",
+    "64a61186-47e9-5084-a238-4c98c323e3c1",
+    "68a617d2-4376-5970-a638-530cc7965b05",
+    "69a61965-c493-5735-a738-54a94679bd34",
+    "9f6accd3-2898-5725-a8db-430915a8f3a0",
+    "a36ad31f-2d0b-5e39-a4db-3c951a1b6ae4",
+    "a96adc91-33b6-50d7-a2db-395b20c71dca",
+    "256dde5c-05a5-5a0e-9ed3-ae42b4ad2063",
+    "286de315-8488-5c49-9dd3-aca5315746f0"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-past-subjunctive",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 2,
+   "ids": [
+    "1f65dd18-d9bd-56aa-ac77-7836e8b9e757",
+    "2565e68a-dbf6-5234-a677-6e88e20e3471"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-past-subjunctive",
+   "phase": "surplus",
+   "variant": "past-tense-trigger-subjunctive",
+   "planned": 39,
+   "ids": [
+    "966d5432-f084-5a46-977e-dafaad75f8c7",
+    "976d55c5-71a1-580b-987e-dc972c595af6",
+    "946d510c-ee4b-5ebc-957e-d7c0ab3cbd25",
+    "956d529f-6f67-5c81-967e-d95d2a201f54",
+    "9a6d5a7e-e32d-550a-a37e-ee56b1e8700b",
+    "9b6d5c11-6449-52cf-a47e-eff330cbd23a",
+    "ac6b383d-7dbe-5999-a17c-ae65ea69b980",
+    "aa6b3517-7ff8-5523-a37c-b19feca2f522",
+    "a96b3384-fedb-575e-a27c-b0026dbf92f3",
+    "a86b31f1-794c-5285-a57c-b4d9eedc30c4",
+    "a76b305e-f82f-54c0-a47c-b33c6ff8ce95",
+    "a66b2ecb-7b85-5e0f-a77c-b813f1156c66",
+    "a56b2d38-fa69-504a-a67c-b67672320a37",
+    "a46b2ba5-86a3-57c1-997c-a17df34ea808",
+    "a36b2a12-0587-59fc-987c-9fe0746b45d9",
+    "a668f034-0f6b-5000-a779-acdcde26ec81",
+    "a768f1c7-9088-5dc5-a879-ae795d0a4eb0",
+    "a868f35a-11a4-5b8a-a979-b016e0602823",
+    "a968f4ed-92c1-594f-aa79-b1b35f438a52",
+    "a268e9e8-13de-5714-a379-a668e29963c5",
+    "a368eb7b-94fa-54d9-a479-a805617cc5f4",
+    "a468ed0e-1617-529e-a579-a9a2e4d29f67",
+    "9e68e39c-1850-5e28-9f79-9ff4e70bdb09",
+    "9f68e52f-996d-5bed-a079-a19165ef3d38",
+    "2065deab-5ad9-546f-ad77-79d3679d4986",
+    "2265e1d1-58a0-58e5-ab77-769965640de4",
+    "2165e03e-d783-5b20-aa77-74fce680abb5",
+    "2465e4f7-5f4c-5b83-a977-735f632ad242",
+    "1865d213-63be-5297-a577-6ceb7082380e",
+    "1765d080-e2a1-54d2-a477-6b4ef19ed5df",
+    "493ea2e3-18e3-5e87-ac85-5d4b3be4f0a6",
+    "829fb6af-3530-5b73-a1fa-8f3fe407c3e2",
+    "839fb842-b1da-5224-9efa-8a6862eb2611",
+    "809fb389-2e85-58d5-a3fa-9279e640ff84",
+    "7f9fb1f6-ad68-5b10-a2fa-90dc675d9d55",
+    "7e9fb063-30be-545f-a5fa-95b3e87a3b26",
+    "7d9faed0-afa1-569a-a4fa-94166996d8f7",
+    "8c9fc66d-3bdc-5e11-97fa-7f1deab376c8",
+    "8b9fc4da-babf-504c-96fa-7d806bd01499"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-past-subjunctive",
+   "phase": "surplus",
+   "variant": "past-tense-trigger-subjunctive",
+   "planned": 41,
+   "ids": [
+    "7869858d-1d92-5e51-9e91-f04d885bb310",
+    "69696df0-9157-56da-ab92-05461908f24f",
+    "e370e9c3-2be8-5b69-a98e-f6d5518a3bc4",
+    "e270e830-aacc-5da4-a88e-f538d2a6d995",
+    "e570ece9-2e22-56f3-ab8e-fa0f53c37766",
+    "e770f00f-2776-5455-ad8e-fd494d17c480",
+    "e670ee7c-a659-5690-ac8e-fbacce346251",
+    "e970f335-29af-5fdf-af8f-00834f510022",
+    "e870f1a2-a893-521a-ae8e-fee6d06d9df3",
+    "eb70f65b-34cd-5991-a18e-e9ed5a6f2a4c",
+    "ea70f4c8-b3b1-5bcc-a08e-e850db8bc81d",
+    "fd6ed41a-bd95-51d0-af8c-c3cc45476ec5",
+    "fe6ed5ad-3eb2-5f95-b08c-c569c42ad0f4",
+    "fb6ed0f4-bfce-5d5a-b18c-c7064780aa67",
+    "fc6ed287-40eb-5b1f-b28c-c8a3c6640c96",
+    "f96ecdce-c208-58e4-ab8c-bd5840d4f781",
+    "fa6ecf61-4324-56a9-ac8c-bef5bfb859b0",
+    "f76ecaa8-c441-546e-ad8c-c092430e3323",
+    "f86ecc3b-455e-5233-ae8c-c22fc1f19552",
+    "f56ec782-c67a-5ff8-a78c-b6e44e2c5d4d",
+    "f66ec915-4797-5dbd-a88c-b881cd0fbf7c",
+    "6f764355-0903-563f-b589-c24386ada6c2",
+    "6d76402f-06ca-5ab5-b389-bf0984746b20",
+    "6c763e9c-85ad-5cf0-b289-bd6c059108f1",
+    "6b763d09-0d76-5d53-b189-bbcf8b201e06",
+    "697639e3-0b3d-51c9-af89-b89588e6e264",
+    "77764fed-11e8-5467-ad89-b55b8f92954a",
+    "a41b3502-cd19-5dc6-a30b-ea0ab4d0fa37",
+    "a01b2eb6-c8a7-56b2-a70b-f07eb05e82f3",
+    "a51b3695-4e36-5b8b-a40b-eba733b45c66",
+    "d30035a8-48ce-5208-872f-bf247caea251",
+    "f62f4fbb-5252-5045-88e9-724990152c00",
+    "f92f5474-d5a7-5994-83e9-6a3815a44115",
+    "fa2f5607-56c4-5759-84e9-6bd59487a344",
+    "fb2f579a-d7e1-551e-85e9-6d7217dd7cb7",
+    "fc2f592d-58fd-52e3-86e9-6f0f96c0dee6",
+    "f82f52e1-548b-5bcf-8ae9-7583924e67a2",
+    "f52f4e28-d135-5280-87e9-70ac1131c9d1",
+    "f72f514e-d36e-5e0a-89e9-73e6136b0573",
+    "f22f496f-5fa9-5581-bce9-5eed9d6c91cc",
+    "8a81a89f-e169-5cf9-9890-1085aafc4264"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-perception-verbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "75fba691-7d7b-5a7f-a3ac-11e3d1fd3f4a",
+    "338f1e39-cb73-50d7-abb0-92fb0a3d6462",
+    "0e6d6c04-896f-5014-9dba-49b872b618dd",
+    "f4888c6d-2199-532b-b697-3e471c646d26"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-perception-verbs",
+   "phase": "surplus",
+   "variant": "perception-verb-gerund",
+   "planned": 24,
+   "ids": [
+    "c9f85940-f1d3-5d06-9cd3-caea679b448b",
+    "cdf85f8c-ed60-55f2-a0d3-d15e6c0dbbcf",
+    "d0f86445-6c44-582d-9fd3-cfc1e8b7e25c",
+    "d4f86a91-67d1-5119-a3d3-d635db607c90",
+    "72fba1d8-fa25-5130-a0ac-0d0c50e0a179",
+    "77fba9b7-7fb4-5609-9dac-0835d4367aec",
+    "6bfb96d3-8426-5d1d-99ac-01c1c6df1520",
+    "6afb9540-030a-5f58-98ac-002447fbb2f1",
+    "61f4cb50-e995-588e-9bae-41b28e5dcbab",
+    "69f4d7e8-f27a-56b6-93ae-34ca8578dd23",
+    "e4030f80-0eb3-5942-91b3-797e5b739c4f",
+    "ea0318f2-10ec-54cc-8bb3-6fd054c7e969",
+    "ee031f3e-0395-5f90-97b3-832c50557225",
+    "368f22f2-4ec9-5a26-a6b0-8aea8fcc7977",
+    "398f27ab-c055-5725-b1b0-9ca910e91748",
+    "2b47be65-3761-5b1d-b6d8-3e4187331334",
+    "2947bb3f-399a-56a7-b8d8-417b896c4ed6",
+    "2d4a0022-8693-532a-8cda-9e76b30b7b73",
+    "b32685f7-2a07-55b1-b5eb-5d9d74bd9e04",
+    "b426878a-ab23-5376-b6eb-5f3af8137777",
+    "a7267313-1caf-5075-81eb-70f979301548",
+    "50989c1e-2c80-5612-99bd-8aee5e238013",
+    "51989db1-ad9c-53d7-9abd-8c8bdd06e242",
+    "5498a26a-30f2-5d26-95bd-847a6295f757"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-perception-verbs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "cf1fea31-12a6-5f8d-9cbb-e7517268c964"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-perception-verbs",
+   "phase": "surplus",
+   "variant": "perception-verb-gerund",
+   "planned": 27,
+   "ids": [
+    "bd63cf93-df52-5f11-852b-d87df4e7181c",
+    "c063d44c-59c3-5a38-882b-dd5471913ea9",
+    "bc63ce00-5e35-514c-842b-d6e07603b5ed",
+    "bf63d2b9-e18b-5a9b-872b-dbb7f72053be",
+    "be63d126-606e-5cd6-862b-da1a783cf18f",
+    "c263d772-5bfc-55c2-8a2b-e08e73ca7a4b",
+    "c363d905-dd18-5387-8b2b-e22bf2addc7a",
+    "c163d5df-dadf-57fd-892b-def1f074a0d8",
+    "c563dc2b-d66d-50e9-8d2b-e565ec022994",
+    "c71fdd99-09c1-5165-a4bb-f4397b4db7ec",
+    "c51fda73-0bfa-5cef-a6bb-f7737d86f38e",
+    "c41fd8e0-8ade-5f2a-a5bb-f5d6fea3915f",
+    "ca1fe252-8d17-5ab4-9fbb-ec28f7f7de79",
+    "c91fe0bf-106d-5403-a2bb-f0ff79147c4a",
+    "ce222735-f931-58c3-9fbe-f75fb8cae21e",
+    "cb22227c-75db-5f74-9cbe-f28837ae444d",
+    "c7221c30-7169-5860-a0be-f8fc333bcd09",
+    "d522323a-80f9-5926-96be-e8da31029167",
+    "d3246dab-e667-5497-98c1-28cb462a4cee",
+    "d2246c18-654b-56d2-97c1-272ec746eabf",
+    "d52470d1-e42e-590d-96c1-259143f1114c",
+    "d72473f7-eada-5bab-94c1-225741b7d5aa",
+    "d6247264-69bd-5de6-93c1-20bac2d4737b",
+    "cb246113-dd83-566f-a0c1-35b33d455e66",
+    "d824758a-6784-525c-91c1-1d80c09b37d9",
+    "5b27825a-9d33-5bb2-94c4-2d8ebeed2b8b",
+    "56277a7b-2089-5501-8fc4-257d4009c95c"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-quantifiers-advanced",
+   "phase": "surplus",
+   "variant": "algo-adjective-attenuating",
+   "planned": 23,
+   "ids": [
+    "80970576-87dd-57d8-8d00-6db4c6c69f5d",
+    "81970709-08f9-559d-8e00-6f5145aa018c",
+    "7e970250-8a16-5362-8f00-70eec8ffdaff",
+    "b0ca146c-9d41-5e80-8ea9-44bc6c8041c9",
+    "8d9719ed-0487-5e89-9200-75c538529bc0",
+    "adca0fb3-22d0-5359-8ba9-3fe5efd61b3c",
+    "aeca1146-a3ed-511e-8ca9-4182732bf4af",
+    "b8ca2104-a626-5ca8-86a9-37d4639b5341",
+    "3bc2a078-883e-5eca-8dab-7fd62020fabf",
+    "41c2a9ea-8a77-5a54-87ab-7628197547d9",
+    "3ec2a531-0722-5105-8cab-7e399ccb214c",
+    "38c29bbf-16b2-51cb-82ab-6e1791acf722",
+    "45c4eecd-fb04-5f77-83ae-7aebb64038fa",
+    "43c4eba7-f8cb-53ed-81ae-77b1b406fd58",
+    "b3bd4d32-3de5-5d88-bdb0-adf474da00fd",
+    "bcbd5b5d-b61c-5d25-86b0-bc79ead874a4",
+    "61764d53-50ce-5db7-a860-0c9b0562f3ae",
+    "68765858-c6cc-51ca-af60-17e67d9aa2f7",
+    "6d766037-4c5b-56a3-ac60-130ff80b8de2",
+    "dd4d3071-ab0a-599d-8306-72a1f2811604",
+    "dc4d2ede-29ed-5bd8-8206-7104739db3d5",
+    "da4d2bb8-2c26-5762-8406-743e75d6ef77",
+    "3606df9d-271b-5ff3-acc3-eabfca5ee556"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-quantifiers-advanced",
+   "phase": "surplus",
+   "variant": "cualquier-before-noun",
+   "planned": 4,
+   "ids": [
+    "b2ca1792-9f7a-5a0a-90a9-47f66eb97d6b",
+    "b9ca2297-2742-5a6d-87a9-3971e27eb570",
+    "3cc2a20b-095b-5c8f-8eab-81739f045cee",
+    "37c29a2c-9596-5406-81ab-6c7a12c994f3"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-quantifiers-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 8,
+   "ids": [
+    "f13a360a-70ae-5da6-b466-d94ab4d4e43f",
+    "f9a35ee1-ea65-5033-84ec-db6f3132c56e",
+    "f6a35a28-670f-56e4-81ec-d698b016279d",
+    "fda5a3c4-567f-5e42-bcef-0b3ecdfdb68f",
+    "00a5a87d-d562-507d-bbef-09a14aa7dd1c",
+    "f9a59d78-5af1-5556-b8ef-04cac98b3f4b",
+    "fca5a231-d9d5-5791-b7ef-032d463565d8",
+    "ffb7358e-3741-577a-98c6-86b6ae85fcf3"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-quantifiers-advanced",
+   "phase": "surplus",
+   "variant": "algo-adjective-attenuating",
+   "planned": 8,
+   "ids": [
+    "ec3a2e2b-eb1f-58cd-b766-de212d0c9388",
+    "e83a27df-e6ad-51b9-bb66-e495289a1c44",
+    "71a04a32-79d8-5b10-88e9-d6ac0321218d",
+    "6fa0470c-7c11-569a-8ae9-d9e6055a5d2f",
+    "6ea04579-ff67-5fe9-85e9-d1d57d920c78",
+    "6ba040c0-8084-5dae-86e9-d37200e7e5eb",
+    "79a056ca-82bd-5938-80e9-c9c4fa3c3305",
+    "f8a35d4e-6948-526e-83ec-d9d2b24f633f"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-quantifiers-advanced",
+   "phase": "surplus",
+   "variant": "cualquier-before-noun",
+   "planned": 4,
+   "ids": [
+    "f03a3477-ef92-5fe1-b366-d7ad317f0acc",
+    "ee3a3151-ed58-5457-b966-e15b2f45cf2a",
+    "70a0489f-fd2e-545f-8be9-db83843dbf5e",
+    "6ca04253-01a1-5b73-87e9-d50f7fcb481a"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-quantifiers-advanced",
+   "phase": "surplus",
+   "variant": "partitive-fraction",
+   "planned": 2,
+   "ids": [
+    "ef3a32e4-6e75-521c-b266-d610b29ba89d",
+    "e73a264c-6590-53f4-ba66-e2f8a9b6ba15"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-relative-clauses-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "1c784a9f-e785-5a9f-99dd-ac33e7975b46",
+    "9e7b55dc-55d9-5438-8be0-a0d47db69981",
+    "f285234c-3285-53a6-8d02-c45a524460fb",
+    "b4917de9-1b0d-5cf1-987c-0ebdcdffed28"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-relative-clauses-advanced",
+   "phase": "surplus",
+   "variant": "prep-article-que-relative",
+   "planned": 22,
+   "ids": [
+    "958b6c05-30cb-5ee9-b099-a5d5fe88bc80",
+    "928b674c-b1e7-5cae-b199-a77281de95f3",
+    "948b6a72-afae-5124-af99-a4387fa55a51",
+    "938b68df-3304-5a73-b299-a90f00c1f822",
+    "908b6426-ab3c-5a10-b399-aaac8417d195",
+    "918b65b9-2c58-57d5-b499-ac4902fb33c4",
+    "3376303d-9008-5c8f-a0e6-0aa3c77690b2",
+    "32762eaa-0eeb-5eca-9fe6-090648932e83",
+    "30762b84-0cb2-5340-9de6-05cc4659f2e1",
+    "2f7629f1-947b-53a3-9ce6-042fcbe907f6",
+    "2d7626cb-9241-5819-9ae6-00f5c9afcc54",
+    "2c762538-1125-5a54-99e5-ff584acc6a25",
+    "2b7623a5-98ed-5ab7-98e5-fdbbd05b7f3a",
+    "197845e6-68a2-5864-92dd-a0e862084631",
+    "18784453-ebf8-51b3-95dd-a5bfe324e402",
+    "1b78490c-6669-5cda-98dd-aa9668b3f917",
+    "2178527e-7187-568c-8add-94006aed34b9",
+    "9f7b576f-d6f5-51fd-8ce0-a271fc99fbb0",
+    "a17b5a95-d92f-5d87-8ee0-a5abfed33752",
+    "9c7b52b6-5c84-56d6-89e0-9d9a84624c67",
+    "a77b6407-ce10-53d5-94e0-af59057eea38",
+    "9569fe90-af8f-5dd2-8eed-723e50ecedb7"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-relative-clauses-advanced",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 4,
+   "ids": [
+    "9d729b95-48f1-5e0f-adc3-8a03beeb14c2",
+    "fea53cba-25c6-5962-bda6-5ebe66fe467b",
+    "fca53994-238d-5dd8-bba6-5b8464c50ad9",
+    "5f19c1e5-7a40-54d7-b261-f63b38276b0a"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-relative-clauses-advanced",
+   "phase": "surplus",
+   "variant": "prep-article-que-relative",
+   "planned": 6,
+   "ids": [
+    "7183cd4c-a2ef-56e0-a03d-3e9c4ad677d1",
+    "7283cedf-240c-54a5-a13d-4039c9b9da00",
+    "a87968ab-7fc3-527f-b4cb-19f3a7af38b6",
+    "ae79721d-81fc-5e09-aecb-1045a10385d0",
+    "97729223-4b2b-5999-a7c3-8055c1245064",
+    "99729549-4d64-5523-a9c3-838fc35d8c06"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-reported-speech-backshift",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "36b5f9a8-9a05-5a8e-ba78-2172e8240823",
+    "4827994a-d346-57c8-8117-3b849d8e8aa5",
+    "cad55fdb-48a5-59e3-8624-4a5faa190fba"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-reported-speech-backshift",
+   "phase": "surplus",
+   "variant": "future-to-conditional",
+   "planned": 16,
+   "ids": [
+    "3ab5fff4-9592-537a-be78-27e6ec967f67",
+    "35b5f815-1d5a-53dd-b578-19617225947c",
+    "37b5fb3b-1b21-5853-bb78-230f67076a52",
+    "c489464d-c1fa-5be3-a5d6-146f7b19c4a6",
+    "be893cdb-bb4e-5945-a7d6-17a9746e11c0",
+    "bf893e6e-3c6a-570a-a8d6-1946f7c3eb33",
+    "b98934fc-4789-50bc-9ad6-02b002e2155d",
+    "3281a4b2-2bda-5e68-9bd8-410435411565",
+    "2e819e66-304d-557c-97d8-3a9030ce9e21",
+    "2f819ff9-b169-5341-98d8-3c2dafb20050",
+    "be84bfad-9382-5563-9fdb-52afdaf0f50e",
+    "bd84be1a-1265-579e-9edb-51125c0d92df",
+    "457d456d-f692-54c9-a2c8-7485c7790bb0",
+    "407d3d8e-7103-5ff0-a5c8-795c4d0820c5",
+    "417d3f21-f21f-5db5-a6c8-7af9cbeb82f4",
+    "3e7d3a68-733c-5b7a-a7c8-7c964f415c67"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-reported-speech-backshift",
+   "phase": "surplus",
+   "variant": "preterite-perfect-to-pluperfect",
+   "planned": 1,
+   "ids": [
+    "c0894001-bd87-54cf-a9d6-1ae376a74d62"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-reported-speech-backshift",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 22,
+   "ids": [
+    "6690b1e1-a2a8-5aef-8a21-d1d391395252",
+    "6790b374-23c5-58b4-8321-c688148f2bc5",
+    "6990b69a-25fe-543e-8521-c9c216c86767",
+    "5b90a090-2837-5fc8-bf21-c0141901a309",
+    "d8c2c1ab-aa1b-58f3-898a-69dfc5181a22",
+    "dec2cb1d-a370-5655-8b8a-6d19c75155c4",
+    "d1c2b6a6-2faa-5dcc-be8a-58204ce06ad9",
+    "60c5d65a-1635-5702-818c-99ae8178a683",
+    "61c5d7ed-9752-54c7-828c-9b4b005c08b2",
+    "5ac5cce8-186f-528c-bb8c-900083b1e225",
+    "5bc5ce7b-998b-5051-bc8c-919d02954454",
+    "58c5c9c2-0d50-58da-898c-a6968a5d950b",
+    "46c7ec03-8489-509b-bb8f-9b371c0a5c02",
+    "4dca359f-5065-5f59-867d-987559878634",
+    "4eca3732-d181-5d1e-877d-9a12dcdd5fa7",
+    "48ca2dc0-cad6-5a80-897d-9d4cd631acc1",
+    "49ca2f53-4bf2-5845-8a7d-9ee955150ef0",
+    "4aca30e6-cd0f-560a-8b7d-a086d86ae863",
+    "55ca4237-594a-5d81-be7d-8b8d626c74bc",
+    "d43b04de-243c-58e8-8d26-f194b706367d",
+    "d73b0997-ac04-594b-8c26-eff733b05d0a",
+    "d53b0671-a558-56ad-8e26-f33135e998ac"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-reported-speech-backshift",
+   "phase": "surplus",
+   "variant": "preterite-perfect-to-pluperfect",
+   "planned": 9,
+   "ids": [
+    "6390ad28-1f52-51a0-8721-ccfc101cb481",
+    "6a90b82d-a71a-5203-8621-cb5f95abc996",
+    "5c90a223-a954-5d8d-8021-c1b197e50538",
+    "dac2c4d1-a7e2-5d69-878a-66a5c2dede80",
+    "d9c2c33e-26c5-5fa4-868a-650843fb7c51",
+    "d7c2c018-28ff-5b2e-888a-68424634b7f3",
+    "dcc2c7f7-a5a9-51df-8d8a-7053c98a9166",
+    "dbc2c664-248c-541a-8c8a-6eb64aa72f37",
+    "5ec5d334-13fc-5b78-bf8c-96747f3f6ae1"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-se-middle-accidental",
+   "phase": "surplus",
+   "variant": "accidental-se-dative",
+   "planned": 12,
+   "ids": [
+    "36fb9981-cae1-513d-a083-8721f8513844",
+    "2ffb8e7c-478c-57ee-a583-8f32801988fb",
+    "30fb900f-c8a8-55b3-a683-90cffefceb2a",
+    "aa030a4f-e21d-5c7d-a381-4f4146e9baf0",
+    "a90308bc-6101-5eb8-a281-4da4c80658c1",
+    "ac030d75-e456-5807-a581-527b4922f692",
+    "ab030be2-633a-5a42-a481-50deca3f9463",
+    "a6030403-e690-5391-9f81-48cd4b5c3234",
+    "a5030270-6573-55cc-9e81-4730cc78d005",
+    "a8030729-e8c9-5f1b-a181-4c074d956dd6",
+    "a7030596-67ac-5156-a081-4a6aceb20ba7",
+    "b20316e7-d938-5e55-ab81-5c294fcea978"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-se-middle-accidental",
+   "phase": "surplus",
+   "variant": "accidental-se-dative",
+   "planned": 27,
+   "ids": [
+    "11e32f61-6207-578f-aaa1-ab83d60fd1a2",
+    "0fe32c3b-5fce-5c05-a8a1-a849d3d69600",
+    "12e330f4-e324-5554-a3a1-a0385965ab15",
+    "0de32915-6f5f-5ccb-9ea1-9827e367376e",
+    "0ce32782-ee42-5f06-9da1-968a6483d53f",
+    "0fab246a-cde9-5612-bbc4-67ee796c87f3",
+    "0dab2144-cbb0-5a88-b9c4-64b477334c51",
+    "04ab1319-4a93-5cc3-80c4-6fff05a74fee",
+    "04a8d482-e2eb-55c8-bcc2-2cd4ceb0bd85",
+    "02a8d15c-e525-5152-bec2-300ed0e9f927",
+    "00a8ce36-e75e-5cdc-b8c2-2660ca3e4641",
+    "0da8e2ad-5b23-5565-85c2-3b5956790e3c",
+    "80a5c61f-76d1-57b9-84bf-2e8531e5cc64",
+    "81a5c7b2-f7ee-557e-85bf-3022b53ba5d7",
+    "82a5c945-790b-5343-86bf-31bf341f0806",
+    "7ba5be40-f142-52e0-87bf-335cae8ff2f1",
+    "7ea5c2f9-7498-5c2f-8abf-38332fac90c2",
+    "78a37af0-29d9-5b36-b8d1-fe2a75854003",
+    "79a37c83-aaf5-58fb-b9d1-ffc7f468a232",
+    "7da382cf-a683-51e7-bdd2-063bf8db1976",
+    "7ca3813c-2566-5422-bcd2-049e79f7b747",
+    "7ea38462-232d-5898-bad2-016477be7ba5",
+    "e09f45d1-b83f-5e67-a82d-cbcb217509aa",
+    "e49f4c1d-bcb2-557b-a42d-c55725e780ee",
+    "e39f4a8a-3b95-57b6-a32d-c3baa7041ebf",
+    "e29f48f7-ba78-59f1-a22d-c21d23ae454c",
+    "de9f42ab-b606-52dd-a62d-c8911f3bce08"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-sino-adversatives",
+   "phase": "surplus",
+   "variant": "sino-phrase-correction",
+   "planned": 10,
+   "ids": [
+    "1cbca97c-a28d-5fc6-8840-c6da7f71f40b",
+    "21bcb15b-1653-584f-9540-dbd3f9e2def6",
+    "20bcafc8-9536-5a8a-9440-da367aff7cc7",
+    "f0f49900-fe1f-560a-828b-8446844ca5af",
+    "f1f49a93-7f3c-53cf-838b-85e3033007de",
+    "f2f49c26-fbe6-5a80-808b-810c82136a0d",
+    "f3f49db9-7d03-5845-818b-82a900f6cc3c",
+    "f4f49f4c-0292-5d1e-be8b-7dd27fda2e6b",
+    "f7f4a405-8175-5f59-bd8b-7c35fc8454f8",
+    "f8f4a598-0704-5432-ba8b-775e7b67b727"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-compound",
+   "phase": "surplus",
+   "variant": "perfect-subjunctive-haya-participle",
+   "planned": 5,
+   "ids": [
+    "943aace9-14db-59ef-ad45-c433addcee22",
+    "953aae7c-95f7-57b4-a645-b8e83132c795",
+    "a33d031d-7776-51b1-983e-1dadd036f458",
+    "26400fed-6274-51fb-9741-2747e9ac0c06",
+    "173ff850-d1c6-5370-a041-35cc6d01e579"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-compound",
+   "phase": "surplus",
+   "variant": "perfect-subjunctive-haya-participle",
+   "planned": 24,
+   "ids": [
+    "e65d3432-52f3-5f0a-b5cd-ff8610fa1c43",
+    "e05d2ac0-552c-5a94-afcd-f5d8133357e5",
+    "e25d2de6-5765-561e-b1cd-f912156c9387",
+    "e35d2f79-d882-53e3-b2cd-faaf944ff5b6",
+    "e15d2c53-d648-5859-b0cd-f7759216ba14",
+    "e45d310c-50b9-5380-b3cd-fc4c0ec0e0a1",
+    "e55d329f-d1d6-5145-b4cd-fde98da442d0",
+    "ea5d3a7e-604a-5446-a9cd-ec2a1e51820f",
+    "eb5d3c11-e167-520b-aacd-edc79d34e43e",
+    "34b16feb-aa31-585f-954d-52837f82a066",
+    "33b16e58-2915-5a9a-944d-50e6009f3e37",
+    "35b1717e-26dc-5f10-924d-4dacfe660295",
+    "38b17637-aea4-5f73-914d-4c0f7b102922",
+    "37b174a4-2d87-51ae-904d-4a72fc2cc6f3",
+    "3ab1795d-ac6b-53e9-8f4d-48d578d6ed80",
+    "2bb161c0-31fa-58c2-8c4d-43fe09842cbf",
+    "2cb16353-b316-5687-8d4d-459b88678eee",
+    "22aa97d0-82cc-5434-8745-b7481a1455e5",
+    "23aa9963-03e8-51f9-8845-b8e598f7b814",
+    "24aa9af6-8505-5fbe-8945-ba821c4d9187",
+    "25aa9c89-0621-5d83-8a45-bc1f9b30f3b6",
+    "26aa9e1c-7e59-5d20-8b45-bdbc15a1dea1",
+    "27aa9faf-ff76-5ae5-8c45-bf59948540d0",
+    "28aaa142-8092-58aa-8d45-c0f617db1a43"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-negated-opinion",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "fedaf90c-8a41-53c4-a6ca-7868e6a7b40d"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-negated-opinion",
+   "phase": "surplus",
+   "variant": "no-creo-que-subjunctive",
+   "planned": 19,
+   "ids": [
+    "ad0be92c-e60d-546a-ac68-1036d3cf5d3f",
+    "f5d42f1c-5f02-50aa-b9cd-a2468cf10737",
+    "f6d430af-e01f-5e6f-bacd-a3e30bd46966",
+    "f8d433d5-dde6-52e5-b8cd-a0a9099b2dc4",
+    "f1d428d0-6375-57be-b5cd-9bd2887e8ff3",
+    "f4d42d89-e258-59f9-b4cd-9a350528b680",
+    "fdd43bb4-67e7-5ed2-b1cd-955e95d5f5bf",
+    "06db05a4-9326-51ec-9eca-6b80ddc2c585",
+    "08db08ca-955f-5d76-a0ca-6ebadffc0127",
+    "03db00eb-0fd0-589d-a3ca-73915833b070",
+    "05db0411-1209-5427-a5ca-76cb5a6cec12",
+    "ffdafa9f-0b5e-5189-a7ca-7a05658b163c",
+    "ffd8bc08-a829-51a2-a7c8-3d4ec44dadd7",
+    "02d8c0c1-270c-53dd-a6c8-3bb140f7d464",
+    "06d8c70d-2b7e-5af1-a2c8-353d3c855d20",
+    "f9d8b296-9d0a-57f0-adc8-46fccaf960bd",
+    "04d8c3e7-2db8-567b-a4c8-38773ebe98c2",
+    "fad8b429-1e27-55b5-aec8-489949dcc2ec",
+    "82ccbe4e-e1f2-5a42-aac5-36ee84974803"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-negated-opinion",
+   "phase": "surplus",
+   "variant": "no-es-cierto-verdad-que-subjunctive",
+   "planned": 4,
+   "ids": [
+    "ae0beabf-6729-522f-ad68-11d352b2bf6e",
+    "f7d43242-5cc9-5520-b7cd-9f0c8ab7cb95",
+    "f3d42bf6-613b-5c34-b3cd-989886455451",
+    "fed43d47-e904-5c97-b2cd-96fb14b957ee"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-negated-opinion",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 3,
+   "ids": [
+    "bbf5a98f-689e-5f2f-b5e9-9ca30649dfbe",
+    "bdf5acb5-6665-53a5-b3e9-99690410a41c",
+    "b6f36319-9efb-5bfb-9ce6-6917ea9b8c6e"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-negated-opinion",
+   "phase": "surplus",
+   "variant": "no-creo-que-subjunctive",
+   "planned": 32,
+   "ids": [
+    "02ebaf17-e066-5ef1-89f7-d2ed23e53344",
+    "01ebad84-5f49-512c-88f7-d150a501d115",
+    "49ee3a54-4138-5b04-a7e1-32e8a0db953d",
+    "4cee3f0d-c48e-5453-aae1-37bf21f8330e",
+    "4aee3be7-c255-58c9-a8e1-34851fbef76c",
+    "4bee3d7a-4371-568e-a9e1-3622a314d0df",
+    "45ee3408-3cc6-53f0-abe1-395c9c691df9",
+    "46ee359b-bde2-51b5-ace1-3af91b4c8028",
+    "47ee372e-3eff-5f7a-ade1-3c969ea2599b",
+    "48ee38c1-c01b-5d3f-aee1-3e331d85bbca",
+    "41ee2dbc-4a1d-592c-9fe1-260097f6a6b5",
+    "42ee2f4f-cb3a-56f1-a0e1-279d16da08e4",
+    "baf5a7fc-e781-516a-b4e9-9b0687667d8f",
+    "bcf5ab22-e548-55e0-b2e9-97cc852d41ed",
+    "b7f5a343-6d10-5643-b1e9-962f01d7687a",
+    "b6f5a1b0-ebf4-587e-b0e9-949282f4064b",
+    "b9f5a669-6ad7-5ab9-afe9-92f5ff9e2cd8",
+    "c3f5b627-7183-5d57-ade9-8fbbfd64f136",
+    "c2f5b494-f066-5f92-ace9-8e1e7e818f07",
+    "b5f36186-1dde-5e36-9be6-677a6bb82a3f",
+    "b3f35e60-1ba5-52ac-99e6-6440697eee9d",
+    "b4f35ff3-9cc2-5071-9ae6-65dde86250cc",
+    "b9f367d2-196c-5722-9fe6-6dee6745b2fb",
+    "baf36965-9a89-54e7-a0e6-6f8be629152a",
+    "b7f364ac-1733-5b98-9de6-6ab4650c7759",
+    "b8f3663f-984f-595d-9ee6-6c51e3efd988",
+    "bdf36e1e-14fa-500e-a3e6-746262d33bb7",
+    "bef36fb1-9616-5dd3-a4e6-75ffe1b69de6",
+    "b6e69726-0a67-5694-a8ee-cf989881d609",
+    "b5e69593-8dbc-5fe3-abee-d46f199e73da",
+    "b4e69400-0ca0-521e-aaee-d2d29abb11ab",
+    "bbe69f05-8711-5d45-adee-d7a91bd7af7c"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-temporal-concessive",
+   "phase": "surplus",
+   "variant": "por-mucho-mas-que-subjunctive",
+   "planned": 25,
+   "ids": [
+    "89930959-2380-5dad-a7b6-4e51328d73ec",
+    "8c930e12-a6d6-56fc-a2b6-4640af379a79",
+    "87930633-25b9-5937-a9b6-518b34c6af8e",
+    "889307c6-a264-5fe8-a6b6-4cb4b3aa11bd",
+    "8b930c7f-2a2c-504b-a5b6-4b173054384a",
+    "919315f1-1a9b-5f85-afb6-5b3929a88564",
+    "fb77d04b-56aa-52d1-b21c-727d8d99829c",
+    "fa77ceb8-d58e-550c-b11c-70e00eb6206d",
+    "fd77d371-58e4-5e5b-b41c-75b78fd2be3e",
+    "fc77d1de-d7c7-5096-b31c-741a10ef5c0f",
+    "ff77d697-5238-5bbd-b61c-78f189270b58",
+    "0177d9bd-5471-5747-b81c-7c2b8b6046fa",
+    "f377c3b3-4dc5-54a9-ba1c-7f6584b49414",
+    "69702eb0-a16a-53ca-8c1e-d9264c334a9f",
+    "6c703369-204d-5605-8b1e-d789c8dd712c",
+    "6f703822-a3a3-5f54-861e-cf78458797b9",
+    "707039b5-24c0-5d19-871e-d115c46af9e8",
+    "72703cdb-2b6b-5fb7-851e-cddbc231be46",
+    "6f7276b9-0fbd-5d63-8621-daafe6c5001e",
+    "6e727526-8ea0-5f9e-8521-d91267e19def",
+    "717279df-0911-5ac5-8821-dde9e0194d38",
+    "7072784c-87f5-5d00-8721-dc4c6135eb09",
+    "77728351-18a2-5b8b-be21-cdc7dde01196",
+    "6e7f4119-ff2d-54c1-b10f-a44d4de31cc8",
+    "6b7f3c60-804a-5286-b20f-a5ead138f63b"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-subjunctive-temporal-concessive",
+   "phase": "surplus",
+   "variant": "temporal-connector-subjunctive-future",
+   "planned": 2,
+   "ids": [
+    "869304a0-a49d-5b72-a8b6-4feeb5e34d5f",
+    "9093145e-997f-51c0-aeb6-599caac52335"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-temporal-concessive",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "abf97962-b73d-5b42-a287-489e60e5501b"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-temporal-concessive",
+   "phase": "surplus",
+   "variant": "por-mucho-mas-que-subjunctive",
+   "planned": 14,
+   "ids": [
+    "a5f96ff0-b977-56cc-9c87-3ef0631e8bbd",
+    "acf97af5-385a-5907-a387-4a3bdfc8b24a",
+    "25b7e66d-1f51-5541-883d-da0d6e7b0a18",
+    "23b7e347-218a-50cb-8a3d-dd4770b445ba",
+    "22b7e1b4-a06d-5306-893d-dbaaf1d0e38b",
+    "21b7e021-1ade-5e2d-8c3d-e08172ed815c",
+    "1eb7db68-9bfb-5bf2-8d3d-e21ef6435acf",
+    "1db7d9d5-166c-5719-903d-e6f565961b90",
+    "0eba00cf-7bb5-5209-9d40-38a5ae316fec",
+    "11bc441f-66b2-5253-9c42-73bfc7a6879a",
+    "0cbc3c40-e123-5d7a-9f42-78964d359caf",
+    "0fbc40f9-6006-5fb5-9e42-76f9c9dfc33c",
+    "09aaee66-d73f-5776-8830-3efafa2aa2bf",
+    "0aaaeff9-585b-553b-8930-4097790e04ee"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-temporal-concessive",
+   "phase": "surplus",
+   "variant": "aunque-subjunctive-nonfactual",
+   "planned": 4,
+   "ids": [
+    "a8f974a9-3ccd-501b-9f87-43c7e43b298e",
+    "b2f98467-2d3c-5f55-a987-53e9d4aa8820",
+    "24b7e4da-9e34-577c-873d-d870ef97a7e9",
+    "0bb9fc16-f85f-58ba-a240-40b62d14d21b"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-subjunctive-temporal-concessive",
+   "phase": "surplus",
+   "variant": "temporal-connector-subjunctive-future",
+   "planned": 4,
+   "ids": [
+    "a9f9763c-b504-5fb8-a087-45645eac1479",
+    "a6f97183-3a93-5491-9d87-408de201edec",
+    "b1f982d4-ac1f-5190-a887-524c55c725f1",
+    "1fb7dcfb-1d17-59b7-8e3d-e3bb7526bcfe"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-verbs-of-change",
+   "phase": "surplus",
+   "variant": "llegar-a-ser-slow-outcome",
+   "planned": 10,
+   "ids": [
+    "e6254b15-0bea-5301-8d3e-7f5d7f6f30c0",
+    "7fc6aa6a-b072-5ba0-84e5-9dac36fb0abd",
+    "7ec6a8d7-33c8-54ef-87e5-a283b817a88e",
+    "73c69786-bdc9-50dc-b8e5-8a5029a3a4f1",
+    "74c69919-3ee6-5ea1-b9e5-8beda8870720",
+    "7dc468ad-e52f-5507-86ed-258b8f11ef72",
+    "f0c14c1f-12a7-53ab-b5ea-cd677c488aaa",
+    "ebc14440-8d18-5ed2-b8ea-d23e01d79fbf",
+    "f7c15724-88a6-57be-bcea-d8b2f48039f3",
+    "f8c158b7-09c2-5583-bdea-da4f73639c22"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-verbs-of-change",
+   "phase": "surplus",
+   "variant": "convertirse-en-transformation",
+   "planned": 8,
+   "ids": [
+    "7ac6a28b-383a-5c03-83e5-9c0fb3a5314a",
+    "74c45a82-5b2e-591a-8ded-30d619137bcb",
+    "6fc452a3-de83-5269-88ed-28c59a30199c",
+    "6ec45110-5d67-54a4-87ed-27281b4cb76d",
+    "efc14a8c-918b-55e6-b4ea-cbcafd65287b",
+    "ecc145d3-0e35-5c97-b9ea-d3db80bb01ee",
+    "eec148f9-0bfc-510d-b7ea-d0a17e81c64c",
+    "e9bf0283-8d7e-5e89-82f2-6705f1225b7c"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-verbs-of-change",
+   "phase": "surplus",
+   "variant": "quedarse-state-left-by-event",
+   "planned": 2,
+   "ids": [
+    "e5254982-8acd-553c-8c3e-7dc0008bce91",
+    "80c6abfd-318e-5965-85e5-9f49b5de6cec"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-verbs-of-change",
+   "phase": "surplus",
+   "variant": "llegar-a-ser-slow-outcome",
+   "planned": 27,
+   "ids": [
+    "859892db-efdc-5a69-b8be-c8f59542710c",
+    "8698946e-70f8-582e-b9be-ca9218984a7f",
+    "89989927-eb69-5355-bcbe-cf6990cff9c8",
+    "8b989c4d-eda2-5edf-bebe-d2a39309356a",
+    "8a989aba-6c86-511a-bdbe-d1061425d33b",
+    "7c9884b0-77a4-5acc-afbe-ba700d7a2055",
+    "362d030e-72e3-5d6e-98c7-b602a0e7c41f",
+    "382d0634-6c37-5ad0-9ac7-b93c9a3c1139",
+    "3a2d095a-6e71-565a-9cc7-bc769c754cdb",
+    "3b2d0aed-ef8d-541f-9dc7-be131b58af0a",
+    "2c2cf350-798f-500c-8ec7-a5e095c999f5",
+    "2d2cf4e3-faab-5dd1-8fc7-a77d14acfc24",
+    "a8347249-95d6-5a85-a2cf-4ac901e3975c",
+    "a73470b6-14ba-5cc0-a1cf-492c8300352d",
+    "ae347bbb-a0f5-5437-9ccf-411bfb37e476",
+    "ab347702-192c-53d4-9dcf-42b87e8dbde9",
+    "ad347a28-1fd8-5672-9bcf-3f7e7c548247",
+    "40318ffa-4d50-5516-8acc-e75a698b1d7f",
+    "4131918d-ce6d-52db-8bcc-e8f7e86e7fae",
+    "3c3189ae-48de-5e02-8ecc-edce6518a63b",
+    "3d318b41-c9fa-5bc7-8fcc-ef6be3fc086a",
+    "3a318688-46a5-5278-8ccc-ea9462df6a99",
+    "38318362-446b-56ee-92cc-f44260a62ef7",
+    "393184f5-c588-54b3-93cc-f5dfdf899126",
+    "b138fda2-c827-5ff4-97d4-80f89654c949",
+    "ad38f756-c3b5-58e0-9bd4-876c9ac7408d",
+    "ab38f430-c5ee-546a-9dd4-8aa69d007c2f"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-verbs-of-change",
+   "phase": "surplus",
+   "variant": "convertirse-en-transformation",
+   "planned": 1,
+   "ids": [
+    "84989148-6ebf-5ca4-b7be-c758165f0edd"
+   ]
+  }
+ ],
+ "total": 3070
+}
