@@ -254,6 +254,29 @@ describe('parsePointEnumeration', () => {
     ).toThrow(/rationale/);
   });
 
+  // Regression: Anthropic tool-use intermittently serializes a nested array as
+  // a JSON string. This cost 3 of 114 points on the 2026-08-19 ES sweep, all
+  // three with stop_reason 'tool_use' and output well under the cap — the
+  // serialization, not truncation. @language-drill/shared's parseTheoryTopicJson
+  // has defended against the same behaviour for theory generation since 2026-05.
+  it('decodes a constructions array that arrived as a JSON string', () => {
+    const parsed = parsePointEnumeration(
+      { mechanism: 'construction-variants', constructions: JSON.stringify(valid.constructions) },
+      'k',
+    );
+    expect(parsed.constructions).toHaveLength(2);
+    expect(parsed.constructions[0].id).toBe('backshift');
+  });
+
+  it('still rejects a string that does not decode to an array', () => {
+    expect(() =>
+      parsePointEnumeration({ mechanism: 'none', constructions: 'not json at all' }, 'k'),
+    ).toThrow(/constructions must be an array/);
+    expect(() =>
+      parsePointEnumeration({ mechanism: 'none', constructions: '{"a":1}' }, 'k'),
+    ).toThrow(/constructions must be an array/);
+  });
+
   it('accepts an empty construction list', () => {
     expect(parsePointEnumeration({ mechanism: 'none', constructions: [] }, 'k').constructions)
       .toEqual([]);
@@ -313,6 +336,16 @@ describe('ENUMERATION_TOOL', () => {
 });
 
 describe('CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT', () => {
+  it('requires ASCII kebab-case ids and meaning-based disambiguation', () => {
+    // Two enumeration failures on the 2026-08-19 ES sweep were ids carrying
+    // accented characters ('tu-tú', 'invariable-adjective-estándar-gratis').
+    // Every committed constructionVariants id is ASCII, and ids become
+    // content_json.seedWord values and coverage keys, so the convention is
+    // enforced in the prompt rather than relaxed in the parser.
+    expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('ASCII kebab-case');
+    expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('disambiguate them by MEANING');
+  });
+
   it('states the three-part mustRepresent test', () => {
     expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Distinct form');
     expect(CONSTRUCTION_ENUMERATION_SYSTEM_PROMPT).toContain('Actually claimed');
