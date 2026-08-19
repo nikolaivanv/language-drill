@@ -796,6 +796,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-negation-tampoco',
+    // Measured 2026-08-19 (`audit:constructions`): 18 of 18 sampled rows were
+    // tampoco. Every other construction this description names — including
+    // pre-verb `no`, the point's own foundation — sat at 0.
+    constructionVariants: [
+      {
+        id: 'pre-verb-negation-no',
+        directive:
+          'plain sentence negation with no placed immediately before the conjugated verb (No hablo francés; Mi hermano no trabaja aquí)',
+        share: 2,
+      },
+      {
+        id: 'si-no-short-answers',
+        directive:
+          'a yes/no question answered with a short Sí or No, optionally followed by a short clause (¿Hablas español? — Sí, un poco; ¿Vienes? — No, hoy no)',
+      },
+      {
+        id: 'tambien-agreement-affirmative',
+        directive:
+          'también agreeing with a preceding AFFIRMATIVE statement (Yo estudio francés. — Yo también; A mí también me gusta)',
+      },
+      {
+        id: 'tampoco-agreement-negative',
+        directive:
+          'tampoco agreeing with a preceding NEGATIVE statement (No me gusta el café. — A mí tampoco; Yo tampoco lo sabía)',
+      },
+      {
+        id: 'confirmation-tag-no',
+        directive:
+          'a statement closed by the confirmation tag ¿no? (Usted habla inglés, ¿no?; Vienes mañana, ¿no?)',
+      },
+      {
+        id: 'ya-no-no-longer',
+        directive:
+          "ya no for 'no longer' — something that used to be true and has stopped (Ya no vivo aquí; Ya no fuma)",
+      },
+    ],
     coverageSpec: {
       axes: [
         // For a point named "negation" generation goes ~all-negative (pool
@@ -1491,6 +1527,50 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-direct-object-pronouns',
+    // Measured 2026-08-19 (`audit:constructions`): 22 of 24 sampled rows were
+    // plain proclisis before a conjugated verb; enclisis on infinitives,
+    // gerunds and imperatives, the periphrastic shift and neuter lo were all 0.
+    //
+    // The audit also enumerated `gender-agreement` and a `usted-register`
+    // construction. Neither is a variant here: both are orthogonal to WHERE the
+    // clitic sits — "la compré" realizes proclisis and gender agreement at once,
+    // and "Doctora, la llamé" realizes proclisis and the usted register at once.
+    // Non-disjoint variants make the single-label coverage measurement read the
+    // general one as absent, so both are folded into the directives instead and
+    // the variant axis stays one-per-placement.
+    constructionVariants: [
+      {
+        id: 'dop-proclisis',
+        directive:
+          'a direct object pronoun BEFORE a conjugated verb, agreeing in gender and number with the noun it replaces (Lo veo todos los días; Las compré ayer; Doctora, la llamé ayer)',
+        share: 2,
+      },
+      {
+        id: 'dop-enclisis-infinitive',
+        directive:
+          'the pronoun attached to the end of an INFINITIVE (Quiero verlo mañana; Es difícil entenderla)',
+      },
+      {
+        id: 'dop-enclisis-gerund',
+        directive:
+          'the pronoun attached to the end of a GERUND, with the written accent that keeps the stress (Estoy leyéndolo; Sigue buscándolas)',
+      },
+      {
+        id: 'dop-enclisis-imperative',
+        directive:
+          'the pronoun attached to a POSITIVE imperative, with the written accent where needed (Cómpralo; Llámala esta tarde). Negative imperatives take proclisis instead (No lo compres)',
+      },
+      {
+        id: 'dop-periphrastic-shift',
+        directive:
+          'a verb + infinitive periphrasis where the pronoun may sit either side, showing both placements as equivalent (Lo voy a comprar / Voy a comprarlo; Te lo estoy diciendo / Estoy diciéndotelo)',
+      },
+      {
+        id: 'dop-neuter-lo',
+        directive:
+          'neuter lo replacing a whole idea, clause or predicate rather than a noun (¿Sabes que llegó tarde? — Sí, lo sé; Parece cansado, pero no lo está)',
+      },
+    ],
     coverageSpec: {
       axes: [
         // lo/la/los/las agree with the replaced noun; gender is not an axis,
@@ -2189,6 +2269,44 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-llevar-time-expressions',
+    // Measured 2026-08-19 (`audit:constructions`): only llevar + gerund was
+    // realized (4 rows); hace…que, hacía…que, tardar en, dentro de and the
+    // completed-duration past were all at 0. The point teaches the CONTRAST
+    // between still-ongoing and completed durations, and the pool only ever
+    // showed the ongoing half.
+    constructionVariants: [
+      {
+        id: 'llevar-period-gerund',
+        directive:
+          'llevar + a period + gerund for a still-ongoing duration (Llevo dos años estudiando alemán; Llevamos media hora esperando)',
+        share: 2,
+      },
+      {
+        id: 'hace-period-que-present',
+        directive:
+          'hace + a period + que + present indicative for a still-ongoing duration (Hace tres años que vivo aquí; Hace una semana que no llueve)',
+      },
+      {
+        id: 'hacia-period-que-imperfect',
+        directive:
+          'the past-shifted hacía + a period + que + imperfect (Hacía años que no la veía; Hacía meses que no salíamos)',
+      },
+      {
+        id: 'tardar-en-infinitive',
+        directive:
+          'tardar + en + infinitive for how long something takes (Tardé dos horas en llegar; El paquete tardó una semana en venir)',
+      },
+      {
+        id: 'dentro-de-period',
+        directive:
+          'dentro de + a period for a point measured forward from now (Vuelvo dentro de dos semanas; El tren sale dentro de diez minutos)',
+      },
+      {
+        id: 'past-tense-durante-period',
+        directive:
+          'a COMPLETED duration: a past tense + (durante) + a period, for something finished (Trabajé (durante) varios años en Madrid; Vivimos allí tres meses). Never llevar or hace…que here — those are only for still-ongoing events',
+      },
+    ],
     kind: 'grammar',
     name: 'Duration and time-span expressions',
     description:
