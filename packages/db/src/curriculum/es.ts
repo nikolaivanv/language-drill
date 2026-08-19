@@ -768,6 +768,46 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-present-indicative-regular',
+    // Measured 2026-08-19 (`audit:constructions`): 30 of 44 sampled rows were
+    // classified as the habitual/general-truth use, and the other two uses this
+    // point's description names — the imminent arranged event (Me caso el
+    // sábado) and the offer/permission question (¿Escribo yo a los abuelos?) —
+    // were 0 of 44 despite one of them owning a commonError.
+    //
+    // The audit ALSO enumerated the three conjugation classes (-ar / -er / -ir)
+    // as constructions. They are REJECTED as the axis, not because the classes
+    // do not matter but because a row is simultaneously a class AND a use, so
+    // only one of the two can be the single label coverage is measured on
+    // (same call as `es-a2-estar-gerundio` in #676). The USE axis is chosen:
+    // the classes are still varied by the conjugation cell, which keeps verb
+    // seeding (`seedKindFor` routes CONJUGATION to 'verb', not to variants),
+    // and every directive below names all three classes so a draft cannot
+    // settle on one. If the -er gap survives the repass, it is a seed-pool
+    // problem, not a missing variant.
+    //
+    // The `person` coverageSpec below is KEPT: none of these uses pins a
+    // person — the offer/permission question is the closest, and it is natural
+    // in 1sg and 1pl alike.
+    constructionVariants: [
+      {
+        id: 'present-for-habitual-actions',
+        directive:
+          'the present for a habitual action or a general truth, with a marker such as todos los días, siempre, normalmente (Todos los días como fruta y bebo agua). Use a regular -ar, -er or -ir verb, varying the class from draft to draft',
+        share: 3,
+      },
+      {
+        id: 'present-for-imminent-arranged-events',
+        directive:
+          'the present for an imminent or already-arranged event, where English would use a future or a continuous (Me caso el sábado; Mañana abrimos a las nueve; ¡Ya voy!). Use a regular -ar, -er or -ir verb',
+        share: 3,
+      },
+      {
+        id: 'present-for-offers-permission',
+        directive:
+          'the present in a QUESTION that offers or asks permission (¿Escribo yo a los abuelos?; ¿Abrimos la ventana?). Use a regular -ar, -er or -ir verb',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Present indicative (regular verbs)',
     description:
@@ -1203,6 +1243,35 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-noun-modifiers-de',
+    // Measured 2026-08-19 (`audit:constructions`): 10 of 18 sampled rows were the
+    // de-compound noun. Attribute de for price, age or measurement — a whole
+    // sentence of the description — was 0 of 18.
+    constructionVariants: [
+      {
+        id: 'de-compound-noun',
+        directive:
+          'a de-compound naming a type or category, with NO article after de (Tengo un libro de español; una tarjeta de crédito)',
+        share: 3,
+      },
+      {
+        id: 'de-possessive-del-contraction',
+        directive:
+          'possessive de before a masculine singular article, where de + el contracts to del (La página del libro está rota; el coche del vecino)',
+        share: 2,
+      },
+      {
+        id: 'de-attribute-price-age-measurement',
+        directive:
+          'attribute de giving a price, an age or a measurement (Es un coche de diez mil euros; Es un hombre de cuarenta años; una mesa de dos metros)',
+        share: 2,
+      },
+      {
+        id: 'con-permanent-feature-contents',
+        directive:
+          'con after a noun for a permanent feature or for contents (Vivo en una casa con jardín; Trae una cesta con pan)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Noun modifiers with de and con',
     description:
@@ -1343,6 +1412,53 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-a1-locative-prepositions',
+    // Measured 2026-08-19 (`audit:constructions`): 13 of 19 sampled rows were
+    // entre … y. The bare locative adverbs (cenamos fuera, te espero abajo) were
+    // 0, as were entre = 'among' and the motion adverbs — and the compound
+    // prepositions this point is built on managed 5.
+    //
+    // `de-el-contraction-del` is narrowed to the masculine-singular case and
+    // `compound-locative-prep-de` to everything else, so the two are disjoint:
+    // undivided, every del row is also a compound-preposition row and the
+    // classifier can only pick one.
+    // Note this point is `clozeUnsuitable`, so the rotation drives the
+    // translation cell only.
+    constructionVariants: [
+      {
+        id: 'compound-locative-prep-de',
+        directive:
+          'a compound locative preposition with its linking de — debajo de, encima de, delante de, detrás de, dentro de, fuera de, cerca de, lejos de, al lado de — before a FEMININE or PLURAL noun, so no contraction occurs (El gato duerme debajo de la mesa; Vivo cerca de las oficinas)',
+        share: 3,
+      },
+      {
+        id: 'de-el-contraction-del',
+        directive:
+          'the same compound locatives before a MASCULINE SINGULAR noun, where de + el must contract to del (La farmacia está al lado del supermercado; El perro salió de detrás del coche)',
+        share: 2,
+      },
+      {
+        id: 'entre-y-between',
+        directive:
+          'entre … y locating something between two reference points, with no de after entre (Vivo entre el parque y el río)',
+        share: 2,
+      },
+      {
+        id: 'entre-among',
+        directive:
+          "entre meaning 'among' within a group rather than between two points (Entre mis amigos, nadie fuma)",
+      },
+      {
+        id: 'bare-adverbs-no-de',
+        directive:
+          'a bare locative adverb that takes NO de at all — fuera, dentro, arriba, abajo (Vamos a cenar fuera esta noche; Te espero abajo)',
+        share: 2,
+      },
+      {
+        id: 'motion-adverbs-adentro-afuera-adelante-atras',
+        directive:
+          'a motion-direction adverb where the static form would be wrong — adentro/afuera, adelante, atrás (Sigue adelante y no mires hacia atrás; Dio un paso atrás)',
+      },
+    ],
     kind: 'grammar',
     name: 'Locative prepositional phrases',
     description:
@@ -1668,6 +1784,40 @@ const esCurriculum: readonly GrammarPoint[] = [
     // Added 2026-07-11 (split from es-a2-preterite-stem-spelling): the yo-form
     // orthographic changes, whose only diagnostic person is 1sg.
     key: 'es-a2-preterite-yo-spelling',
+    // Measured 2026-08-19 (`audit:constructions`): 9 of 12 sampled rows were
+    // -zar → -cé and 0 were -gar → -gué, even though llegué/pagué is the class
+    // this point's first commonError names first.
+    //
+    // The rare -guar → -güé class (averiguar → averigüé) is deliberately NOT a
+    // fourth variant: `targetOverride: 15` wins outright over the variant floor
+    // and is tied to the curated `conjugationSeedWords` list below, which
+    // contains no -guar verb — and the curriculum invariant requires
+    // targetOverride >= 4 × variants, which four variants (16) would break. It
+    // stays in the description and in examplesPositive.
+    //
+    // The 1sg-only `person` coverageSpec is KEPT: the spelling classes are
+    // orthogonal to person, and the yo-form restriction is what both mechanisms
+    // are about from different directions.
+    constructionVariants: [
+      {
+        id: 'car-que',
+        directive:
+          'a -car verb in the 1sg preterite, where c → qu keeps the /k/ sound: buscar → busqué, tocar → toqué, explicar → expliqué',
+        share: 3,
+      },
+      {
+        id: 'gar-gue',
+        directive:
+          'a -gar verb in the 1sg preterite, where g → gu keeps the hard /g/: llegar → llegué, pagar → pagué, jugar → jugué',
+        share: 3,
+      },
+      {
+        id: 'zar-ce',
+        directive:
+          'a -zar verb in the 1sg preterite, where z → c before e: empezar → empecé, cruzar → crucé, almorzar → almorcé',
+        share: 3,
+      },
+    ],
     kind: 'grammar',
     name: 'Preterite — yo-form spelling changes (-qué/-gué/-cé)',
     description:
@@ -2078,6 +2228,34 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-saber-poder-ability',
+    // Measured 2026-08-19 (`audit:constructions`): 24 of 24 sampled rows were
+    // saber + infinitive. poder + infinitive — the other half of a contrast the
+    // description says English "can" collapses, and the target of two of the
+    // three commonErrors — was 0.
+    //
+    // The audit's `saber-no-preposition` is REJECTED: "takes no preposition" is
+    // a property every correct saber row already has, and its directive asked
+    // for an error-correction format these exercise types do not have.
+    constructionVariants: [
+      {
+        id: 'saber-infinitive-learned-skill',
+        directive:
+          'saber + infinitive for a LEARNED skill, with context making the training or long-standing ability clear (Sé nadar desde los cinco años; ¿Sabes tocar la guitarra?)',
+        share: 3,
+      },
+      {
+        id: 'poder-infinitive-circumstantial',
+        directive:
+          'poder + infinitive for a circumstantial possibility, a physical capacity on one occasion, or permission — never a learned skill (Hoy no puedo nadar porque la piscina está cerrada; ¿Puedo abrir la ventana?)',
+        share: 3,
+      },
+      {
+        id: 'saber-poder-contrast-one-sentence',
+        directive:
+          'both verbs in ONE sentence, the contrast carrying the meaning: the skill exists but the occasion does not allow it (Sé nadar, pero hoy no puedo porque la piscina está cerrada)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Saber vs. poder for ability',
     description:
@@ -2575,6 +2753,47 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-todo-otro-quantifiers',
+    // Measured 2026-08-19 (`audit:constructions`): 20 of 24 sampled rows were
+    // agreeing demasiado. todo + determiner — the FIRST thing the description
+    // names, and the source of the *todo los estudiantes commonError — was 0 of
+    // 24, and varios/varias 0.
+    constructionVariants: [
+      {
+        id: 'todo-with-determiner',
+        directive:
+          "todo/toda/todos/todas immediately followed by an article, possessive or demonstrative, meaning 'the whole' or 'all the' (Toda la clase aprobó el examen; Todos mis amigos vinieron)",
+        share: 3,
+      },
+      {
+        id: 'otro-no-article',
+        directive:
+          'otro/otra/otros/otras with NO un/una before it, unlike English "another" (No me gusta este café, ponme otro; ¿Tienes otra pregunta?)',
+        share: 3,
+      },
+      {
+        id: 'demasiado-adjective-agreement',
+        directive:
+          'demasiado/a/os/as as an ADJECTIVE, agreeing with the noun it quantifies (Has traído demasiados libros; Hay demasiadas personas en la sala)',
+        share: 2,
+      },
+      {
+        id: 'demasiado-adverb-invariable',
+        directive:
+          'demasiado as an invariable ADVERB modifying an adjective or a verb, where it must not agree (Este ejercicio es demasiado difícil; Hablas demasiado rápido)',
+        share: 2,
+      },
+      {
+        id: 'varios-agreement-no-article',
+        directive:
+          "varios/varias meaning 'several', agreeing with the noun and standing before it with no article (Compré varios libros; en varias partes del país)",
+        share: 2,
+      },
+      {
+        id: 'nada-nadie-negative-pronouns',
+        directive:
+          'nada or nadie as a negative pronoun, before the verb or after it with no (No hay nadie en la oficina; No quiero nada de postre)',
+      },
+    ],
     kind: 'grammar',
     name: 'Todo, otro, demasiado, nada/nadie',
     description:
@@ -3593,6 +3812,33 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-futuro-simple',
+    // Measured 2026-08-19 (`audit:constructions`): the future of probability —
+    // half of what the description claims, and the reading behind the point's
+    // own examplesPositive "¿Qué hora es? — Serán las once" — was 0 of 24. The
+    // pool taught the tense only as a statement about the future.
+    //
+    // The `person` coverageSpec below is KEPT: regular/irregular stems and the
+    // epistemic reading are all orthogonal to person.
+    constructionVariants: [
+      {
+        id: 'futuro-simple-regular',
+        directive:
+          'the regular future — the whole infinitive plus -é/-ás/-á/-emos/-éis/-án, accents included (Mañana hablaré con mi jefe; Comeremos a las dos)',
+        share: 3,
+      },
+      {
+        id: 'futuro-simple-irregular',
+        directive:
+          'an irregular future stem: tendr-, saldr-, sabr-, podr-, har-, dir-, pondr-, vendr-, querr- (El lunes tendremos una reunión; ¿Qué harás el fin de semana?)',
+        share: 3,
+      },
+      {
+        id: 'futuro-probabilidad',
+        directive:
+          'the EPISTEMIC future — a guess about the PRESENT, not a statement about the future (¿Qué hora es? — Serán las once; No contesta, estará durmiendo)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Future simple',
     description:
@@ -3640,6 +3886,31 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-past-narration',
+    // Measured 2026-08-19 (`audit:constructions`): al + infinitivo, the third
+    // construction the description names and the subject of the point's third
+    // commonError, had 1 row across 46 classified. The translation cell also
+    // ran 13 of 22 on the conato pattern, so its two cells collapsed onto
+    // different single constructions rather than the same one.
+    constructionVariants: [
+      {
+        id: 'imperfecto-indefinido-interplay',
+        directive:
+          'the imperfecto carrying the background and the indefinido the event that interrupts or advances it, in the same sentence (Iba por la calle cuando de repente me encontré con Ana)',
+        share: 3,
+      },
+      {
+        id: 'conato-iba-a-infinitive-interrupted',
+        directive:
+          'the conato: iba a + infinitive for an intention cut short by a preterite event — the imperfect of ir, never the preterite (Iba a salir de casa cuando sonó el teléfono)',
+        share: 2,
+      },
+      {
+        id: 'al-infinitivo-simultaneous',
+        directive:
+          "al + infinitive for 'on/when doing X' where a finite cuando-clause would be less idiomatic, with a main clause in the indefinido (Al llegar a la oficina, vi que las luces estaban encendidas)",
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Past narration: imperfecto/indefinido interplay',
     description:
@@ -4361,6 +4632,36 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-indirect-questions',
+    // Measured 2026-08-19 (`audit:constructions`): 13 of 21 classified rows were
+    // an indirect wh-question with a finite clause. The si + INFINITIVE pattern
+    // (No sé si ir a la fiesta) was 0 of 21 — one of this point's own
+    // examplesPositive — and si + finite clause had 2.
+    constructionVariants: [
+      {
+        id: 'indirect-wh-finite',
+        directive:
+          'an indirect wh-question — qué, cuándo, dónde, cómo, all keeping the written accent — followed by a FINITE clause (Pregúntale dónde está la parada; No sabía cuándo empezaba la película)',
+        share: 3,
+      },
+      {
+        id: 'indirect-wh-infinitive',
+        directive:
+          'an indirect wh-question followed by a BARE INFINITIVE, possible only when both subjects are the same, with the question word before the infinitive (No sé qué hacer con tanto tiempo libre)',
+        share: 2,
+      },
+      {
+        id: 'indirect-yn-si-finite',
+        directive:
+          'an indirect YES/NO question introduced by si — never que — with a finite clause (No sé si tiene tiempo esta tarde; Pregunta si vienen mañana)',
+        share: 3,
+      },
+      {
+        id: 'indirect-yn-si-infinitive',
+        directive:
+          'an indirect yes/no question with si + a BARE INFINITIVE, both subjects the same (No sé si ir a la fiesta esta noche; Dudaba si aceptar la oferta)',
+        share: 3,
+      },
+    ],
     kind: 'grammar',
     name: 'Indirect questions: si, qué, cuándo, dónde + clause or infinitivo',
     description:
@@ -4747,6 +5048,39 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-cuyo',
+    // Measured 2026-08-19 (`audit:constructions`): 48 of 48 sampled rows were a
+    // restrictive cuyo clause. The spoken alternatives de quien / del que, named
+    // in the description, were 0, as was cuyo inside a comma-set explicativa —
+    // the shape of one of the point's own examplesPositive.
+    //
+    // Two of the audit's proposals are REJECTED. `cuyo-vs-que-su-calque` is not
+    // a separate construction: every correct cuyo row is already the non-calque,
+    // so it is the general case the specific ones absorb. `cuyo-not-interrogative`
+    // names a prohibition — a draft cannot realize the absence of *¿Cuyo libro
+    // es este? — and stays a commonError. The variants split by CLAUSE TYPE
+    // instead, which is disjoint; agreement with the possessed noun rides in
+    // both directives, since it is a property of every cuyo row rather than a
+    // member of the axis.
+    constructionVariants: [
+      {
+        id: 'cuyo-restrictive-clause',
+        directive:
+          'cuyo/cuya/cuyos/cuyas in a RESTRICTIVE relative clause with no commas, agreeing with the thing POSSESSED and not the possessor (Es un autor cuyas novelas se leen en todo el mundo)',
+        share: 3,
+      },
+      {
+        id: 'cuyo-nonrestrictive-comma-clause',
+        directive:
+          'cuyo inside a NON-RESTRICTIVE clause set off by commas, again agreeing with the possessed noun (La empresa, cuyo director dimitió ayer, cotiza en bolsa)',
+        share: 2,
+      },
+      {
+        id: 'de-quien-del-que-spoken-alternative',
+        directive:
+          'the spoken alternative to cuyo — de quien / del que / de la que — in a sentence where written Spanish would use cuyo (Ese es el escritor del que te hablé, el que tiene las novelas premiadas; Es un amigo mío de quien conozco a toda la familia)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Relative possessive cuyo',
     description:

@@ -14,7 +14,7 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **21** · needs topping up: **4** · needs only the repass: **65**
+- Needs authoring: **11** · needs topping up: **4** · needs only the repass: **75**
 
 ### Never examined — re-run after the enumeration fixes in #673
 
@@ -27,129 +27,68 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 These points declare no `constructionVariants` at all. Author a list, then repass.
 
-### AUTHOR-1. `es-b2-cuyo` — Relative possessive cuyo
-
-- **B2** · mechanism: **coverage-spec** · cells: cloze (1 of 4), translation (1 of 4)
-- Under-represented:
-  - `cuyo-vs-que-su-calque` — cuyo instead of *que + possessive (que sus novelas) — **0/24**
-
-### AUTHOR-2. `es-a1-present-indicative-regular` — Present indicative (regular verbs)
-
-- **A1** · mechanism: **coverage-spec** · cells: translation (2 of 6), cloze (1 of 6)
-- Under-represented:
-  - `present-indicative-er-verbs` — Present indicative: -er verbs (comer) — **0/22**
-  - `present-indicative-ar-verbs` — Present indicative: -ar verbs (hablar) — **1/22**
-
-### AUTHOR-3. `es-a1-locative-prepositions` — Locative prepositional phrases
-
-- **A1** · mechanism: **construction-variants** · cells: translation (1 of 6)
-- Under-represented:
-  - `bare-adverbs-no-de` — Bare locative adverbs without de (fuera, dentro, arriba, abajo) — **0/19**
-
-### AUTHOR-4. `es-a1-noun-modifiers-de` — Noun modifiers with de and con
-
-- **A1** · mechanism: **construction-variants** · cells: translation (1 of 4)
-- Under-represented:
-  - `de-attribute-price-age-measurement` — Attribute de for price, age, or measurement — **0/18**
-
-### AUTHOR-5. `es-a2-preterite-yo-spelling` — Preterite — yo-form spelling changes (-qué/-gué/-cé)
-
-- **A2** · mechanism: **coverage-spec** · cells: translation (1 of 4)
-- Under-represented:
-  - `gar-gue` — -gar → -gué (e.g. llegar → llegué) — **0/12**
-
-### AUTHOR-6. `es-a2-saber-poder-ability` — Saber vs. poder for ability
-
-- **A2** · mechanism: **construction-variants** · cells: translation (1 of 3)
-- Under-represented:
-  - `poder-infinitive-circumstantial` — Poder + infinitive (circumstantial ability / permission) — **0/24**
-
-### AUTHOR-7. `es-a2-todo-otro-quantifiers` — Todo, otro, demasiado, nada/nadie
-
-- **A2** · mechanism: **construction-variants** · cells: cloze (1 of 6)
-- Under-represented:
-  - `todo-with-determiner` — todo/toda/todos/todas + article/possessive/demonstrative — **0/24**
-
-### AUTHOR-8. `es-b1-futuro-simple` — Future simple
-
-- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 3)
-- Under-represented:
-  - `futuro-probabilidad` — Future of probability (epistemic future) — **0/24**
-
-### AUTHOR-9. `es-b1-indirect-questions` — Indirect questions: si, qué, cuándo, dónde + clause or infinitivo
-
-- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 4)
-- Under-represented:
-  - `indirect-yn-si-infinitive` — Indirect yes/no question with si + infinitive (same subject) — **0/24**
-
-### AUTHOR-10. `es-b1-past-narration` — Past narration: imperfecto/indefinido interplay
-
-- **B1** · mechanism: **construction-variants** · cells: translation (1 of 3), cloze (1 of 3)
-- Under-represented:
-  - `al-infinitivo-simultaneous` — Al + infinitivo for 'on/when doing X' — **0/24**
-
-### AUTHOR-11. `es-b2-adjective-position` — Adjective position and meaning
+### AUTHOR-1. `es-b2-adjective-position` — Adjective position and meaning
 
 - **B2** · mechanism: **construction-variants** · cells: translation (1 of 5)
 - Under-represented:
   - `postnominal-literal-meaning` — Postnominal position yields literal/physical meaning — **0/24**
 
-### AUTHOR-12. `es-b2-nuanced-ser-estar` — Nuanced ser vs. estar
+### AUTHOR-2. `es-b2-nuanced-ser-estar` — Nuanced ser vs. estar
 
 - **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
 - Under-represented:
   - `resultant-state-estar-past-participle` — Resultant-state estar + past participle — **0/24**
 
-### AUTHOR-13. `es-b2-reported-speech-backshift` — Reported speech — full backshift
+### AUTHOR-3. `es-b2-reported-speech-backshift` — Reported speech — full backshift
 
 - **B2** · mechanism: **construction-variants** · cells: cloze (1 of 5)
 - Under-represented:
   - `command-to-imperfect-subjunctive` — Reported command → Imperfect subjunctive — **0/24**
 
-### AUTHOR-14. `es-b2-causal-connectors` — Formal causal connectors: ya que, puesto que, debido a que, enunciative porque
+### AUTHOR-4. `es-b2-causal-connectors` — Formal causal connectors: ya que, puesto que, debido a que, enunciative porque
 
 - **B2** · mechanism: **construction-variants** · cells: cloze (1 of 4), translation (1 of 4)
 - Under-represented:
   - `debido-a-que` — debido a que (formal causal alternative) — **1/24**
   - `ya-que-puesto-que` — ya que / puesto que (formal 'since/given that') — **1/24**
 
-### AUTHOR-15. `es-a2-gustar-type-verbs` — Gustar-type verbs (extended)
+### AUTHOR-5. `es-a2-gustar-type-verbs` — Gustar-type verbs (extended)
 
 - **A2** · mechanism: **construction-variants** · cells: cloze (1 of 4)
 - Under-represented:
   - `a-tonic-reduplication` — a + tonic pronoun/name reduplication for clarification or contrast — **1/24**
 
-### AUTHOR-16. `es-a2-preterite-irregular` — Preterite — irregular verbs
+### AUTHOR-6. `es-a2-preterite-irregular` — Preterite — irregular verbs
 
 - **A2** · mechanism: **coverage-spec** · cells: cloze (1 of 3)
 - Under-represented:
   - `preterite-ser-ir-fui` — Shared preterite of ser/ir (fui/fuiste/fue/fuimos/fuisteis/fueron) — **1/24**
 
-### AUTHOR-17. `es-b1-nominalizers` — Nominalizers el de / el que ("the one...")
+### AUTHOR-7. `es-b1-nominalizers` — Nominalizers el de / el que ("the one...")
 
 - **B1** · mechanism: **construction-variants** · cells: cloze (1 of 5), translation (1 of 5)
 - Under-represented:
   - `adjective-nominalizer` — Article/determiner + adjective (adjectival nominalizer) — **1/24**
 
-### AUTHOR-18. `es-b1-ser-estar-uses` — Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date
+### AUTHOR-8. `es-b1-ser-estar-uses` — Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date
 
 - **B1** · mechanism: **construction-variants** · cells: translation (1 of 5)
 - Under-represented:
   - `impersonal-ser-time` — Impersonal ser for time/period of day — **1/24**
 
-### AUTHOR-19. `es-b2-cleft-sentences` — Cleft sentences: ser-focus with relator agreement
+### AUTHOR-9. `es-b2-cleft-sentences` — Cleft sentences: ser-focus with relator agreement
 
 - **B2** · mechanism: **construction-variants** · cells: translation (1 of 7)
 - Under-represented:
   - `cleft-time-cuando` — Time-focus cleft with cuando — **1/24**
 
-### AUTHOR-20. `es-b2-past-subjunctive` — Past (imperfect) subjunctive
+### AUTHOR-10. `es-b2-past-subjunctive` — Past (imperfect) subjunctive
 
 - **B2** · mechanism: **construction-variants** · cells: cloze (1 of 3)
 - Under-represented:
   - `counterfactual-si-clause` — Counterfactual 'si' clause with imperfect subjunctive + conditional — **1/24**
 
-### AUTHOR-21. `es-b2-subjunctive-compound` — Compound subjunctive: perfect and pluperfect
+### AUTHOR-11. `es-b2-subjunctive-compound` — Compound subjunctive: perfect and pluperfect
 
 - **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
 - Under-represented:
@@ -704,3 +643,66 @@ These already declare at least as many variants as the audit enumerated. **No au
 - **B2** · mechanism: **construction-variants** · cells: cloze (1 of 3), translation (1 of 3)
 - Under-represented:
   - `conditional-perfect-standalone` — Standalone conditional perfect (hypothetical past) — **0/24**
+
+### REPASS-66. `es-b2-cuyo` — Relative possessive cuyo
+
+- **B2** · mechanism: **coverage-spec** · cells: cloze (1 of 4), translation (1 of 4)
+- Under-represented:
+  - `cuyo-vs-que-su-calque` — cuyo instead of *que + possessive (que sus novelas) — **0/24**
+
+### REPASS-67. `es-a1-present-indicative-regular` — Present indicative (regular verbs)
+
+- **A1** · mechanism: **coverage-spec** · cells: translation (2 of 6), cloze (1 of 6)
+- **Note (2026-08-19):** the audit also enumerated the three conjugation classes (-ar/-er/-ir). They were NOT declared as variants: a row is simultaneously a class AND a use, so only one can be the single label coverage is measured on, and the USE axis was chosen (the conjugation cell keeps verb seeding, which varies the classes). If the -er gap survives the repass it is a seed-pool problem, not a missing variant.
+- Under-represented:
+  - `present-indicative-er-verbs` — Present indicative: -er verbs (comer) — **0/22**
+  - `present-indicative-ar-verbs` — Present indicative: -ar verbs (hablar) — **1/22**
+
+### REPASS-68. `es-a1-locative-prepositions` — Locative prepositional phrases
+
+- **A1** · mechanism: **construction-variants** · cells: translation (1 of 6)
+- Under-represented:
+  - `bare-adverbs-no-de` — Bare locative adverbs without de (fuera, dentro, arriba, abajo) — **0/19**
+
+### REPASS-69. `es-a1-noun-modifiers-de` — Noun modifiers with de and con
+
+- **A1** · mechanism: **construction-variants** · cells: translation (1 of 4)
+- Under-represented:
+  - `de-attribute-price-age-measurement` — Attribute de for price, age, or measurement — **0/18**
+
+### REPASS-70. `es-a2-preterite-yo-spelling` — Preterite — yo-form spelling changes (-qué/-gué/-cé)
+
+- **A2** · mechanism: **coverage-spec** · cells: translation (1 of 4)
+- **Note (2026-08-19):** the rare -guar → -güé class is deliberately NOT a fourth variant. `targetOverride: 15` wins outright over the variant floor and is tied to the curated `conjugationSeedWords` list, which holds no -guar verb; the curriculum invariant requires targetOverride ≥ 4 × variants, which a fourth (16) would break.
+- Under-represented:
+  - `gar-gue` — -gar → -gué (e.g. llegar → llegué) — **0/12**
+
+### REPASS-71. `es-a2-saber-poder-ability` — Saber vs. poder for ability
+
+- **A2** · mechanism: **construction-variants** · cells: translation (1 of 3)
+- Under-represented:
+  - `poder-infinitive-circumstantial` — Poder + infinitive (circumstantial ability / permission) — **0/24**
+
+### REPASS-72. `es-a2-todo-otro-quantifiers` — Todo, otro, demasiado, nada/nadie
+
+- **A2** · mechanism: **construction-variants** · cells: cloze (1 of 6)
+- Under-represented:
+  - `todo-with-determiner` — todo/toda/todos/todas + article/possessive/demonstrative — **0/24**
+
+### REPASS-73. `es-b1-futuro-simple` — Future simple
+
+- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 3)
+- Under-represented:
+  - `futuro-probabilidad` — Future of probability (epistemic future) — **0/24**
+
+### REPASS-74. `es-b1-indirect-questions` — Indirect questions: si, qué, cuándo, dónde + clause or infinitivo
+
+- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 4)
+- Under-represented:
+  - `indirect-yn-si-infinitive` — Indirect yes/no question with si + infinitive (same subject) — **0/24**
+
+### REPASS-75. `es-b1-past-narration` — Past narration: imperfecto/indefinido interplay
+
+- **B1** · mechanism: **construction-variants** · cells: translation (1 of 3), cloze (1 of 3)
+- Under-represented:
+  - `al-infinitivo-simultaneous` — Al + infinitivo for 'on/when doing X' — **0/24**
