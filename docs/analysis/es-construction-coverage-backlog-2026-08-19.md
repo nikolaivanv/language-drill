@@ -8,13 +8,13 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 **Nightly pre-generation is paused in prod (#672)** precisely so variants can land first. Demoting before it resumes creates headroom nothing refills.
 
-**Before acting on a row, check it against the pool by hand.** The classifier labels what a row *tests*, not what it contains, so when constructions nest the specific one absorbs the general one's rows. A `0` beside a high-share sibling can mean "never tested on its own" rather than "absent". Two constructions the audit proposed have already been rejected on exactly these grounds (`clitic-shift` on the A2 periphrases, `gender-agreement`/`usted-register` on the direct object pronouns): each was orthogonal to the variant axis rather than a member of it.
+**Before acting on a row, check it against the pool by hand.** The classifier labels what a row *tests*, not what it contains, so when constructions nest the specific one absorbs the general one's rows. A `0` beside a high-share sibling can mean "never tested on its own" rather than "absent". **34 of the ~215 constructions the audit proposed were rejected on these grounds across the nine authoring batches** — non-disjoint properties every row already realizes (`postnominal-position`, `accent-on-question-words`), prohibitions no draft can realize (`no-ellipsis-of-participle`, `cuyo-not-interrogative`), axes a `coverageSpec` already owns (`pronoun-person-agreement`, `verb-agreement-with-thing`), and one item whose own directive asked for two equally correct answers (`perfect-pluperfect-interchangeability`). Each rejection is documented in a comment on the point in `packages/db/src/curriculum/es.ts`. The audit is a good enumerator and a poor judge of axis orthogonality; that is where the human call is load-bearing.
 
 ## Scope
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **11** · needs topping up: **4** · needs only the repass: **75**
+- Needs authoring: **0** · needs topping up: **4** · needs only the repass: **86**
 
 ### Never examined — re-run after the enumeration fixes in #673
 
@@ -25,74 +25,7 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 ## Bucket A — no variants declared: author them
 
-These points declare no `constructionVariants` at all. Author a list, then repass.
-
-### AUTHOR-1. `es-b2-adjective-position` — Adjective position and meaning
-
-- **B2** · mechanism: **construction-variants** · cells: translation (1 of 5)
-- Under-represented:
-  - `postnominal-literal-meaning` — Postnominal position yields literal/physical meaning — **0/24**
-
-### AUTHOR-2. `es-b2-nuanced-ser-estar` — Nuanced ser vs. estar
-
-- **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
-- Under-represented:
-  - `resultant-state-estar-past-participle` — Resultant-state estar + past participle — **0/24**
-
-### AUTHOR-3. `es-b2-reported-speech-backshift` — Reported speech — full backshift
-
-- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 5)
-- Under-represented:
-  - `command-to-imperfect-subjunctive` — Reported command → Imperfect subjunctive — **0/24**
-
-### AUTHOR-4. `es-b2-causal-connectors` — Formal causal connectors: ya que, puesto que, debido a que, enunciative porque
-
-- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 4), translation (1 of 4)
-- Under-represented:
-  - `debido-a-que` — debido a que (formal causal alternative) — **1/24**
-  - `ya-que-puesto-que` — ya que / puesto que (formal 'since/given that') — **1/24**
-
-### AUTHOR-5. `es-a2-gustar-type-verbs` — Gustar-type verbs (extended)
-
-- **A2** · mechanism: **construction-variants** · cells: cloze (1 of 4)
-- Under-represented:
-  - `a-tonic-reduplication` — a + tonic pronoun/name reduplication for clarification or contrast — **1/24**
-
-### AUTHOR-6. `es-a2-preterite-irregular` — Preterite — irregular verbs
-
-- **A2** · mechanism: **coverage-spec** · cells: cloze (1 of 3)
-- Under-represented:
-  - `preterite-ser-ir-fui` — Shared preterite of ser/ir (fui/fuiste/fue/fuimos/fuisteis/fueron) — **1/24**
-
-### AUTHOR-7. `es-b1-nominalizers` — Nominalizers el de / el que ("the one...")
-
-- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 5), translation (1 of 5)
-- Under-represented:
-  - `adjective-nominalizer` — Article/determiner + adjective (adjectival nominalizer) — **1/24**
-
-### AUTHOR-8. `es-b1-ser-estar-uses` — Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date
-
-- **B1** · mechanism: **construction-variants** · cells: translation (1 of 5)
-- Under-represented:
-  - `impersonal-ser-time` — Impersonal ser for time/period of day — **1/24**
-
-### AUTHOR-9. `es-b2-cleft-sentences` — Cleft sentences: ser-focus with relator agreement
-
-- **B2** · mechanism: **construction-variants** · cells: translation (1 of 7)
-- Under-represented:
-  - `cleft-time-cuando` — Time-focus cleft with cuando — **1/24**
-
-### AUTHOR-10. `es-b2-past-subjunctive` — Past (imperfect) subjunctive
-
-- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 3)
-- Under-represented:
-  - `counterfactual-si-clause` — Counterfactual 'si' clause with imperfect subjunctive + conditional — **1/24**
-
-### AUTHOR-11. `es-b2-subjunctive-compound` — Compound subjunctive: perfect and pluperfect
-
-- **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
-- Under-represented:
-  - `pluperfect-subjunctive-hubiera-hubiese-participle` — Pluperfect subjunctive: hubiera/hubiese + participle (non-si-clause uses) — **1/24**
+**CLEARED 2026-08-19** (#674, #675, #676, #677, #678, #679, #680, #681 and the batch-9 PR). All 86 points that reached this bucket now declare a `constructionVariants` list; every one of them has moved to bucket C and needs only the repass. Nothing is left to author here.
 
 ## Bucket B — variants declared but incomplete: add the missing ones
 
@@ -706,3 +639,70 @@ These already declare at least as many variants as the audit enumerated. **No au
 - **B1** · mechanism: **construction-variants** · cells: translation (1 of 3), cloze (1 of 3)
 - Under-represented:
   - `al-infinitivo-simultaneous` — Al + infinitivo for 'on/when doing X' — **0/24**
+
+### REPASS-76. `es-b2-adjective-position` — Adjective position and meaning
+
+- **B2** · mechanism: **construction-variants** · cells: translation (1 of 5)
+- Under-represented:
+  - `postnominal-literal-meaning` — Postnominal position yields literal/physical meaning — **0/24**
+
+### REPASS-77. `es-b2-nuanced-ser-estar` — Nuanced ser vs. estar
+
+- **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
+- Under-represented:
+  - `resultant-state-estar-past-participle` — Resultant-state estar + past participle — **0/24**
+
+### REPASS-78. `es-b2-reported-speech-backshift` — Reported speech — full backshift
+
+- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 5)
+- Under-represented:
+  - `command-to-imperfect-subjunctive` — Reported command → Imperfect subjunctive — **0/24**
+
+### REPASS-79. `es-b2-causal-connectors` — Formal causal connectors: ya que, puesto que, debido a que, enunciative porque
+
+- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 4), translation (1 of 4)
+- Under-represented:
+  - `debido-a-que` — debido a que (formal causal alternative) — **1/24**
+  - `ya-que-puesto-que` — ya que / puesto que (formal 'since/given that') — **1/24**
+
+### REPASS-80. `es-a2-gustar-type-verbs` — Gustar-type verbs (extended)
+
+- **A2** · mechanism: **construction-variants** · cells: cloze (1 of 4)
+- Under-represented:
+  - `a-tonic-reduplication` — a + tonic pronoun/name reduplication for clarification or contrast — **1/24**
+
+### REPASS-81. `es-a2-preterite-irregular` — Preterite — irregular verbs
+
+- **A2** · mechanism: **coverage-spec** · cells: cloze (1 of 3)
+- Under-represented:
+  - `preterite-ser-ir-fui` — Shared preterite of ser/ir (fui/fuiste/fue/fuimos/fuisteis/fueron) — **1/24**
+
+### REPASS-82. `es-b1-nominalizers` — Nominalizers el de / el que ("the one...")
+
+- **B1** · mechanism: **construction-variants** · cells: cloze (1 of 5), translation (1 of 5)
+- Under-represented:
+  - `adjective-nominalizer` — Article/determiner + adjective (adjectival nominalizer) — **1/24**
+
+### REPASS-83. `es-b1-ser-estar-uses` — Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date
+
+- **B1** · mechanism: **construction-variants** · cells: translation (1 of 5)
+- Under-represented:
+  - `impersonal-ser-time` — Impersonal ser for time/period of day — **1/24**
+
+### REPASS-84. `es-b2-cleft-sentences` — Cleft sentences: ser-focus with relator agreement
+
+- **B2** · mechanism: **construction-variants** · cells: translation (1 of 7)
+- Under-represented:
+  - `cleft-time-cuando` — Time-focus cleft with cuando — **1/24**
+
+### REPASS-85. `es-b2-past-subjunctive` — Past (imperfect) subjunctive
+
+- **B2** · mechanism: **construction-variants** · cells: cloze (1 of 3)
+- Under-represented:
+  - `counterfactual-si-clause` — Counterfactual 'si' clause with imperfect subjunctive + conditional — **1/24**
+
+### REPASS-86. `es-b2-subjunctive-compound` — Compound subjunctive: perfect and pluperfect
+
+- **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
+- Under-represented:
+  - `pluperfect-subjunctive-hubiera-hubiese-participle` — Pluperfect subjunctive: hubiera/hubiese + participle (non-si-clause uses) — **1/24**

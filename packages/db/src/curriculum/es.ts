@@ -1642,6 +1642,33 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-preterite-irregular',
+    // Measured 2026-08-19 (`audit:constructions`): 18 of 24 sampled rows were
+    // tener/hacer/estar. The shared fui/fue paradigm of ser and ir — the second
+    // of the three groups the description names — had 1 row, even though both
+    // verbs sit in `conjugationSeedWords` below.
+    //
+    // The `person` coverageSpec is KEPT: these three groups are lexical and
+    // orthogonal to person, which is the case the coexistence rule allows.
+    constructionVariants: [
+      {
+        id: 'preterite-tener-hacer-estar',
+        directive:
+          'the strong-stem preterite of tener (tuve), hacer (hice/hizo) or estar (estuve), with unstressed 1sg/3sg endings (Ayer hice la tarea y tuve que quedarme en casa)',
+        share: 3,
+      },
+      {
+        id: 'preterite-ser-ir-fui',
+        directive:
+          'the shared preterite of ser and ir — fui/fuiste/fue/fuimos/fuisteis/fueron — with the context making clear which verb is meant (Ayer fuimos al museo, y la visita fue muy interesante)',
+        share: 3,
+      },
+      {
+        id: 'preterite-ver-dar-accent-free',
+        directive:
+          'the accent-free monosyllabic preterites of ver (vi/vio) and dar (di/dio), never *vió or *dió (Vi la película y luego le di mi opinión)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Preterite — irregular verbs',
     description:
@@ -2632,6 +2659,38 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-gustar-type-verbs',
+    // Measured 2026-08-19 (`audit:constructions`): a + tonic reduplication had 1
+    // row of 23 and the resultar / ser + adjective frame 0, while the plain
+    // clitic frame took the rest.
+    //
+    // Two of the audit's proposals are REJECTED because they ARE the two
+    // coverageSpec axes below, not members of a construction axis.
+    // `gustar-type-full-clitic-series` is what the `person` floors already
+    // enforce (and it is the general case every row realizes);
+    // `verb-agreement-with-thing` is what the `number` floors enforce, and
+    // declaring it would pin plural on every draft that drew it, colliding with
+    // the spec's own "target word form MUST be singular" ordinals. Both specs
+    // are KEPT and the three variants below are person- and number-free.
+    constructionVariants: [
+      {
+        id: 'gustar-plain-clitic-frame',
+        directive:
+          'the plain frame — indirect-object clitic + a gustar-type verb (gustar, encantar, doler, interesar, molestar) + the thing — with NO a-phrase reduplication (Nos encanta viajar en verano; Le duelen los pies)',
+        share: 3,
+      },
+      {
+        id: 'a-tonic-reduplication',
+        directive:
+          'a + tonic pronoun or proper name ALONGSIDE the clitic, clarifying or contrasting who is affected — never replacing the clitic (A Juan le interesa la historia, pero a mí no me interesa nada)',
+        share: 2,
+      },
+      {
+        id: 'resultar-ser-adjective',
+        directive:
+          'resultar or ser + adjective in the same dative frame (Me resulta difícil madrugar; Le es muy útil ese diccionario)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         // The full experiencer series me/te/le/nos/les IS the A2 delta over
@@ -3644,6 +3703,37 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-nominalizers',
+    // Measured 2026-08-19 (`audit:constructions`): article + que took 30 of 48
+    // sampled rows and article + de 15. The ADJECTIVAL nominalizer (los viejos,
+    // una rota, uno parecido) — the last sentence of the description, including
+    // the un → uno shift — had 1 row per cell.
+    //
+    // Two of the audit's proposals are REJECTED. `gender-number-agreement` is
+    // what the `number` coverageSpec below already floors, and it is a property
+    // every nominalizer row realizes. `anti-calque-el-uno-de` names a
+    // prohibition (*el uno de) that a correct draft cannot realize, and its
+    // directive asked for an error-correction format these exercise types do not
+    // have. The spec is KEPT; all three variants are number-free.
+    constructionVariants: [
+      {
+        id: 'article-de-nominalizer',
+        directive:
+          'article + de standing in for an omitted noun, the article agreeing with that noun (Mi coche y el de Juan; Prefiero los de ayer; la de mi hermana)',
+        share: 3,
+      },
+      {
+        id: 'article-que-nominalizer',
+        directive:
+          "article + que for 'the one(s) that', the article agreeing with the omitted noun (Prefiero el que compramos; La que está fuera es mía; los que llegaron tarde)",
+        share: 3,
+      },
+      {
+        id: 'adjective-nominalizer',
+        directive:
+          'a determiner + ADJECTIVE standing for a full noun phrase, with masculine un becoming uno (Los viejos ya no funcionan; Tengo una rota; Busco uno parecido)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         // el que/la de agree in number with the omitted noun (los que /
@@ -4566,6 +4656,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-ser-estar-uses',
+    // Measured 2026-08-19 (`audit:constructions`): estar a + price/date and
+    // estar de + occupation took 23 of 24 sampled rows. Impersonal ser for the
+    // time of day — the FIRST use the description names — had 1, and estar con
+    // and the parecer contrast 0.
+    constructionVariants: [
+      {
+        id: 'impersonal-ser-time',
+        directive:
+          'impersonal ser for the time or the period of the day, with no subject at all (Ya es tarde; Es de noche cuando salgo del trabajo)',
+        share: 3,
+      },
+      {
+        id: 'estar-de-occupation',
+        directive:
+          'estar de + noun for a TEMPORARY occupation or role, which ser would make permanent (Está de camarero este verano; Estuvo de becario un año)',
+        share: 2,
+      },
+      {
+        id: 'estar-a-price-date',
+        directive:
+          'estar a + a fluctuating price or the date (Estamos a quince de mayo; Los tomates están a tres euros el kilo)',
+        share: 2,
+      },
+      {
+        id: 'estar-con-ailment-accompaniment',
+        directive:
+          'estar con + noun for a current ailment or for who someone is with (Está con tos desde el lunes; Estoy con mis padres esta semana)',
+        share: 2,
+      },
+      {
+        id: 'parecer-adj-vs-parece-que',
+        directive:
+          'parecer + adjective agreeing with its subject, or impersonal parece que + indicative — the two being different structures (Parece cansado; Parece que va a llover)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Ser/estar special uses: impersonal time, estar de + occupation, estar a + price/date',
     description:
@@ -4729,6 +4855,32 @@ const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
   {
     key: 'es-b2-past-subjunctive',
+    // Measured 2026-08-19 (`audit:constructions`): 21 of 24 sampled rows were a
+    // past-tense trigger + que-clause. The counterfactual si-clause — one of the
+    // three uses in the description's single sentence — had 1 row, and the
+    // polite request 2.
+    //
+    // The `person` coverageSpec below is KEPT: all three uses are person-free.
+    constructionVariants: [
+      {
+        id: 'past-tense-trigger-subjunctive',
+        directive:
+          'a PAST-tense main verb forcing the imperfect subjunctive in a que-clause (Esperaba que vinieras a la fiesta; Me pidieron que esperara fuera)',
+        share: 3,
+      },
+      {
+        id: 'counterfactual-si-clause',
+        directive:
+          'a counterfactual si + imperfect subjunctive paired with a simple CONDITIONAL main clause (Si tuviera tiempo, viajaría más; Si fuéramos ricos, no trabajaríamos)',
+        share: 3,
+      },
+      {
+        id: 'polite-request-subjunctive',
+        directive:
+          'the imperfect subjunctive standing alone as a polite request or wish — no si-clause, no past trigger (Quisiera reservar una mesa para dos; ¿Pudiera usted ayudarme?)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
@@ -4846,6 +4998,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-reported-speech-backshift',
+    // Measured 2026-08-19 (`audit:constructions`): the future→conditional shift
+    // took 14 of 23 classified rows. The reported COMMAND (Me pidió que la
+    // ayudara) — one of the point's own examplesPositive and the target of its
+    // third commonError — was 0, and the reported yes/no question 0.
+    //
+    // `deictic-shift` is REJECTED as a variant: a deictic shift rides ON a tense
+    // backshift rather than replacing one, so a row is always both and the
+    // single label could only record one of them. Every directive below asks for
+    // the deictic shift where the sentence needs it, which also covers the
+    // próximo/siguiente commonError.
+    constructionVariants: [
+      {
+        id: 'future-to-conditional',
+        directive:
+          'a reported clause whose FUTURE becomes a conditional, with any time deictic shifted too (Dijo que vendría a la fiesta; Prometió que me llamaría al día siguiente)',
+        share: 3,
+      },
+      {
+        id: 'preterite-perfect-to-pluperfect',
+        directive:
+          'a reported clause whose preterite or present perfect becomes a PLUPERFECT (Aseguró que ya había terminado el informe; Contó que había estado allí aquel día)',
+        share: 2,
+      },
+      {
+        id: 'command-to-imperfect-subjunctive',
+        directive:
+          'a reported COMMAND, where the imperative becomes an imperfect subjunctive after pedir/ordenar/rogar + que (Me pidió que la ayudara con la mudanza; El médico le ordenó que descansara)',
+        share: 3,
+      },
+      {
+        id: 'reported-question-si',
+        directive:
+          'a reported YES/NO question introduced by si, with the embedded verb fully backshifted (Me preguntó si había terminado el trabajo; Quiso saber si vendríamos)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Reported speech — full backshift',
     description:
@@ -4947,6 +5135,30 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-nuanced-ser-estar',
+    // Measured 2026-08-19 (`audit:constructions`): 24 of 24 sampled rows were the
+    // meaning-shifting adjective contrast (ser listo / estar listo). Resultant-
+    // state estar + participle — half of what the description claims, and the
+    // subject of two of the three commonErrors — was 0.
+    constructionVariants: [
+      {
+        id: 'ser-estar-meaning-shift-adjectives',
+        directive:
+          'an adjective whose meaning flips with ser vs. estar — listo, aburrido, malo, bueno, rico, seguro, verde, vivo — with the context fixing which reading is meant (María es muy lista, pero todavía no está lista; Esta sopa está riquísima aunque su familia no es rica)',
+        share: 3,
+      },
+      {
+        id: 'resultant-state-estar-past-participle',
+        directive:
+          'estar + PAST PARTICIPLE for the state left by an earlier action, the participle agreeing with the subject — including posture, where English uses an -ing form (La puerta está cerrada; Cuando llegué, María estaba sentada en el sofá)',
+        share: 3,
+      },
+      {
+        id: 'ser-with-state-like-adjectives',
+        directive:
+          'ser with an adjective that looks temporary but is treated as inherent in Spanish — feliz, inocente, culpable, consciente (El acusado insistió en que era inocente; Es muy feliz con su vida)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Nuanced ser vs. estar',
     description:
@@ -5164,6 +5376,31 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-subjunctive-compound',
+    // Measured 2026-08-19 (`audit:constructions`): 23 of 24 sampled rows were the
+    // perfect subjunctive (haya + participle). The pluperfect subjunctive
+    // outside si-clauses — an ojalá wish, a past-reference que-clause — had 1.
+    //
+    // The audit's `perfect-pluperfect-interchangeability` is REJECTED as a
+    // variant. Its own directive says "both answers must be accepted", which
+    // describes an acceptableAnswers property of a row rather than a
+    // construction a draft realizes — and asking the generator for an item with
+    // two equally correct fillers is the ambiguity class the cloze validator
+    // exists to reject. The interchangeability stays in the description, where
+    // the evaluator reads it.
+    constructionVariants: [
+      {
+        id: 'perfect-subjunctive-haya-participle',
+        directive:
+          'the perfect subjunctive haya + participle for a completed action under doubt, emotion or future anteriority (No es verdad que haya escrito esa carta; Te llamaré en cuanto se haya marchado el jefe)',
+        share: 3,
+      },
+      {
+        id: 'pluperfect-subjunctive-hubiera-hubiese-participle',
+        directive:
+          'the pluperfect subjunctive hubiera/hubiese + participle OUTSIDE a si-clause — an ojalá wish, or a que-clause of doubt or emotion with past reference (Ojalá hubiera sabido la verdad antes; Era imposible que hubiera llegado a tiempo)',
+        share: 3,
+      },
+    ],
     kind: 'grammar',
     name: 'Compound subjunctive: perfect and pluperfect',
     description:
@@ -5876,6 +6113,36 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-causal-connectors',
+    // Measured 2026-08-19 (`audit:constructions`): the two cells collapsed onto
+    // DIFFERENT connectors — ya que/puesto que took 15 of 24 in cloze and 1 of 24
+    // in translation, debido a que 1 and 9 — so neither cell taught the set and
+    // neither looked broken on its own. Colloquial que was 0 in both.
+    constructionVariants: [
+      {
+        id: 'ya-que-puesto-que',
+        directive:
+          "ya que or puesto que for 'since / given that', fronted or following the main clause (Puesto que quieres que me quede, me quedo; No pudimos salir, ya que llovía sin parar)",
+        share: 3,
+      },
+      {
+        id: 'debido-a-que',
+        directive:
+          'debido a que as a formal causal connector, with the a never dropped (El vuelo se retrasó debido a que había niebla en el aeropuerto)',
+        share: 3,
+      },
+      {
+        id: 'enunciative-porque',
+        directive:
+          "ENUNCIATIVE porque, justifying the speaker's inference rather than explaining the fact itself (Están en casa, porque veo luz encendida en la ventana)",
+        share: 2,
+      },
+      {
+        id: 'colloquial-que',
+        directive:
+          'colloquial que attaching a reason to an imperative or a warning (¡Date prisa, que se va el tren!; Ponte el abrigo, que hace frío)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Formal causal connectors: ya que, puesto que, debido a que, enunciative porque',
     description:
@@ -6127,6 +6394,48 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-cleft-sentences',
+    // Measured 2026-08-19 (`audit:constructions`): the person cleft and the
+    // neuter lo que pseudo-cleft took 18 of 24 sampled rows; the TIME cleft with
+    // cuando had 1 and the prepositional cleft 1.
+    //
+    // Two of the audit's proposals are REJECTED as non-members of the axis:
+    // `cleft-ser-agreement-number-person` and
+    // `cleft-relative-clause-person-agreement` describe AGREEMENT that rides on
+    // a person-focus cleft rather than a distinct relator type, so a row would
+    // always be both and the single label could record only one. The agreement
+    // requirement rides in the person directive instead.
+    constructionVariants: [
+      {
+        id: 'cleft-person-quien',
+        directive:
+          'a ser-focus cleft on a PERSON, with quien/quienes or el que/la que as the relator — and if the focus is a first- or second-person pronoun, ser and the relative verb agree with it (Fue Juan quien llamó anoche; El que llamó fui yo; Somos nosotros quienes decidimos)',
+        share: 3,
+      },
+      {
+        id: 'cleft-place-donde',
+        directive:
+          'a ser-focus cleft on a PLACE, with donde as the relator (Es aquí donde nos conocimos; Fue en Sevilla donde se casaron)',
+        share: 2,
+      },
+      {
+        id: 'cleft-time-cuando',
+        directive:
+          'a ser-focus cleft on a TIME expression, with cuando as the relator (Fue entonces cuando lo supe; Es en verano cuando más trabajamos)',
+        share: 3,
+      },
+      {
+        id: 'cleft-neuter-lo-que',
+        directive:
+          'a pseudo-cleft built on lo que as subject, with ser as the copula (Lo que necesito es dormir; Lo que más me molesta es el ruido)',
+        share: 2,
+      },
+      {
+        id: 'cleft-prepositional-agreement',
+        directive:
+          'a cleft whose focus is a PREPOSITIONAL phrase, with the same preposition repeated before the relator (Fue por eso por lo que me fui; Es con ella con quien tienes que hablar)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Cleft sentences: ser-focus with relator agreement',
     description:
@@ -6152,6 +6461,41 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-adjective-position',
+    // Measured 2026-08-19 (`audit:constructions`): 23 of 24 sampled rows put the
+    // adjective PRENOMINALLY for its figurative reading. The postnominal half of
+    // the very contrast this point exists to teach — un hombre pobre, un
+    // edificio antiguo — was 0, so the pool taught one side of a two-sided rule.
+    //
+    // `apocopation-prenominal` (gran, not grande) is REJECTED as a variant: it
+    // is nested inside the prenominal case — every un gran escritor row is both
+    // — so undivided the specific one would absorb the general. It rides in the
+    // prenominal directive, where the commonError lives anyway.
+    constructionVariants: [
+      {
+        id: 'prenominal-meaning-shift',
+        directive:
+          'a position-sensitive adjective — gran(de), pobre, antiguo, viejo, único, nuevo, cierto — placed BEFORE the noun for its figurative reading, apocopated where required (Es un gran escritor; Visité mi antiguo colegio; un pobre hombre)',
+        share: 3,
+      },
+      {
+        id: 'postnominal-literal-meaning',
+        directive:
+          'the same adjectives placed AFTER the noun for their literal, physical reading (Vive en una casa grande; un edificio antiguo del siglo XIX; un hombre pobre que no tenía nada)',
+        share: 3,
+      },
+      {
+        id: 'prenominal-only-adjectives',
+        directive:
+          'an adjective that only works BEFORE the noun — mero, pleno, supuesto, llamado, tamaño, sendos (Fue un mero malentendido; en pleno invierno; el supuesto culpable)',
+        share: 2,
+      },
+      {
+        id: 'relational-adjectives-postnominal',
+        directive:
+          'a relational, classifying adjective that must stay AFTER the noun because it names a category rather than a quality (una política energética; un virus informático; la reforma educativa)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Adjective position and meaning',
     description:
