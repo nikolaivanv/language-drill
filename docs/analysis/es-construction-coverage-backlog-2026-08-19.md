@@ -2,6 +2,12 @@
 
 Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08-19`, prompt `construction-coverage@2026-08-18`, seed `default`, sample cap 24), then re-grouped 2026-08-19 by what each point actually needs.
 
+**STATUS 2026-08-19: authoring is COMPLETE.** Buckets A and B are cleared across
+#674–#682 and the batch-10 PR; all **90** points now declare a
+`constructionVariants` list, and every remaining item is the same single job —
+the #631 repass, in the order given below. Nothing in this document is an
+authoring task any more.
+
 **Not every finding is authoring work.** A point whose variants are already declared is collapsed because its pool PREDATES them — the remedy there is the retrofit repass PR #631 never ran, not a second variant list. The three buckets below are ordered by how much work they are.
 
 **Retrofit order, whichever bucket:** merge the curriculum edit → `push-prompts` per env → `backfill:variant-seeds` **before** demotion (legacy rows carry no `seedWord`, so `pickVariantSeeds` reads them as zero coverage and would spread new drafts evenly, deepening the skew) → `demote:pool --reason pool-hygiene` for headroom. Never `--reason quality` — that revokes learners' credit for past attempts.
@@ -14,7 +20,7 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **0** · needs topping up: **4** · needs only the repass: **86**
+- Needs authoring: **0** · needs topping up: **0** · needs only the repass: **90**
 
 ### Never examined — re-run after the enumeration fixes in #673
 
@@ -29,47 +35,7 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 
 ## Bucket B — variants declared but incomplete: add the missing ones
 
-These already declare some variants; the audit found constructions the existing list does not cover. Add only the missing ones — do not restate the existing.
-
-### TOP-UP-1. `es-a2-periphrases-obligation-aspect` — Obligation and aspect periphrases
-
-- **A2** · mechanism: **construction-variants** · cells: cloze (5 of 8), translation (6 of 8)
-- Under-represented:
-  - `empezar-a-infinitive` — empezar a + infinitive (to begin doing) — **0/24**
-  - `soler-infinitive` — soler + infinitive (habitual action, present/imperfect only) — **0/24**
-  - `clitic-shift` — Optional clitic shift (verlo vs. lo + conjugated verb) — **0/24**
-  - `recien-participle` — recién + past participle (newly/just done) — **0/24**
-  - `hay-que-infinitive` — hay que + infinitive (impersonal necessity) — **0/24**
-  - `volver-a-infinitive` — volver a + infinitive (to do again) — **0/24**
-  - `tener-que-infinitive` — tener que + infinitive (personal obligation) — **1/24**
-
-### TOP-UP-2. `es-a2-por-para` — Por vs. para
-
-- **A2** · mechanism: **construction-variants** · cells: cloze (4 of 8), translation (5 of 8)
-- Under-represented:
-  - `por-duration` — Por = duration of time — **0/24**
-  - `por-means-channel` — Por = means / channel / agent — **0/24**
-  - `por-fetch-ir-venir` — Por = fetching after ir/venir (a por) — **0/24**
-  - `por-movement-location` — Por = movement through / vague location — **0/24**
-  - `por-exchange` — Por = exchange / substitution — **1/24**
-
-### TOP-UP-3. `es-a2-estar-gerundio` — Estar + gerundio
-
-- **A2** · mechanism: **construction-variants** · cells: cloze (3 of 9), translation (2 of 9)
-- Under-represented:
-  - `gerund-formation-y-insertion` — Gerund with y-insertion (leyendo, creyendo) — **0/24**
-  - `gerund-formation-stem-change` — Gerund with stem change (durmiendo, pidiendo) — **0/24**
-  - `enclitic-pronoun-on-gerund` — Enclitic pronoun(s) attached to the gerund (leyéndolo) — **0/24**
-  - `gerund-formation-regular` — Regular gerund formation (-ando/-iendo) — **0/24**
-
-### TOP-UP-4. `es-b2-verbs-of-change` — Verbs of becoming: ponerse, quedarse, hacerse, volverse, convertirse en, llegar a ser
-
-- **B2** · mechanism: **construction-variants** · cells: cloze (3 of 8), translation (4 of 8)
-- Under-represented:
-  - `hacerse-voluntary-conversion` — hacerse + noun/adjective (voluntary lasting conversion) — **0/24**
-  - `resultar-unexpected-outcome` — resultar + noun/adjective (unexpected outcome or impression) — **0/24**
-  - `quedarse-resultant-state` — quedarse + adjective/participle (state left by an event) — **1/24**
-  - `ponerse-brief-change` — ponerse + adjective (brief mood/appearance change) — **1/24**
+**CLEARED 2026-08-19.** Two of the four points needed one variant each (`es-a2-por-para`, `es-b2-verbs-of-change`); the other two needed nothing — every construction the audit listed for them was already declared, or had been rejected with a documented reason. All four have moved to bucket C.
 
 ## Bucket C — variants already declared: repass only, do NOT author
 
@@ -706,3 +672,47 @@ These already declare at least as many variants as the audit enumerated. **No au
 - **B2** · mechanism: **construction-variants** · cells: translation (1 of 3)
 - Under-represented:
   - `pluperfect-subjunctive-hubiera-hubiese-participle` — Pluperfect subjunctive: hubiera/hubiese + participle (non-si-clause uses) — **1/24**
+
+### REPASS-87. `es-a2-periphrases-obligation-aspect` — Obligation and aspect periphrases
+
+- **A2** · mechanism: **construction-variants** · cells: cloze (5 of 8), translation (6 of 8)
+- **Resolved 2026-08-19 — nothing to add.** Six of the seven constructions the audit listed here (`empezar-a`, `soler`, `recién`, `hay que`, `volver a`, `tener que`) were ALREADY declared; the pool is short of them because it predates the list. The seventh, `clitic-shift`, was rejected in #674 as orthogonal to the periphrasis axis (a `volver a verlo` row realizes both) and rides in the directives instead. This point needs only the repass.
+- Under-represented:
+  - `empezar-a-infinitive` — empezar a + infinitive (to begin doing) — **0/24**
+  - `soler-infinitive` — soler + infinitive (habitual action, present/imperfect only) — **0/24**
+  - `clitic-shift` — Optional clitic shift (verlo vs. lo + conjugated verb) — **0/24**
+  - `recien-participle` — recién + past participle (newly/just done) — **0/24**
+  - `hay-que-infinitive` — hay que + infinitive (impersonal necessity) — **0/24**
+  - `volver-a-infinitive` — volver a + infinitive (to do again) — **0/24**
+  - `tener-que-infinitive` — tener que + infinitive (personal obligation) — **1/24**
+
+### REPASS-88. `es-a2-por-para` — Por vs. para
+
+- **A2** · mechanism: **construction-variants** · cells: cloze (4 of 8), translation (5 of 8)
+- **Topped up 2026-08-19:** `por-fetch-ir-venir` added (share 1) and the two `para` variants moved to share 2 so the por/para split stays near even. `por-duration` remains deliberately excluded — the point's own fourth commonError warns learners off that rendering.
+- Under-represented:
+  - `por-duration` — Por = duration of time — **0/24**
+  - `por-means-channel` — Por = means / channel / agent — **0/24**
+  - `por-fetch-ir-venir` — Por = fetching after ir/venir (a por) — **0/24**
+  - `por-movement-location` — Por = movement through / vague location — **0/24**
+  - `por-exchange` — Por = exchange / substitution — **1/24**
+
+### REPASS-89. `es-a2-estar-gerundio` — Estar + gerundio
+
+- **A2** · mechanism: **construction-variants** · cells: cloze (3 of 9), translation (2 of 9)
+- **Resolved 2026-08-19 — nothing to add.** All three gerund-formation classes the audit listed were already declared. The fourth item, `enclitic-pronoun-on-gerund`, was deliberately excluded in #676: this point tangles gerund form, the tense of `estar` and clitic placement, a row is simultaneously a point on all three, and only one can be the measured axis. This point needs only the repass.
+- Under-represented:
+  - `gerund-formation-y-insertion` — Gerund with y-insertion (leyendo, creyendo) — **0/24**
+  - `gerund-formation-stem-change` — Gerund with stem change (durmiendo, pidiendo) — **0/24**
+  - `enclitic-pronoun-on-gerund` — Enclitic pronoun(s) attached to the gerund (leyéndolo) — **0/24**
+  - `gerund-formation-regular` — Regular gerund formation (-ando/-iendo) — **0/24**
+
+### REPASS-90. `es-b2-verbs-of-change` — Verbs of becoming: ponerse, quedarse, hacerse, volverse, convertirse en, llegar a ser
+
+- **B2** · mechanism: **construction-variants** · cells: cloze (3 of 8), translation (4 of 8)
+- **Topped up 2026-08-19:** `resultar-unexpected-outcome` added (share 1). The 2026-08-08 exclusion (it reports an outcome rather than a change the subject undergoes) is real but argues for a small share, not for a pool with none — the description and examplesPositive both teach it.
+- Under-represented:
+  - `hacerse-voluntary-conversion` — hacerse + noun/adjective (voluntary lasting conversion) — **0/24**
+  - `resultar-unexpected-outcome` — resultar + noun/adjective (unexpected outcome or impression) — **0/24**
+  - `quedarse-resultant-state` — quedarse + adjective/participle (state left by an event) — **1/24**
+  - `ponerse-brief-change` — ponerse + adjective (brief mood/appearance change) — **1/24**

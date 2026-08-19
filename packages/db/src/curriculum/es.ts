@@ -3298,10 +3298,22 @@ const esCurriculum: readonly GrammarPoint[] = [
     // Uniform shares: with four por variants against two para ones the pool
     // already sits at ~67/33, and a share-3 por member would take it to 75/25
     // on a point whose whole purpose is the por/para contrast.
-    // NOT rotated, though the description lists them: por for DURATION (por dos
-    // años) — the point's own fourth commonError warns learners off it — and
-    // fetching a por pan, which is Peninsular-only and lexically confined to
-    // ir/venir/salir. See the task-8 report.
+    // NOT rotated, though the description lists it: por for DURATION (por dos
+    // años) — the point's own fourth commonError warns learners off exactly that
+    // rendering, so mandating it in ~1 draft in 7 would drill a pattern the
+    // point tells learners to avoid. Re-examined 2026-08-19 and kept out.
+    //
+    // The fetching use (salir a por pan) was excluded with it on 2026-08-08 as
+    // Peninsular-only and lexically confined to ir/venir/salir. That exclusion
+    // is REVERSED here: `audit:constructions` measured it at 0 of 48 approved
+    // rows, and this curriculum is Peninsular throughout (Butt & Benjamin is the
+    // reference grammar, and the use appears in this point's own
+    // examplesPositive). Lexical confinement is a reason to give it share 1, not
+    // to leave the pool with none.
+    //
+    // Adding a fifth por member would take the por/para split to 71/29 on a
+    // point whose whole purpose is the contrast, so the two para variants move
+    // to share 2: the split is now 5 por vs. 4 para (~56/44).
     constructionVariants: [
       {
         id: 'por-cause-reason',
@@ -3324,14 +3336,21 @@ const esCurriculum: readonly GrammarPoint[] = [
           'por of place — movement through, or a vague location rather than a point (Caminamos por el parque; Las llaves estarán por aquí)',
       },
       {
+        id: 'por-fetch-ir-venir',
+        directive:
+          'por after a verb of motion for what is being fetched, Peninsular a por (Mi padre ha salido a por pan; Vengo a por las llaves)',
+      },
+      {
         id: 'para-recipient',
         directive:
           'para marking the person something is intended for (Este regalo es para ti; He guardado un trozo para tu hermano)',
+        share: 2,
       },
       {
         id: 'para-deadline',
         directive:
           'para fixing a deadline — the point in time by which something must be ready (Lo necesito para el lunes)',
+        share: 2,
       },
     ],
   },
@@ -5670,9 +5689,14 @@ const esCurriculum: readonly GrammarPoint[] = [
     // plain quedar — B&B treats them together, so they share one variant).
     // ponerse takes share 3 as the most frequent of the set (B&B lists it
     // first; brief mood/appearance changes are the everyday case).
-    // NOT rotated: resultar (31.3.7), which the description mentions only in
-    // passing and which reports an outcome or impression rather than a change
-    // undergone by the subject. See the task-8 report.
+    // resultar (31.3.7) was excluded on 2026-08-08 as reporting an outcome or an
+    // impression rather than a change undergone by the subject. That exclusion
+    // is REVERSED here: `audit:constructions` measured it at 0 of 48 approved
+    // rows, and the point's own description and examplesPositive both teach it
+    // (El plan resultó un desastre; Sus amigos me resultaron muy simpáticos).
+    // The taxonomic objection is real but it argues for share 1, not for a pool
+    // with none — the axis is which becoming-verb the sentence needs, and
+    // resultar is a member the description names.
     constructionVariants: [
       {
         id: 'ponerse-temporary-state',
@@ -5704,6 +5728,11 @@ const esCurriculum: readonly GrammarPoint[] = [
         id: 'llegar-a-ser-slow-outcome',
         directive:
           'llegar a ser for a hard-won outcome reached through a slow process (Trabajó muchísimo y llegó a ser director general)',
+      },
+      {
+        id: 'resultar-unexpected-outcome',
+        directive:
+          'resultar for an outcome or impression that turned out otherwise than expected — an assessment rather than a change the subject underwent (El plan resultó un desastre; Sus amigos me resultaron muy simpáticos)',
       },
     ],
   },
