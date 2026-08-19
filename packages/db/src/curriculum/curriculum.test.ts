@@ -736,13 +736,31 @@ describe('comparison coverageSpec floors', () => {
   const cases: Array<[string, Record<string, number>]> = [
     ['tr-a1-comparative-superlative', { comparative: 12, superlative: 6, less: 2 }],
     ['de-a2-comparison', { comparative: 14, superlative: 10, equative: 6 }],
-    ['es-a2-comparatives-superlatives', { comparative: 14, less: 8, equative: 8 }],
   ];
   it.each(cases)('%s carries the expected comparison floors', (key, floors) => {
     const gp = getGrammarPoint(key);
     const axis = gp?.coverageSpec?.axes.find((a) => a.name === 'comparison');
     expect(axis, `${key}: missing comparison axis`).toBeDefined();
     expect(axis?.floors).toEqual(floors);
+  });
+
+  // es-a2-comparatives-superlatives lost its comparison axis on 2026-08-19 when
+  // constructionVariants were authored: four of the five variants encode a
+  // comparison value, so spec and variants would emit contradictory MUSTs into
+  // the same draft prompt. The variants are strictly finer — the spec's single
+  // `equative` value is split into the tan…como and tanto…como halves, which is
+  // the collapse the audit found. Asserted here so a future edit cannot restore
+  // the axis without reading this.
+  it('es-a2-comparatives-superlatives carries variants INSTEAD of a comparison axis', () => {
+    const gp = getGrammarPoint('es-a2-comparatives-superlatives');
+    expect(gp?.coverageSpec?.axes.some((a) => a.name === 'comparison') ?? false).toBe(false);
+    expect(gp?.constructionVariants?.map((v) => v.id)).toEqual([
+      'comparative-superiority',
+      'comparative-inferiority',
+      'equality-adjective-adverb',
+      'equality-noun-verb',
+      'irregular-comparatives',
+    ]);
   });
 });
 
