@@ -509,6 +509,44 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-possessives-atonic',
+    // Measured 2026-08-19 (`audit:constructions`): 24 of 28 sampled rows were
+    // mi/tu/su, 4 were nuestro/vuestro, and the de + pronoun disambiguation of
+    // su was 0.
+    //
+    // This point is the case where MOST of what the audit found missing is
+    // already the `person` coverageSpec's job: the possessor paradigm
+    // (mi = 1sg, tu = 2sg, su = 3sg, nuestro = 1pl) IS the person axis, and its
+    // floors already ask for 5 rows of each on a 20-row cell. Declaring those as
+    // variants too would put two contradictory MUSTs in one draft prompt (see
+    // `es-b1-imperative-negative-pronouns`), so the variants below are
+    // deliberately restricted to the constructions that are ORTHOGONAL to
+    // possessor person and that the spec therefore cannot reach.
+    //
+    // `su-disambiguation-de-pronoun` (la camisa de él) is consequently NOT a
+    // variant: de + pronoun only disambiguates the third person, so it pins the
+    // axis the spec owns. It stays served by the spec's 3sg ordinals. If it is
+    // still absent after the repass, the fix is a targeted seed pool, not a
+    // variant that fights the spec.
+    // Note this point is `clozeUnsuitable`, so the rotation drives the
+    // translation cell only.
+    constructionVariants: [
+      {
+        id: 'possessive-before-single-noun',
+        directive:
+          'ONE short-form possessive directly before ONE noun, with no article, agreeing in number (and, for nuestro/vuestro, in gender) with the thing possessed (Nuestra casa es grande; ¿Dónde está tu coche?; Mis amigos viven aquí)',
+        share: 3,
+      },
+      {
+        id: 'repeated-possessive-two-referents',
+        directive:
+          'the possessive REPEATED before each of two distinct things, where English uses it once (Llevaba mi chaqueta y mi corbata; Trajo su pasaporte y su billete)',
+      },
+      {
+        id: 'article-not-possessive-body-parts',
+        directive:
+          'the definite article where English would use a possessive — body parts and clothing, with the person carried by the verb’s pronoun (Me duele la cabeza; Se lavó las manos antes de comer)',
+      },
+    ],
     coverageSpec: {
       axes: [
         // Possessor-person paradigm mi/tu/su/nuestro; su-ambiguity needs 3sg
@@ -1490,6 +1528,47 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-imperfect',
+    // Measured 2026-08-19 (`audit:constructions`): the habitual past and the
+    // three irregulars took 43 of 48 sampled rows between them. The
+    // imperfect/preterite contrast — the choice this tense is actually hard for
+    // — appeared once, and the courtesy imperfect never.
+    //
+    // The `person` coverageSpec below is KEPT: none of these variants pins a
+    // person (the courtesy directive deliberately names querer/poder/desear
+    // without fixing the speaker), so the two mechanisms stay orthogonal, which
+    // is the case the coexistence rule allows.
+    constructionVariants: [
+      {
+        id: 'imperfect-habitual-past',
+        directive:
+          'the imperfect for a habitual or repeated past action, with a time marker that makes the repetition explicit (De niña siempre cocinaba los domingos; Cada verano íbamos a la playa)',
+        share: 3,
+      },
+      {
+        id: 'imperfect-background-description',
+        directive:
+          'the imperfect for a background state or description — scene, weather, feelings, appearance — rather than an event (El cielo estaba despejado y hacía mucho calor; La casa era pequeña y olía a café)',
+        share: 2,
+      },
+      {
+        id: 'imperfect-irregular-ser-ir-ver',
+        directive:
+          'one of the three irregular imperfects — ser (era), ir (iba), ver (veía) — as the form the learner must produce (Cuando éramos pequeños, íbamos al parque)',
+        share: 2,
+      },
+      {
+        id: 'imperfect-preterite-contrast',
+        directive:
+          'the imperfect and the preterite in the SAME sentence: the imperfect carries the ongoing background, the preterite the single event that interrupts it (Llovía mucho cuando llegamos a casa; Leía tranquilamente y de pronto sonó el teléfono)',
+        share: 2,
+      },
+      {
+        id: 'courtesy-imperfect',
+        directive:
+          'the courtesy imperfect softening a request or a statement, on querer, poder or desear (Buenos días, quería un kilo de tomates; ¿Podía usted repetirlo?)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Imperfect',
     description:
@@ -1896,14 +1975,53 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-tonic-pronouns-prepositions',
-    coverageSpec: {
-      axes: [
-        // mí/ti (+ conmigo/contigo) vs reflexive 3rd-person sí (mismo)/
-        // consigo — three claimed person forms with distinct surfaces. Pool
-        // audit 2026-07-17: mí/ti healthy, 3sg nearly absent (~2 rows).
-        { name: 'person', floors: { '1sg': 8, '2sg': 8, '3sg': 6 } },
-      ],
-    },
+    // Measured 2026-08-19 (`audit:constructions`): 36 of 47 classified rows were
+    // plain mí/ti after a preposition. The exception prepositions (entre tú y
+    // yo, según tú) were 1 of 47 despite owning a commonError, and reflexive
+    // sí / consigo was 0.
+    //
+    // The `person` coverageSpec this point carried (1sg 8 / 2sg 8 / 3sg 6) is
+    // REMOVED for the reason documented on `es-b1-imperative-negative-pronouns`:
+    // mí/ti and conmigo/contigo are 1sg/2sg by definition and sí/consigo is 3sg,
+    // so the spec's per-ordinal "target grammatical person" MUST and the
+    // variant's "MUST use this sub-construction" MUST would arrive in the same
+    // draft prompt from two seeders that never consult each other. Person is
+    // not orthogonal here — it IS what distinguishes the tonic forms. The
+    // floors are subsumed: at the A2 target of 30 the shares below put ~14 rows
+    // on 1sg/2sg forms and ~5.5 on sí/consigo, against a 3sg floor of 6 the pool
+    // had realized 0 times.
+    constructionVariants: [
+      {
+        id: 'tonic-mi-ti-after-preposition',
+        directive:
+          'the tonic form mí or ti after a standard preposition — de, para, sin, por, sobre, ante (Este regalo es para ti; No pueden vivir sin mí)',
+        share: 3,
+      },
+      {
+        id: 'conmigo-contigo-fusion',
+        directive:
+          'the obligatory fusion conmigo / contigo, never *con mí or *con ti (¿Quieres venir conmigo al cine?; Cuentan contigo para el sábado)',
+        share: 2,
+      },
+      {
+        id: 'a-mi-a-ti-reduplication-contrast',
+        directive:
+          'a mí / a ti as a contrastive reduplicant standing beside the clitic me/te, not replacing it (A mí me encanta el chocolate, pero a ti no te gusta nada)',
+        share: 2,
+      },
+      {
+        id: 'exception-prepositions-subject-form',
+        directive:
+          'entre, según, hasta or incluso followed by the SUBJECT form tú/yo/él, not the tonic form (Entre tú y yo, esto es un secreto; Según tú, siempre tengo la culpa)',
+        share: 2,
+      },
+      {
+        id: 'reflexive-third-si-consigo',
+        directive:
+          'the reflexive third-person tonic sí (mismo/misma) or consigo, referring back to the subject (Está disgustado consigo mismo; Los estudiantes hablan entre sí)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Tonic pronouns after prepositions',
     description:
@@ -1993,6 +2111,48 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-reflexive-verbs',
+    // Measured 2026-08-19 (`audit:constructions`): 39 of 48 sampled rows were
+    // the intransitive/change-of-state reading (casarse, dormirse) — an
+    // ILLUSTRATIVE construction here — while the placement contrast the point
+    // is built on was 1 row preverbal per cell, and always-pronominal verbs and
+    // the benefactive reading were 0.
+    //
+    // The audit's `pronoun-person-agreement` is REJECTED as a variant: person
+    // agreement is what the `person` coverageSpec below already enforces, and
+    // every row of every variant realizes it. That spec is KEPT — no variant
+    // here pins a person (the non-finite directive offers infinitive and gerund
+    // beside the imperative), so the two mechanisms stay orthogonal.
+    constructionVariants: [
+      {
+        id: 'reflexive-preverbal-pronoun',
+        directive:
+          'a reflexive pronoun standing BEFORE the conjugated verb, on a daily-routine verb such as levantarse, ducharse, vestirse, acostarse (Me levanto a las siete; ¿A qué hora te acuestas?)',
+        share: 3,
+      },
+      {
+        id: 'reflexive-pronoun-attached-nonfinite',
+        directive:
+          'a reflexive pronoun ATTACHED to a non-finite form — an infinitive, a gerund, or a positive imperative (Necesito ducharme antes de salir; Está vistiéndose ahora mismo; ¡Levántate ya!)',
+        share: 3,
+      },
+      {
+        id: 'inherently-pronominal-verbs',
+        directive:
+          'a verb that exists ONLY in pronominal form — quejarse, atreverse a, arrepentirse de, darse cuenta de (Siempre se queja del trabajo; ¿Te atreves a hablar en público?)',
+        share: 2,
+      },
+      {
+        id: 'reflexive-intransitive-change-of-state',
+        directive:
+          'the reflexive marking an intransitive change of state rather than an action done to oneself (Mi hermana se casó el año pasado; El niño se durmió enseguida)',
+      },
+      {
+        id: 'benefactive-reflexive-get-done-for-oneself',
+        directive:
+          "the benefactive reflexive for having something done for oneself, where the subject is not the one performing the action (Me voy a cortar el pelo; Se está arreglando las uñas)",
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         // The pronoun must agree in person with the subject (me levanto /
@@ -2167,6 +2327,40 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-cada-mismo',
+    // Measured 2026-08-19 (`audit:constructions`): the cloze pool was 24 of 24
+    // el mismo … que — invariable cada, the other half of this point's own
+    // title and the source of its *cadas commonError, was 0 there. Emphatic yo
+    // mismo, agreeing propio and de dos en dos were 0 across both cells.
+    constructionVariants: [
+      {
+        id: 'mismo-agreeing',
+        directive:
+          'el mismo / la misma / los mismos … que for sameness, with the article and with que (never *como): Trabajamos en la misma oficina que el año pasado',
+        share: 3,
+      },
+      {
+        id: 'cada-invariable',
+        directive:
+          'invariable distributive cada — cada + singular noun, or cada + numeral + plural noun — never pluralized or gender-marked (Voy al gimnasio cada dos días; Cada alumno trae su libro)',
+        share: 3,
+      },
+      {
+        id: 'mismo-emphatic',
+        directive:
+          'emphatic mismo/misma right after a subject pronoun or noun, stressing that the person did it themselves (Lo preparé yo misma; El director mismo abrió la puerta)',
+        share: 2,
+      },
+      {
+        id: 'propio-agreeing',
+        directive:
+          "agreeing propio/propia for 'own' or 'the … himself' (Lo vi con mis propios ojos; Lo dijo el propio autor)",
+      },
+      {
+        id: 'de-dos-en-dos',
+        directive:
+          'the distributive pattern de N en N describing how people or things move or are arranged (Los niños entraban de dos en dos; Subía los escalones de tres en tres)',
+      },
+    ],
     kind: 'grammar',
     name: 'Cada and mismo',
     description:
@@ -2189,6 +2383,60 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-temporal-clauses',
+    // Measured 2026-08-19 (`audit:constructions`): antes de / después de +
+    // infinitive took 25 of 36 sampled rows. The whole desde family was 1 row —
+    // and the desde / desde hace confusion is one of this point's three
+    // commonErrors, so the pool was silent on the error it exists to prevent.
+    //
+    // The audit's `cuando-accent-distinction` (cuándo vs. cuando) is REJECTED
+    // here: the accented interrogative is an indirect question, which is
+    // `es-b1-indirect-questions`, not a temporal clause. It stays a commonError
+    // on this point rather than a construction drafts are asked to realize.
+    // Note this point is `clozeUnsuitable`, so the rotation drives the
+    // translation cell only.
+    constructionVariants: [
+      {
+        id: 'antes-de-infinitive',
+        directive:
+          'antes de + INFINITIVE with a subject shared by both clauses (Antes de salir, apago las luces; Antes de acostarme, leo un rato)',
+        share: 3,
+      },
+      {
+        id: 'despues-de-infinitive',
+        directive:
+          'después de + INFINITIVE with a subject shared by both clauses (Después de cenar, vemos la televisión; Después de terminar el informe, se fue a casa)',
+        share: 2,
+      },
+      {
+        id: 'cuando-present-habitual',
+        directive:
+          'cuando + present indicative for a habitual or general time relation (Cuando llueve, cojo el paraguas; Cuando termino de trabajar, salgo a correr)',
+        share: 3,
+      },
+      {
+        id: 'desde-point-in-time',
+        directive:
+          'desde + a calendar or clock POINT, the moment an ongoing situation started (Vivo en Madrid desde 2020; Está esperando desde las ocho)',
+        share: 2,
+      },
+      {
+        id: 'desde-hace-duration',
+        directive:
+          'desde hace + a DURATION, how long an ongoing situation has lasted — never desde + bare duration (Estudio español desde hace tres años; No la veo desde hace meses)',
+        share: 2,
+      },
+      {
+        id: 'hasta-until',
+        directive:
+          "hasta + a time expression for 'until / up to' (La tienda está abierta hasta las nueve; Trabajé hasta muy tarde)",
+        share: 2,
+      },
+      {
+        id: 'antes-que-pronoun',
+        directive:
+          "bare antes 'beforehand' or antes que + pronoun, comparing WHO acted first (Lola se levantó antes que nadie; Llegué antes que tú)",
+      },
+    ],
     kind: 'grammar',
     name: 'Temporal clauses: cuando, antes de, después de, desde, hasta',
     description:
@@ -2322,6 +2570,42 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-connectors',
+    // Measured 2026-08-19 (`audit:constructions`): the translation pool was
+    // 23/24 por eso / entonces — the ONE construction in this point's title that
+    // is not a substitution rule. The e/u substitutions the point exists to
+    // teach, each with its own commonError, were 1 and 0 of 24 there; the
+    // hie- exception and the luego/entonces contrast were 0.
+    constructionVariants: [
+      {
+        id: 'por-eso-entonces-consequence',
+        directive:
+          'por eso or entonces introducing a result or consequence (Perdí el autobús; por eso llegué tarde; No tenía dinero, entonces pedí un préstamo)',
+        share: 3,
+      },
+      {
+        id: 'y-to-e-substitution',
+        directive:
+          'y replaced by e because the next word begins with an /i/ sound, written i- or hi- (Fernando e Ignacio llegaron tarde; padres e hijos)',
+        share: 2,
+      },
+      {
+        id: 'y-exception-hie',
+        directive:
+          'y KEPT before a word beginning with hie-, where the glide blocks the substitution (Compramos agua y hielo para la fiesta; hierro y hierba)',
+      },
+      {
+        id: 'o-to-u-substitution',
+        directive:
+          'o replaced by u because the next word begins with o- or ho- (Necesito diez u once minutos más; ¿mujer u hombre?)',
+        share: 2,
+      },
+      {
+        id: 'luego-vs-entonces-temporal',
+        directive:
+          "the temporal contrast between luego 'afterwards/later on' and entonces 'at that moment', with the context making which one is meant unambiguous (Primero cenamos y luego vimos una película; Entonces yo vivía en Sevilla)",
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Connectors: e/u substitution, por eso, entonces',
     description:
@@ -4000,15 +4284,52 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-subjunctive-negated-opinion',
-    coverageSpec: {
-      axes: [
-        // The polarity flip IS the point: no creo que + subjunctive vs creo
-        // que + indicative — different target forms (tenga vs tiene). Pool
-        // audit 2026-07-17: 99/99 negative; the indicative half of the
-        // contrast did not exist in the pool.
-        { name: 'polarity', floors: { negative: 10, affirmative: 8 } },
-      ],
-    },
+    // Measured 2026-08-19 (`audit:constructions`): 46 of 48 sampled rows were
+    // `no creo que`. `no es cierto/verdad que` had 2 and the negated verb of
+    // saying with a past subjunctive — the hardest member, and the one the
+    // description names last — had 0.
+    //
+    // The `polarity` coverageSpec this point carried (negative 10 /
+    // affirmative 8, added 2026-07-17 when the pool measured 99/99 negative) is
+    // REMOVED: every construction here is defined by its polarity, so the
+    // spec's "the target sentence MUST be negated" and a variant's own MUST
+    // would collide in the same draft prompt — the defect documented on
+    // `es-b1-imperative-negative-pronouns`, and the same polarity shape.
+    // The affirmative half is instead declared as its own variant, which is
+    // what makes the contrast a per-draft instruction rather than a floor: at
+    // the B2 target of 50 the shares give ~10 affirmative rows against the old
+    // floor of 8, and ~40 negative against 10.
+    constructionVariants: [
+      {
+        id: 'no-creo-que-subjunctive',
+        directive:
+          'no creo que + present subjunctive (No creo que Marta tenga razón; No creemos que sea buena idea)',
+        share: 3,
+      },
+      {
+        id: 'creo-que-indicative-affirmative',
+        directive:
+          'the AFFIRMATIVE half of the same contrast: creo/pienso/me parece que + INDICATIVE, where no mood flip applies (Creo que Marta tiene razón; Me parece que ya han llegado)',
+        share: 2,
+      },
+      {
+        id: 'no-es-cierto-verdad-que-subjunctive',
+        directive:
+          'no es cierto / no es verdad que + subjunctive (No es verdad que hayan aprobado la ley; No es cierto que estemos en crisis)',
+        share: 2,
+      },
+      {
+        id: 'negated-verb-of-saying-past-subjunctive',
+        directive:
+          'a negated verb of saying — decir, contar, mencionar — in a past tense, followed by an imperfect or pluperfect subjunctive (No me dijo que hubiera venido a la fiesta; Nadie mencionó que estuviera enfermo)',
+        share: 2,
+      },
+      {
+        id: 'no-dudar-que-indicative',
+        directive:
+          'no dudar que + INDICATIVE, the exception where negation does NOT trigger the subjunctive (No dudo que es verdad; No niego que tiene talento)',
+      },
+    ],
     kind: 'grammar',
     name: 'Subjunctive after negated opinion and assertion',
     description:
@@ -4033,6 +4354,46 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-subjunctive-temporal-concessive',
+    // Measured 2026-08-19 (`audit:constructions`): por mucho/más que took 25 of
+    // 48 sampled rows. The reduplicative subjunctive (pase lo que pase) was 0,
+    // and the INDICATIVE half of the temporal contrast — the whole point of the
+    // "only for future reference" rule, and its own commonError — was 1.
+    constructionVariants: [
+      {
+        id: 'temporal-connector-subjunctive-future',
+        directive:
+          'a temporal connector — en cuanto, tan pronto como, apenas, una vez que, hasta que, después de que, mientras — + SUBJUNCTIVE for an event still to come (En cuanto termine el informe, te lo envío)',
+        share: 3,
+      },
+      {
+        id: 'temporal-connector-indicative-past-habitual',
+        directive:
+          'the same temporal connectors + INDICATIVE for a past or habitual event, where the subjunctive would be wrong (Apenas llegué a casa, comenzó a llover; Mientras estudiaba, escuchaba música)',
+        share: 3,
+      },
+      {
+        id: 'aunque-subjunctive-nonfactual',
+        directive:
+          'aunque or a pesar de que + SUBJUNCTIVE for a concession presented as non-factual or not yet known (Aunque no lo creas, es la pura verdad; Aunque llueva, saldremos)',
+        share: 2,
+      },
+      {
+        id: 'por-mucho-mas-que-subjunctive',
+        directive:
+          'por mucho que / por más que + subjunctive for an intensified concession (Por mucho que insistas, no voy a cambiar de opinión)',
+      },
+      {
+        id: 'reduplicative-subjunctive',
+        directive:
+          "the reduplicative subjunctive for 'whatever / wherever / whether or not' — verb + lo que + same verb, verb + donde/como + same verb, or verb + o no (Pase lo que pase, seguiremos adelante; Vaya donde vaya, la reconocen; Le guste o no, tendrá que aceptarlo)",
+        share: 2,
+      },
+      {
+        id: 'factual-concessive-indicative-only',
+        directive:
+          'a FACTUAL concessive — y eso que, si bien — which takes the indicative only, y eso que following the main clause (No la reconocí, y eso que la había visto muchas veces)',
+      },
+    ],
     kind: 'grammar',
     name: 'Subjunctive in temporal and concessive connectors',
     description:
@@ -4330,6 +4691,47 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-gerund-participle-constructions',
+    // Measured 2026-08-19 (`audit:constructions`): the predicative participle
+    // and nada más + infinitive took 36 of 48 sampled rows, while como + gerund
+    // was 0 of 48 and the adverbial gerund — the construction this point is
+    // named for — managed 6.
+    constructionVariants: [
+      {
+        id: 'adverbial-gerund-method-cause-purpose-concession',
+        directive:
+          'an adverbial gerund carrying ONE unambiguous function — method (Aprende idiomas leyendo novelas), cause (Nos llamó pidiendo ayuda), condition (Siendo estudiante, tendrá beca) or concession (Aun sabiéndolo, no dijo nada)',
+        share: 3,
+      },
+      {
+        id: 'como-gerund-como-si',
+        directive:
+          'como + gerund for a manner that resembles a hypothetical action, the compact equivalent of como si + subjunctive (Me miró como calculando mi edad; Movía las manos como buscando algo)',
+        share: 2,
+      },
+      {
+        id: 'nada-mas-infinitive-sequence',
+        directive:
+          'nada más + INFINITIVE for an immediate sequence whose subject is shared with the main clause (Nada más llegar a casa, nos pusimos a preparar la cena)',
+        share: 2,
+      },
+      {
+        id: 'una-vez-participle-prior-event',
+        directive:
+          'una vez + PARTICIPLE, agreeing with its noun, framing a completed event before the main clause (Una vez estudiado el problema, propusieron tres soluciones)',
+        share: 2,
+      },
+      {
+        id: 'predicative-participle-object-agreement',
+        directive:
+          'a predicative past participle agreeing in gender and number with the DIRECT OBJECT of the main verb (Encontré la tienda cerrada cuando llegué; Dejó las ventanas abiertas)',
+        share: 2,
+      },
+      {
+        id: 'predicative-adjective-subject-agreement',
+        directive:
+          'a predicative ADJECTIVE agreeing with the SUBJECT where English would use an adverb (Sonrió tranquila y siguió andando; Ellas viven felices aquí)',
+      },
+    ],
     kind: 'grammar',
     name: 'Adverbial gerund, nada más + infinitive, and predicative participle clauses',
     description:
