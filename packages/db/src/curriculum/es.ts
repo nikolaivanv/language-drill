@@ -658,6 +658,39 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a1-subject-pronouns',
+    // Measured 2026-08-19 (`audit:constructions`): 40 of 40 sampled rows used an
+    // EXPLICIT pronoun for emphasis or contrast. The default — omitting it,
+    // because the verb ending already marks the subject — was 0, which is the
+    // rule this point exists to teach and the source of its first commonError.
+    // A learner drilling this cell met the exception forty times and the rule
+    // never.
+    //
+    // Four of the audit's proposals are REJECTED because they pin the axis the
+    // `person` coverageSpec below owns: `nosotros-nosotras-gender` (1pl),
+    // `tu-vs-usted-register` (2sg/3sg), `no-pronoun-for-things` (3sg/3pl), and
+    // `vosotros-vs-ustedes`, which is a dialect choice rather than a
+    // construction. Declaring them here would put two contradictory MUSTs in one
+    // draft prompt (see `es-b1-imperative-negative-pronouns`); the spec already
+    // floors every person at 4 on a 20-row cell.
+    constructionVariants: [
+      {
+        id: 'pronoun-omission-default',
+        directive:
+          'the DEFAULT: no subject pronoun at all, the verb ending carrying the subject on its own (Hablo español y un poco de inglés; Trabajamos en el mismo edificio). If the exercise needs a blank, blank the conjugated verb, never the absent pronoun',
+        share: 3,
+      },
+      {
+        id: 'pronoun-explicit-emphasis-contrast',
+        directive:
+          'an explicit subject pronoun earning its place through emphasis or an overt contrast between two subjects (Yo estudio biología, pero él estudia física; Tú y yo vamos juntos)',
+        share: 3,
+      },
+      {
+        id: 'pronoun-after-ser',
+        directive:
+          'the pronoun retained after ser, where Spanish keeps it (¿Quién es? — Soy yo; Fueron ellas las que llamaron)',
+      },
+    ],
     coverageSpec: {
       axes: [
         // The full pronoun set is claimed; contrast/emphasis drafts collapse
@@ -1527,6 +1560,38 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-preterite-strong-stems',
+    // Measured 2026-08-19 (`audit:constructions`): u-stems and j-stems took all
+    // 48 sampled rows between them; the i-stems querer (quise) and venir (vine),
+    // named in the description alongside them, were 0.
+    //
+    // The audit's `unstressed-1sg-3sg-endings` is REJECTED as a variant: the
+    // unstressed -e/-o ending is a property EVERY strong preterite realizes
+    // (pude, puso, vino), so it is the general construction the three stem
+    // classes absorb. It stays a commonError, and the directives name the
+    // ending where it matters.
+    //
+    // The `person` coverageSpec below is KEPT — the stem classes are lexical and
+    // orthogonal to person, so the two mechanisms do not touch.
+    constructionVariants: [
+      {
+        id: 'u-stem-preterite',
+        directive:
+          'the preterite of a U-stem strong verb — poder (pude), poner (puse), saber (supe), caber (cupe), estar (estuve), tener (tuve) (No pude dormir anoche; Puso la mesa sin decir nada)',
+        share: 3,
+      },
+      {
+        id: 'i-stem-preterite',
+        directive:
+          'the preterite of an I-stem strong verb — querer (quise) or venir (vine) (Mis abuelos vinieron a vernos; No quiso esperar más)',
+        share: 3,
+      },
+      {
+        id: 'j-stem-preterite',
+        directive:
+          'the preterite of a J-stem strong verb — decir (dije), traer (traje), conducir (conduje), traducir (traduje); its third-person plural ends in -eron, never *-ieron (Me lo dijeron ayer; Trajeron un pastel)',
+        share: 3,
+      },
+    ],
     kind: 'grammar',
     name: 'Preterite — strong stems (pude, puse, dije...)',
     description:
@@ -1900,6 +1965,24 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-ir-a-future',
+    // Measured 2026-08-19 (`audit:constructions`): 48 of 48 sampled rows were
+    // ir a + infinitive. The present indicative with a future time marker —
+    // the second of the two ways this point's description says Spanish expresses
+    // the future — was 0 of 48.
+    constructionVariants: [
+      {
+        id: 'ir-a-infinitive',
+        directive:
+          'ir a + infinitive for a planned or immediate future, with the a never dropped (Voy a estudiar español este verano; ¿Vas a venir a la fiesta?)',
+        share: 3,
+      },
+      {
+        id: 'present-indicative-future-marker',
+        directive:
+          'the PRESENT indicative carrying a future meaning through an explicit time expression — mañana, esta noche, el lunes — with no ir a at all (Mañana salgo temprano para el aeropuerto; El lunes empiezan las clases)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Ir a + infinitive',
     description:
@@ -2092,6 +2175,46 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-indirect-object-pronouns-se',
+    // Measured 2026-08-19 (`audit:constructions`): clitic doubling took 27 of 47
+    // classified rows. The fixed cluster order se > te/os > me/nos > lo/la —
+    // whose violation is this point's fourth commonError (*me se cayó) — was 0
+    // of 47.
+    //
+    // The `number` coverageSpec below is KEPT: le→se and les→se both need
+    // drilling, no variant here pins a number, and that orthogonality is the
+    // case the coexistence rule allows.
+    constructionVariants: [
+      {
+        id: 'clitic-doubling-named-io',
+        directive:
+          'clitic doubling: le/les together with an explicit a + named indirect object in the same sentence (Le di el libro a Juan; Les expliqué el problema a mis padres)',
+        share: 3,
+      },
+      {
+        id: 'io-pronoun-le-les',
+        directive:
+          'le or les alone as the whole indirect object — no direct-object clitic, no a-phrase (Les expliqué la situación; Le escribí ayer)',
+        share: 2,
+      },
+      {
+        id: 'le-to-se-before-3p-do',
+        directive:
+          'the obligatory le/les → se before a third-person direct-object clitic, giving se lo / se la / se los / se las and never *le lo (Se lo doy a ella; Se las mandé la semana pasada)',
+        share: 3,
+      },
+      {
+        id: 'dative-of-possession',
+        directive:
+          'the dative of possession, where se + a dative clitic replaces a possessive on a body part or belonging in an involuntary event (Se le rompió el brazo a Carlos; Se me perdieron las llaves)',
+        share: 2,
+      },
+      {
+        id: 'clitic-order-se-first',
+        directive:
+          'a cluster of at least two clitics in the fixed order se > te/os > me/nos > lo/la/los/las — se always first, never *me se (Se te ha caído la tinta; Se nos olvidó el nombre)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         // le→se and les→se both need drilling. Prophylactic: the 2026-07-17
@@ -2614,6 +2737,28 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-hace-ago',
+    // Measured 2026-08-19 (`audit:constructions`): 47 of 47 classified rows were
+    // the "ago" pattern. desde hace — the contrast this point's description is
+    // built around, and its third commonError — was 0 of 47, so the pool tested
+    // only one side of a two-sided distinction.
+    //
+    // `desde-hace-duration` is also declared on `es-a2-temporal-clauses`, which
+    // claims the same construction; ids are point-scoped and the dedup index
+    // keeps the two pools from holding the same sentence.
+    constructionVariants: [
+      {
+        id: 'hace-ago',
+        directive:
+          'hace + period placing a COMPLETED past event that far back from now, with a past-tense verb and hace never inflected (Llegué a España hace dos años; Hace una semana vimos esa película)',
+        share: 3,
+      },
+      {
+        id: 'desde-hace-duration',
+        directive:
+          'desde hace + period for a situation that STARTED then and is still going, with a present-tense verb (Trabajo aquí desde hace seis meses; No la veo desde hace dos años)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Hace + time period = "ago"',
     description:
@@ -2989,6 +3134,54 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-comparatives-superlatives',
+    // Measured 2026-08-19 (`audit:constructions`): tanto/a/os/as … como — the
+    // equality construction used with NOUNS and verbs, and the one behind this
+    // point's third commonError (*tan problemas como) — was 0 of 48. tan … como
+    // had 3.
+    //
+    // The `comparison` coverageSpec (comparative 14 / less 8 / equative 8, added
+    // 2026-07-18) is REMOVED: its three values are exactly what four of these
+    // five variants encode, so the spec's "the target sentence MUST express the
+    // comparison as <value>" and the variant's own MUST would collide in one
+    // draft prompt (see `es-b1-imperative-negative-pronouns`). The variants are
+    // strictly finer: the spec had one `equative` value where the pool needed
+    // the adjective/adverb and noun/verb halves split apart, which is the whole
+    // finding here. At the A2 target of 30 the shares below give ~12.5
+    // comparative (superiority + irregular), ~7.5 less and ~10 equative against
+    // floors of 14 / 8 / 8 — near-identical, and arriving as per-draft MUSTs
+    // rather than as a deficit the scheduler may or may not close.
+    constructionVariants: [
+      {
+        id: 'comparative-superiority',
+        directive:
+          'superiority más + adjective/adverb/noun + que, never *más … de before a comparison target (Madrid es más grande que Sevilla; El tren es más rápido que el autobús)',
+        share: 3,
+      },
+      {
+        id: 'comparative-inferiority',
+        directive:
+          'inferiority menos + adjective/adverb/noun + que (Este libro es menos interesante que el otro; Hoy hace menos frío que ayer)',
+        share: 3,
+      },
+      {
+        id: 'equality-adjective-adverb',
+        directive:
+          'equality tan + ADJECTIVE or ADVERB + como (Juan es tan alto como yo; Ana corre tan rápido como su hermano)',
+        share: 2,
+      },
+      {
+        id: 'equality-noun-verb',
+        directive:
+          'equality with a NOUN or a VERB: tanto/tanta/tantos/tantas + noun + como, agreeing with the noun, or invariable tanto como after a verb (Tengo tantos amigos como tú; Ella trabaja tanto como él). Never *tan + noun',
+        share: 2,
+      },
+      {
+        id: 'irregular-comparatives',
+        directive:
+          'one of the suppletive comparatives mejor, peor, mayor, menor, which never take más (Este restaurante es mejor que el de la esquina; Mi hermana es mayor que yo)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Comparatives',
     description:
@@ -3002,12 +3195,6 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Saying "más bueno" instead of the suppletive form "mejor".',
       'Using "tan" before a noun where "tanto/a/os/as" is required ("*tan problemas como").',
     ],
-    // coverageSpec: `comparison` axis (added 2026-07-18). Superlative lives at
-    // B1 (es-b1-superlatives-comparisons), so this A2 point floors only
-    // comparative / less / equative.
-    coverageSpec: {
-      axes: [{ name: 'comparison', floors: { comparative: 14, less: 8, equative: 8 } }],
-    },
   },
   {
     key: 'es-a2-diacritic-pairs',
@@ -3607,6 +3794,41 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-subjunctive-adverbial',
+    // Measured 2026-08-19 (`audit:constructions`): antes de que took 29 of 48
+    // sampled rows. sin que — the last construction the description names, with
+    // its own commonError about the sin/sin que subject split — was 0, and
+    // después de que 0.
+    constructionVariants: [
+      {
+        id: 'cuando-future-subjunctive',
+        directive:
+          'cuando + present subjunctive for an event still to come, never the future indicative (Te llamaré cuando llegue a casa; Cuando termines, avísame)',
+        share: 3,
+      },
+      {
+        id: 'antes-de-que-subjunctive',
+        directive:
+          'antes de que + subjunctive, which takes the subjunctive whatever the time reference (Llámame antes de que salgas; Terminó antes de que llegáramos)',
+        share: 2,
+      },
+      {
+        id: 'despues-de-que-subjunctive',
+        directive:
+          'después de que + subjunctive with future reference (Te escribiré después de que termine la reunión)',
+      },
+      {
+        id: 'para-que-subjunctive',
+        directive:
+          'para que + subjunctive for purpose, requiring TWO different subjects — with one subject Spanish uses para + infinitive instead (Te lo explico para que lo entiendas)',
+        share: 2,
+      },
+      {
+        id: 'sin-que-subjunctive',
+        directive:
+          "sin que + subjunctive for 'without someone doing something', again with two different subjects — same-subject sentences take sin + infinitive (Salió sin que nadie lo viera)",
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Subjunctive in adverbial clauses',
     description:
@@ -4095,6 +4317,30 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-ser-location-events',
+    // Measured 2026-08-19 (`audit:constructions`): 48 of 48 sampled rows were
+    // the LOCATION of an event. Ser for the TIME of an event — half of what the
+    // description claims, and its own commonError (*el examen está a las diez) —
+    // was 0 of 48.
+    constructionVariants: [
+      {
+        id: 'ser-event-location',
+        directive:
+          'ser for WHERE an event takes place (La reunión es en la sala 2; La fiesta es en casa de Marta)',
+        share: 3,
+      },
+      {
+        id: 'ser-event-time',
+        directive:
+          'ser for WHEN an event takes place — clock time, day or date (El examen es a las diez; La boda es el sábado)',
+        share: 3,
+      },
+      {
+        id: 'estar-physical-location-contrast',
+        directive:
+          'the contrast itself in one sentence: ser for the event, estar for the physical thing or person (¿Dónde es el concierto? — Es en el teatro, que está en el centro)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Ser for the location of events',
     description:
@@ -4227,6 +4473,34 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-conditional-perfect',
+    // Measured 2026-08-19 (`audit:constructions`): 48 of 48 sampled rows paired
+    // the conditional perfect with a si + pluperfect-subjunctive clause. Both
+    // uses the description names in its own first line — the standalone
+    // hypothetical past and the reported future-in-the-past — were 0 of 48, so
+    // the pool taught the form only as one half of another point's construction
+    // (`es-b2-complex-conditionals`).
+    //
+    // The `person` coverageSpec below is KEPT: no variant here pins a person.
+    constructionVariants: [
+      {
+        id: 'conditional-perfect-standalone',
+        directive:
+          'a STANDALONE habría + participle for a hypothetical past, with no si-clause anywhere in the sentence (Yo habría actuado de otra manera; Nadie lo habría imaginado)',
+        share: 3,
+      },
+      {
+        id: 'conditional-perfect-si-pluperfect-subjunctive',
+        directive:
+          'habría + participle as the result of a si + pluperfect subjunctive counterfactual (Si me lo hubieras dicho, te habría ayudado)',
+        share: 2,
+      },
+      {
+        id: 'conditional-perfect-reported-future-in-past',
+        directive:
+          'habría + participle as a reported future-in-the-past — what someone said would have happened by some point (Dijo que el paquete habría llegado antes del viernes)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
@@ -4294,6 +4568,31 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-complex-conditionals',
+    // Measured 2026-08-19 (`audit:constructions`): 48 of 48 sampled rows put the
+    // conditional perfect in the result clause. The hubiera + participle variant
+    // the description explicitly licenses there was 0 of 48.
+    //
+    // The audit's `hubiese-result-clause-exclusion` is REJECTED: *hubiese in the
+    // result clause is a prohibition, not something a correct draft can realize,
+    // and its own directive asked for an error-correction format these exercise
+    // types do not have. The -ra-only restriction rides in the variant
+    // directive instead.
+    //
+    // The `person` coverageSpec below is KEPT: both variants are person-free.
+    constructionVariants: [
+      {
+        id: 'past-counterfactual-standard',
+        directive:
+          'si + pluperfect subjunctive with the CONDITIONAL PERFECT (habría + participle) in the result clause (Si hubiera estudiado, habría aprobado; Si hubieras venido, te habrías divertido)',
+        share: 3,
+      },
+      {
+        id: 'past-counterfactual-hubiera-result',
+        directive:
+          'si + pluperfect subjunctive with hubiera + participle in the RESULT clause instead of habría — the -ra form only, never hubiese there (Si lo hubiera sabido, hubiera venido antes)',
+        share: 2,
+      },
+    ],
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 15, '2sg': 15, '3sg': 15, '1pl': 15, '3pl': 15 } },
