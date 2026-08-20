@@ -251,9 +251,13 @@ describe('GET /admin/pool-status', () => {
       // seen — 6 variants = 24, added 2026-08-19 with the first ES
       // construction-coverage batches. Extend this list when that happens; it
       // is a sanity check that targets resolve to a KNOWN value, not a claim
-      // that the set is closed.
+      // that the set is closed. 44 joined on 2026-08-20 with
+      // es-a2-diacritic-pairs, which declares one variant per accent pair (11)
+      // rather than grouping them by word class — grouping would have held the
+      // A2 target at 30 while hiding the very gap the audit found (mí/mi at 0
+      // behind a healthy tú/tu).
       // Assert it resolved to a known target.
-      expect([5, 6, 8, 10, 12, 15, 16, 20, 24, 25, 30, 48, 50, 75]).toContain(item.generationTarget);
+      expect([5, 6, 8, 10, 12, 15, 16, 20, 24, 25, 30, 44, 48, 50, 75]).toContain(item.generationTarget);
       expect(['ES', 'DE', 'TR']).toContain(item.language);
       expect(['A1', 'A2', 'B1', 'B2']).toContain(item.level);
       expect(['cloze', 'translation', 'vocab_recall', 'sentence_construction', 'dictation', 'free_writing', 'conjugation', 'contextual_paraphrase']).toContain(item.type);
