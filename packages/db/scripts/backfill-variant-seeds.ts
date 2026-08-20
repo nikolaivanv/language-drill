@@ -1,7 +1,8 @@
 /**
  * `pnpm backfill:variant-seeds` — one-off CLI labelling the approved
- * cloze/translation pool of the `constructionVariants` points with the variant
- * id each row actually realizes. Prerequisite for the PR #631 repass; see
+ * cloze / translation / sentence-construction pool of the
+ * `constructionVariants` points with the variant id each row actually realizes.
+ * Prerequisite for the PR #631 repass; see
  * docs/superpowers/specs/2026-08-11-variant-seed-backfill-design.md.
  *
  * Writes are keyed on the row's PRIMARY KEY — never on a content pattern. The
@@ -61,7 +62,21 @@ const LANGUAGE_VALUES = new Set<string>(Object.values(Language));
 const CEFR_VALUES = new Set<string>(Object.values(CefrLevel));
 
 /** Only these two types ever carry a construction-variant seed. */
-const ELIGIBLE_TYPES = new Set<string>([ExerciseType.CLOZE, ExerciseType.TRANSLATION]);
+/**
+ * Types whose rows carry a construction-variant seed. SENTENCE_CONSTRUCTION
+ * joined 2026-08-20: `seedKindFor` has routed SC to variant seeding since #652
+ * for any point that declares variants, so SC rows generated after that point
+ * already carry a variant id — but the legacy pool did not, and this tool could
+ * not reach it. That left `es-b1-present-subjunctive` (75 rows) and
+ * `es-b2-past-subjunctive` (73) with zero-coverage SC cells, which is the exact
+ * state `pickVariantSeeds` reads as "no variant is covered" and answers by
+ * spreading new drafts evenly instead of chasing the real gaps.
+ */
+const ELIGIBLE_TYPES = new Set<string>([
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
+]);
 
 // ---------------------------------------------------------------------------
 // Args
@@ -257,6 +272,23 @@ export function toClassifierRow(row: CandidateRow): ClassifierRow | null {
     const answer = c.referenceTranslation;
     if (typeof prompt !== 'string' || typeof answer !== 'string') return null;
     return { rowId: row.id, prompt, answer };
+  }
+  if (row.type === ExerciseType.SENTENCE_CONSTRUCTION) {
+    // SC has no single correct answer, so the MODEL ANSWERS are the evidence —
+    // they are the Spanish the row is built around. `targetStructure` is the
+    // generator's own prose description of what the draft was asked for, which
+    // is exactly the question being asked here, so it rides with the prompt.
+    const prompt = c.prompt;
+    const models = Array.isArray(c.modelAnswers)
+      ? c.modelAnswers.filter((m): m is string => typeof m === 'string' && m.trim() !== '')
+      : [];
+    if (typeof prompt !== 'string' || models.length === 0) return null;
+    const target = typeof c.targetStructure === 'string' ? c.targetStructure : null;
+    return {
+      rowId: row.id,
+      prompt: target ? `${prompt}\n[target structure: ${target}]` : prompt,
+      answer: models.slice(0, 3).join(' | '),
+    };
   }
   return null;
 }
