@@ -13,11 +13,12 @@ approved: `demote:pool` selects by content substring and cannot express
 PAUSED (#672) by explicit decision, so that headroom is not refilled yet —
 resuming is the one step left.
 
-Authoring is complete again as of the batch-11 PR: the four points the pre-#673
-enumeration faults had skipped were re-audited on 2026-08-20, found collapsed,
-and now declare variants too. **94 ES points** carry a `constructionVariants`
-list. Those four still need their own label + demote pass — the repass below ran
-before they were authored.
+Authoring is complete: the four points the pre-#673 enumeration faults had
+skipped were re-audited on 2026-08-20, found collapsed, authored in #685, and put
+through the same label + demote pass the same day (262 of 269 rows labelled, 123
+demoted, 152 rows of headroom). **94 ES points** carry a `constructionVariants`
+list and every one of them has been through the repass. The only step left for
+any of them is the generation resume.
 
 **Not every finding is authoring work.** A point whose variants are already declared is collapsed because its pool PREDATES them — the remedy there is the retrofit repass PR #631 never ran, not a second variant list. The three buckets below are ordered by how much work they are.
 
@@ -31,15 +32,15 @@ before they were authored.
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **0** · needs topping up: **0** · needs only the repass: **94** (the four below were authored after the repass ran, so they still need `backfill:variant-seeds` + `demote:pool`)
+- Needs authoring: **0** · needs topping up: **0** · repass: **done for all 94**, awaiting the generation resume
 
 ### Never examined — RE-RUN 2026-08-20, all four now examined AND authored
 
 The four points the pre-#673 enumeration faults skipped were re-audited on
 2026-08-20 (`reaudit-<key>-2026-08-20` in `audit-runs/`, $0.30 total). All four
-were collapsed; all four now declare variants (batch 11). **They still need the
-repass** — the 2026-08-20 labelling and demotion ran before they were authored,
-so their pools carry no variant labels at all.
+were collapsed; all four now declare variants (#685) and have been through the
+repass — labelled and demoted on 2026-08-20 after authoring, since the main sweep
+had run before they existed. Details in `es-variant-repass-2026-08-20.md`.
 
 | point | enumeration fault (pre-#673) | what the pool shows now |
 |---|---|---|
