@@ -61,19 +61,54 @@ or number axis") immediately.
 | `person`, `polarity` | orthogonal — a draft can be both "2sg" and "fixed-case dative verb" | author alongside, keep the spec |
 | `case`, `number`, `comparison` | often *is* the dimension the variants encode | check per point; defer if the spec is load-bearing |
 
-### 3. Per-axis floors cannot express a cross-axis requirement
+### 3. `decideCoverageTargets` can only ever request `lcm(m, n)` of `m × n` combinations
 
-`tr-a1-imperative` is the proof, and the audit found it without understanding it.
-Its pool is **10 rows of 2sg+affirmative and 10 rows of 2pl+negative, and nothing
-else**, in both cells. Every floor is satisfied — 2sg 10≥8, 2pl 10≥8, affirmative
-10≥10, negative 10≥8 — because `decideCoverageTargets` water-fills each axis
-*independently*. A pool covering only the diagonal of the 2×2 grid passes
-completely while the learner never sees `Gelin!` or `Gelme!`. No floor value
-would have caught it.
+**This is a live bug in the coverage controller, found via two of the findings
+below. It is not construction-variant work and is not fixed here.**
 
-Here person and polarity genuinely *are* the morphological axes of the
-imperative, and the point is not `conjugationSuitable`, so the ES resolution
-applies: the spec is removed and the four cells of the grid become four variants.
+`decideCoverageTargets` builds an independent water-filled sequence per axis and
+then zips them **index-wise**:
+
+```ts
+for (let i = 0; i < need; i++) {
+  const target: CoverageTarget = {};
+  for (const axis of activeAxes) target[axis] = perAxisSeq[axis]![i];
+  coverageTargets.push(target);
+}
+```
+
+Water-filling makes each sequence cycle through its own values in order, so the
+zip only ever emits `lcm(m, n)` of the `m × n` combinations. For **two 2-value
+axes that is 2 of 4** — a hard diagonal the pool can never escape, no matter how
+many rows are generated or what the floors are set to.
+
+Two TR points are exactly this shape, and both show the signature — suspiciously
+*equal* counts on precisely two cells of a 2×2 grid, in both cell types:
+
+| point | axes | prod pool (both cells) | never requested |
+|---|---|---|---|
+| `tr-a1-imperative` | person(2sg,2pl) × polarity(aff,neg) | 2sg+aff **10**, 2pl+neg **10** | `Gelin!` (2pl positive), `Gelme!` (2sg negative) |
+| `tr-a2-optative` | person(1sg,1pl) × polarity(aff,neg) | 1sg+aff **15**, 1pl+neg **15** | 1pl positive (`gidelim`), 1sg negative |
+
+Every floor on both points is satisfied. The learner never sees half the
+paradigm.
+
+It is not limited to 2×2. At 6×2 the zip reaches only 6 of 12 combinations, and
+`tr-a1-future` confirms the prediction: its five dominant cells are exactly the
+parity diagonal (1sg-aff 5, 2sg-neg 5, 3sg-aff 5, 1pl-neg 4, 2pl-aff 4, 3pl-neg
+5) with just 2 stray rows off it, phase drift across batches accounting for
+those. `tr-a1-dili-past` is more mixed for the same reason — differing floors and
+`need` values across many batches shift the phase.
+
+**24 of the 38 spec'd TR points carry two or more axes**, so this is not
+marginal. A fix would enumerate the cartesian product and water-fill over
+*combinations* when the axes are small enough, rather than zipping independent
+per-axis sequences. Worth its own PR and its own review.
+
+For `tr-a1-imperative` and `tr-a2-optative` the variant mechanism routes around
+it — person and polarity genuinely *are* those points' morphological axes, and
+neither point is `conjugationSuitable`, so the ES resolution applies: the spec
+comes off and the cells of the grid become variants, each a per-draft MUST.
 
 ## A1 — done
 
@@ -123,9 +158,81 @@ resolving `resolveCellTargetFor` over the curriculum, not by arithmetic.
 - Thin cells skipped: `tr-a1-beri-dir:cloze` (1 row), `tr-a1-stem-changes:cloze`
   (1 row, and the point is `clozeUnsuitable`).
 
-## A2 / B1 / B2 — pending
+## A2 — done
 
-A2 returned **24 findings** ($1.54) and is triaged next. B1 and B2 are running.
+28 of 28 points enumerated, a clean run — 0 enumeration errors, 0
+enumeration-suspect cells · **24 findings over 18 points** · $1.54.
+**13 authored, 1 topped up, 1 rejected, 2 repass-only.**
+
+### Authored
+
+| point | what the pool showed |
+|---|---|
+| `tr-a2-clitics-da-bile` | 22/24 scalar `bile`; the additive `dA` the point is named for is 1, the `X dA Y dA` enumerative 0 |
+| `tr-a2-converbs` | `-mAdAn` 14 + `-(y)Ip` 10 = the whole cell; `-(y)ArAk` and `-(y)A…-(y)A`, both in the title, 0 |
+| `tr-a2-correlative-conjunctions` | `ne…ne` 17, `ya…ya` 7; `hem…hem` and `ister…ister` both 0 |
+| `tr-a2-distributive` | 24/24 the plain "… each"; the reduplicated "X by X" 0 |
+| `tr-a2-enumerator-tane` | 24/24 numeral+tane+noun; `kaç tane` 0, and the OPTIONALITY of tane 0 |
+| `tr-a2-indefinite-pronouns` | `herkes` 12 + NPIs 12 = the whole cell; existential `biri(si)` 0, case-inflected `hepsi` 0 |
+| `tr-a2-nominalization` | 23/24 the `-mAk` infinitive; the different-subject `-mA`+possessive is 1, `-(y)Iş` 0 |
+| `tr-a2-past-copula` | 24/24 `-(y)DI`; `vardı/yoktu` 0 and evidential `-(y)mIş` — half the title — 0 |
+| `tr-a2-purpose-icin-uzere` | 24/24 `-mAk için`; negative purpose, different-subject `-mAsI için`, and both senses of `-mAk üzere` all 0 |
+| `tr-a2-relative-an` | positive 14 + negative 10 = the whole cell; suppletive `olan` 0 and headless `-(y)An` 0 |
+| `tr-a2-ability-necessity` | necessity `-mAlI` 20 of 24; the ABILITY half the title names first is 2 positive / 1 negative, lexical `lazım/gerek` 0 |
+| `tr-a2-ca-suffix` | 21/24 the manner adverb; the language-name adverbial — half the title — is 1 |
+| `tr-a2-mis-evidential` | 22/23 the verbal `-mIş`; the copular `-(y)mIş` is 1 |
+
+### Topped up
+
+`tr-a2-gibi-kadar` already declared four variants; the `o kadar / öyle … ki`
+result frame was **0/24 in both cells** and undeclared, though it sits in the
+point's own `examplesPositive`. Added as a fifth. The audit also reported
+`-mIş gibi` at 0, which the existing curriculum comment already documents as
+**deliberately excluded** — it has its own B2 point (`tr-b2-as-if-gibi`) listing
+this one as a prerequisite. No change there.
+
+### Two more `coverageSpec`s removed
+
+Both were added 2026-07-17 and are *currently working*, so removal had to be an
+improvement rather than a regression:
+
+- `tr-a2-indefinite-pronouns` (`polarity` 12/12, pool now 12/12) — the NPIs
+  require a negative verb **by definition**, so a per-draft "MUST use
+  kimse/hiçbiri" and a per-ordinal "target affirmative" contradict each other in
+  one prompt. One NPI variant at share 3 of 13 guarantees the negative half more
+  directly than the floor did, and six non-NPI variants guarantee the positive
+  half the floor was originally added to rescue.
+- `tr-a2-relative-an` (`polarity` 18/12, pool now 14/10) — `-(y)An` vs `-mAyAn`
+  *is* the polarity axis. The negative variant carries share 3 of 10 to keep
+  roughly the 40% weight the floor asked for.
+
+### Rejected
+
+`tr-a2-suffix-order-buffers` — the proposed `-n-`-buffer-before-case variant is a
+**property** of any 3sg/3pl possessive + case row, not a member of a disjoint
+axis, and it would collide with both the `person` and `case` axes the point
+already carries.
+
+### Repass-only (bucket C)
+
+`tr-a2-adversative-connectors` (`ancak/yalnız` at 1/24) and
+`tr-a2-causal-connectors` (clause-final `çünkü` at 1/24) both **already declare**
+the construction the audit flagged. Their pools predate the declaration, so they
+need only the label + demote repass — no authoring.
+
+### Rejections carried across both batches
+
+Running total, by class: non-disjoint properties (`-n-` buffer, `-y-` buffer,
+`-s-` buffer, bare-converb, same-subject, `saat`-optional, `çeyrek`-adjacent,
+`-CA` harmony) · prohibitions no single draft can realize (mass-noun rejection,
+"both halves obligatory") · constructions that are the point's *alternatives*
+rather than the point itself (bare-adjective adverb, `bir şekilde` periphrasis) ·
+and "contrast X with Y" directives that a single-answer exercise cannot express
+(`dA` vs locative `-DA`).
+
+## B1 / B2 — audits done, triage pending
+
+B1 returned **12 findings** ($0.77). B2 is running. Neither is authored yet.
 
 ## Operational note
 

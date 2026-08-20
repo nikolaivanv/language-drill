@@ -1864,6 +1864,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Beşer lira ödedik. (We each paid five lira — beş→beşer.)',
       'Onar dakika ara verdik. (We took breaks of ten minutes each — on→onar.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled cloze rows
+    // are the plain "… each" reading. The REDUPLICATED form ("X by X", in
+    // groups of X) — named in the description — is 0.
+    constructionVariants: [
+      { id: 'distributive-sar-each', directive: 'the distributive -(ş)Ar on a numeral meaning "… each", used ONCE (Herkese birer elma verdim; Üçer kitap aldılar). -ş- after a vowel, dropped after a consonant', share: 3 },
+      { id: 'distributive-sar-reduplication', directive: 'the distributive form REDUPLICATED for "X by X / in groups of X" — the same -(ş)Ar form twice in a row (Çocuklar ikişer ikişer girdi; birer birer)', share: 1 },
+    ],
     examplesNegative: [
       '*Herkese bir elma verdim. for "one each" (a plain numeral means a flat count; "one each" is the distributive birer.)',
       '*ikier (wrong — a vowel-final numeral keeps the -ş-: ikişer)',
@@ -2029,14 +2036,16 @@ const trCurriculum: readonly GrammarPoint[] = [
   // require a negative verb), §12.2.2 (herkes takes singular agreement).
   {
     key: 'tr-a2-indefinite-pronouns',
-    coverageSpec: {
-      axes: [
-        // Two claimed halves: NPIs requiring a negative verb (kimse, hiçbiri)
-        // vs the non-NPI members (biri, herkes, hepsi). Pool audit
-        // 2026-07-17: 51/9 negative-skewed — the positive half starved.
-        { name: 'polarity', floors: { affirmative: 12, negative: 12 } },
-      ],
-    },
+    // coverageSpec REMOVED 2026-08-20 (was `polarity`, affirmative 12 / negative
+    // 12, added 2026-07-17 when the pool was 51/9 negative-skewed). The floor
+    // WAS working — the pool is 12/12 today — but it cannot coexist with the
+    // variants below: the NPIs require a negative verb BY DEFINITION, so a
+    // per-draft "MUST use kimse/hiçbiri" and a per-ordinal "target affirmative"
+    // would contradict each other in one prompt (scheduler.ts attaches
+    // coverageTargets with no check for variant seeding). The variant mechanism
+    // subsumes the floor's purpose and states it more directly: one NPI variant
+    // at share 3 of 13 guarantees the negative half, and six non-NPI variants
+    // guarantee the positive half the floor was originally added to rescue.
     kind: 'grammar',
     name: 'Indefinite & quantifier pronouns (biri / herkes / hiçbir / kimse / hepsi)',
     description:
@@ -2051,6 +2060,27 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Bu ilaçlardan hiçbirini beğenmedim. (I did not like any of these medicines — case + -n- buffer: hiçbir-i-n-i; an ablative-marked set forms the partitive: arkadaşlarımdan biri "one of my friends". As direct object the -(s)I head obligatorily takes the accusative.)',
       'Herkese yardım ettim. (I helped everyone — dative on herkes.)',
       'Çamaşır makinesi bozuldu, yenisini aldık. (The washing machine broke down; we bought a new one — the same -(s)I pronominalises adjectives, numerals and determiners: yenisi, eskisi, ikisi (de), hangisi, başkası.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows, herkes + singular agreement holds 12 and the negative-polarity set
+    // 12 — the whole cell. Existential biri(si) is 0 and case-inflected hepsi
+    // (with the -n- buffer) is 0.
+    //
+    // The `polarity` spec was REMOVED 2026-08-20. Polarity is not an orthogonal
+    // axis on this point: the negative-polarity pronouns REQUIRE a negative
+    // verb by definition, so a per-draft "MUST use kimse/hiçbiri" and a
+    // per-ordinal "target affirmative" would contradict each other in the same
+    // prompt (scheduler.ts attaches coverageTargets with no check for variant
+    // seeding). The variant below enforces the pairing far more directly than a
+    // floor did.
+    constructionVariants: [
+      { id: 'herkes-singular-agreement', directive: 'herkes "everyone" with an OBLIGATORY SINGULAR verb (Herkes geldi — never *geldiler)', share: 3 },
+      { id: 'negative-polarity-kimse-hicbir', directive: 'a negative-polarity indefinite — kimse, hiçbiri, hiçbir + N, hiçbir şey — paired with the obligatory NEGATIVE verb (Kimse gelmedi; Hiçbir şey görmedim)', share: 3 },
+      { id: 'biri-existential', directive: 'biri / birisi "someone" as an existential subject (Kapıda biri var; Biri seni arıyor)', share: 3 },
+      { id: 'hepsi-case-inflection', directive: 'hepsi CASE-INFLECTED with the -n- buffer: hepsini, hepsine, hepsinden (Hepsini gördüm; Hepsine sordum)', share: 2 },
+      { id: 'si-pronominalization', directive: '-(s)I pronominalising an adjective or determiner: yenisi, eskisi, hangisi, başkası (Çamaşır makinesi bozuldu, yenisini aldık)', share: 1 },
+      { id: 'partitive-ablative-biri', directive: 'the partitive frame — an ABLATIVE-marked set noun + biri (Arkadaşlarımdan biri aradı; onlardan biri)', share: 1 },
+      { id: 'bazisi-some', directive: 'bazısı "some of them" as a partitive pronoun referring back to a mentioned set (Kitapları aldım; bazısını okudum)', share: 1 },
     ],
     examplesNegative: [
       '*Kimse geldi. for "nobody came" (wrong — Turkish requires a negative verb: "Kimse gelmedi".)',
@@ -2135,6 +2165,13 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yollar ıslak, yağmur yağmış. (inference from a result — unwitnessed)',
       'Yeni komşumuz çok kibarmış. (hearsay / newly learned — copular -mış)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 22 of 23 classified cloze
+    // rows are the VERBAL -mIş. The copular -(y)mIş on a nominal or adjectival
+    // predicate is 1 — and it is the form a learner meets constantly in speech.
+    constructionVariants: [
+      { id: 'verbal-mis-evidential', directive: 'the VERBAL evidential -mIş on a verb stem, for an unwitnessed or reported past event (Ahmet evlenmiş; Yağmur yağmış)', share: 3 },
+      { id: 'copular-ymis-evidential', directive: 'the COPULAR evidential -(y)mIş on a NOUN or ADJECTIVE predicate, no verb stem, for hearsay or newly-learned state (Yeni komşumuz çok kibarmış; Hastaymış)', share: 3 },
+    ],
     examplesNegative: ['*Dün hava soğukmuş. (when the speaker felt the cold)'],
     commonErrors: [
       'Using -mIş for events the speaker actually witnessed.',
@@ -2200,6 +2237,20 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Okuyabilirim. (I can read — vowel stem oku- takes the buffer -y-.)',
       'Eve gitmem lazım. (I have to go home — objective necessity with lazım, vs. speaker-felt gitmeliyim.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 20 of 24 sampled
+    // translation rows are necessity -mAlI. The ABILITY half of the point —
+    // which the title names first — is 2 positive and 1 negative, and the
+    // lexical lazım/gerek necessity the description contrasts -mAlI against is 0.
+    //
+    // NOT a variant: the -y- buffer before -(y)Abil. It is a property of any
+    // vowel-final stem, so a row realizing it also realizes
+    // `ability-positive-yabil` — not a member of the same axis.
+    constructionVariants: [
+      { id: 'necessity-mali', directive: 'SPEAKER-FELT necessity -mAlI, "must" (Erken kalkmalıyım; Bunu görmelisin)', share: 3 },
+      { id: 'ability-positive-yabil', directive: 'POSITIVE ability -(y)Abil + tense (Yüzebilirim; Okuyabilirsin). Vary consonant- and vowel-final stems so the -y- buffer appears', share: 3 },
+      { id: 'ability-negative-yama', directive: 'the IRREGULAR negative ability -(y)AmA — never -Abilme (Yapamam; Gelemedi; Görüşemedik)', share: 3 },
+      { id: 'necessity-lazim-gerek', directive: 'OBJECTIVE necessity by lexical means — lazım or gerek on a -mA/-mAk nominal (Eve gitmem lazım; Beklemek gerek). Not the -mAlI suffix', share: 2 },
+    ],
     examplesNegative: [
       '*Yüzmek yapabilirim. (wrong — ability is a suffix on the verb stem, not a separate auxiliary: "yüzebilirim")',
       '*Okuabilirim. (wrong — a vowel-final stem needs the buffer -y- before -(y)Abil → "okuyabilirim".)',
@@ -2228,6 +2279,20 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Bağıra bağıra koştu. (He ran shouting and shouting — repeated.)',
       'Koşup düştü. (He ran and fell — the converb verb has no tense; only "düştü" carries the past.)',
       'Müziği açarak ders çalıştı. (She studied with the music on — manner; "çalıştı" supplies the tense.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows, -mAdAn holds 14 and -(y)Ip 10 — the whole cell. The -(y)ArAk manner
+    // converb and the -(y)A…-(y)A repeated-action converb, both named in the
+    // point's own title, are 0.
+    //
+    // NOT variants: "the converb is bare, no tense" and "both clauses share a
+    // subject". Both are PROPERTIES every row of every sibling already
+    // realizes, not members of the same axis.
+    constructionVariants: [
+      { id: 'converb-yip-sequence', directive: '-(y)Ip chaining two SEQUENTIAL actions, the converb bare and the finite verb carrying the tense (Kalkıp giyindim; Eve gelip yattı)', share: 3 },
+      { id: 'converb-yarak-manner', directive: '-(y)ArAk describing HOW the main action is performed — manner, not sequence (Gülerek konuştu; Koşarak geldi)', share: 3 },
+      { id: 'converb-madan-without', directive: '-mAdAn "without doing", naming an action that does NOT occur (Yemeden gitme; Hiç durmadan çalıştı)', share: 3 },
+      { id: 'converb-ya-ya-repeated', directive: 'the -(y)A…-(y)A frame — the SAME stem doubled with -(y)A — for repeated or continuous action (Bağıra bağıra koştu; Ağlaya ağlaya anlattı)', share: 2 },
     ],
     examplesNegative: [
       '*Eve geldim ve yemek yedim. (overuses finite "ve" coordination where a converb is more idiomatic: "Eve gelip yemek yedim.")',
@@ -2290,6 +2355,16 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Onun gelmesini istiyorum. (I want him to come — different subject, so -mA + possessive + accusative.)',
       "Kardeşimin gelme ihtimali var. (There's a chance my brother will come — a -mA verbal noun modifying a -(s)I compound head; -mA is preferred over -mAk in this slot.)",
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 23 of 24 sampled
+    // translation rows are the -mAk infinitive. The -mA + possessive form — the
+    // DIFFERENT-SUBJECT construction, which is the whole reason the point holds
+    // three suffixes — is 1, and -(y)Iş is 0.
+    constructionVariants: [
+      { id: 'mak-same-subject', directive: 'the -mAk infinitive as a verbal noun, SAME subject as the main verb (Okumak çok eğlenceli; Yüzmeyi severim)', share: 3 },
+      { id: 'ma-possessive-different-subject', directive: '-mA + POSSESSIVE for a subject DIFFERENT from the main clause subject (Onun gelmesi zor; Gitmeni istiyorum). Never -mAk in this slot', share: 3 },
+      { id: 'yis-manner-act-noun', directive: 'a -(y)Iş manner or single-act noun, often lexicalised (Bu yürüyüş güzeldi; Onun gidişi beni üzdü)', share: 2 },
+      { id: 'ma-compound-modifier', directive: '-mA as a modifier inside a -(s)I possessive compound (Kardeşimin gelme ihtimali var) — -mAk is ungrammatical in this slot', share: 1 },
+    ],
     examplesNegative: [
       '*Onun gelme zor. (wrong — -mA action nouns take a possessive suffix when used as an embedded subject: "Onun gelmesi zor".)',
       '*Onun gelmek istiyorum. (wrong — when the embedded subject differs, use -mA + possessive: "Onun gelmesini istiyorum".)',
@@ -2305,14 +2380,12 @@ const trCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'tr-a2-relative-an',
-    coverageSpec: {
-      axes: [
-        // The negative participle -mAyAn (with its -y- buffer trap *gelmeen)
-        // is claimed core. Pool audit 2026-07-17: translation 28/2
-        // affirmative-collapsed.
-        { name: 'polarity', floors: { affirmative: 18, negative: 12 } },
-      ],
-    },
+    // coverageSpec REMOVED 2026-08-20 (was `polarity`, affirmative 18 / negative
+    // 12, added 2026-07-17 when translation was 28/2 affirmative-collapsed).
+    // -(y)An vs -mAyAn IS the polarity axis, so the floor and a variant
+    // directive would speak to the same dimension in one draft prompt. The
+    // negative variant carries share 3 of 10 to keep roughly the 40% weight the
+    // floor was asking for.
     kind: 'grammar',
     name: 'Subject relative -(y)An / -(y)En',
     description:
@@ -2327,6 +2400,21 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Kırmızı olan araba bizim. (The car that is red is ours — olan = ol- + -(y)An relativizes a nominal predicate.)',
       'Hiç çalışmayan öğrenci sınıfta kaldı. (The student who doesn\'t study at all failed — negative -mAyAn.)',
       'Çalışan kazanır. (The one who works wins — headless: -(y)An stands alone as the noun phrase, no head.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows, positive -(y)An holds 14 and negative -mAyAn 10 — the whole cell.
+    // Suppletive olan (for a nominal or adjectival predicate) is 0 and the
+    // HEADLESS participle is 0, though the description names both.
+    //
+    // The `polarity` spec was REMOVED 2026-08-20: -(y)An vs -mAyAn IS the
+    // polarity axis, so the floor and a variant directive would speak to the
+    // same dimension in one prompt. Shares keep the positive/negative balance
+    // the floors were reaching for.
+    constructionVariants: [
+      { id: 'subject-relative-yan-positive', directive: 'a POSITIVE subject relative -(y)An as a pre-nominal modifier (Gelen adam babam; Kapıda bekleyen çocuk)', share: 3 },
+      { id: 'subject-relative-mayan-negative', directive: 'the NEGATIVE subject relative -mAyAn as a pre-nominal modifier, watching the -y- buffer (gelmeyen, not *gelmeen) (Hiç çalışmayan öğrenci sınıfta kaldı)', share: 3 },
+      { id: 'subject-relative-olan', directive: 'suppletive olan relativising a NOMINAL or ADJECTIVAL predicate, where a bare -(y)An is impossible (Kırmızı olan araba bizim; öğrenci olan kardeşim)', share: 2 },
+      { id: 'subject-relative-headless', directive: 'a HEADLESS -(y)An standing alone as the whole noun phrase, with no head noun (Çalışan kazanır; Gelenler oturdu)', share: 2 },
     ],
     examplesNegative: [
       '*Ben okuyan kitap. (wrong — -(y)An only marks SUBJECT relatives; non-subject "the book I read" needs the B2 -DIK form: "benim okuduğum kitap".)',
@@ -2386,6 +2474,15 @@ const trCurriculum: readonly GrammarPoint[] = [
         directive:
           'the idiom gibi gel- with a dative experiencer, "it seems to someone", after a FINITE clause (Bana haklısın gibi geliyor)',
       },
+      {
+        // Added 2026-08-20: the audit found this at 0 of 24 in BOTH cells. It
+        // is in the description's own examplesPositive ("O kadar yorgundum ki
+        // hemen uyudum") but was never declared, so the 2026-08-08 list could
+        // not request it and the pool never produced one.
+        id: 'o-kadar-ki-result',
+        directive:
+          'the RESULT frame o kadar / öyle … ki, "so … that", where kadar is degree-intensifying and a ki-clause states the consequence (O kadar yorgundum ki hemen uyudum; Öyle güzeldi ki anlatamam)',
+      },
       // DELIBERATELY NOT a variant: the (sanki) …-mIş gibi "as if" clause, even
       // though this description's tail claims it. It has its own dedicated B2
       // point, tr-b2-as-if-gibi, which lists tr-a2-gibi-kadar as a
@@ -2420,6 +2517,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'İster sen gel ister o. (Let either you come or him.)',
       'Hem ben hem de kardeşim geldik. (Both I and my brother came — the last half often takes de.)',
       'Ne param ne de zamanım var. (I have neither money nor time — predicate stays positive: var.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows ne … ne holds 17 and ya … ya 7. Both remaining pairs named in the
+    // point's title are 0 — hem … hem and ister … ister.
+    //
+    // NOT variants: "the (de/da) is optional" and "both halves are obligatory".
+    // The first is a property of several siblings, the second a prohibition no
+    // single draft can realize.
+    constructionVariants: [
+      { id: 'hem-hem', directive: 'hem … hem (de), "both … and", with both halves present (Hem Türkçe hem de İngilizce konuşuyor)', share: 3 },
+      { id: 'ne-ne', directive: 'ne … ne (de), "neither … nor", with the predicate kept POSITIVE (Ne çay ne de kahve içerim)', share: 2 },
+      { id: 'ya-ya', directive: 'ya … ya (da), "either … or" (Ya bugün ya da yarın gelirim)', share: 2 },
+      { id: 'ister-ister', directive: 'ister … ister, "whether … or", typically with imperative or optative halves (İster sen gel ister o; İster inan ister inanma)', share: 3 },
     ],
     examplesNegative: [
       '*Ne çay ne kahve içmem. (wrong — with ne … ne the verb stays POSITIVE in Turkish: "Ne çay ne kahve içerim".)',
@@ -2505,6 +2615,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Bu kitabı Türkçe okudum. (I read this book in Turkish — the same -CA form, used as an adverb.)',
       'Çok çocukça davrandın. (You behaved very childishly — -CA on çocuk.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 21 of 24 sampled cloze rows
+    // are the -CA manner adverb. The "-ish" similative is 2 and the LANGUAGE
+    // NAME used adverbially — half the point's own title — is 1.
+    //
+    // NOT variants: the bare-adjective manner adverb and the bir şekilde /
+    // olarak periphrasis. Neither contains -CA at all; they are the
+    // ALTERNATIVES the description contrasts against, so a draft realizing one
+    // would not realize this grammar point.
+    constructionVariants: [
+      { id: 'ca-manner-adverb', directive: 'a -CA MANNER adverb from a native adjective or adverb root (yavaşça, sessizce, hafifçe, güzelce)', share: 3 },
+      { id: 'ca-ish-similative', directive: 'a -CA "-ish" / similative from a noun for a person, group or age (çocukça, kardeşçe, dostça, delice)', share: 2 },
+      { id: 'ca-language-name-adverb', directive: 'a -CA LANGUAGE NAME used adverbially, "in [language]" (Türkçe konuşuyor; İngilizce yazdı; Fransızca biliyor)', share: 2 },
+    ],
     examplesNegative: [
       '*Yavaşce konuş. (wrong — back-vowel stem "yavaş" needs back-vowel -ca: "yavaşça"; -CA harmonises.)',
       '*İngilizde konuşuyorum. (wrong — "in English" is the -CA form İngilizce, not a locative: "İngilizce konuşuyorum".)',
@@ -2558,6 +2681,20 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Geç kalmamak için erken çıktım. (I left early in order not to be late — negative purpose -mAmAk için.)',
       'Çocuğun anlaması için yavaş konuştum. (I spoke slowly so that the child would understand — different subject → -mAsI için.)',
       "Kışın üşümeyelim diye kalorifer yaptırdık. (We had heating installed so we won't be cold in winter — colloquial finite purpose: optative + diye, informal alternative to -mAk için.)",
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled cloze rows
+    // are -mAk için with a same subject. Every other construction the
+    // description names is 0 in cloze — negative purpose -mAmAk için, the
+    // DIFFERENT-SUBJECT -mAsI için, and -mAk üzere in either sense.
+    //
+    // NOT a variant: -mAk üzere as a formal synonym of -mAk için. It is not
+    // disjoint from either sibling — the same string, split only by register.
+    constructionVariants: [
+      { id: 'mak-icin-same-subject', directive: '-mAk için for purpose where BOTH clauses share a subject (Türkçe öğrenmek için kursa gidiyorum)', share: 3 },
+      { id: 'mamak-icin-negative-purpose', directive: '-mAmAk için, "in order NOT to" (Geç kalmamak için erken çıktım; Unutmamak için yazdım)', share: 2 },
+      { id: 'masi-icin-different-subject', directive: '-mAsI için, where the purpose clause has a DIFFERENT subject, "so that [someone else] …" (Çocuğun anlaması için yavaş konuştum)', share: 2 },
+      { id: 'mak-uzere-imminence', directive: '-mAk üzere for IMMINENCE, "about to" (Tam çıkmak üzereydim; Film başlamak üzere)', share: 2 },
+      { id: 'optative-diye-purpose', directive: 'a colloquial purpose clause: OPTATIVE + diye (Kışın üşümeyelim diye kalorifer yaptırdık)', share: 1 },
     ],
     examplesNegative: [
       '*Çalışırım için Almanya\'ya gitti. (wrong — purpose uses the infinitive: "çalışmak için", not a finite verb form.)',
@@ -2729,6 +2866,20 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Eskiden burada bir lokanta vardı. (There used to be a restaurant here — past existence.)',
       'Yorgunmuş, o yüzden gelmemiş. (She was apparently tired, so she didn\'t come — evidential -(y)mIş.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled cloze rows
+    // are -(y)DI on a nominal predicate. Past existence vardı / yoktu is 0 in
+    // cloze and 1 of 24 in translation, and the evidential -(y)mIş — the second
+    // half of the point's own title — is 0 in cloze.
+    //
+    // The `person` spec stays: it floors WHICH ending the copula carries, an
+    // axis orthogonal to which copula is used. vardı/yoktu is inherently 3sg,
+    // and renderCoverageBlock's "use the closest natural person instead" clause
+    // absorbs that.
+    constructionVariants: [
+      { id: 'nominal-past-copula-ydi', directive: 'the past copula -(y)DI with group-1 endings on a NON-VERBAL predicate — noun, adjective or locative (Biz o zaman öğrenciydik; Hastaydım; Evdeydik)', share: 3 },
+      { id: 'past-existence-vardi-yoktu', directive: 'past EXISTENCE or possession with vardı / yoktu (Eskiden burada bir lokanta vardı; Dün param yoktu)', share: 2 },
+      { id: 'nominal-evidential-copula-ymis', directive: 'the evidential copula -(y)mIş with group-2 endings on a non-verbal predicate, for reported or newly-learned information (Yorgunmuş; Yeni komşumuz çok kibarmış)', share: 2 },
+    ],
     examplesNegative: [
       '*hastadım (wrong — a nominal predicate needs the copula with a -y- buffer after the vowel: hastaydım)',
       '*hastaydıyım (wrong — -(y)DI takes group-1 endings: hastaydım, not group-2 -yIm)',
@@ -2756,6 +2907,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Çocuklar bile biliyor. (Even the children know.)',
       'O filmi gördüm bile. (I\'ve already seen that film — post-verbal bile.)',
       '(Her) iki çocuk da uyumuş. (Both children had gone to sleep — dA after a numeral-modified noun phrase gives the definite "both/all" reading.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 22 of 24 sampled translation
+    // rows are scalar bile "even". The additive dA the point is named for is 1,
+    // the X dA Y dA enumerative 0, and post-verbal bile "already" 1.
+    //
+    // NOT a variant: "distinguish dA from the locative -DA". That is a contrast
+    // to teach, not a construction a single draft can realize — every dA row
+    // already stands against the suffix.
+    constructionVariants: [
+      { id: 'da-additive-too-also', directive: 'the additive clitic dA "too/also" on a subject or object NP, written as a SEPARATE word and never devoiced (Ben de geliyorum; Ali de geldi)', share: 3 },
+      { id: 'da-enumerative-both-and', directive: 'the enumerative frame X dA Y dA, "both … and", where two distinct NPs each carry the clitic (Ayşe de Semra da geldi)', share: 3 },
+      { id: 'bile-scalar-even', directive: 'invariable bile as a SCALAR focus clitic, "even", marking a surprising or extreme member (Çocuklar bile biliyor; Bir kuruş bile vermedi)', share: 3 },
+      { id: 'bile-post-verbal-already', directive: 'POST-VERBAL bile meaning "already", following the finite verb (Gördüm bile; O filmi izledim bile)', share: 2 },
     ],
     examplesNegative: [
       '*evde [meaning "the house too"] (wrong — the additive is a separate word: ev de; evde is the locative "at the house")',
@@ -2809,6 +2973,21 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Kaç tane kitap istiyorsun? (How many books do you want?)',
       'Masada on tane tabak var. (There are ten plates on the table.)',
       'Bunlardan iki tane alayım. (Let me take two of these — ablative partitive with a tane/measure head: şu elmadan bir kilo "a kilo of those apples".)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled
+    // translation rows are numeral + tane + noun. The kaç tane question is 0 in
+    // translation and 1 of 24 in cloze, and the OPTIONALITY of tane — the thing
+    // the description spends a clause on — is 0.
+    //
+    // NOT variants: the two mass-noun items the audit proposed. Both are
+    // directives to "show that X is ungrammatical" or "contrast with a correct
+    // alternative", which a single-answer exercise cannot realize; biraz is
+    // also a different lexeme, not a use of tane.
+    constructionVariants: [
+      { id: 'numeral-tane-noun', directive: 'a numeral + tane + SINGULAR noun, no -lAr (Marketten üç tane elma aldım; on tane tabak)', share: 3 },
+      { id: 'kac-tane-question', directive: 'a QUESTION with kaç tane + singular noun (Kaç tane kitap istiyorsun?; Kaç tane kaldı?)', share: 2 },
+      { id: 'tane-optional-omission', directive: 'the numeral directly before the singular noun with tane OMITTED, showing it is optional (Yedi iskemle aldım; üç elma)', share: 2 },
+      { id: 'distributive-iser-tane', directive: 'a DISTRIBUTIVE numeral + tane + singular noun (Herkese ikişer tane kalem verdim)', share: 1 },
     ],
     examplesNegative: [
       '*üç tane elmalar (wrong — a noun after a numeral stays singular: üç tane elma)',
