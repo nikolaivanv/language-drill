@@ -230,9 +230,88 @@ rather than the point itself (bare-adjective adverb, `bir şekilde` periphrasis)
 and "contrast X with Y" directives that a single-answer exercise cannot express
 (`dA` vs locative `-DA`).
 
-## B1 / B2 — audits done, triage pending
+## B1 — done
 
-B1 returned **12 findings** ($0.77). B2 is running. Neither is authored yet.
+16 of 16 points enumerated, clean run · **12 findings over 9 points** · $0.77.
+**8 authored, 1 repass-only.**
+
+| point | what the pool showed |
+|---|---|
+| `tr-b1-abstract-postpositions` | 15/24 bare noun + postposition; the GENITIVE PRONOUN frame, where the postposition shifts its own possessive (`benim hakkımda`), is 0 in cloze — the point's one real trap |
+| `tr-b1-conditional-irrealis` | 21/23 the `-sAydI` counterfactual; `keşke`+`-sA`, copular `-(y)sA`, tensed `-(y)sA`, the deliberative question and the `-sA dA` concessive all 0 or 1 in both cells |
+| `tr-b1-participles-dik-acak` | 22/24 `-DIK`+possessive with an explicit head; prospective `-(y)AcAK` — the other half of the title — is 2, headless 0 |
+| `tr-b1-passive-voice` | agent `tarafından` 14, plain allomorphy 9; the IMPERSONAL passive on an intransitive (`Burada sigara içilmez`) 0 |
+| `tr-b1-reason-digi-icin` | 24/24 `-DIğI için`; future cause `-(y)AcAğI için` 0 in translation, formal `-DIğIndAn` 0 |
+| `tr-b1-converb-while-yken` | 17/24 verbal `-ken`; the NOMINAL `-ken` (`çocukken`) is 1, contrastive "whereas" 0 |
+| `tr-b1-copula-ol` | thin and lopsided across eight frames; dynamic `ol-` "became" is 1 and existential `ol-` 0 — the contrast the description ends on |
+| `tr-b1-obligation-periphrases` | 19/24 `-mAk zorunda`; the mild `-mAm gerek/lazım/şart` end of the scale is 1 |
+
+`tr-b1-olarak` **already declares** the flagged construction
+(`derived-adjective-adverb`, measured at 1/24) — repass only, no authoring.
+
+## B2 — done
+
+16 of 17 points enumerated · **7 findings over 6 points** · $0.59.
+**6 authored.**
+
+| point | what the pool showed |
+|---|---|
+| `tr-b2-aspectual-verbs` | 19/24 `-(y)Ip dur-`; `-(y)Iver`, the ONLY fully productive member per the description, is 2 and `-(y)Akal` 0 |
+| `tr-b2-compound-evidential-rivayet` | 16/24 `-Iyormuş`; the point claims "the copula on ANY tense base" and the others are 6, 1, 0 |
+| `tr-b2-concessive` | 24/24 `-mAsInA rağmen`; BOTH other frames in the title are 0, so the hâlde/rağmen case contrast the point teaches is untested |
+| `tr-b2-instead-of` | `-mAktAnsA` 17, `-AcAğInA` 7, `-AcAğI yerde` 0 |
+| `tr-b2-reported-directives` | reported NECESSITY — which switches to `-DIK` because it reports a fact, the contrast the description turns on — is 0 |
+| `tr-b2-as-if-gibi` | 23/24 `-mIş gibi`; the `-(I)yormuş gibi` ongoing-pretence frame is 1 |
+
+`tr-b2-compound-evidential-rivayet` was routed by the audit to `coverage-spec`,
+but its missing items are TENSE BASES — orthogonal to the `person`/`polarity`
+spec it carries, which must stay because the point is `conjugationSuitable`. It
+is authored as variants with the spec left in place.
+
+**Enumeration fault:** `tr-b2-compound-past-hikaye` was never examined (`id
+'past-necessitative-maliydı' must be kebab-case`, both attempts) — the same fault
+class as `tr-a1-numbers-ordinals`. Both need a re-run.
+
+## Totals
+
+| level | points enumerated | findings | authored | rejected / deferred | repass-only | cost |
+|---|---|---|---|---|---|---|
+| A1 | 27 of 28 | 33 over 20 pts | 14 | 6 | 0 | $1.53 |
+| A2 | 28 of 28 | 24 over 18 pts | 13 (+1 topped up) | 1 | 2 | $1.54 |
+| B1 | 16 of 16 | 12 over 9 pts | 8 | 0 | 1 | $0.77 |
+| B2 | 16 of 17 | 7 over 6 pts | 6 | 0 | 0 | $0.59 |
+| **total** | **87 of 89** | **76 over 53 pts** | **41 (+1)** | **7** | **3** | **$4.43** |
+
+**46 TR points now declare `constructionVariants`** (5 pre-existing + 41 new).
+Every affected cell resolves to a target already in the `admin.test.ts`
+allow-list.
+
+Five `coverageSpec`s were removed where the spec and the variants spoke to the
+same dimension: `tr-a1-imperative`, `tr-a2-indefinite-pronouns`,
+`tr-a2-relative-an` (all three not `conjugationSuitable`). Two more were
+attempted and reverted — `tr-a1-ablative-dative` is `conjugationSuitable` and the
+invariant test caught it.
+
+## What is NOT done
+
+1. **The prod repass has not run.** `backfill:variant-seeds` + `demote:pool
+   --reason pool-hygiene` over the ~4,646 approved TR cloze/translation rows.
+   Per the ES record the deploy must land first — the generation Lambda needs the
+   variant lists live before headroom is opened. These batches are unmerged.
+2. **The sentence_construction tail.** 778 approved SC rows across 16 cells, of
+   which the points that now declare variants own the majority. `seedKindFor`
+   has routed SC to variant seeding since #652, and `backfill:variant-seeds`
+   gained SC in #687, so the tooling is ready — but zero of those rows are
+   labelled, which is exactly the input `pickVariantSeeds` reads as "nothing is
+   covered". ES hit this with 2 cells; TR has 16.
+3. **Two points never examined** — `tr-a1-numbers-ordinals` and
+   `tr-b2-compound-past-hikaye`, both kebab-case enumeration faults.
+4. **`tr-a1-ablative-dative` is blocked** on the spec/variant collision.
+5. **The `decideCoverageTargets` zip bug is unfixed** (see above). It is the
+   larger finding here and deserves its own PR.
+6. **Nothing is verified as an outcome.** As with ES, "pools become diverse" is
+   unmeasurable until regeneration resumes — and nightly pre-generation is still
+   PAUSED (#672).
 
 ## Operational note
 

@@ -3164,6 +3164,22 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Üniversiteyi kazansaydı / kazanmış olsaydı, babası ona ev tutacaktı. (If he had got into university, his father would have rented him a flat — -mIş olsaydI is interchangeable with plain -sAydI.)',
       'Çalışsa da/bile sınavı geçemez. (Even if he studies he cannot pass — -sA + dA/bile = concessive "even if"; doubled çalışsa da çalışmasa da = "whether he studies or not".)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 21 of 23 classified cloze
+    // rows are the -sAydI past counterfactual. Everything else the description
+    // names is 0 or 1 in both cells — keşke + -sA, the copular -(y)sA, -(y)sA on
+    // a tensed verb, the deliberative question, and the -sA dA concessive.
+    //
+    // Orthogonal to the `person` / `polarity` axes: those floor who and whether
+    // negated, never which conditional frame carries it.
+    constructionVariants: [
+      { id: 'sa-ydi-past-counterfactual', directive: 'the -sAydI PAST COUNTERFACTUAL — an unreal past condition with a would-have consequence (Vaktim olsaydı gelirdim)', share: 3 },
+      { id: 'keske-sa-present-wish', directive: 'keşke + verbal -sA as a PRESENT or FUTURE wish; the sentence opens with keşke (Keşke burada olsa; Keşke daha çok vaktim olsa)', share: 2 },
+      { id: 'copular-ysa-real-condition', directive: 'the COPULAR -(y)sA on a NOMINAL or ADJECTIVAL predicate, a realistically possible condition (Hava güzelse yürüyelim; Hastaysan dinlen)', share: 2 },
+      { id: 'tensed-verb-ysa-inferential', directive: '-(y)sA on an already TENSED verb form (geldiyse, geliyorsa, gelecekse) or on var/yok/değil, for a condition knowable from context (Meşgulsen rahatsız etmeyeyim; Geldiyse haber verir)', share: 2 },
+      { id: 'sa-deliberative-question', directive: 'the 1st-person -sA DELIBERATIVE question, wondering aloud what to do, normally with acaba (Bu konuda kime danışsam acaba?; Ne yapsam?)', share: 2 },
+      { id: 'sa-da-bile-concessive', directive: 'the CONCESSIVE -sA dA / -sA bile, "even if" (Çalışsa da sınavı geçemez; İstesen bile olmaz)', share: 2 },
+      { id: 'mis-olsaydi-counterfactual', directive: 'the PERIPHRASTIC -mIş olsaydI past counterfactual (Üniversiteyi kazanmış olsaydı, babası ona ev tutacaktı)', share: 1 },
+    ],
     examplesNegative: [
       '*Vaktim olsa, geldim. (wrong — counterfactual needs -sAydI + aorist-past main clause: olsaydı, gelirdim)',
       '*Hava güzel olursa yürüdük. (wrong — a real condition pairs -(y)sA/aorist with a non-past main clause)',
@@ -3204,6 +3220,18 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Şimdi gitmem lazım. (I need to go now.)',
       'Bunu bitirmemiz gerekiyor. (We need to finish this.)',
       'Daha çok çalışman şart. (It is essential that you work more.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 19 of 24 sampled translation
+    // rows are -mAk zorunda. The -mAm gerek / lazım / şart frame — the MILD end
+    // of the scale, and the reason the point holds four exponents rather than
+    // one — is 1, and impersonal gerekiyor is 4.
+    //
+    // Orthogonal to the `person` / `polarity` axes, which floor who is obliged
+    // and whether the obligation is negated, not which exponent carries it.
+    constructionVariants: [
+      { id: 'mak-zorunda', directive: '-mAk zorunda for external COMPULSION, the strong end (Ankara\'ya gitmek zorundayım; Çalışmak zorundasın)', share: 3 },
+      { id: 'ma-possessive-gerek-lazim-sart', directive: 'a POSSESSIVE-marked verbal noun + gerek / lazım / şart, for mild or essential obligation (Şimdi gitmem lazım; Daha çok çalışman şart)', share: 3 },
+      { id: 'gerek-iyor', directive: 'the IMPERSONAL gerekiyor frame — verbal-noun subject + gerekiyor (Bunu bitirmemiz gerekiyor; Beklemek gerekiyor)', share: 2 },
     ],
     examplesNegative: [
       '*Gitmem zorunda. (wrong — zorunda takes the bare -mAk infinitive: gitmek zorundayım)',
@@ -3277,6 +3305,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Mektup dün yazıldı. (The letter was written yesterday.)',
       'Hırsız polis tarafından yakalandı. (The thief was caught by the police.)',
       'Burada sigara içilmez. (Smoking is not done here — impersonal passive.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows, the tarafından agent frame holds 14 and plain allomorphy 9. The
+    // IMPERSONAL passive on an intransitive — the use with no English
+    // counterpart, and the one a learner will actually meet on signs — is 0.
+    //
+    // NOT a variant: the reflexive/passive -In homophone. Its directive asks the
+    // learner to "identify or justify" a reading, which is not something a
+    // single-answer draft can elicit.
+    constructionVariants: [
+      { id: 'passive-allomorphy-no-agent', directive: 'a plain agentless passive, with the allomorph chosen by the stem: -Il after a consonant (yapıl-), -In after an l-final stem (bilin-), -n after a vowel (aran-). Vary the stem class across drafts', share: 3 },
+      { id: 'passive-agent-tarafindan', directive: 'a passive with the demoted agent made EXPLICIT by tarafından (Hırsız polis tarafından yakalandı; Rapor müdür tarafından imzalandı)', share: 2 },
+      { id: 'impersonal-passive-intransitive', directive: 'the IMPERSONAL passive on an INTRANSITIVE verb — no grammatical subject, general or prohibitive meaning (Burada sigara içilmez; Bu parkta koşulur; Nasıl gidilir?)', share: 2 },
     ],
     examplesNegative: [
       '*yapınıl- (wrong — consonant-final yap takes -Il: yapıl-)',
@@ -3370,6 +3411,19 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Sen uyurken telefon çaldı. (The phone rang while you were sleeping.)',
       'Herkes filme bayılırken ben sıkıldım. (While everyone adored the film, I was bored — aorist + -(y)ken can also contrast two situations, "while/whereas".)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 17 of 24 sampled translation
+    // rows are -(y)ken on a verbal base. The NOMINAL -ken (çocukken) — half of
+    // what the description defines — is 1, and the contrastive "whereas"
+    // reading is 0.
+    //
+    // NOT a variant: "the converb subject differs from the main clause". That is
+    // a property a verbal -ken row realizes anyway (it was measured at 6), so it
+    // is not disjoint from the verbal variant; it is folded into that directive.
+    constructionVariants: [
+      { id: 'yken-verbal-aorist', directive: '-(y)ken on an AORIST / imperfective VERB base for simultaneity (Eve gelirken ekmek aldım; O konuşurken herkes sustu). The converb subject may match the main clause or differ from it — vary both', share: 3 },
+      { id: 'yken-nominal', directive: '-(y)ken on a NOUN or ADJECTIVE rather than a verb, for a background state (Ben çocukken burası bir bahçeydi; öğrenciyken; hastayken)', share: 2 },
+      { id: 'yken-contrastive', directive: '-(y)ken for CONTRAST between two simultaneous situations, "while / whereas" (Herkes filme bayılırken ben sıkıldım)', share: 2 },
+    ],
     examplesNegative: [
       '*Geldiyken ekmek aldım. (wrong — -ken attaches to the aorist/imperfective base, not -DI past: gelirken)',
       '*Çocuktuken burası bahçeydi. (wrong — nominal -ken: çocukken)',
@@ -3438,6 +3492,18 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Annemin yaptığı yemek (the food my mother made)',
       'Oturduğun sandalye kırık. (The chair you are sitting on is broken.)',
       'Söylediğini duymadım. (I didn\'t hear what you said — headless: -DIK + possessive stands alone as the noun phrase, then takes case.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 22 of 24 sampled translation
+    // rows are -DIK + possessive with an explicit head noun. The prospective
+    // -(y)AcAK — the other half of the point's own title — is 2, and the
+    // HEADLESS frame (Söylediğini duymadım) is 0.
+    //
+    // NOT a variant: "a numeral or determiner follows the relative clause". That
+    // is a word-order PROPERTY any such row realizes, not a member of the axis.
+    constructionVariants: [
+      { id: 'dik-possessive-relative', directive: 'a -DIK + possessive NON-FUTURE relative clause modifying an EXPLICIT head noun, possessive agreeing with the clause subject (Okuduğum kitap çok güzeldi)', share: 3 },
+      { id: 'yacak-possessive-relative', directive: 'a -(y)AcAK + possessive PROSPECTIVE relative clause modifying an EXPLICIT head noun (Yarın gideceğimiz şehir Bursa; alacağım araba)', share: 3 },
+      { id: 'headless-dik-possessive', directive: 'a HEADLESS -DIK / -(y)AcAK + possessive standing alone as the whole noun phrase and taking case directly, with no head noun (Söylediğini duymadım; Ne yapacağımı bilmiyorum)', share: 2 },
     ],
     examplesNegative: [
       '*Benim okuyan kitap (wrong — subject relative -(y)An cannot encode "the book I read"; needs -DIK + possessive: okuduğum kitap)',
@@ -3605,6 +3671,25 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Eskiden burada otururlarmış. (They say they used to live here — habitual -ArmIş.)',
       'Yarın gelecekmiş. (Supposedly he will come tomorrow — future -AcAkmIş.)',
       'Ona göre daha çok çalışmalıymışız. (According to her we ought to work harder — -mAlIymIş.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 16 of 24 sampled cloze rows
+    // are -Iyormuş. The point's claim is "the copula -(y)mIş on ANY tense base",
+    // and the other bases are 6, 1 and 0 — hearsay future -AcAkmIş is 1 in cloze
+    // and hearsay necessity -mAlIymIş is 0 in cloze, 1 in translation.
+    //
+    // The audit routed this to `coverage-spec`, but the missing items are TENSE
+    // BASES, an axis orthogonal to the `person` / `polarity` spec the point
+    // already carries — and that spec must stay, since the point is
+    // `conjugationSuitable` and its conjugation cell seeds from it.
+    //
+    // NOT variants: "group-2 endings follow -mIş" and "never -DI + -mIş". The
+    // first is a property of every row here, the second a prohibition no single
+    // draft realizes.
+    constructionVariants: [
+      { id: 'iyormus-hearsay-present', directive: 'the evidential copula on the PRESENT CONTINUOUS base: -Iyormuş, reported ongoing action (Çalışıyormuş; Seni arıyormuş)', share: 3 },
+      { id: 'armus-hearsay-habitual', directive: 'the evidential copula on the AORIST base: -ArmIş / -IrmIş, reported habit or general truth (Her sabah koşarmış; Çok içermiş)', share: 3 },
+      { id: 'acakmus-hearsay-future', directive: 'the evidential copula on the FUTURE base: -AcAkmIş, reported plan or prediction (Yarın gelecekmiş; Taşınacakmış)', share: 3 },
+      { id: 'maliymis-hearsay-necessity', directive: 'the evidential copula on the NECESSITATIVE base: -mAlIymIş, reported obligation (Erken gitmeliymiş; Dikkatli olmalıymış)', share: 2 },
     ],
     examplesNegative: [
       '*geldimiş (wrong — -(y)mIş does not attach to -DI; the reportative past is the finite -mIş: gelmiş)',
@@ -3780,6 +3865,18 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Gelmenizi istiyorum. (I want you to come — request → -mA.)',
       'Gitmem gerektiğini söyledi. (He said I had to go — reported necessity → -DIK.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: of 24 sampled translation
+    // rows, 9 are the -mA + possessive + accusative directive. Reported
+    // NECESSITY — which switches to -DIK because it reports a fact rather than
+    // a command, the one contrast the description turns on — is 0.
+    //
+    // NOT a variant: the addressee case frame (iste-/rica et- take ablative,
+    // söyle- dative). It is a property of whichever reporting verb a row already
+    // uses, measured at 15, not a member of a disjoint axis.
+    constructionVariants: [
+      { id: 'reported-directive-ma-accusative', directive: 'a reported COMMAND, REQUEST or WISH with the -mA action nominal + possessive + accusative under iste- / söyle- / rica et- (Gitmemi söyledi; Gelmenizi istiyorum)', share: 3 },
+      { id: 'reported-necessity-dik-accusative', directive: 'reported NECESSITY, which is a FACT and therefore takes -DIK, not -mA: -mAsI gerektiğini söyledi (Erken gitmem gerektiğini söyledi; beklememiz gerektiğini belirtti)', share: 2 },
+    ],
     examplesNegative: [
       '*Gittiğimi söyledi [for "he told me to go"] (wrong — -DIK means "he said that I went"; a directive takes -mA: gitmemi söyledi)',
       '*Gelmeniz istiyorum (wrong — the -mA object clause takes the accusative: gelmenizi)',
@@ -3864,6 +3961,16 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Kötü şeyler yapmış olmasına rağmen onu severim. (Despite her having done bad things, I like her.)',
       'Hastalığına rağmen çalışıyor. (She works in spite of her illness — -A rağmen on a noun.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled translation
+    // rows are -mAsInA rağmen. BOTH other frames the point's own title names are
+    // 0 — the verbal -DIğI hâlde and -A rağmen on a bare noun — and the
+    // hâlde/rağmen case contrast (hâlde takes no case, rağmen governs the
+    // dative) is exactly what the point exists to teach.
+    constructionVariants: [
+      { id: 'masina-ragmen', directive: '-mA + possessive + DATIVE + rağmen / karşın (Yağmur yağmasına rağmen çıktık; gelmesine karşın)', share: 3 },
+      { id: 'dik-possessive-halde', directive: '-DIK / -(y)AcAK + possessive + hâlde, which takes NO case at all (Gerektiği hâlde yapmadı; Bildiği hâlde söylemedi)', share: 3 },
+      { id: 'noun-a-ragmen', directive: '-A rağmen on a BARE NOUN, not a nominalised clause (Hastalığına rağmen çalıştı; Yaşına rağmen çok dinç)', share: 2 },
+    ],
     examplesNegative: [
       '*olması rağmen (wrong — rağmen governs the dative: olmasına rağmen)',
       '*gerek hâlde (wrong — hâlde takes -DIK + possessive: gerektiği hâlde)',
@@ -3895,6 +4002,14 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Burada beklemektense yürüyelim. (Rather than waiting here, let\'s walk.)',
       'Ağlayacağına bir çözüm bul. (Instead of crying, find a solution — -AcAğInA.)',
       'Televizyon seyredeceğin yerde kitap oku. (Read a book instead of watching TV — -AcAğI yerde.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 17 of 24 sampled translation
+    // rows are -mAktAnsA and 7 are -AcAğInA. The -AcAğI yerde frame is 0,
+    // though the description names it alongside -AcAğInA.
+    constructionVariants: [
+      { id: 'maktansa', directive: '-mAktAnsA — the -mAk verbal noun + ablative + ise (Beklemektense yürüyelim; Oturmaktansa çalış)', share: 3 },
+      { id: 'acagina', directive: '-AcAğInA — the future participle + possessive + DATIVE (Ağlayacağına gül; Söyleneceğine yardım et)', share: 3 },
+      { id: 'acagi-yerde', directive: '-AcAğI yerde — the future participle + possessive + yerde (Dinleneceği yerde çalıştı; Yardım edeceği yerde köstek oldu)', share: 2 },
     ],
     examplesNegative: [
       '*ağladığına [for "instead of crying (expected)"] (wrong — a substituted future action takes -AcAK: ağlayacağına)',
@@ -3951,6 +4066,17 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Çocuk bütün gün bakıp durdu. (The child kept staring all day — free -(y)Ip dur-.)',
       'Yorgunluktan uyuyup kaldık. (We were left fast asleep from exhaustion — -(y)Ip kal-.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 19 of 24 sampled translation
+    // rows are -(y)Ip dur-. -(y)Iver — the ONLY fully productive member, per the
+    // description — is 2, and -(y)Akal is 0. The bound auxiliaries are the point.
+    constructionVariants: [
+      { id: 'yiver-quick-easy', directive: 'the bound -(y)Iver for a QUICK or casual action, "just do it" (Gidiver; Bakıver; Şunu tutuver). The only fully productive member', share: 3 },
+      { id: 'yip-dur-keep-on', directive: 'the free -(y)Ip dur- for a PERSISTENT repeated action, "keep on doing" (Bana bakıp durdu; Söylenip duruyor)', share: 3 },
+      { id: 'yakal-frozen-stunned', directive: 'the bound -(y)Akal for a FROZEN or stunned state (Donakaldı; Şaşakaldı; Bakakaldı)', share: 2 },
+      { id: 'yip-kal-left-doing', directive: 'the free -(y)Ip kal- for being LEFT in a state (Uyuyup kaldı; Bakıp kaldı)', share: 2 },
+      { id: 'yayaz-almost', directive: 'the bound -(y)Ayaz for an action that ALMOST happened (Düşeyazdı; Boğulayazdı) — rare, recognition-level', share: 1 },
+      { id: 'yagel-over-time', directive: 'the bound -(y)Agel for an action continuing OVER TIME up to now (Süregeldi; olagelmiş) — rare, recognition-level', share: 1 },
+    ],
     examplesNegative: [
       '*donukaldı (wrong converb vowel — -kal takes -(y)A: donakaldı)',
       '*gider durdu (wrong — the free auxiliary needs the -(y)Ip converb: gidip durdu)',
@@ -4005,6 +4131,17 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Sanki hiçbir şey olmamış gibi konuşuyor. (He talks as if nothing had happened.)',
       'Beni duymuyormuş gibi yaptı. (She acted as if she couldn\'t hear me — -Iyormuş gibi.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 23 of 24 sampled translation
+    // rows are -mIş gibi. The -(I)yormuş gibi ONGOING-PRETENCE frame, which the
+    // description's last sentence exists to introduce, is 1.
+    //
+    // NOT variants: "sanki is optional" (a property of every row here) and
+    // "real comparison with gibi" (that is tr-a2-gibi-kadar's `gibi-similarity`,
+    // not this point — a draft realizing it would be off-target).
+    constructionVariants: [
+      { id: 'mis-gibi-counterfactual', directive: '(sanki) + -mIş gibi for a COUNTERFACTUAL manner clause — the state described did not happen (Hayalet görmüş gibi bakıyor; Sanki her şeyi biliyormuş gibi konuştu)', share: 3 },
+      { id: 'iyormus-gibi-ongoing', directive: '-(I)yormuş gibi for an ONGOING PRETENCE — pretending to be doing something right now (Uyuyormuş gibi yaptı; Dinliyormuş gibi davrandı)', share: 3 },
+    ],
     examplesNegative: [
       '*gördü gibi (wrong — "as if" builds on the participle -mIş, not the finite past: görmüş gibi)',
       '*görmüş kadar [for "as if he saw"] (wrong postposition — the "as if" frame uses gibi, not kadar)',
@@ -4039,6 +4176,25 @@ const trCurriculum: readonly GrammarPoint[] = [
       "Ahmet 1994'te başkan oldu. (Ahmet became president in 1994 — dynamic \"become\".)",
       'Bir arabamız olsa her yere giderdik. (If we had a car we\'d go everywhere — existential ol-.)',
       'Kapı açık, evde olmalılar. (The door is open — they must be at home; olmalı on a nominal also expresses deduction from evidence, not just obligation.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: no single frame dominates
+    // here, but the pool is thin and lopsided across 24 sampled translation
+    // rows — future 5, necessity 4, conditional 3, aorist 5, non-finite 5,
+    // while DYNAMIC ol- "became/got" is 1 and EXISTENTIAL ol- is 0. The
+    // dynamic/stative contrast (oldu "became" vs -(y)DI "was") is the thing the
+    // description ends on.
+    //
+    // NOT a variant: ol- + -mAlI read as epistemic deduction. It is the SAME
+    // surface as `ol-necessity`, split only by reading, so a draft cannot
+    // realize one without realizing the other.
+    constructionVariants: [
+      { id: 'ol-future', directive: 'ol- as the FUTURE copula, which the -(y)- copula cannot express (Büyüyünce doktor olacağım; Yarın orada olacak)', share: 3 },
+      { id: 'ol-necessity', directive: 'ol- carrying NECESSITY -mAlI (Yarın sabah burada olmalıyım; Dikkatli olmalısın)', share: 3 },
+      { id: 'ol-conditional', directive: 'ol- in the CONDITIONAL (olsa / olsam / olsaydı) for a hypothetical state (Param olsa seyahat ederdim; Zengin olsam)', share: 3 },
+      { id: 'ol-dynamic-become', directive: 'DYNAMIC ol- meaning "became / got" (oldu, olmuş) — a CHANGE of state, contrasting with stative -(y)DI "was" (Ahmet 1994\'te başkan oldu; hava soğudu, karanlık oldu)', share: 3 },
+      { id: 'ol-existential', directive: 'EXISTENTIAL / possessive ol-, "come to have / there to be", rather than identity (Bir arabamız olsa her yere giderdik; Bir sorun oldu)', share: 3 },
+      { id: 'ol-aorist-habitual', directive: 'ol- in the AORIST or present continuous for a habitual or general truth (Kışın hava böyle olur; Böyle şeyler oluyor)', share: 2 },
+      { id: 'ol-nonfinite', directive: 'a NON-FINITE form of ol- as modifier or adverbial — olan, olarak, olup (Öğretmen olan biri bunu bilmeli; ilk olarak)', share: 2 },
     ],
     examplesNegative: [
       '*öğretmeneceğim (wrong — a nominal predicate needs ol- to carry the future: öğretmen olacağım)',
@@ -4137,6 +4293,21 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yol boyunca hiç konuşmadık. (We didn\'t talk at all along the way.)',
       'Benim hakkımda ne dediler? (What did they say about me? — 1sg possessive on hak.)',
     ],
+    // Collapse measured 2026-08-20 on the prod pool: 15 of 24 sampled cloze rows
+    // are a bare noun + postposition, and the GENITIVE PRONOUN frame — where the
+    // postposition shifts its own possessive to agree (benim hakkımda, senin
+    // sayende) — is 0 in cloze. That shift is the point's one real trap.
+    //
+    // Split by lexeme group rather than by "which postposition", so the
+    // variants stay disjoint. NOT a variant: "contrast yüzünden with
+    // sayesinde" — a contrast to teach, not a construction one draft realizes,
+    // and both halves are bare-noun rows already.
+    constructionVariants: [
+      { id: 'bare-noun-topic', directive: 'a BARE (caseless) noun + a TOPIC postposition — hakkında or konusunda, "about / on the subject of" (Bu film hakkında ne düşünüyorsun?; eğitim konusunda)', share: 3 },
+      { id: 'bare-noun-causal', directive: 'a BARE noun + a CAUSAL postposition — yüzünden for an unwelcome cause, sayesinde for a welcome one (Trafik yüzünden geç kaldık; Onun sayesinde işi bitirdik)', share: 3 },
+      { id: 'bare-noun-substitution-extent', directive: 'a BARE noun + yerine "instead of" or boyunca "along / throughout" (Çay yerine kahve içelim; yol boyunca; yıl boyunca)', share: 2 },
+      { id: 'genitive-pronoun-possessive-shift', directive: 'a PERSONAL PRONOUN in the GENITIVE, with the postposition shifting its possessive to agree: benim hakkımda, senin sayende, onun yüzünden, bizim hakkımızda (Benim hakkımda ne dediler?)', share: 3 },
+    ],
     examplesNegative: [
       '*Filmden hakkında konuştuk. (wrong — the complement stays caseless: "film hakkında")',
       '*Sınavı kazandım senin yüzünden. (wrong register — yüzünden is for unwelcome causes; a welcome cause is sayesinde: "senin sayende")',
@@ -4177,6 +4348,18 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Yağmur yağdığı için maç ertelendi. (The match was postponed because it rained.)',
       'Bu para yetmeyeceği için borç isteyeceğim. (As this money won\'t be enough, I\'ll ask for a loan.)',
       'Hasta olduğum için gelemedim. (I couldn\'t come because I was ill.)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool: 24 of 24 sampled translation
+    // rows are -DIğI için. The FUTURE cause -(y)AcAğI için, which the
+    // description spells out with its own example, is 0 in translation and 1 of
+    // 24 in cloze; the formal -DIğIndAn (dolayı) is 0.
+    //
+    // Orthogonal to the `person` spec: that floors which possessive the
+    // subordinate verb carries, never which reason frame is used.
+    constructionVariants: [
+      { id: 'digi-icin-past-present', directive: '-DIğI için for a PAST or PRESENT reason, with possessive agreement on the subordinate verb (Hasta olduğum için gelemedim; Yağdığı için çıkmadık)', share: 3 },
+      { id: 'yacagi-icin-future', directive: '-(y)AcAğI için for a FUTURE cause (Para yetmeyeceği için borç isteyeceğim; Geç kalacağımız için taksiye bindik)', share: 2 },
+      { id: 'digindan-dolayi-formal', directive: 'the FORMAL equivalent -DIğIndAn (dolayı) (Hasta olduğumdan dolayı gelemedim; yoğun olduğundan)', share: 1 },
     ],
     examplesNegative: [
       '*Geç kaldım için özür dilerim. (wrong — için needs the nominalised participle, not a finite verb: "geç kaldığım için")',
