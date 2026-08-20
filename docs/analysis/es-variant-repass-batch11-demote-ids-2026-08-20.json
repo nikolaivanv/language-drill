@@ -1,0 +1,244 @@
+{
+ "generated": "2026-08-20",
+ "database": "prod",
+ "reason": "pool-hygiene",
+ "batch": "11",
+ "note": "Row ids captured BEFORE demotion. demote:pool writes no rollback artifact; every row here was auto-approved or manual-approved. Restore by setting review_status back and demotion_reason=NULL.",
+ "groups": [
+  {
+   "cell": "A2:cloze:es-a2-diacritic-pairs",
+   "phase": "surplus",
+   "variant": "tu-pronoun-vs-tu-possessive",
+   "planned": 11,
+   "ids": [
+    "5e5a5024-b364-5d5a-81ae-95c6014d6137",
+    "615a54dd-3248-5f95-80ae-94297df787c4",
+    "605a534a-b12b-51d0-bfae-928cff142595",
+    "5d5a4e91-36ba-56a9-bcae-8db579851080",
+    "575a451f-3d66-5947-baae-8a7b8915b1ee",
+    "aa2e641d-2592-5003-aeaa-2dcf4be825be",
+    "2831690e-e37d-5160-b8a2-b94cdd94ecb5",
+    "29316aa1-649a-5f25-b9a2-bae95c784ee4",
+    "263165e8-e5b6-5cea-baa2-bc86dfce2857",
+    "20315c76-ec62-5f88-b0a2-ac64e679db3d",
+    "dd203ea6-4b0f-5e36-83b3-b3ea405a2def"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-diacritic-pairs",
+   "phase": "surplus",
+   "variant": "se-verb-vs-se-clitic",
+   "planned": 4,
+   "ids": [
+    "5f5a51b7-3481-5b1f-82ae-97638030c366",
+    "5b5a4b6b-38f3-5233-beae-90ef7bbe4c22",
+    "565a438c-bc49-5b82-b9ae-88de0a324fbf",
+    "a02e545f-2c3e-52a1-a4aa-1dad40c9fb94"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-diacritic-pairs",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 6,
+   "ids": [
+    "db7160c8-3ff3-50e0-b747-1b1cea7ff3d1",
+    "dc71625b-c10f-5ea5-b847-1cb969635600",
+    "e2716bcd-c7bb-5143-b647-197f700f08e6",
+    "dc831410-df69-5f16-86be-3bfadf2e0003",
+    "717bafda-1c38-52ae-97b6-d2c2ff4eca97",
+    "1085a24b-cca5-588b-bc4c-3e17a8a4bd5a"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-diacritic-pairs",
+   "phase": "surplus",
+   "variant": "accent-only-on-the-stressed-member",
+   "planned": 5,
+   "ids": [
+    "d5715756-4b11-5a92-b147-116ef59e1dfb",
+    "6f7bacb4-19ff-5724-95b6-cf88fd158ef5",
+    "707bae47-9b1b-54e9-96b6-d1257bf8f124",
+    "d4c73d5a-2b8d-51c6-867d-51aa378fb137",
+    "1185a3de-494f-5f3c-b94c-394027881f89"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-si-present-conditional",
+   "phase": "surplus",
+   "variant": "si-present-apodosis-present",
+   "planned": 8,
+   "ids": [
+    "d3217637-b1c9-5df3-aa8e-95ff2b3f3a4a",
+    "d021717e-2a01-5d90-ab8e-979cae9513bd",
+    "ce216e58-2c3a-591a-ad8e-9ad6b0ce4f5f",
+    "cf216feb-ad57-56df-ae8e-9c732fb1b18e",
+    "eaafde8e-c422-59e4-a900-13b801165c99",
+    "ebafe021-453f-57a9-aa00-15557ff9bec8",
+    "e8afdb68-c65b-556e-ab00-16f2034f983b",
+    "edafe347-4305-5c1f-b000-1f0386a571ae"
+   ]
+  },
+  {
+   "cell": "A2:cloze:es-a2-si-present-conditional",
+   "phase": "surplus",
+   "variant": "si-present-apodosis-imperative",
+   "planned": 2,
+   "ids": [
+    "d42177ca-2e74-54a4-a78e-9128aa229c79",
+    "d1217311-ab1e-5b55-ac8e-99392d7875ec"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-si-present-conditional",
+   "phase": "surplus",
+   "variant": "si-present-apodosis-future",
+   "planned": 8,
+   "ids": [
+    "fe995f9d-a95d-5823-a449-3b6fb8b65d4e",
+    "fd995e0a-2841-5a5e-a349-39d239d2fb1f",
+    "fc995c77-a724-5c99-a249-3835b67d21ac",
+    "fa995951-a4eb-510f-a849-41e3b443e60a",
+    "e869fee2-28c5-54fe-9d1d-30426a7ca27f",
+    "e369f703-a336-5025-a01d-3519e2b451c8",
+    "7a71a07d-4bb9-5215-a724-c50959c75e3c",
+    "76719a31-502b-5929-a324-be955554e6f8"
+   ]
+  },
+  {
+   "cell": "A2:translation:es-a2-si-present-conditional",
+   "phase": "surplus",
+   "variant": "si-present-apodosis-imperative",
+   "planned": 6,
+   "ids": [
+    "f899562b-a2b2-5585-a649-3ea9b20aaa68",
+    "f99957be-23ce-534a-a749-4046356083db",
+    "f3994e4c-2eec-5cfc-9949-29b02eb4d0f5",
+    "e96a0075-a9e2-52c3-9e1d-31dfe96004ae",
+    "e269f570-221a-5260-9f1d-337c63d0ef99",
+    "7471970b-5265-54b3-a524-c1cf578e229a"
+   ]
+  },
+  {
+   "cell": "B2:cloze:es-b2-conditional-connectors",
+   "phase": "surplus",
+   "variant": "provided-that-subjunctive",
+   "planned": 33,
+   "ids": [
+    "09ca40a5-c6f6-5b55-b4fb-d1d9c26be604",
+    "06ca3bec-4812-591a-b5fb-d37645c1bf77",
+    "07ca3d7f-c92f-56df-b6fb-d513c4a521a6",
+    "08ca3f12-45d9-5d90-b3fb-d03c438883d5",
+    "05ca3a59-cb68-5269-b0fb-cb65bdf96ec0",
+    "03ca3733-cda2-5df3-b2fb-ce9fc032aa62",
+    "02ca35a0-4c85-502e-b1fb-cd02414f4833",
+    "11ca4d3d-cfdb-597d-acfb-c4f1cb50d48c",
+    "10ca4baa-4ebe-5bb8-abfb-c3544c6d725d",
+    "f9616419-2876-59e5-aa3e-a4f92c468124",
+    "f8616286-a75a-5c20-a93e-a35cad631ef5",
+    "f6615f60-a993-57aa-ab3e-a696af9c5a97",
+    "fb61673f-2f22-5c83-a83e-a1bf2a0d4582",
+    "00616f1e-b03e-5a48-a13e-9674b6480d7d",
+    "016170b1-315b-580d-a23e-9811352b6fac",
+    "925e835d-f253-58eb-9746-d97712d16976",
+    "905e8037-f01a-5d61-9546-d63d10982dd4",
+    "8f5e7ea4-6efd-5f9c-9446-d4a091b4cba5",
+    "8e5e7d11-ede1-51d7-9b46-dfeb0e5ef232",
+    "8d5e7b7e-6cc4-5412-9a46-de4e8f7b9003",
+    "8c5e79eb-eba8-564d-9946-dcb10c25b690",
+    "8b5e7858-6a8b-5888-9846-db148d425461",
+    "8a5e76c5-e96e-5ac3-9f46-e65f1bb657fe",
+    "8c5c3b54-8400-5f52-9d43-d7ee783fb3f7",
+    "8d5c3ce7-051d-5d17-9e43-d98bf7231626",
+    "8e5c3e7a-81c7-53c8-9b43-d4b476067855",
+    "885c3508-8872-5666-9943-d17a73cd3cb3",
+    "895c369b-098f-542b-9a43-d317f2b09ee2",
+    "8a5c382e-8639-5adc-9743-ce4071940111",
+    "8b5c39c1-0756-58a1-9843-cfddf0776340",
+    "845c2ebc-7b1b-512a-a543-e4d68124a27f",
+    "8659f34b-ab66-537d-9b37-082123ecc1f0",
+    "8559f1b8-2a49-55b8-9a37-0684a5095fc1"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-conditional-connectors",
+   "phase": "surplus",
+   "variant": "provided-that-subjunctive",
+   "planned": 36,
+   "ids": [
+    "4511be8d-c8c3-50cf-b933-066315676022",
+    "4211b9d4-456d-5780-b633-018c944ac251",
+    "4411bcfa-47a6-530a-b833-04c69683fdf3",
+    "3f11b51b-cafc-5c59-b332-fcb517a09bc4",
+    "4311bb67-c689-5545-b733-0329132e2480",
+    "3e11b388-49df-5e94-b232-fb1898bd3995",
+    "4011b6ae-4c18-5a1e-b432-fe529af67537",
+    "3b11aecf-cf6e-536d-af32-f6411c131308",
+    "3a11ad3c-4e52-55a8-ae32-f4a49d2fb0d9",
+    "e5e7a1ec-6596-5a70-ac49-cc4c0dda2e31",
+    "e6e7a37f-e6b3-5835-ad49-cde98cbd9060",
+    "e7e7a512-67cf-55fa-ae49-cf86101369d3",
+    "e8e7a6a5-e8ec-53bf-af49-d1238ef6cc02",
+    "e1e79ba0-6a08-5184-a849-c5d8124ca575",
+    "e3e79ec6-6c42-5d0e-aa49-c9121485e117",
+    "ede7ae84-6e7b-5898-a449-bf6416bf1cb9",
+    "e4e7a059-ed5e-5ad3-ab49-caaf93694346",
+    "eee7b017-ef98-565d-a549-c10195a27ee8",
+    "77ef4387-b090-573b-9a51-33e7734878b2",
+    "76ef41f4-2f73-5976-9951-324af4651683",
+    "79ef46ad-ae56-5bb1-9851-30ad710f3d10",
+    "78ef451a-2d3a-5dec-9751-2f10f22bdae1",
+    "73ef3d3b-ac1d-5027-9e51-3a5b77baeff6",
+    "72ef3ba8-2b01-5262-9d51-38bef8d78dc7",
+    "75ef4061-a9e4-549d-9c51-37217581b454",
+    "74ef3ece-28c7-56d8-9b51-3584f69e5225",
+    "6fef36ef-a7ab-5913-a251-40cf7c2d673a",
+    "6eef355c-268e-5b4e-a151-3f32fd4a050b",
+    "f1ec31fe-423c-5da2-a04f-00ded8b6c333",
+    "efec2ed8-4003-5218-9e4e-fda4d67d8791",
+    "f0ec306b-c120-5fdd-9f4e-ff415560e9c0",
+    "f5ec384a-46af-54b6-9c4e-fa6add293a77",
+    "f6ec39dd-c7cc-527b-9d4e-fc075c0c9ca6",
+    "f4ec36b7-c592-56f1-9b4e-f8cd59d36104",
+    "e9ec2566-3957-5f7a-a84f-0dc6e19bb1bb",
+    "eaec26f9-ba74-5d3f-a94f-0f63607f13ea"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-correlative-comparison",
+   "phase": "unlabelled",
+   "variant": null,
+   "planned": 1,
+   "ids": [
+    "4ac809d8-4c70-55e8-b6cf-7bf4a9441181"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-correlative-comparison",
+   "phase": "surplus",
+   "variant": "cuanto-mas-menos-correlative",
+   "planned": 9,
+   "ids": [
+    "245b5ab1-2acb-5e47-9970-188bbb615252",
+    "275b5f6a-ae20-5796-9470-107a40f06767",
+    "235b591e-a9ae-5082-9870-16ee3c7df023",
+    "225b578b-2891-52bd-9770-1551b92816b0",
+    "285b60fd-2f3d-555b-9570-1217bfd3c996",
+    "255b5c44-abe7-5c0c-9270-0d403eb72bc5",
+    "265b5dd7-2d04-59d1-9370-0eddbd9a8df4",
+    "1b5b4c86-a0c9-525a-a070-23d64562deab",
+    "bbcf7780-8108-5ece-83d7-e4128fcef9d3"
+   ]
+  },
+  {
+   "cell": "B2:translation:es-b2-correlative-comparison",
+   "phase": "surplus",
+   "variant": "cuanto-agreeing-before-noun",
+   "planned": 1,
+   "ids": [
+    "215b55f8-a775-54f8-9670-13b43a44b481"
+   ]
+  }
+ ],
+ "total": 130
+}
