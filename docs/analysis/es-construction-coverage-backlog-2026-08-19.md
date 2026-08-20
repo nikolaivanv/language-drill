@@ -6,12 +6,18 @@ Generated from `pnpm audit:constructions --language ES` (report `es-full-2026-08
 #674–#683; all **90** points declare a `constructionVariants` list. The retrofit
 then ran against prod on 2026-08-20: prompts verified in sync (no drift, nothing
 to push), **6,532 of 9,134** approved ES cloze/translation rows labelled with the
-variant they realize, and **3,070 rows demoted `pool-hygiene`** to open headroom.
-Nightly pre-generation stays PAUSED (#672) by explicit decision, so that headroom
-is not refilled yet — resuming is the one step left.
+variant they realize, and **2,598 rows demoted `pool-hygiene`** — 2,745 rows of
+headroom across 174 of 179 variant cells. (472 further rows were planned but left
+approved: `demote:pool` selects by content substring and cannot express
+"unlabelled". See `es-variant-repass-2026-08-20.md`.) Nightly pre-generation stays
+PAUSED (#672) by explicit decision, so that headroom is not refilled yet —
+resuming is the one step left.
 
-The only authoring work still open is the four points below, which the
-pre-#673 enumeration faults had skipped and which were re-audited on 2026-08-20.
+Authoring is complete again as of the batch-11 PR: the four points the pre-#673
+enumeration faults had skipped were re-audited on 2026-08-20, found collapsed,
+and now declare variants too. **94 ES points** carry a `constructionVariants`
+list. Those four still need their own label + demote pass — the repass below ran
+before they were authored.
 
 **Not every finding is authoring work.** A point whose variants are already declared is collapsed because its pool PREDATES them — the remedy there is the retrofit repass PR #631 never ran, not a second variant list. The three buckets below are ordered by how much work they are.
 
@@ -25,14 +31,15 @@ pre-#673 enumeration faults had skipped and which were re-audited on 2026-08-20.
 
 - Points enumerated: **110 / 114** in scope · judged single-construction: **2**
 - Findings: **162** across **90** points
-- Needs authoring: **4** (the re-examined points below) · needs topping up: **0** · needs only the repass: **90**
+- Needs authoring: **0** · needs topping up: **0** · needs only the repass: **94** (the four below were authored after the repass ran, so they still need `backfill:variant-seeds` + `demote:pool`)
 
-### Never examined — RE-RUN 2026-08-20, all four now examined
+### Never examined — RE-RUN 2026-08-20, all four now examined AND authored
 
 The four points the pre-#673 enumeration faults skipped were re-audited on
 2026-08-20 (`reaudit-<key>-2026-08-20` in `audit-runs/`, $0.30 total). All four
-are collapsed and **all four need variants authored** — they are the only
-authoring work left in this document.
+were collapsed; all four now declare variants (batch 11). **They still need the
+repass** — the 2026-08-20 labelling and demotion ran before they were authored,
+so their pools carry no variant labels at all.
 
 | point | enumeration fault (pre-#673) | what the pool shows now |
 |---|---|---|

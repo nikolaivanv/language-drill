@@ -3058,6 +3058,52 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-si-present-conditional',
+    // Never examined by the ES sweep — its enumeration failed the pre-#673 array
+    // check. Re-audited 2026-08-20: the three apodosis types are healthy
+    // (17 / 17 / 13 of 48 sampled rows), but si + PERFECT was 0, the
+    // past-indicative habitual si was 0, and the si/sí accent contrast had 1 —
+    // the three things the description added beyond the basic frame.
+    //
+    // The audit's `no-future-after-si` is REJECTED: "the future never follows
+    // si" is a prohibition, not something a draft can realize, and its directive
+    // asked for a multiple-choice or error-correction item these exercise types
+    // do not have. It rides in the apodosis-future directive, where the
+    // temptation actually arises.
+    constructionVariants: [
+      {
+        id: 'si-present-apodosis-present',
+        directive:
+          'si + present indicative with a PRESENT indicative main clause (Si llueve, me quedo en casa)',
+        share: 3,
+      },
+      {
+        id: 'si-present-apodosis-future',
+        directive:
+          'si + PRESENT indicative with a FUTURE main clause — the future belongs in the main clause only, never after si (Si terminas pronto, iremos al cine)',
+        share: 2,
+      },
+      {
+        id: 'si-present-apodosis-imperative',
+        directive:
+          'si + present indicative with an IMPERATIVE main clause (Si tienes tiempo, llámame esta tarde)',
+        share: 2,
+      },
+      {
+        id: 'si-perfect-apodosis-imperative',
+        directive:
+          'si + present PERFECT for something to be completed by a given point, usually with an imperative (Si no ha cambiado para el viernes, avísame)',
+      },
+      {
+        id: 'si-past-indicative-habitual',
+        directive:
+          'si + a PAST indicative for a fulfilled or habitual condition, with a past main clause (Si teníamos dinero, íbamos al teatro)',
+      },
+      {
+        id: 'si-vs-si-accent',
+        directive:
+          "the spelling contrast in context: sí ('yes' or emphatic, accented) against the conjunction si ('if', bare), both present so the learner must choose (—¿Vienes a la fiesta? —Sí, claro que voy. Si vienes, avísame)",
+      },
+    ],
     kind: 'grammar',
     name: 'Open conditions with si + present',
     description:
@@ -3495,6 +3541,85 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-a2-diacritic-pairs',
+    // Never examined by the ES sweep — its enumeration failed the pre-#673 id
+    // check ('tu-tú' is not kebab-case). Re-audited 2026-08-20: tú/tu (19 of 48
+    // sampled rows) and sé/se (18) took the pool, while mí/mi, sí/si, más/mas and
+    // dé/de were ALL 0. A point about nine accent pairs was testing two of them.
+    //
+    // Declared as constructionVariants rather than the `coverageSpec` the audit
+    // proposed: its axis would be one value per pair, which is a per-draft MUST
+    // in everything but name, and a new axis id has to be threaded through
+    // `renderCoverageBlock` and `legalAxesFor` by hand. Same call as
+    // `es-b1-preterite-imperfect-meaning` (#677).
+    //
+    // ONE VARIANT PER PAIR, deliberately — grouping them by the accented
+    // member's word class (pronoun / verb / adverb) would have kept the list at
+    // seven and the A2 target at 30, but it would also have hidden exactly what
+    // this audit found: mí/mi sitting at 0 behind a healthy tú/tu. The variant
+    // floor raises the cell to 11 x 4 = 44, which is the target this point has
+    // always needed and never had.
+    constructionVariants: [
+      {
+        id: 'tu-pronoun-vs-tu-possessive',
+        directive:
+          'the pair tú (subject pronoun, accented) vs. tu (possessive, bare), with the sentence forcing one of them (Tú siempre olvidas tu paraguas)',
+        share: 2,
+      },
+      {
+        id: 'el-pronoun-vs-el-article',
+        directive:
+          'the pair él (pronoun, accented) vs. el (definite article, bare) — El coche es de él',
+      },
+      {
+        id: 'mi-pronoun-vs-mi-possessive',
+        directive:
+          'the pair mí (prepositional pronoun, accented) vs. mi (possessive, bare) — A mí me encanta mi barrio',
+      },
+      {
+        id: 'se-verb-vs-se-clitic',
+        directive:
+          'the pair sé (the verb saber or the imperative of ser, accented) vs. se (clitic, bare) — Sé que se acuesta tarde',
+        share: 2,
+      },
+      {
+        id: 'de-verb-vs-de-preposition',
+        directive:
+          'the pair dé (present subjunctive of dar, accented) vs. de (preposition, bare) — Espero que me dé el número de teléfono',
+      },
+      {
+        id: 'te-noun-vs-te-clitic',
+        directive:
+          'the pair té (the drink, accented) vs. te (clitic, bare) — ¿Te apetece un té?',
+      },
+      {
+        id: 'si-affirmative-vs-si-conditional',
+        directive:
+          "the pair sí (yes, or emphatic, accented) vs. si (if, bare), including assertive sí que and the rejoinder pero si (—No vendrá. —¡Sí que vendrá!; Si vienes, avísame)",
+        share: 2,
+      },
+      {
+        id: 'mas-adverb-vs-mas-conjunction',
+        directive:
+          "the pair más (more, accented) vs. the literary mas (= pero, bare) — Quería más tiempo, mas no lo tenía",
+      },
+      {
+        id: 'aun-adverb-vs-aun-even',
+        directive:
+          "the pair aún (= todavía, accented) vs. aun (= incluso, bare) — Aún no ha llegado; Aun así, lo intentó",
+        share: 2,
+      },
+      {
+        id: 'solo-adjective-vs-solo-adverb',
+        directive:
+          "solo as an ADJECTIVE agreeing with its subject (volvió sola) against solo as the invariable adverb 'only' — the contrast is the agreement, not the optional accent (Octavia volvió sola y solo quería descansar)",
+      },
+      {
+        id: 'accent-only-on-the-stressed-member',
+        directive:
+          'a sentence holding BOTH members of one pair, so the learner must accent the stressed one and leave the function word bare — the hypercorrection trap (*tú paraguas, *mí casa) this point exists to break',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Diacritic accent pairs (tú/tu, sé/se...)',
     description:
@@ -5577,6 +5702,53 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b2-conditional-connectors',
+    // Never examined by the ES sweep — its enumeration failed the pre-#673 array
+    // check. Re-audited 2026-08-20: the 'provided that' family took 43 of 48
+    // sampled rows. por si (acaso) had 1, and salvo si, conditional como and
+    // de + infinitive were ALL 0 — three of the six connectors this point is
+    // named for, each carrying its own mood rule.
+    //
+    // Causal como + indicative is NOT a separate variant: it is the reading the
+    // conditional one must not be confused with, so it rides in that directive
+    // as the contrast rather than competing for the same label.
+    constructionVariants: [
+      {
+        id: 'provided-that-subjunctive',
+        directive:
+          "a 'provided that' connector — siempre que, siempre y cuando, con tal de que, a condición de que — + SUBJUNCTIVE (Aceptaré el trabajo siempre y cuando el sueldo sea justo)",
+        share: 3,
+      },
+      {
+        id: 'por-si-acaso-indicative',
+        directive:
+          "por si or por si acaso + INDICATIVE for 'in case' — never the present subjunctive (Llévate el paraguas por si acaso llueve)",
+        share: 2,
+      },
+      {
+        id: 'a-no-ser-que-salvo-que-subjunctive',
+        directive:
+          "a no ser que or salvo que + SUBJUNCTIVE for 'unless' (No cambiaré de opinión a no ser que me des una buena razón)",
+        share: 2,
+      },
+      {
+        id: 'salvo-si-excepto-si-indicative',
+        directive:
+          'salvo si or excepto si + INDICATIVE — the same-looking connector that behaves like a plain if-clause, unlike salvo que (Saldremos a la hora prevista, salvo si hay un imprevisto)',
+        share: 2,
+      },
+      {
+        id: 'como-conditional-subjunctive',
+        directive:
+          'conditional como + SUBJUNCTIVE in a threat or warning, distinct from causal como + indicative (¡Como vuelvas a llegar tarde, te quedas sin salir!)',
+        share: 2,
+      },
+      {
+        id: 'de-infinitive-if-clause',
+        directive:
+          'de + INFINITIVE as a same-subject if-clause, usually with a conditional main clause (De haberlo sabido, no habría venido)',
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Conditional connectors beyond si',
     description:
@@ -6322,6 +6494,39 @@ const esCurriculum: readonly GrammarPoint[] = [
 
   {
     key: 'es-b2-correlative-comparison',
+    // Never examined by the ES sweep — its enumeration failed the pre-#673 array
+    // check. Re-audited 2026-08-20: cada vez más/menos was 0 of 24, though
+    // calquing it as *más y más is one of this point's three commonErrors.
+    //
+    // The audit's `subjunctive-future-reference-cuanto` is REJECTED as a
+    // variant: mood is orthogonal to which correlative shape the sentence uses —
+    // a row is simultaneously a cuanto-correlative AND either indicative or
+    // subjunctive, so only one of the two could carry the label. It rides in
+    // both cuanto directives instead. The remaining two are made disjoint by
+    // whether a NOUN follows cuanto, which is exactly where the agreement rule
+    // (and the *cuanto más fotos error) lives.
+    // Note this point is `clozeUnsuitable`, so the rotation drives the
+    // translation cell only.
+    constructionVariants: [
+      {
+        id: 'cuanto-mas-menos-correlative',
+        directive:
+          'cuanto más/menos + VERB or adjective …, más/menos … — cuanto invariable because no noun follows it; use the subjunctive in the cuanto-clause when the reference is future (Cuanto más practiques, más aprenderás)',
+        share: 3,
+      },
+      {
+        id: 'cuanto-agreeing-before-noun',
+        directive:
+          'the same correlative with a NOUN directly after cuanto, which then agrees in gender and number — never *cuanto más fotos (Cuantas más fotos veo, menos me decido)',
+        share: 2,
+      },
+      {
+        id: 'cada-vez-mas-menos-progressive',
+        directive:
+          "cada vez más / cada vez menos for a gradual change, the only idiomatic rendering of 'more and more' — never *más y más (El tráfico está cada vez peor; Cada vez menos gente compra el periódico)",
+        share: 2,
+      },
+    ],
     kind: 'grammar',
     name: 'Correlative and progressive comparison',
     description:
