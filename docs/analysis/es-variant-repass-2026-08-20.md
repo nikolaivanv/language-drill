@@ -86,6 +86,41 @@ Nothing outside the captured id set was touched.
   exists so the scheduler can generate those constructions. Until pre-generation
   resumes, they stay at zero.
 
+## Batch-11 tail, same day
+
+The four points #685 authored (`es-a2-diacritic-pairs`,
+`es-a2-si-present-conditional`, `es-b2-conditional-connectors`,
+`es-b2-correlative-comparison`) were not in the sweep above — they did not declare
+variants when it ran — so they got the same two steps afterwards, against snapshot
+branch `br-proud-leaf-anhky01u`:
+
+- **Labelled:** 262 of 269 approved rows, $0.36 across four runs
+  (`batch11-<key>-2026-08-20` artifacts). 7 rows the classifier declined.
+- **Demoted:** 123 rows `pool-hygiene`, from the 130 captured in
+  `es-variant-repass-batch11-demote-ids-2026-08-20.json`. The 7 unlabelled rows
+  stayed approved for the same reason as the main pass — `demote:pool` cannot
+  express "unlabelled".
+
+Resulting cells, against target:
+
+| cell | approved → | target |
+|---|---|---|
+| `es-a2-diacritic-pairs:cloze` | 30 → **15** | 44 |
+| `es-a2-diacritic-pairs:translation` | 30 → **25** | 44 |
+| `es-a2-si-present-conditional:cloze` | 30 → **20** | 30 |
+| `es-a2-si-present-conditional:translation` | 30 → **16** | 30 |
+| `es-b2-conditional-connectors:cloze` | 50 → **17** | 50 |
+| `es-b2-conditional-connectors:translation` | 50 → **14** | 50 |
+| `es-b2-correlative-comparison:translation` | 49 → **39** | 50 |
+
+**152 rows of headroom.** `es-b2-conditional-connectors` lost two thirds of both
+cells, which is what a pool that was 43-of-48 on one connector looks like once the
+other five are asked for. `es-a2-diacritic-pairs` is the other extreme in a
+different direction: its cells were already below the 44 the eleven variants
+require, so the demotion only had to clear the `tú/tu` and `sé/se` surplus.
+
+Every ES point that declares variants has now been through both steps.
+
 ## What is NOT done
 
 1. **The refill.** Resuming nightly pre-generation is one flag in
@@ -99,8 +134,8 @@ Nothing outside the captured id set was touched.
    to avoid: coverage reads zero for every variant and the seeder spreads drafts
    evenly instead of chasing real gaps. Either extend the tool's eligible types or
    accept one skewed round there.
-3. **Four points reopened as authoring work** (see the backlog's "Never examined"
-   section) — they need variants, then their own label + demote pass.
+3. ~~Four points reopened as authoring work~~ — **done**: authored in #685,
+   labelled and demoted the same day (see the batch-11 section above).
 4. **No outcome has been verified.** The claim is "pools become diverse"; that is
    unmeasurable until regeneration. The confirming runs are `audit:constructions`
    and `audit:collapse --dry-run` **after** the refill, not now.
