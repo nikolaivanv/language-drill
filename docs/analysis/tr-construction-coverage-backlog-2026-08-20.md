@@ -294,16 +294,37 @@ invariant test caught it.
 
 ## What is NOT done
 
-1. **The prod repass has not run.** `backfill:variant-seeds` + `demote:pool
-   --reason pool-hygiene` over the ~4,646 approved TR cloze/translation rows.
-   Per the ES record the deploy must land first — the generation Lambda needs the
-   variant lists live before headroom is opened. These batches are unmerged.
-2. **The sentence_construction tail.** 778 approved SC rows across 16 cells, of
-   which the points that now declare variants own the majority. `seedKindFor`
-   has routed SC to variant seeding since #652, and `backfill:variant-seeds`
-   gained SC in #687, so the tooling is ready — but zero of those rows are
-   labelled, which is exactly the input `pickVariantSeeds` reads as "nothing is
-   covered". ES hit this with 2 cells; TR has 16.
+1. **The prod repass has not run.** Sized read-only against prod 2026-08-20:
+
+   | type | approved rows on variant points | points | already carry a `seedWord` |
+   |---|---|---|---|
+   | cloze | 885 | 34 | 860 |
+   | translation | 1,571 | 46 | 1,505 |
+   | sentence_construction | 374 | 8 | **27** |
+   | **total** | **2,830** | **46** | 2,392 |
+
+   At the ES run's measured rate (5,432 rows / $7.86 ≈ $0.00145 per row) the
+   labelling pass is roughly **$4**. Note the `seedWord` counts are the LEGACY
+   frequency-band seeds, not variant ids — `backfill:variant-seeds` overwrites
+   them, and the rollback artifact is the only record of the originals, so the
+   run must be `--name`d and the artifact archived outside
+   `packages/db/backfill-runs/` (gitignored).
+
+   Order, per the ES record: **merge and deploy first**, then `push-prompts`
+   verification, then snapshot a Neon branch, then `backfill:variant-seeds`,
+   then capture row ids into `docs/analysis/`, then `demote:pool --reason
+   pool-hygiene` (never `quality` — that revokes learners' credit). The deploy
+   must precede the demotion because the generation Lambda needs the variant
+   lists live before headroom is opened. These four batches are unmerged.
+
+2. **The sentence_construction tail is proportionally worse than ES's.** Of the
+   374 approved SC rows on variant-declaring points, only **27 carry a
+   `seedWord` at all** — 347 are the unlabelled legacy pool. That is precisely
+   the input `pickVariantSeeds` reads as "no variant is covered anywhere", whose
+   answer is to spread drafts evenly instead of chasing gaps. `seedKindFor` has
+   routed SC to variant seeding since #652 and `backfill:variant-seeds` gained
+   SC in #687, so the tooling is ready. ES hit this with 2 cells and 148 rows;
+   TR has 8 affected cells and 374.
 3. **Two points never examined** — `tr-a1-numbers-ordinals` and
    `tr-b2-compound-past-hikaye`, both kebab-case enumeration faults.
 4. **`tr-a1-ablative-dative` is blocked** on the spec/variant collision.
