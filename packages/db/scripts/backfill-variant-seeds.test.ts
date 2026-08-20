@@ -286,9 +286,17 @@ describe('isEligible', () => {
     expect(isEligible(noVariants, row())).toBe(false);
   });
 
-  it('SKIPS an exercise type other than cloze/translation', () => {
+  it('SKIPS an exercise type that carries no variant seed', () => {
     expect(isEligible(withVariants, row({ type: ExerciseType.CONJUGATION }))).toBe(false);
-    expect(isEligible(withVariants, row({ type: ExerciseType.SENTENCE_CONSTRUCTION }))).toBe(false);
+    expect(isEligible(withVariants, row({ type: ExerciseType.VOCAB_RECALL }))).toBe(false);
+  });
+
+  it('accepts sentence_construction rows — seedKindFor has routed SC to variants since #652', () => {
+    const r = row({
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      contentJson: { prompt: 'Express a wish.', modelAnswers: ['Espero que vengas.'] },
+    });
+    expect(isEligible(withVariants, r)).toBe(true);
   });
 
   it('accepts translation rows', () => {
@@ -321,9 +329,61 @@ describe('toClassifierRow', () => {
     });
   });
 
+  it('maps a sentence-construction row to prompt + model answers', () => {
+    const r = row({
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      contentJson: {
+        prompt: 'Express a wish for a friend travelling abroad.',
+        targetStructure: 'present subjunctive after espero que',
+        modelAnswers: ['Espero que tengas buen viaje.', 'Quiero que te diviertas.'],
+      },
+    });
+    expect(toClassifierRow(r)).toEqual({
+      rowId: 'row-1',
+      prompt:
+        'Express a wish for a friend travelling abroad.\n[target structure: present subjunctive after espero que]',
+      answer: 'Espero que tengas buen viaje. | Quiero que te diviertas.',
+    });
+  });
+
+  it('caps the model answers it sends at three', () => {
+    const r = row({
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      contentJson: { prompt: 'p', modelAnswers: ['a', 'b', 'c', 'd'] },
+    });
+    expect(toClassifierRow(r)?.answer).toBe('a | b | c');
+  });
+
+  it('omits the target-structure hint when the row has none', () => {
+    const r = row({
+      type: ExerciseType.SENTENCE_CONSTRUCTION,
+      contentJson: { prompt: 'p', modelAnswers: ['a'] },
+    });
+    expect(toClassifierRow(r)?.prompt).toBe('p');
+  });
+
   it('returns null when the content lacks a usable field rather than sending empty text', () => {
     expect(toClassifierRow(row({ contentJson: {} }))).toBeNull();
     expect(toClassifierRow(row({ contentJson: { sentence: 'x ___' } }))).toBeNull();
+  });
+
+  it('returns null for a sentence-construction row with no usable model answer', () => {
+    // An SC row has no correctAnswer; with no model answers there is nothing but
+    // the situation prompt to judge from, which is not enough to pick a variant.
+    const base = { prompt: 'p', targetStructure: 't' };
+    expect(
+      toClassifierRow(row({ type: ExerciseType.SENTENCE_CONSTRUCTION, contentJson: base })),
+    ).toBeNull();
+    expect(
+      toClassifierRow(
+        row({ type: ExerciseType.SENTENCE_CONSTRUCTION, contentJson: { ...base, modelAnswers: ['', '  '] } }),
+      ),
+    ).toBeNull();
+    expect(
+      toClassifierRow(
+        row({ type: ExerciseType.SENTENCE_CONSTRUCTION, contentJson: { modelAnswers: ['a'] } }),
+      ),
+    ).toBeNull();
   });
 });
 
