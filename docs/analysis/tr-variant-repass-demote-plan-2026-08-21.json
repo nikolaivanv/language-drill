@@ -1,0 +1,1401 @@
+[
+  {
+    "cell": "tr-a1-plural-suffix:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-plural-suffix",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 14,
+    "planned": 13,
+    "alloc": [
+      {
+        "variant": "no-plural-after-numeral",
+        "take": 13
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-plural-suffix:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-plural-suffix",
+    "approved": 47,
+    "target": 20,
+    "labelled": 47,
+    "need": 40,
+    "planned": 40,
+    "alloc": [
+      {
+        "variant": "plural-lar-ler-harmony",
+        "take": 40
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-present-continuous:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-present-continuous",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 9,
+    "planned": 8,
+    "alloc": [
+      {
+        "variant": "present-continuous-consonant-final-stem",
+        "take": 5
+      },
+      {
+        "variant": "present-continuous-low-vowel-raising",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-present-continuous:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-present-continuous",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 9,
+    "planned": 8,
+    "alloc": [
+      {
+        "variant": "present-continuous-low-vowel-raising",
+        "take": 5
+      },
+      {
+        "variant": "present-continuous-consonant-final-stem",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-negation:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-negation",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 18,
+    "planned": 18,
+    "alloc": [
+      {
+        "variant": "negation-ma-present-continuous",
+        "take": 18
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-negation:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-negation",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 19,
+    "planned": 19,
+    "alloc": [
+      {
+        "variant": "negation-ma-present-continuous",
+        "take": 19
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-imperative:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-imperative",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "imperative-2sg-positive",
+        "take": 5
+      },
+      {
+        "variant": "imperative-2pl-negative",
+        "take": 5
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-imperative:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-imperative",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "imperative-2sg-positive",
+        "take": 5
+      },
+      {
+        "variant": "imperative-2pl-negative",
+        "take": 5
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-questions:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-questions",
+    "approved": 17,
+    "target": 20,
+    "labelled": 17,
+    "need": 9,
+    "planned": 9,
+    "alloc": [
+      {
+        "variant": "mi-nominal-predicate-yn",
+        "take": 9
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-questions:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-questions",
+    "approved": 19,
+    "target": 20,
+    "labelled": 19,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "mi-nominal-predicate-yn",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-degil:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-degil",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 8,
+    "planned": 7,
+    "alloc": [
+      {
+        "variant": "degil-contrastive-constituent",
+        "take": 5
+      },
+      {
+        "variant": "degil-noun-predicate",
+        "take": 1
+      },
+      {
+        "variant": "degil-mi-tag-question",
+        "take": 1
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-degil:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-degil",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 5,
+    "planned": 3,
+    "alloc": [
+      {
+        "variant": "degil-noun-predicate",
+        "take": 2
+      },
+      {
+        "variant": "degil-adjective-predicate",
+        "take": 1
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-var-yok:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-var-yok",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 6,
+    "planned": 4,
+    "alloc": [
+      {
+        "variant": "existential-var-yok",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-var-yok:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-var-yok",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 6,
+    "planned": 4,
+    "alloc": [
+      {
+        "variant": "possessive-var-yok",
+        "take": 3
+      },
+      {
+        "variant": "existential-var-yok",
+        "take": 1
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-accusative-definite-object:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-accusative-definite-object",
+    "approved": 18,
+    "target": 20,
+    "labelled": 18,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "definite-np-accusative",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-accusative-definite-object:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-accusative-definite-object",
+    "approved": 19,
+    "target": 20,
+    "labelled": 19,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "definite-np-accusative",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-genitive-possessive:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-genitive-possessive",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "genitive-possessive-core",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-genitive-possessive:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-genitive-possessive",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "genitive-possessive-core",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-instrumental-ile:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-instrumental-ile",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 2,
+    "planned": 0,
+    "alloc": []
+  },
+  {
+    "cell": "tr-a1-instrumental-ile:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-instrumental-ile",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 5,
+    "planned": 4,
+    "alloc": [
+      {
+        "variant": "ile-suffix-consonant-stem",
+        "take": 2
+      },
+      {
+        "variant": "ile-suffix-vowel-stem-buffer",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-postpositions-once-sonra:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-postpositions-once-sonra",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "noun-ablative-once-sonra",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-postpositions-once-sonra:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-postpositions-once-sonra",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "noun-ablative-once-sonra",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-ki-relativizer:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-ki-relativizer",
+    "approved": 19,
+    "target": 20,
+    "labelled": 19,
+    "need": 9,
+    "planned": 8,
+    "alloc": [
+      {
+        "variant": "ki-locative-noun-modifier",
+        "take": 8
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-ki-relativizer:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ki-relativizer",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 13,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "ki-locative-noun-modifier",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-beri-dir:cloze",
+    "approved": 1,
+    "target": 20,
+    "need": 0,
+    "note": "no headroom needed"
+  },
+  {
+    "cell": "tr-a1-beri-dir:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-beri-dir",
+    "approved": 20,
+    "target": 20,
+    "labelled": 20,
+    "need": 8,
+    "planned": 8,
+    "alloc": [
+      {
+        "variant": "dir-for-span",
+        "take": 6
+      },
+      {
+        "variant": "den-beri-since-point",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-clock-time-dates:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-clock-time-dates",
+    "approved": 18,
+    "target": 24,
+    "labelled": 18,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "locative-on-the-hour",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-clock-time-dates:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-clock-time-dates",
+    "approved": 20,
+    "target": 24,
+    "labelled": 20,
+    "need": 5,
+    "planned": 5,
+    "alloc": [
+      {
+        "variant": "dative-kala-to-the-hour",
+        "take": 3
+      },
+      {
+        "variant": "ceyrek-quarter-hour",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-distributive:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-distributive",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 8,
+    "planned": 7,
+    "alloc": [
+      {
+        "variant": "distributive-sar-each",
+        "take": 7
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-distributive:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-distributive",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 5,
+    "planned": 4,
+    "alloc": [
+      {
+        "variant": "distributive-sar-each",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-indefinite-pronouns:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-indefinite-pronouns",
+    "approved": 30,
+    "target": 30,
+    "labelled": 26,
+    "need": 15,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "negative-polarity-kimse-hicbir",
+        "take": 8
+      },
+      {
+        "variant": "herkes-singular-agreement",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-indefinite-pronouns:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-indefinite-pronouns",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 16,
+    "planned": 15,
+    "alloc": [
+      {
+        "variant": "herkes-singular-agreement",
+        "take": 8
+      },
+      {
+        "variant": "negative-polarity-kimse-hicbir",
+        "take": 7
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-mis-evidential:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-mis-evidential",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 14,
+    "planned": 14,
+    "alloc": [
+      {
+        "variant": "verbal-mis-evidential",
+        "take": 14
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-mis-evidential:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-mis-evidential",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 2,
+    "planned": 2,
+    "alloc": [
+      {
+        "variant": "copular-ymis-evidential",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-ability-necessity:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-ability-necessity",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 8,
+    "planned": 7,
+    "alloc": [
+      {
+        "variant": "necessity-mali",
+        "take": 7
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-ability-necessity:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-ability-necessity",
+    "approved": 30,
+    "target": 30,
+    "labelled": 28,
+    "need": 18,
+    "planned": 15,
+    "alloc": [
+      {
+        "variant": "necessity-mali",
+        "take": 15
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-converbs:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-converbs",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 14,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "converb-madan-without",
+        "take": 10
+      },
+      {
+        "variant": "converb-yip-sequence",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-nominalization:cloze",
+    "approved": 1,
+    "target": 30,
+    "need": 0,
+    "note": "no headroom needed"
+  },
+  {
+    "cell": "tr-a2-nominalization:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-nominalization",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 19,
+    "planned": 19,
+    "alloc": [
+      {
+        "variant": "mak-same-subject",
+        "take": 19
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-relative-an:cloze",
+    "approved": 5,
+    "target": 30,
+    "need": 0,
+    "note": "no headroom needed"
+  },
+  {
+    "cell": "tr-a2-relative-an:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-relative-an",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 11,
+    "planned": 11,
+    "alloc": [
+      {
+        "variant": "subject-relative-yan-positive",
+        "take": 7
+      },
+      {
+        "variant": "subject-relative-mayan-negative",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-gibi-kadar:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-gibi-kadar",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "kadar-equality",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-gibi-kadar:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-gibi-kadar",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "kadar-equality",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-correlative-conjunctions:cloze",
+    "approved": 4,
+    "target": 30,
+    "need": 0,
+    "note": "no headroom needed"
+  },
+  {
+    "cell": "tr-a2-correlative-conjunctions:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-correlative-conjunctions",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 18,
+    "planned": 18,
+    "alloc": [
+      {
+        "variant": "ne-ne",
+        "take": 15
+      },
+      {
+        "variant": "ya-ya",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-causal-connectors:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-causal-connectors",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "bu-yuzden-consequence",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-causal-connectors:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-causal-connectors",
+    "approved": 25,
+    "target": 30,
+    "labelled": 25,
+    "need": 11,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "bu-yuzden-consequence",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-ca-suffix:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-ca-suffix",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 14,
+    "planned": 14,
+    "alloc": [
+      {
+        "variant": "ca-manner-adverb",
+        "take": 14
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-ca-suffix:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-ca-suffix",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "ca-language-name-adverb",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-purpose-icin-uzere:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-purpose-icin-uzere",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 21,
+    "planned": 21,
+    "alloc": [
+      {
+        "variant": "mak-icin-same-subject",
+        "take": 21
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-purpose-icin-uzere:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-purpose-icin-uzere",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 18,
+    "planned": 18,
+    "alloc": [
+      {
+        "variant": "mak-icin-same-subject",
+        "take": 18
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-reported-speech:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-reported-speech",
+    "approved": 30,
+    "target": 30,
+    "labelled": 30,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "diye-reporting-verb",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-reported-speech:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-reported-speech",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 8,
+    "planned": 8,
+    "alloc": [
+      {
+        "variant": "diye-reporting-verb",
+        "take": 8
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-past-copula:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-past-copula",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 16,
+    "planned": 16,
+    "alloc": [
+      {
+        "variant": "nominal-past-copula-ydi",
+        "take": 16
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-past-copula:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-past-copula",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 11,
+    "planned": 11,
+    "alloc": [
+      {
+        "variant": "nominal-past-copula-ydi",
+        "take": 11
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-clitics-da-bile:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-clitics-da-bile",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 19,
+    "planned": 18,
+    "alloc": [
+      {
+        "variant": "bile-scalar-even",
+        "take": 18
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-enumerator-tane:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-enumerator-tane",
+    "approved": 28,
+    "target": 30,
+    "labelled": 28,
+    "need": 15,
+    "planned": 14,
+    "alloc": [
+      {
+        "variant": "numeral-tane-noun",
+        "take": 14
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-enumerator-tane:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-enumerator-tane",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 18,
+    "planned": 17,
+    "alloc": [
+      {
+        "variant": "numeral-tane-noun",
+        "take": 17
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-adversative-connectors:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-adversative-connectors",
+    "approved": 26,
+    "target": 30,
+    "labelled": 26,
+    "need": 10,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "ama-fakat-conjoining",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-adversative-connectors:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-adversative-connectors",
+    "approved": 29,
+    "target": 30,
+    "labelled": 29,
+    "need": 12,
+    "planned": 12,
+    "alloc": [
+      {
+        "variant": "ama-fakat-conjoining",
+        "take": 12
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-conditional-irrealis:cloze",
+    "cefr": "B1",
+    "type": "cloze",
+    "grammarPoint": "tr-b1-conditional-irrealis",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 34,
+    "planned": 34,
+    "alloc": [
+      {
+        "variant": "sa-ydi-past-counterfactual",
+        "take": 34
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-conditional-irrealis:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-conditional-irrealis",
+    "approved": 50,
+    "target": 50,
+    "labelled": 45,
+    "need": 32,
+    "planned": 26,
+    "alloc": [
+      {
+        "variant": "sa-ydi-past-counterfactual",
+        "take": 22
+      },
+      {
+        "variant": "keske-sa-present-wish",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-obligation-periphrases:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-obligation-periphrases",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 21,
+    "planned": 21,
+    "alloc": [
+      {
+        "variant": "mak-zorunda",
+        "take": 21
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-passive-voice:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-passive-voice",
+    "approved": 50,
+    "target": 50,
+    "labelled": 49,
+    "need": 16,
+    "planned": 14,
+    "alloc": [
+      {
+        "variant": "passive-agent-tarafindan",
+        "take": 14
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-converb-while-yken:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 28,
+    "planned": 27,
+    "alloc": [
+      {
+        "variant": "yken-verbal-aorist",
+        "take": 27
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-participles-dik-acak:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 27,
+    "planned": 27,
+    "alloc": [
+      {
+        "variant": "dik-possessive-relative",
+        "take": 27
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-compound-evidential-rivayet:cloze",
+    "cefr": "B2",
+    "type": "cloze",
+    "grammarPoint": "tr-b2-compound-evidential-rivayet",
+    "approved": 47,
+    "target": 50,
+    "labelled": 45,
+    "need": 23,
+    "planned": 21,
+    "alloc": [
+      {
+        "variant": "iyormus-hearsay-present",
+        "take": 21
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-compound-evidential-rivayet:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-evidential-rivayet",
+    "approved": 50,
+    "target": 50,
+    "labelled": 46,
+    "need": 21,
+    "planned": 16,
+    "alloc": [
+      {
+        "variant": "iyormus-hearsay-present",
+        "take": 8
+      },
+      {
+        "variant": "acakmus-hearsay-future",
+        "take": 8
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-reported-directives:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-reported-directives",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 19,
+    "planned": 19,
+    "alloc": [
+      {
+        "variant": "reported-directive-ma-accusative",
+        "take": 19
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-concessive:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-concessive",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 30,
+    "planned": 30,
+    "alloc": [
+      {
+        "variant": "masina-ragmen",
+        "take": 30
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-instead-of:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-instead-of",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 13,
+    "planned": 13,
+    "alloc": [
+      {
+        "variant": "maktansa",
+        "take": 13
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-aspectual-verbs:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-aspectual-verbs",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 28,
+    "planned": 27,
+    "alloc": [
+      {
+        "variant": "yip-dur-keep-on",
+        "take": 27
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-as-if-gibi:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-as-if-gibi",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 22,
+    "planned": 22,
+    "alloc": [
+      {
+        "variant": "mis-gibi-counterfactual",
+        "take": 22
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-copula-ol:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-copula-ol",
+    "approved": 49,
+    "target": 50,
+    "labelled": 39,
+    "need": 17,
+    "planned": 6,
+    "alloc": [
+      {
+        "variant": "ol-nonfinite",
+        "take": 3
+      },
+      {
+        "variant": "ol-future",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-olarak:cloze",
+    "cefr": "B1",
+    "type": "cloze",
+    "grammarPoint": "tr-b1-olarak",
+    "approved": 48,
+    "target": 50,
+    "labelled": 48,
+    "need": 17,
+    "planned": 16,
+    "alloc": [
+      {
+        "variant": "role-of-person",
+        "take": 9
+      },
+      {
+        "variant": "classify-or-use-as",
+        "take": 7
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-olarak:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-olarak",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 17,
+    "planned": 16,
+    "alloc": [
+      {
+        "variant": "role-of-person",
+        "take": 12
+      },
+      {
+        "variant": "classify-or-use-as",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-abstract-postpositions:cloze",
+    "cefr": "B1",
+    "type": "cloze",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 31,
+    "planned": 31,
+    "alloc": [
+      {
+        "variant": "bare-noun-causal",
+        "take": 31
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-abstract-postpositions:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 32,
+    "planned": 32,
+    "alloc": [
+      {
+        "variant": "bare-noun-causal",
+        "take": 32
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-reason-digi-icin:cloze",
+    "cefr": "B1",
+    "type": "cloze",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "approved": 48,
+    "target": 50,
+    "labelled": 48,
+    "need": 22,
+    "planned": 22,
+    "alloc": [
+      {
+        "variant": "digi-icin-past-present",
+        "take": 22
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-reason-digi-icin:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 24,
+    "planned": 24,
+    "alloc": [
+      {
+        "variant": "digi-icin-past-present",
+        "take": 24
+      }
+    ]
+  }
+]
