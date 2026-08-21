@@ -2248,12 +2248,26 @@ const trCurriculum: readonly GrammarPoint[] = [
   {
     key: 'tr-a2-aorist',
     conjugationSuitable: true,
+    // SCOPED to conjugation 2026-08-21. The variants below ARE the person x
+    // polarity grid — the irregular 1sg -mAm and 1pl -mAyIz are person-and-
+    // polarity-bound by definition — so on cloze/translation/SC the coverage
+    // block and a variant directive would contradict each other in one draft
+    // prompt. Deleting the spec is not available: the point is
+    // `conjugationSuitable` and `assertCurriculumInvariants` requires a
+    // person/case/number axis for its conjugation cell to seed from. Same shape
+    // as tr-a1-ablative-dative.
+    //
+    // Side effect, deliberate: the non-conjugation target drops from 48 (the
+    // person floors summed to 6x8) back to the A2 base of 30, because those
+    // floors no longer apply there. The elevated target existed only to
+    // accommodate them.
     coverageSpec: {
       axes: [
         { name: 'person', floors: { '1sg': 8, '2sg': 8, '3sg': 8, '1pl': 8, '2pl': 8, '3pl': 8 } },
         // Negative aorist (-mAz, irregular -mAm/-mAyIz) is the high-value drill.
         { name: 'polarity', floors: { affirmative: 6, negative: 6 } },
       ],
+      appliesTo: [ExerciseType.CONJUGATION],
     },
     kind: 'grammar',
     name: 'Aorist -(I/A)r',
@@ -2267,6 +2281,22 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Kaplumbağa yavaş yürür. (characteristic / general truth → aorist)',
       'Ali sigara içmez. (negative aorist -mez = "is a non-smoker")',
       'İçmem, teşekkürler. (1sg negative — irregular -mem, not *içmezim)',
+    ],
+    // Collapse measured 2026-08-21 on the prod SENTENCE_CONSTRUCTION pool — the
+    // first time the audit could read SC at all. Of 24 sampled rows, 16 are the
+    // plain positive aorist. The irregular 1sg negative -mAm, which the
+    // description names explicitly, is **0**, and the offer/question form
+    // -(A/I)r mI? — the third of the three uses the description lists — is 1.
+    //
+    // Both irregulars get their own variant rather than sharing one "negative"
+    // bucket: *-mAzIm and *-mAzIz are the errors, and a pool that only ever
+    // shows -mAz cannot teach against them.
+    constructionVariants: [
+      { id: 'aorist-positive-affirmative', directive: 'the POSITIVE aorist -(A/I)r for a general truth or characteristic behaviour (Kaplumbağa yavaş yürür; Her sabah çay içerim)', share: 3 },
+      { id: 'aorist-negative-maz', directive: 'the negative aorist -mAz in the 2nd or 3rd person (Ali sigara içmez; Bunu anlamazsın)', share: 2 },
+      { id: 'aorist-negative-1sg-mam', directive: 'the IRREGULAR 1sg negative aorist -mAm, never *-mAzIm (İçmem, teşekkürler; Bilmem; Gitmem)', share: 2 },
+      { id: 'aorist-negative-1pl-mayiz', directive: 'the IRREGULAR 1pl negative aorist -mAyIz, never *-mAzIz (Biz et yemeyiz; Öyle şeyler yapmayız)', share: 2 },
+      { id: 'aorist-question-offer', directive: 'the aorist question / OFFER -(A/I)r mI?, a polite offer or general-possibility question rather than a -(I)yor progressive one (Çay içer misiniz?; Bana yardım eder misin?)', share: 2 },
     ],
     examplesNegative: [
       '*Her sabah kahve içiyorum. (in a generic-truth context)',
@@ -3338,6 +3368,31 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Onu güldürdün. (You made him laugh — gül → güldür.)',
       'Gök gürültüsü hayvanları ürkütüyor. (The thunder frightens the animals — emotion-verb causatives promote the stimulus to subject; likewise korkut- "scare" and sevindir-: Bu haber beni çok sevindirdi.)',
     ],
+    // Collapse measured 2026-08-21 on the prod SENTENCE_CONSTRUCTION pool. Of 24
+    // sampled rows, -DIr holds 12 and -t 12 — the whole cell — while the
+    // -Ir/-Ar/-It group is **0**. That group is a quarter of the point's own
+    // title (-DIr / -t / -Ir / -Ar) and is the lexically-restricted one a
+    // learner cannot derive: düşür-, çıkar-, korkut-, göster-.
+    //
+    // NOT variants, of the six the audit proposed:
+    //   - `causative-causee-dative` — the dative causee is a property ANY
+    //     causative row can carry, not a disjoint member of the allomorph axis.
+    //   - `causative-emotion-verb` — the audit's own example (kork- → korkut-)
+    //     is already an -It causative, so it is not disjoint from
+    //     `causative-ir-ar`.
+    //   - `causative-stacked` — double causatives belong to tr-b2-double-voice,
+    //     which declares `causative-of-causative` for exactly this. Pinning it
+    //     here would hand part of a B1 cell to a B2 construction and duplicate
+    //     that point's pool, the same call already documented on
+    //     tr-a2-gibi-kadar for the -mIş gibi clause.
+    //
+    // Orthogonal to the `person` / `polarity` spec, which floors who causes and
+    // whether it is negated, never which allomorph the stem selects.
+    constructionVariants: [
+      { id: 'causative-dir', directive: 'the -DIr causative on a polysyllabic stem not ending in a vowel, l or r (yaz- → yazdır-, yap- → yaptır-, öl- → öldür-). The causer is an explicit subject and the causee appears in the sentence', share: 3 },
+      { id: 'causative-t', directive: 'the -t causative on a stem ending in a vowel, l or r (uyu- → uyut-, kayna- → kaynat-, temizle- → temizlet-)', share: 3 },
+      { id: 'causative-ir-ar', directive: 'the lexically-restricted -Ir / -Ar / -It causative on a monosyllabic stem (düş- → düşür-, çık- → çıkar-, kork- → korkut-, gör- → göster-). Not derivable from the regular pattern — the verb must come from this closed set', share: 3 },
+    ],
     examplesNegative: [
       '*yaztır- (wrong allomorph — consonant-final yaz takes -DIr: yazdır-)',
       '*uyudur- (wrong — vowel-final uyu takes -t: uyut-)',
@@ -4014,6 +4069,24 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Baba çocukları öpüştürdü. (The father made the children kiss each other — reciprocal + causative.)',
       'Onları görüştürdü. (She put them in touch / made them meet — reciprocal + causative.)',
       'Mektubu bana yazdırttı. (He had someone make me write the letter — double causative.)',
+    ],
+    // Collapse measured 2026-08-21 on the prod SENTENCE_CONSTRUCTION pool — the
+    // sharpest single result of that sweep: **14 of 14** classified rows are
+    // causative+passive. Double-causative is 0 and reciprocal+causative is 0,
+    // so two of the three stackings the point exists to teach never appear.
+    //
+    // Invisible to `audit:collapse`, which passed this cell comfortably: 14 rows
+    // drilling one construction across 14 different scenes is lexically diverse
+    // and structurally monotonous at the same time, and a surface metric cannot
+    // separate those.
+    //
+    // NOT variants: "wrong stacking order" and "wrong second-causative
+    // allomorph". Both are errors to avoid, and no single correct draft can
+    // realize a prohibition.
+    constructionVariants: [
+      { id: 'causative-plus-passive', directive: 'CAUSATIVE then PASSIVE, in that order (Bütün öğrencilere resim yaptırıldı; Rapor bana yazdırıldı). The causative suffix must precede the passive', share: 3 },
+      { id: 'causative-of-causative', directive: 'a SECOND causative stacked directly on the first (yaptır- → yaptırt-, yazdır- → yazdırt-), giving an outer causer who acts through an intermediary (Mektubu bana yazdırttı)', share: 2 },
+      { id: 'reciprocal-plus-causative', directive: 'RECIPROCAL then CAUSATIVE, in that order (öpüş- → öpüştür-, görüş- → görüştür-): someone makes two parties do it to each other (Baba çocukları öpüştürdü; Onları görüştürdüm)', share: 2 },
     ],
     examplesNegative: [
       '*yapıldırdı (wrong order — nothing but a passive may follow a passive; the causative must precede it: yaptırıldı)',
