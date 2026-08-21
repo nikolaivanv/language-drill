@@ -1,7 +1,15 @@
 # TR sentence-construction collapse — measurement, 2026-08-21
 
-**Result: the TR SC pool is NOT collapsed. No demotion is warranted, and none was
-run.**
+**Result, in two stages.** The signals available at the time said the pool was
+not collapsed, and no demotion was run. Then the blind spot those signals left
+was closed — see the follow-up at the bottom of this file — and **three
+variant-less points turned out to be genuinely collapsed after all**, including
+one at 14 of 14 rows on a single construction.
+
+Read the two halves together. The first half is not wrong: nothing in it
+justified a demotion, and demoting on it would have been demoting on noise. But
+its conclusion was bounded by what the tooling could see, which is why it ends by
+naming the gap rather than declaring the pool healthy.
 
 ## Why this was checked at all
 
