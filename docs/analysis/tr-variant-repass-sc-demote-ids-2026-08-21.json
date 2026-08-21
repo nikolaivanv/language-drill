@@ -1,0 +1,1122 @@
+[
+  {
+    "id": "80f7ef8a-788f-5526-854d-4f9aabd729e7",
+    "cell": "tr-a2-reported-speech:sc",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-reported-speech",
+    "variant": "diye-reporting-verb",
+    "createdAt": "2026-06-07 04:22:07.864639"
+  },
+  {
+    "id": "c23f5a6a-5d7b-5236-a9be-b69a419d0ee7",
+    "cell": "tr-a2-reported-speech:sc",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-reported-speech",
+    "variant": "diye-reporting-verb",
+    "createdAt": "2026-06-07 04:22:08.241415"
+  },
+  {
+    "id": "fdcdd069-8c38-5071-b030-b4ada1e25a70",
+    "cell": "tr-b1-passive-voice:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-passive-voice",
+    "variant": "passive-allomorphy-no-agent",
+    "createdAt": "2026-06-19 04:28:28.484188"
+  },
+  {
+    "id": "facdcbb0-0d55-5e36-b130-b64a253833e3",
+    "cell": "tr-b1-passive-voice:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-passive-voice",
+    "variant": "passive-allomorphy-no-agent",
+    "createdAt": "2026-06-19 04:28:28.669906"
+  },
+  {
+    "id": "fbcdcd43-8e71-5bfb-b230-b7e7a41b9612",
+    "cell": "tr-b1-passive-voice:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-passive-voice",
+    "variant": "passive-allomorphy-no-agent",
+    "createdAt": "2026-06-19 04:28:28.678591"
+  },
+  {
+    "id": "327538d1-3a62-5a23-8593-258f26acfb86",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.404547"
+  },
+  {
+    "id": "33753a64-b299-59c0-8693-272ca11de671",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.404927"
+  },
+  {
+    "id": "36753f1d-35ef-530f-8993-2c03223a8442",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.409609"
+  },
+  {
+    "id": "34753bf7-33b6-5785-8793-28c9200148a0",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.414225"
+  },
+  {
+    "id": "3175373e-b945-5c5e-8493-23f2a7c99957",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.591387"
+  },
+  {
+    "id": "307535ab-3828-5e99-8393-22552473bfe4",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.592056"
+  },
+  {
+    "id": "2f753418-b70c-50d4-8293-20b8a5905db5",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.594219"
+  },
+  {
+    "id": "2e753285-3ed4-5137-8193-1f1b2b1f72ca",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.599245"
+  },
+  {
+    "id": "e2902d61-b8ec-56a7-ac6b-4e5ba7c9b7c2",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.780268"
+  },
+  {
+    "id": "e590321a-3c42-5ff6-a76b-464a2d58ccd7",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.794387"
+  },
+  {
+    "id": "e69033ad-bd5e-5dbb-a86b-47e7ac3c2f06",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.967736"
+  },
+  {
+    "id": "e4903087-bb25-5231-a66b-44adaa02f364",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:35.968637"
+  },
+  {
+    "id": "5b8d1a45-c97c-5f49-b169-19b56a4c8d90",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.154271"
+  },
+  {
+    "id": "588d158c-4a99-5d0e-b269-1b52eda26703",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.166226"
+  },
+  {
+    "id": "578d13f9-c509-5835-b569-20296ebf04d4",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.172658"
+  },
+  {
+    "id": "558d10d3-c743-53bf-b769-236370f84076",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.341852"
+  },
+  {
+    "id": "548d0f40-4626-55fa-b669-21c6f214de47",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.343823"
+  },
+  {
+    "id": "628d254a-5144-5fac-a869-0b30f44e19e9",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.363152"
+  },
+  {
+    "id": "578ad562-5d62-513a-b966-1b66d1f413b3",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.531546"
+  },
+  {
+    "id": "588ad6f5-de7f-5eff-ba66-1d0350d775e2",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.544659"
+  },
+  {
+    "id": "518acbf0-5f9b-5cc4-b366-11b8d42d4f55",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.553217"
+  },
+  {
+    "id": "528acd83-e0b8-5a89-b466-13555310b184",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.71682"
+  },
+  {
+    "id": "4f888a33-1848-579f-bd63-e523e7801d96",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.903318"
+  },
+  {
+    "id": "50888bc6-94f2-5e50-ba63-e04c66637fc5",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.929413"
+  },
+  {
+    "id": "5388907f-1cba-5eb3-b963-deafe30da652",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:36.933498"
+  },
+  {
+    "id": "54889212-9964-5564-b663-d9d861f10881",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:37.093808"
+  },
+  {
+    "id": "56889538-a010-5802-b463-d69e7181a9ef",
+    "cell": "tr-b1-converb-while-yken:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "variant": "yken-verbal-aorist",
+    "createdAt": "2026-06-19 04:36:37.157888"
+  },
+  {
+    "id": "d43de74f-a14d-535b-897b-9a471aff24a2",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-06-19 04:32:42.614736"
+  },
+  {
+    "id": "48b36661-03b9-5575-9d19-26f913268464",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.31454"
+  },
+  {
+    "id": "45b361a8-84d6-533a-9e19-2896967c5dd7",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.31796"
+  },
+  {
+    "id": "4ab36987-0a65-5813-9b19-23bf10ed48c2",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.501992"
+  },
+  {
+    "id": "49b367f4-8948-5a4e-9a19-22229209e693",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.506482"
+  },
+  {
+    "id": "40b359c9-0c9e-539d-9519-1a111c0b72ec",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.508937"
+  },
+  {
+    "id": "de67fd6d-0fd4-5345-8191-60d9f31b3944",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.511023"
+  },
+  {
+    "id": "db67f8b4-90f0-510a-8291-6276767112b7",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.513289"
+  },
+  {
+    "id": "dc67fa47-120d-5ecf-8391-6413f55474e6",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.689087"
+  },
+  {
+    "id": "d967f58e-932a-5c94-bc91-58c86fc55fd1",
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "variant": "dik-possessive-relative",
+    "createdAt": "2026-07-19 04:38:59.695657"
+  },
+  {
+    "id": "3947d2e5-4026-5c47-9388-6bdb4729013a",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.556486"
+  },
+  {
+    "id": "3347c973-425f-57d1-8d88-622d49623cdc",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.561867"
+  },
+  {
+    "id": "3847d152-bf09-5e82-9288-6a3ec8459f0b",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.745991"
+  },
+  {
+    "id": "3647ce2c-bcd0-52f8-9088-6704c60c6369",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.749757"
+  },
+  {
+    "id": "3d47d931-3bb3-5533-9788-724f42b689f6",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.75167"
+  },
+  {
+    "id": "7f04dfb6-29e4-5faa-b009-50c67887c96b",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.944354"
+  },
+  {
+    "id": "8404e795-af73-5483-ad09-4beffbdda2de",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:46.944656"
+  },
+  {
+    "id": "7e04de23-a8c7-51e5-af09-4f29f531eff8",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.134641"
+  },
+  {
+    "id": "fa01cfc0-411f-5aea-b306-4a6641b6521f",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.326289"
+  },
+  {
+    "id": "0401df7e-47cb-5d88-a906-3a44369827f5",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.519689"
+  },
+  {
+    "id": "f7ff8e03-f660-59f1-9903-e3bda2b2255c",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.705164"
+  },
+  {
+    "id": "f8ff8f96-777d-57b6-9a03-e55a2607fecf",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.70557"
+  },
+  {
+    "id": "faff92bc-70d1-5518-9c03-e8941f5c4be9",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.711273"
+  },
+  {
+    "id": "fbff944f-f1ed-52dd-9d03-ea319e3fae18",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-necessity",
+    "createdAt": "2026-07-08 04:44:47.876245"
+  },
+  {
+    "id": "0001d932-4359-5674-ad06-40b83b0a9f39",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-future",
+    "createdAt": "2026-07-08 04:44:47.500404"
+  },
+  {
+    "id": "ff01d79f-c6ae-5fc3-b006-458fbc273d0a",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-future",
+    "createdAt": "2026-07-08 04:44:47.510992"
+  },
+  {
+    "id": "f9ff9129-f899-557b-9b03-e6f7a4eb60fe",
+    "cell": "tr-b1-copula-ol:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "variant": "ol-future",
+    "createdAt": "2026-07-08 04:44:47.708585"
+  },
+  {
+    "id": "f8133f0f-eb1f-5015-b170-3c19181d3970",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.463731"
+  },
+  {
+    "id": "f5133a56-70ae-54ee-ae70-37429fe58a27",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.471386"
+  },
+  {
+    "id": "f91340a2-6c3b-5dda-b270-3db69b7312e3",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.649043"
+  },
+  {
+    "id": "fc13455b-f876-5551-a570-28bd25749f3c",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.659996"
+  },
+  {
+    "id": "2d42a689-2204-5b3d-a306-716143000fc4",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.6665"
+  },
+  {
+    "id": "2c42a4f6-a0e7-5d78-a206-6fc4c41cad95",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.832631"
+  },
+  {
+    "id": "2a42a1d0-a321-5902-a406-72fec655e937",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.833141"
+  },
+  {
+    "id": "3142acd5-2677-5251-9f06-6aed3e8d9880",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.833247"
+  },
+  {
+    "id": "2f42a9af-28b0-5ddb-a106-6e2740c6d422",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:41.858596"
+  },
+  {
+    "id": "2e42a81c-a793-5016-a006-6c8ac1e371f3",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.015774"
+  },
+  {
+    "id": "3542b321-191f-5d15-ab06-7e494be4fe4c",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.017514"
+  },
+  {
+    "id": "3442b18e-9802-5f50-aa06-7caccd019c1d",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.018499"
+  },
+  {
+    "id": "3344ee92-9057-54d6-9d09-72ea0199d7c7",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.048448"
+  },
+  {
+    "id": "3444f025-1174-529b-9e09-7487807d39f6",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.202271"
+  },
+  {
+    "id": "3144eb6c-8e1e-594c-9b09-6fb0ff609c25",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.203669"
+  },
+  {
+    "id": "2e44e6b3-0ac8-5ffd-a009-77c179d18710",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.38502"
+  },
+  {
+    "id": "3b44fb2a-8772-56ae-a509-7fd20a7ec64f",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.385469"
+  },
+  {
+    "id": "3c44fcbd-088f-5473-a609-816f8962287e",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.387149"
+  },
+  {
+    "id": "3947369b-db17-55cf-b70b-d9939c2b8d46",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.429689"
+  },
+  {
+    "id": "38473508-59fa-580a-b60b-d7f61d482b17",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.568326"
+  },
+  {
+    "id": "3d473ce7-df89-5ce3-b30b-d31f97b91602",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.620139"
+  },
+  {
+    "id": "3c473b54-5e6d-5f1e-b20b-d18218d5b3d3",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.751661"
+  },
+  {
+    "id": "3e473e7a-5c33-5394-b00b-ce48169c7831",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.809804"
+  },
+  {
+    "id": "31472a03-e3fc-53f7-af0b-ccaba5107bce",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.938033"
+  },
+  {
+    "id": "30472870-62df-5632-ae0b-cb0e262d199f",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:42.939478"
+  },
+  {
+    "id": "4249835d-a14d-5d2f-b40e-117393d1ce12",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:43.195708"
+  },
+  {
+    "id": "3b497858-226a-5af4-ad0e-06281727a785",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:43.299488"
+  },
+  {
+    "id": "3e497d11-a5c0-5443-b00e-0aff98444556",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:43.479896"
+  },
+  {
+    "id": "3749720c-26dd-5208-a90d-ffb41b9a1ec9",
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "variant": "bare-noun-causal",
+    "createdAt": "2026-07-17 04:06:43.487021"
+  },
+  {
+    "id": "4d7397c6-fd24-5962-a601-c9eed8b58633",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.315574"
+  },
+  {
+    "id": "4c739633-7c07-5b9d-a501-c851555facc0",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.321996"
+  },
+  {
+    "id": "50739c7f-807a-52b1-a101-c1dd59d22404",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.323528"
+  },
+  {
+    "id": "52739fa5-82b3-5e3b-a301-c5175c0b5fa6",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.498948"
+  },
+  {
+    "id": "5373a138-f206-5fb0-ac01-d39cdf613919",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.499699"
+  },
+  {
+    "id": "5473a2cb-7322-5d75-ad01-d5395e449b48",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.501665"
+  },
+  {
+    "id": "56f2deb0-75a5-5b88-9add-42f49fd9aa71",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.507603"
+  },
+  {
+    "id": "57f2e043-f6c1-594d-9bdd-44911ebd0ca0",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.509304"
+  },
+  {
+    "id": "59f2e369-f8fb-54d7-9ddd-47cb20f64842",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.686751"
+  },
+  {
+    "id": "5af2e4fc-7a17-529c-96dd-3c80a44c21b5",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.691009"
+  },
+  {
+    "id": "5cf2e822-7c50-5e26-98dd-3fbaa6855d57",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.698782"
+  },
+  {
+    "id": "5ef2eb48-6cc0-5d60-a2dd-4fdca8be98f9",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.868632"
+  },
+  {
+    "id": "e8fa804b-9d0b-5fb3-a8e5-acaf0547f4f2",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.868828"
+  },
+  {
+    "id": "ecfa8697-9898-589f-ace5-b32309ba6c36",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:09.885999"
+  },
+  {
+    "id": "edfa882a-1542-5f50-a9e5-ae4c889dce65",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.059729"
+  },
+  {
+    "id": "dffa7220-24d3-5016-9fe5-9e2a8f49814b",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.075839"
+  },
+  {
+    "id": "e2f83842-2eb8-561a-aee2-ab266ab63f73",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.238563"
+  },
+  {
+    "id": "ddf83063-b20d-5f69-a9e2-a315ebd2dd44",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.420347"
+  },
+  {
+    "id": "f4ff105d-561d-5a45-acd5-db595e737274",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.438582"
+  },
+  {
+    "id": "f2ff0d37-5857-55cf-aed5-de9360acae16",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.602916"
+  },
+  {
+    "id": "f0ff0a11-5a90-5159-a8d5-d4e55a00fb30",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.609537"
+  },
+  {
+    "id": "eeff06eb-5cc9-5ce3-aad5-d81f5c3a36d2",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.638958"
+  },
+  {
+    "id": "edff0558-dbad-5f1e-a9d5-d682dd56d4a3",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.785005"
+  },
+  {
+    "id": "ecff03c5-5f02-586d-a4d5-ce71675860fc",
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "variant": "digi-icin-past-present",
+    "createdAt": "2026-07-17 04:09:10.788943"
+  }
+]

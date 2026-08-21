@@ -1,0 +1,133 @@
+[
+  {
+    "cell": "tr-a2-mis-evidential:sc",
+    "approved": 30,
+    "target": 30,
+    "labelled": 23,
+    "need": 7,
+    "note": "no surplus variant"
+  },
+  {
+    "cell": "tr-a2-reported-speech:sc",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-reported-speech",
+    "approved": 26,
+    "target": 30,
+    "labelled": 10,
+    "need": 18,
+    "planned": 2,
+    "alloc": [
+      {
+        "variant": "diye-reporting-verb",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-passive-voice:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-passive-voice",
+    "approved": 50,
+    "target": 50,
+    "labelled": 39,
+    "need": 15,
+    "planned": 3,
+    "alloc": [
+      {
+        "variant": "passive-allomorphy-no-agent",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-converb-while-yken:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-converb-while-yken",
+    "approved": 50,
+    "target": 50,
+    "labelled": 49,
+    "need": 29,
+    "planned": 27,
+    "alloc": [
+      {
+        "variant": "yken-verbal-aorist",
+        "take": 27
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-participles-dik-acak:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-participles-dik-acak",
+    "approved": 59,
+    "target": 50,
+    "labelled": 44,
+    "need": 25,
+    "planned": 10,
+    "alloc": [
+      {
+        "variant": "dik-possessive-relative",
+        "take": 10
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-copula-ol:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-copula-ol",
+    "approved": 50,
+    "target": 50,
+    "labelled": 34,
+    "need": 34,
+    "planned": 17,
+    "alloc": [
+      {
+        "variant": "ol-necessity",
+        "take": 14
+      },
+      {
+        "variant": "ol-future",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-abstract-postpositions:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-abstract-postpositions",
+    "approved": 50,
+    "target": 50,
+    "labelled": 46,
+    "need": 33,
+    "planned": 29,
+    "alloc": [
+      {
+        "variant": "bare-noun-causal",
+        "take": 29
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-reason-digi-icin:sc",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-reason-digi-icin",
+    "approved": 59,
+    "target": 50,
+    "labelled": 52,
+    "need": 31,
+    "planned": 24,
+    "alloc": [
+      {
+        "variant": "digi-icin-past-present",
+        "take": 24
+      }
+    ]
+  }
+]
