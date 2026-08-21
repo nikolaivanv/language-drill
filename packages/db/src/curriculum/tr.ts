@@ -1,4 +1,4 @@
-import { CefrLevel, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
@@ -247,7 +247,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // requested against 47-57% for the sibling case values. Load-bearing, not
 // ceremonial: the bump also clears `skip-low-yield` suppression, without which a
 // corrected spec cannot re-run on any cell already suppressed.
-export const CURRICULUM_VERSION_TR = '2026-08-20';
+export const CURRICULUM_VERSION_TR = '2026-08-21';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1101,7 +1101,20 @@ const trCurriculum: readonly GrammarPoint[] = [
     conjugationSuitable: true,
     // Nominal case inflection — declines a noun, not a verb; seed from the noun band.
     conjugationSeedKind: 'noun',
-    coverageSpec: { axes: [{ name: 'case', floors: { ablative: 6, dative: 6 } }] },
+    // SCOPED to conjugation 2026-08-21. The `case` axis is the right mechanism
+    // for the conjugation cell — which declines a noun and needs an axis to
+    // seed from, as `assertCurriculumInvariants` requires of every
+    // `conjugationSuitable` point — but every sub-construction below implies a
+    // case, so on cloze/translation the coverage block ("The target word form
+    // MUST carry the dative case", a hard MUST with no escape clause) and a
+    // variant directive ("MUST use a verb that GOVERNS the ablative") would
+    // reach one draft prompt from two seeders that never consult each other.
+    // Deleting the spec was tried first and correctly rejected by the
+    // curriculum invariant; scoping keeps it where it works.
+    coverageSpec: {
+      axes: [{ name: 'case', floors: { ablative: 6, dative: 6 } }],
+      appliesTo: [ExerciseType.CONJUGATION],
+    },
     kind: 'grammar',
     name: 'Ablative -DAn and dative -(y)A',
     description:
@@ -1114,6 +1127,56 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Anneme çiçek aldım. (I bought flowers for my mother — dative -e marks the recipient.)',
       'Uçaktan indik. (We got off the plane — ablative -tan, voiceless k forces -t-.)',
       'tahtadan bir masa (a table made of wood — the ablative also marks material: altından bir yüzük = a ring of gold)',
+    ],
+    // Collapse measured 2026-08-20 on the prod pool. Both FIXED-CASE VERB
+    // constructions are 0 — 0 of 20 translation rows and 0 of 19 cloze rows —
+    // even though verb government is the half of this point a learner actually
+    // gets wrong: it owns the last commonError and two of the three
+    // examplesNegative. The pool is plain source/goal marking (ablative source
+    // 5 of 20, dative goal 8, dative recipient 3).
+    //
+    // NOT a variant: ablative voicing assimilation (-tan/-ten after a voiceless
+    // stem), which the audit proposed at 2 of 20. It is a PROPERTY of any
+    // ablative row whose stem ends voiceless — "Uçaktan indik" realizes it and
+    // `ablative-source-separation` at the same time — so it is not a member of
+    // the same axis. It is folded into the two ablative directives instead.
+    constructionVariants: [
+      {
+        id: 'ablative-source-separation',
+        directive:
+          'ablative -DAn marking a SOURCE or separation, "from" (Okuldan geliyorum; Evden çıktık). Vary the stem so the suffix sometimes assimilates to -tan/-ten after a voiceless consonant (Uçaktan indik)',
+        share: 3,
+      },
+      {
+        id: 'ablative-material',
+        directive:
+          'ablative -DAn marking the MATERIAL something is made of (tahtadan bir masa; altından bir yüzük) — not a source of motion',
+        share: 1,
+      },
+      {
+        id: 'fixed-case-verbs-ablative',
+        directive:
+          'a verb that GOVERNS the ablative, where the case is required by the verb and not by any "from" meaning: kork-, hoşlan-, nefret et-, bık- (Köpekten korkuyorum; Bu işten bıktım). English uses a direct object here, so the ablative is the whole difficulty',
+        share: 2,
+      },
+      {
+        id: 'dative-goal-of-motion',
+        directive:
+          "dative -(y)A marking the GOAL of motion, \"to\" (Ankara'ya gidiyorum; okula gitti). Vary vowel-final stems so the -y- buffer appears",
+        share: 3,
+      },
+      {
+        id: 'dative-recipient',
+        directive:
+          'dative -(y)A marking a RECIPIENT or beneficiary, "to/for" a person (Anneme çiçek aldım; Bana bir mektup yazdı) — not motion toward a place',
+        share: 2,
+      },
+      {
+        id: 'fixed-case-verbs-dative',
+        directive:
+          'a verb that GOVERNS the dative, where the case is required by the verb and not by any "to" meaning: inan-, güven-, bin-, yardım et-, başla- (Sana inanıyorum; Otobüse bindim). English uses a direct object here, so the dative is the whole difficulty',
+        share: 2,
+      },
     ],
     examplesNegative: [
       '*Ankara gidiyorum.',
@@ -3637,6 +3700,27 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Çocukken her yaz denize giderdik. (As children we would go to the seaside every summer — past habitual -ArdI.)',
       'Tam çıkacaktım ki telefon çaldı. (I was just about to leave when the phone rang — future-in-past -AcAktI.)',
       'Daha erken kalkmalıydın. (You should have got up earlier — past necessitative -mAlIydI.)',
+    ],
+    // Collapse measured 2026-08-21 on the prod pool, after the enumeration fault
+    // that had kept this point unexamined was fixed. Of 24 sampled translation
+    // rows, future-in-past -AcAktI holds 15 and necessitative -mAlIydI 6, while
+    // the PLUPERFECT -mIştI — the first base the description names — is 1 and
+    // the past conditional -sAydI is 0.
+    //
+    // The point's whole claim is "-(y)DI on ANY tense base (one rule)", so a
+    // pool that realizes two bases teaches the opposite of the rule. Orthogonal
+    // to the `person` / `polarity` spec, which floors who and whether negated,
+    // never which base carries the copula — and that spec must stay, since the
+    // point is `conjugationSuitable` and its conjugation cell seeds from it.
+    //
+    // NOT variants: "group-1 person endings" and the -y- buffer dropping after
+    // a consonant. Both are properties every row here already realizes.
+    constructionVariants: [
+      { id: 'pluperfect-misti', directive: 'the copula on the -mIş base: PLUPERFECT -mIştI, an event completed before another past point (Ben gelmeden önce gitmişti; Yemeği çoktan yemiştik)', share: 3 },
+      { id: 'past-habitual-ardi', directive: 'the copula on the AORIST base: -ArdI / -IrdI, a past habit or an unreal past (Her yaz denize giderdik; Çocukken çok okurdum)', share: 3 },
+      { id: 'future-in-past-acakti', directive: 'the copula on the FUTURE base: -AcAktI, a plan or expectation held in the past (Gelecekti ama vazgeçti; Tam çıkacaktım ki telefon çaldı)', share: 3 },
+      { id: 'past-necessitative-maliydi', directive: 'the copula on the NECESSITATIVE base: -mAlIydI, an obligation located in the past, often with regret (Daha dikkatli olmalıydım; Ona söylemeliydin)', share: 2 },
+      { id: 'past-conditional-saydi', directive: 'the copula on the CONDITIONAL base: -sAydI, a past counterfactual condition (Bilseydim gelmezdim; Param olsaydı alırdım)', share: 2 },
     ],
     examplesNegative: [
       '*gelmiştir [for "had come"] (wrong — the second element is the past copula -(y)DI, not the generalizing -DIr: gelmişti)',

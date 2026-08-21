@@ -232,6 +232,36 @@ describe('parsePointEnumeration', () => {
     ).toThrow(/kebab-case/);
   });
 
+  // Both TR enumeration faults in the 2026-08-21 sweep were a capital I:
+  // 'ordinal-suffix-incI' (tr-a1-numbers-ordinals) and
+  // 'past-necessitative-maliydI' (tr-b2-compound-past-hikaye). Turkish
+  // morphological notation writes suffixes with capitals (-(I)ncI, -mAlIydI),
+  // so the model reproduces them in the id and the whole point's enumeration is
+  // lost. An id is an identifier — case carries no meaning — so normalize
+  // rather than reject.
+  it('normalizes a capitalized id to lower case instead of rejecting it', () => {
+    const parsed = parsePointEnumeration(
+      { ...valid, constructions: [{ ...valid.constructions[0], id: 'past-necessitative-maliydI' }] },
+      'tr-b2-compound-past-hikaye',
+    );
+    expect(parsed.constructions[0].id).toBe('past-necessitative-maliydi');
+  });
+
+  it('still detects duplicates that differ only in case', () => {
+    expect(() =>
+      parsePointEnumeration(
+        {
+          ...valid,
+          constructions: [
+            { ...valid.constructions[0], id: 'back-shift' },
+            { ...valid.constructions[1], id: 'Back-Shift' },
+          ],
+        },
+        'k',
+      ),
+    ).toThrow(/duplicate/);
+  });
+
   it('rejects duplicate ids', () => {
     expect(() =>
       parsePointEnumeration(

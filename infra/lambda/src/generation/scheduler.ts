@@ -522,6 +522,14 @@ export async function handler(): Promise<void> {
     // Phase 2 coverage controller — any axis the cell's coverageSpec controls.
     const spec = cell.grammarPoint.coverageSpec;
     if (!spec) return base;
+    // A spec may be scoped to particular exercise types. Without this the
+    // controller attaches coverage targets to EVERY cell of a spec'd point,
+    // including cells whose diversity is owned by `constructionVariants` — and
+    // the two directives then reach one draft prompt with no arbitration
+    // between them. See the `appliesTo` doc on CoverageSpec.
+    if (spec.appliesTo !== undefined && !spec.appliesTo.includes(cell.exerciseType)) {
+      return base;
+    }
 
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =

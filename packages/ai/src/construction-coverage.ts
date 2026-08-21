@@ -319,8 +319,17 @@ export function parsePointEnumeration(input: unknown, grammarPointKey: string): 
   const seen = new Set<string>();
   const constructions: ClaimedConstruction[] = raw.map((entry) => {
     if (!isObject(entry)) throw new Error('each construction must be an object');
-    const id = requireNonEmptyString(entry.id, 'id');
-    if (!KEBAB_CASE.test(id)) throw new Error(`id '${id}' must be kebab-case`);
+    const rawId = requireNonEmptyString(entry.id, 'id');
+    // Lower-case BEFORE validating. An id is an identifier — case carries no
+    // meaning — and rejecting one costs the entire point's enumeration, not
+    // just the construction. Both TR faults in the 2026-08-21 sweep were a
+    // capital I the model had copied from Turkish suffix notation
+    // ('ordinal-suffix-incI' from -(I)ncI, 'past-necessitative-maliydI' from
+    // -mAlIydI), which would have kept failing on every re-run. Case-folding
+    // before the duplicate check also means ids differing only in case still
+    // collide, rather than both surviving as distinct constructions.
+    const id = rawId.toLowerCase();
+    if (!KEBAB_CASE.test(id)) throw new Error(`id '${rawId}' must be kebab-case`);
     if (seen.has(id)) throw new Error(`duplicate construction id '${id}'`);
     seen.add(id);
     if (typeof entry.mustRepresent !== 'boolean') {

@@ -131,7 +131,13 @@ export function resolveCellTargetFor(cell: CellTargetInput): number {
   const base = fromTable ?? TARGET_PER_CELL;
   const spec = cell.grammarPoint.coverageSpec;
   let maxAxisFloorSum = 0;
-  if (spec) {
+  // A spec scoped with `appliesTo` does not govern other exercise types, so it
+  // must not raise their targets either — otherwise a conjugation-only axis
+  // would inflate the cloze cell it was deliberately excluded from.
+  const specApplies =
+    spec !== undefined &&
+    (spec.appliesTo === undefined || spec.appliesTo.includes(cell.exerciseType));
+  if (spec && specApplies) {
     for (const axis of spec.axes) {
       let sum = 0;
       for (const floor of Object.values(axis.floors)) sum += (floor as number) ?? 0;
