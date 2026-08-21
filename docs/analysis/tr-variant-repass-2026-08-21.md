@@ -141,12 +141,64 @@ translation 1,571 → 880), a difference of exactly 1,077.
   same position ES was deliberately left in. Until it resumes the TR pool is
   simply smaller.
 
-## What is NOT done
+## The sentence-construction tail — done the same day
 
-1. **The sentence_construction tail.** 374 SC rows on variant points, 297 now
-   labelled and 77 not. Not demoted. ES handled SC as a separate pass for the
-   same reason.
-2. **The generation resume** — one flag in `infra/bin/app.ts` plus a CDK deploy.
+Eight SC cells belong to points that declare variants (374 approved rows, 297
+labelled). The other eight TR SC cells belong to points with no variant list —
+`tr-a2-aorist`, `tr-a2-converb-temporal`, `tr-b1-causative-voice`,
+`tr-b1-reciprocal-voice`, `tr-b1-reflexive-voice-kendi`, `tr-b1-since-converb`,
+`tr-b1-when-converbs`, `tr-b2-double-voice` — and are correctly untouched and
+unlabelled, exactly as ES left `es-b1-conditional` and `es-b1-relative-clauses`.
+
+`tr-b1-converb-while-yken:sc` was the sharpest: **49 of 50 rows on one variant**
+of three.
+
+**112 rows demoted across 7 cells.** `tr-a2-mis-evidential:sc` planned 0 — both
+its variants already sit near quota, so there is no surplus to take. On several
+cells `planned` falls short of `need` because the surplus is bounded by what the
+classifier had labelled; ES hit the same ceiling and recorded it the same way.
+
+| cell | approved → | target |
+|---|---|---|
+| `tr-a2-reported-speech:sc` | 26 → **22** | 30 |
+| `tr-b1-abstract-postpositions:sc` | 50 → **21** | 50 |
+| `tr-b1-converb-while-yken:sc` | 50 → **23** | 50 |
+| `tr-b1-copula-ol:sc` | 50 → **33** | 50 |
+| `tr-b1-participles-dik-acak:sc` | 59 → **49** | 50 |
+| `tr-b1-passive-voice:sc` | 50 → **47** | 50 |
+| `tr-b1-reason-digi-icin:sc` | 59 → **35** | 50 |
+| `tr-a2-mis-evidential:sc` | 30 → 30 | 30 (no surplus) |
+
+Verified: captured 112, demoted 112, still-approved 0, all `pool-hygiene`. SC
+approved on the eight cells 374 → **262**, a difference of exactly 112.
+
+### A mistake, and how the snapshot fixed it
+
+The runner script used `"$point:sc:$variant"` in an echo. **zsh parses `$point:s`
+as a history modifier** and aborts with `bad substitution` — but it aborts on the
+echo, which runs *after* the demote call has already applied. The script was run
+twice (once with output suppressed, which hid the error), so the first group —
+`tr-a2-reported-speech:diye-reporting-verb`, `--limit 2` — applied **twice**,
+demoting 2 rows beyond the plan.
+
+This surfaced as an arithmetic mismatch, not as an error message: the seven
+allocated cells had lost 114 rows against a capture of 112. An initial reading
+that "4 rejected rows there, 2 mine, 2 pre-existing baseline" was wrong — all
+four were mine.
+
+The two extra rows were recovered from the **pre-demotion Neon snapshot**
+`br-ancient-sun-any6a4eo`, which holds every row's original `review_status`:
+`b43f4460…` was `manual-approved`, `b53f45f3…` was `auto-approved`. Both were
+restored with `demotion_reason = NULL`, after which the totals reconcile exactly.
+
+Two lessons worth keeping. **Always brace `${var}` in zsh when a literal `:`
+follows** — `$point:s` is a modifier, and the previous cloze/translation runner
+only escaped this because it happened to interpolate `$type` after the colon.
+And **a per-invocation success log is not enough**; the cross-check that caught
+this was reconciling total rows removed against the capture count.
+
+## What is NOT done
+1. **The generation resume** — one flag in `infra/bin/app.ts` plus a CDK deploy.
    Everything above is preparation for it.
 3. **No outcome is verified.** "Pools become diverse" is unmeasurable until
    regeneration; the confirming runs are `audit:constructions` and

@@ -1,0 +1,148 @@
+{
+  "runName": "sc-verify-2026-07-23",
+  "baseline": {
+    "source": "repo",
+    "sha": "e283d49a"
+  },
+  "candidate": {
+    "source": "repo",
+    "sha": "e283d49a"
+  },
+  "datasetName": "cells-sc-verify.json",
+  "startedAt": "2026-07-23T11:31:40.851Z",
+  "cellCount": 4,
+  "draftsPerCell": 5,
+  "costCapped": false,
+  "baselineStats": {
+    "totalDrafts": 20,
+    "autoApproved": 20,
+    "flagged": 0,
+    "rejected": 0,
+    "parserFailure": 0,
+    "approvalRate": 1,
+    "rejectionReasonCounts": {},
+    "flagTagCounts": {},
+    "costUsd": 0.4956
+  },
+  "candidateStats": {
+    "totalDrafts": 20,
+    "autoApproved": 20,
+    "flagged": 0,
+    "rejected": 0,
+    "parserFailure": 0,
+    "approvalRate": 1,
+    "rejectionReasonCounts": {},
+    "flagTagCounts": {},
+    "costUsd": 0.3099
+  },
+  "approvalRateDelta": 0,
+  "reasonDeltas": {},
+  "flagDeltas": {},
+  "costUsd": {
+    "baseline": 0.4956,
+    "candidate": 0.3099
+  },
+  "errors": [],
+  "perCell": [
+    {
+      "cellKey": "de:a1:sentence_construction:de-a1-modal-verbs-present",
+      "baseline": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.1219
+      },
+      "candidate": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.0759
+      }
+    },
+    {
+      "cellKey": "tr:a2:sentence_construction:tr-a2-aorist",
+      "baseline": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.1208
+      },
+      "candidate": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.0748
+      }
+    },
+    {
+      "cellKey": "tr:b1:sentence_construction:tr-b1-causative-voice",
+      "baseline": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.1304
+      },
+      "candidate": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.0838
+      }
+    },
+    {
+      "cellKey": "es:b1:sentence_construction:es-b1-relative-clauses",
+      "baseline": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.1225
+      },
+      "candidate": {
+        "totalDrafts": 5,
+        "autoApproved": 5,
+        "flagged": 0,
+        "rejected": 0,
+        "parserFailure": 0,
+        "approvalRate": 1,
+        "rejectionReasonCounts": {},
+        "flagTagCounts": {},
+        "costUsd": 0.0755
+      }
+    }
+  ]
+}
