@@ -89,7 +89,30 @@ export type CoverageAxisSpec = {
   name: CoverageAxis;
   floors: Readonly<Partial<Record<string, number>>>;
 };
-export type CoverageSpec = { axes: readonly CoverageAxisSpec[] };
+export type CoverageSpec = {
+  axes: readonly CoverageAxisSpec[];
+  /**
+   * Exercise types this spec governs. Omitted (the default) means every type.
+   *
+   * Exists for points where an axis is the RIGHT diversity mechanism for one
+   * exercise type and collides with `constructionVariants` on another.
+   * `tr-a1-ablative-dative` is the case: its conjugation cell declines a noun
+   * and needs the `case` axis, but every one of its cloze/translation
+   * sub-constructions implies a case, so the coverage block ("The target word
+   * form MUST carry the dative case" — a hard MUST with no escape clause) and a
+   * variant directive ("MUST use a verb that GOVERNS the ablative") reach the
+   * same draft prompt and contradict each other. The scheduler attaches
+   * coverage targets whenever a spec exists, with no check for variant seeding,
+   * so there is no implicit resolution.
+   *
+   * Deleting the spec is not an option there: the point is
+   * `conjugationSuitable`, and `assertCurriculumInvariants` requires such a
+   * point to carry a person/case/number axis for its conjugation cell to seed
+   * from. Scoping is the narrow fix — the axis keeps serving the cell that
+   * needs it and stops reaching the cells that do not.
+   */
+  appliesTo?: readonly ExerciseType[];
+};
 
 /** One draft's per-axis assignment from the controller; sparse — only the
  *  cell's controlled (and non-suppressed) axes are present. */

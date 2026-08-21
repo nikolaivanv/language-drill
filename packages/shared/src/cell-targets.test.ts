@@ -84,3 +84,71 @@ describe('resolveCellTargetFor', () => {
     expect(CELL_TARGET_DEFAULTS[ExerciseType.VOCAB_RECALL].B2).toBe(10);
   });
 });
+
+describe("coverageSpec appliesTo scoping", () => {
+  // tr-a1-ablative-dative's shape: a `case` axis its CONJUGATION cell needs to
+  // seed from, on a point whose cloze/translation diversity is owned by
+  // constructionVariants. Without scoping the axis would also raise the
+  // cloze/translation target it no longer governs.
+  const scoped = {
+    key: "tr-a1-ablative-dative",
+    kind: "grammar",
+    cefrLevel: "A1",
+    language: "TR",
+    name: "x",
+    description: "x",
+    coverageSpec: {
+      axes: [{ name: "case", floors: { ablative: 6, dative: 6 } }],
+      appliesTo: [ExerciseType.CONJUGATION],
+    },
+  } as unknown as GrammarPoint;
+
+  it("raises the target for a type the spec applies to", () => {
+    expect(
+      resolveCellTargetFor({
+        exerciseType: ExerciseType.CONJUGATION,
+        cefrLevel: "A1" as never,
+        grammarPoint: scoped,
+      }),
+    ).toBeGreaterThanOrEqual(12);
+  });
+
+  it("does NOT raise the target for a type the spec excludes", () => {
+    const unscoped = {
+      ...scoped,
+      coverageSpec: { axes: [{ name: "case", floors: { ablative: 30, dative: 30 } }] },
+    } as unknown as GrammarPoint;
+    const withScope = resolveCellTargetFor({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: "A1" as never,
+      grammarPoint: {
+        ...scoped,
+        coverageSpec: {
+          axes: [{ name: "case", floors: { ablative: 30, dative: 30 } }],
+          appliesTo: [ExerciseType.CONJUGATION],
+        },
+      } as unknown as GrammarPoint,
+    });
+    const withoutScope = resolveCellTargetFor({
+      exerciseType: ExerciseType.CLOZE,
+      cefrLevel: "A1" as never,
+      grammarPoint: unscoped,
+    });
+    expect(withoutScope).toBe(60);
+    expect(withScope).toBe(20);
+  });
+
+  it("an omitted appliesTo still governs every type (unchanged default)", () => {
+    const plain = {
+      ...scoped,
+      coverageSpec: { axes: [{ name: "case", floors: { ablative: 30, dative: 30 } }] },
+    } as unknown as GrammarPoint;
+    expect(
+      resolveCellTargetFor({
+        exerciseType: ExerciseType.TRANSLATION,
+        cefrLevel: "A1" as never,
+        grammarPoint: plain,
+      }),
+    ).toBe(60);
+  });
+});
