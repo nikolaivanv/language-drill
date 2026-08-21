@@ -87,3 +87,55 @@ concludes these 8 points are fine.
 ## Cost
 
 $0.01.
+
+---
+
+# Follow-up: `audit:constructions` extended to SC, and what it found
+
+The blind spot above is now closed. `IN_SCOPE_TYPES` gains
+`SENTENCE_CONSTRUCTION` and `rowSurfaceFor` gains an SC branch, mirroring what
+#687 did for `backfill:variant-seeds`: SC has no `correctAnswer`, so the
+**model answers** are the evidence (capped at three), `targetStructure` rides
+along as the generator's own statement of what the draft was asked for, and a
+row with no usable model answer returns null rather than inviting a guess from a
+situation prompt alone.
+
+First run: 16 points, 16 cells, 370 rows, **7 findings, $0.70**.
+
+## It was a real blind spot
+
+Two variant-less points are genuinely collapsed, and **neither was visible to
+`audit:collapse`** — both passed its surface signal comfortably:
+
+| point | rows | what the SC pool actually drills |
+|---|---|---|
+| `tr-b2-double-voice` | 14 | **14 of 14** are `causative-plus-passive`. `causative-of-causative` **0**, `reciprocal-plus-causative` **0** — two of the three combinations the point exists to teach |
+| `tr-b1-causative-voice` | 76 | `-DIr` 12 and `-t` 12, but **`-Ir`/`-Ar` 0** — a whole allomorph group from the point's own title (`-DIr / -t / -Ir / -Ar`) never appears |
+| `tr-a2-aorist` | 48 | the irregular 1sg negative `-mAm`, which the description calls out by name, is **0** |
+
+`tr-b2-double-voice` is the sharpest illustration of why the surface metric could
+not see this: 14 rows drilling one construction, over 14 different scenes, is
+lexically diverse and structurally monotonous at the same time.
+
+The remaining four findings are on points already through the variant repass
+(`tr-b1-copula-ol`, `tr-b1-participles-dik-acak`, `tr-b1-passive-voice`,
+`tr-b1-abstract-postpositions`); their zeros are the declared variants awaiting
+regeneration, which is expected and needs no action.
+
+## Seven cells reported `enumeration-suspect`
+
+`tr-a2-converb-temporal`, `tr-a2-reported-speech`, `tr-b1-converb-while-yken`,
+`tr-b1-reason-digi-icin`, `tr-b1-reciprocal-voice`, `tr-b1-since-converb`,
+`tr-b1-when-converbs` — all >33% unresolved, so **no finding was raised**, which
+is the designed behaviour: a high unresolved rate means the construction list was
+wrong, not that the pool collapsed. Worth noting that this is a much higher
+suspect rate than the cloze/translation sweep saw (7 of 16 cells vs 2 of 142),
+which suggests the enumeration prompt may fit SC less well than it fits the other
+two types. Not investigated here.
+
+## Still to do
+
+Author `constructionVariants` on the three collapsed variant-less points. Note
+`tr-a2-aorist`'s proposed variants are polarity-based and it is
+`conjugationSuitable`, so it needs the `appliesTo` treatment rather than a spec
+deletion — the same shape as `tr-a1-ablative-dative`.
