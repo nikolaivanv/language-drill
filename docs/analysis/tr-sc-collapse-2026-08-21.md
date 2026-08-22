@@ -147,3 +147,43 @@ Author `constructionVariants` on the three collapsed variant-less points. Note
 `tr-a2-aorist`'s proposed variants are polarity-based and it is
 `conjugationSuitable`, so it needs the `appliesTo` treatment rather than a spec
 deletion — the same shape as `tr-a1-ablative-dative`.
+
+---
+
+# Demotion of the two deployed points, 2026-08-22
+
+Only **two** of the five newly-authored points were demoted:
+`tr-a1-ablative-dative` and `tr-b2-compound-past-hikaye`, both from #690, whose
+Production Deploy (`c47a5ff0`) is green — so their variant lists are live in the
+generation Lambda.
+
+The three SC points authored here (`tr-a2-aorist`, `tr-b1-causative-voice`,
+`tr-b2-double-voice`) were **deliberately not demoted**. Their variants are not
+deployed yet, so freeing slots now would let the scheduler refill them from a
+prompt carrying no variant directive — regenerating the very constructions the
+demotion is meant to displace. That risk is live rather than theoretical, since
+pre-generation is being enabled the same day. They wait for this PR to merge and
+deploy.
+
+## What ran
+
+Snapshot `br-bold-sun-anp6yiwq`. Labelling first — neither point had ever been
+through a repass — then capture, then demote.
+
+- **Labelled:** 124 rows, **$0.17**, no failures (36 + 88).
+- **Demoted:** **26 rows across 3 cells**, 5 invocations, 0 failures, 0 retries,
+  0 count mismatches.
+
+| cell | approved → | target |
+|---|---|---|
+| `tr-a1-ablative-dative:cloze` | 19 → **17** | 24 |
+| `tr-a1-ablative-dative:translation` | 20 → **16** | 24 |
+| `tr-b2-compound-past-hikaye:translation` | 49 → **29** | 50 |
+| `tr-b2-compound-past-hikaye:cloze` | 45 → 45 | 50 (no surplus variant) |
+
+Verified: captured 26, demoted 26, still-approved 0, all `pool-hygiene` — so
+learners keep credit and no `backfill:mastery` rebuild is needed.
+
+The numbers are small because these cells already sat **below** target; `need`
+here is driven by variant deficit rather than by surplus, and
+`tr-b2-compound-past-hikaye:cloze` had no over-quota variant to take from at all.
