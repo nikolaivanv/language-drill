@@ -416,6 +416,34 @@ export function rowSurfaceFor(
     if (typeof source !== 'string' || typeof reference !== 'string') return null;
     return `${source}   [reference: ${reference}]`;
   }
+  if (type === ExerciseType.SENTENCE_CONSTRUCTION) {
+    // SC has no `correctAnswer`, so the MODEL ANSWERS are the evidence — they
+    // are the target-language sentences the row is built around, and the only
+    // thing that shows which sub-construction it actually drills. The same
+    // mapping #687 settled on for `backfill:variant-seeds`.
+    //
+    // `targetStructure` rides along when present: it is the generator's own
+    // prose description of what the draft was asked for, which is precisely the
+    // question being put to the classifier.
+    //
+    // Capped at three answers so one verbose row cannot crowd out its
+    // batch-mates, and null when there is no usable answer — classifying a
+    // sub-construction from a situation prompt alone would be a guess, and a
+    // guess here is worse than an honest unresolved.
+    const prompt = content.prompt;
+    if (typeof prompt !== 'string') return null;
+    const models = Array.isArray(content.modelAnswers)
+      ? content.modelAnswers.filter(
+          (m): m is string => typeof m === 'string' && m.trim() !== '',
+        )
+      : [];
+    if (models.length === 0) return null;
+    const target =
+      typeof content.targetStructure === 'string' && content.targetStructure.trim() !== ''
+        ? `   [target structure: ${content.targetStructure}]`
+        : '';
+    return `${prompt}${target}   [model answers: ${models.slice(0, 3).join(' | ')}]`;
+  }
   return null;
 }
 

@@ -47,7 +47,20 @@ import {
   type RowClassification,
 } from '../src/index.js';
 
-const IN_SCOPE_TYPES = [ExerciseType.CLOZE, ExerciseType.TRANSLATION] as const;
+// sentence_construction joined 2026-08-21. Until then the audit had never
+// examined a single SC row in any language, so construction-level collapse
+// there was invisible: `audit:collapse` can see SC but only measures answer
+// SURFACES and DECLARED mechanisms, and a point that declares neither a
+// coverageSpec nor constructionVariants defeats both of its triaged signals —
+// 45 rows of one construction over 45 different nouns read as healthy. That is
+// the blind spot this tool was built for in #667; it simply did not cover the
+// type. Found while checking 404 approved TR SC rows across 8 variant-less
+// points (docs/analysis/tr-sc-collapse-2026-08-21.md).
+const IN_SCOPE_TYPES = [
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
+] as const;
 
 /** Enumeration attempts per point before recording a failure. See the re-roll
  *  rationale at the stage-1 dispatch. */

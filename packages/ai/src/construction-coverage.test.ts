@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { ExerciseType } from '@language-drill/shared';
-import type { ClozeContent, TranslationContent } from '@language-drill/shared';
+import type { ClozeContent, SentenceConstructionContent, TranslationContent } from '@language-drill/shared';
 import type { GrammarPoint } from '@language-drill/shared';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -421,6 +421,52 @@ describe('rowSurfaceFor', () => {
   it('returns null when the fields are missing or not strings', () => {
     expect(rowSurfaceFor(ExerciseType.CLOZE, {})).toBeNull();
     expect(rowSurfaceFor(ExerciseType.CLOZE, { sentence: 5, correctAnswer: 'x' })).toBeNull();
+  });
+
+  // sentence_construction joined 2026-08-21. Until then `IN_SCOPE_TYPES` was
+  // cloze+translation, so the audit had never examined a single SC row in any
+  // language — which is why 404 approved TR SC rows across 8 variant-less
+  // points sat unmeasured for construction collapse. Field names are pinned to
+  // the shared type for the same reason as the cloze fixture above.
+  const scFields = {
+    prompt: 'Ask your friend what time the meeting starts.',
+    modelAnswers: ['Toplantı saat kaçta başlıyor?', 'Toplantı ne zaman başlıyor?'],
+  } satisfies Pick<SentenceConstructionContent, 'prompt' | 'modelAnswers'>;
+
+  it('renders a sentence_construction from the prompt plus its model answers', () => {
+    const s = rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, { ...scFields });
+    expect(s).toContain('Ask your friend what time the meeting starts.');
+    expect(s).toContain('Toplantı saat kaçta başlıyor?');
+    expect(s).toContain('Toplantı ne zaman başlıyor?');
+  });
+
+  it('includes targetStructure when present — it is what the draft was asked for', () => {
+    const s = rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, {
+      ...scFields,
+      targetStructure: 'question with mI',
+    } satisfies Pick<SentenceConstructionContent, 'prompt' | 'modelAnswers' | 'targetStructure'>);
+    expect(s).toContain('question with mI');
+  });
+
+  it('caps model answers at three so one row cannot dominate a batch', () => {
+    // Distinctive multi-character values, not single letters: the rendered
+    // label itself contains "model answers", so `not.toContain('d')` matched
+    // the label rather than the fourth answer.
+    const s = rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, {
+      prompt: 'Say it another way.',
+      modelAnswers: ['birinci', 'ikinci', 'üçüncü', 'DÖRDÜNCÜ'],
+    });
+    expect(s).toContain('birinci');
+    expect(s).toContain('üçüncü');
+    expect(s).not.toContain('DÖRDÜNCÜ');
+  });
+
+  it('returns null for an SC row with no usable model answer', () => {
+    // Classifying a sub-construction from a situation prompt alone would be a
+    // guess; the same call #687 made in backfill:variant-seeds.
+    expect(rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, { prompt: 'p', modelAnswers: [] })).toBeNull();
+    expect(rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, { prompt: 'p', modelAnswers: ['  '] })).toBeNull();
+    expect(rowSurfaceFor(ExerciseType.SENTENCE_CONSTRUCTION, { modelAnswers: ['a'] })).toBeNull();
   });
 });
 

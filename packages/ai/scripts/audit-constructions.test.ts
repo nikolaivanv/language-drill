@@ -51,9 +51,20 @@ describe('parseAuditConstructionsArgs', () => {
     expect(() => parseAuditConstructionsArgs(['--max-points', '0'])).toThrow(/max-points/);
   });
 
-  it('rejects a sentence_construction type — out of scope', () => {
-    expect(() => parseAuditConstructionsArgs(['--type', 'sentence_construction'])).toThrow(
-      /cloze|translation/,
+  // Was 'rejects a sentence_construction type — out of scope' until 2026-08-21.
+  // SC is now in scope; the audit had never examined an SC row in any language
+  // before that, which is exactly why construction-level collapse there went
+  // unmeasured.
+  it('accepts a sentence_construction type', () => {
+    expect(parseAuditConstructionsArgs(['--type', 'sentence_construction']).type).toBe(
+      'sentence_construction',
+    );
+  });
+
+  it('still rejects a type the audit cannot classify', () => {
+    // vocab_recall has no stem/answer pair to read a construction from.
+    expect(() => parseAuditConstructionsArgs(['--type', 'vocab_recall'])).toThrow(
+      /cloze|translation|sentence_construction/,
     );
   });
 });
