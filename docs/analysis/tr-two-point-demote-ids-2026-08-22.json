@@ -1,0 +1,262 @@
+[
+  {
+    "id": "e05b6fb1-5111-507d-adad-cca16af152f4",
+    "cell": "tr-a1-ablative-dative:cloze",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "ablative-source-separation",
+    "createdAt": "2026-06-07 04:09:29.671289"
+  },
+  {
+    "id": "3b94ed0e-d191-5f50-bddf-afac17d74485",
+    "cell": "tr-a1-ablative-dative:cloze",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "dative-goal-of-motion",
+    "createdAt": "2026-05-30 04:25:41.423415"
+  },
+  {
+    "id": "408a401e-3199-5a9e-a56a-4b8231157ac7",
+    "cell": "tr-a1-ablative-dative:translation",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "dative-goal-of-motion",
+    "createdAt": "2026-05-30 04:26:41.676526"
+  },
+  {
+    "id": "448a466a-2d27-538a-a96a-51f62ca30383",
+    "cell": "tr-a1-ablative-dative:translation",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "dative-goal-of-motion",
+    "createdAt": "2026-05-30 04:26:41.676935"
+  },
+  {
+    "id": "3d8a3b65-b728-5f77-a26a-46abb46b543a",
+    "cell": "tr-a1-ablative-dative:translation",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "dative-goal-of-motion",
+    "createdAt": "2026-05-30 04:26:41.860246"
+  },
+  {
+    "id": "3c8a39d2-360b-51b2-a16a-450e3587f20b",
+    "cell": "tr-a1-ablative-dative:translation",
+    "language": "TR",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "variant": "dative-goal-of-motion",
+    "createdAt": "2026-05-30 04:26:41.860583"
+  },
+  {
+    "id": "8162c636-aeaf-58ae-b8f7-85821a4d723f",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:11.914218"
+  },
+  {
+    "id": "8262c7c9-2fcb-5673-b9f7-871f9930d46e",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:11.920022"
+  },
+  {
+    "id": "8062c4a3-2d92-5ae9-b7f7-83e596f798cc",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:11.920577"
+  },
+  {
+    "id": "8662ce15-2b59-5f5f-bdf7-8d9394be5d2a",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.100117"
+  },
+  {
+    "id": "8762cfa8-b55a-5b4c-aef7-75600f2f4815",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.110005"
+  },
+  {
+    "id": "aa792e86-79d5-5fee-a74d-7ed2382df7df",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.287732"
+  },
+  {
+    "id": "ae7934d2-7562-58da-ab4d-854633bb809b",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.300844"
+  },
+  {
+    "id": "ac7931ac-7329-5d50-a94d-820c318244f9",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.301047"
+  },
+  {
+    "id": "3a80ccfb-9f02-588f-b355-16d39b6306be",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.477546"
+  },
+  {
+    "id": "3980cb68-1de5-5aca-b255-15361c7fa48f",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.491391"
+  },
+  {
+    "id": "4080d66d-a13b-5419-ad55-0d2594b753d8",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.681823"
+  },
+  {
+    "id": "3f80d4da-201e-5654-ac55-0b8815d3f1a9",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.68259"
+  },
+  {
+    "id": "3280c063-a7e6-56b7-ab55-09eb927e1836",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.687594"
+  },
+  {
+    "id": "3180bed0-26ca-58f2-aa55-084e139ab607",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.849336"
+  },
+  {
+    "id": "b27db84c-5209-5c0c-9752-acf0fe98159d",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.872363"
+  },
+  {
+    "id": "b07db526-4fd0-5082-9d52-b69efc5ed9fb",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:12.878969"
+  },
+  {
+    "id": "b17db6b9-d0ec-5e47-9e52-b83b7b423c2a",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "future-in-past-acakti",
+    "createdAt": "2026-07-19 04:27:13.037085"
+  },
+  {
+    "id": "8462caef-291f-53d5-bbf7-8a5992852188",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "past-necessitative-maliydi",
+    "createdAt": "2026-07-19 04:27:11.924196"
+  },
+  {
+    "id": "8562cc82-aa3c-519a-bcf7-8bf615dafafb",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "past-necessitative-maliydi",
+    "createdAt": "2026-07-19 04:27:12.102137"
+  },
+  {
+    "id": "ab793019-faf1-5db3-a84d-806fb7115a0e",
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "variant": "past-necessitative-maliydi",
+    "createdAt": "2026-07-19 04:27:12.289741"
+  }
+]

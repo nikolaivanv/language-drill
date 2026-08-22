@@ -1,0 +1,73 @@
+[
+  {
+    "cell": "tr-a1-ablative-dative:cloze",
+    "cefr": "A1",
+    "type": "cloze",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "approved": 19,
+    "target": 24,
+    "labelled": 17,
+    "need": 5,
+    "planned": 2,
+    "alloc": [
+      {
+        "variant": "ablative-source-separation",
+        "take": 1
+      },
+      {
+        "variant": "dative-goal-of-motion",
+        "take": 1
+      }
+    ]
+  },
+  {
+    "cell": "tr-a1-ablative-dative:translation",
+    "cefr": "A1",
+    "type": "translation",
+    "grammarPoint": "tr-a1-ablative-dative",
+    "approved": 20,
+    "target": 24,
+    "labelled": 19,
+    "need": 7,
+    "planned": 4,
+    "alloc": [
+      {
+        "variant": "dative-goal-of-motion",
+        "take": 4
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-compound-past-hikaye:cloze",
+    "cefr": "B2",
+    "type": "cloze",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "approved": 45,
+    "target": 50,
+    "labelled": 39,
+    "need": 8,
+    "planned": 0,
+    "alloc": []
+  },
+  {
+    "cell": "tr-b2-compound-past-hikaye:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-compound-past-hikaye",
+    "approved": 49,
+    "target": 50,
+    "labelled": 49,
+    "need": 22,
+    "planned": 20,
+    "alloc": [
+      {
+        "variant": "future-in-past-acakti",
+        "take": 17
+      },
+      {
+        "variant": "past-necessitative-maliydi",
+        "take": 3
+      }
+    ]
+  }
+]
