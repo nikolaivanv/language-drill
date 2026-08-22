@@ -1,0 +1,802 @@
+[
+  {
+    "id": "082d0018-b3dd-5880-b166-947c10f11451",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:14:27.880922"
+  },
+  {
+    "id": "0e2d098a-ba88-5b1e-af66-9142179cc737",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:14:27.883924"
+  },
+  {
+    "id": "1383f74c-a03c-5ea0-ba40-90cce3b3bf11",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-01 04:09:37.296975"
+  },
+  {
+    "id": "1483f8df-2159-5c65-bb40-926962972140",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-01 04:09:37.299343"
+  },
+  {
+    "id": "e39ef513-edf0-59f9-8d08-5bf50fcc3f04",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-07 04:18:49.847106"
+  },
+  {
+    "id": "e59ef839-f029-5583-8f08-5f2f12057aa6",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-07 04:18:49.851773"
+  },
+  {
+    "id": "5142599a-bc12-59c2-88b3-660e3d02233b",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-08 04:12:58.582249"
+  },
+  {
+    "id": "52425b2d-3d2f-5787-89b3-67abbbe5856a",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-08 04:12:58.582492"
+  },
+  {
+    "id": "8a923c83-23e9-5bdb-9087-d7375beec432",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:08:36.305352"
+  },
+  {
+    "id": "8d92413c-9e5a-5702-9387-dc0ee17dd947",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:08:36.311072"
+  },
+  {
+    "id": "8b923e16-a094-528c-8d87-d260dad22661",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:08:36.500452"
+  },
+  {
+    "id": "96924f67-1692-569f-9c87-ea93694629fe",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:08:36.500575"
+  },
+  {
+    "id": "e93c65e4-837c-537a-802e-500606208527",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:08:36.685576"
+  },
+  {
+    "id": "fe1609a5-4343-56cd-a9a4-9b81c46a5cd4",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-06-17 04:05:47.37651"
+  },
+  {
+    "id": "3287d811-f8c6-5d9d-b8ef-0ef16ada293c",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:01:36.936118"
+  },
+  {
+    "id": "3687de5d-fd38-54b1-b4ef-087d6667b1f8",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:01:36.939825"
+  },
+  {
+    "id": "3487db37-ff72-503b-b6ef-0bb768a0ed9a",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:01:36.940206"
+  },
+  {
+    "id": "2d87d032-7337-58c4-bbef-13c8de9f6141",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:01:37.13552"
+  },
+  {
+    "id": "2f87d358-79e3-5b62-b9ef-108eee3002af",
+    "cell": "tr-a2-aorist:cloze",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:01:37.136751"
+  },
+  {
+    "id": "40190025-71b5-5a79-9952-24f5038d9a00",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:13:44.661474"
+  },
+  {
+    "id": "4219034b-7860-5d17-9752-21bb131e3b6e",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:13:44.665541"
+  },
+  {
+    "id": "411901b8-f744-5f52-9652-201e943ad93f",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:13:44.671804"
+  },
+  {
+    "id": "f349c9c3-5e0a-58c7-a192-f1bb9ea0a566",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-05-31 04:13:44.850049"
+  },
+  {
+    "id": "5463499e-72d0-5038-ae36-a8942bff7b15",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-01 04:10:19.84724"
+  },
+  {
+    "id": "5363480b-f626-5987-b136-ad6bad1c18e6",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-01 04:10:19.847753"
+  },
+  {
+    "id": "c1e70d4e-459c-54c8-82b9-20a49241d815",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-02 04:02:09.463802"
+  },
+  {
+    "id": "3c18f9d9-6d42-5365-9d52-2b6908001144",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-05-31 04:13:44.481419"
+  },
+  {
+    "id": "55634b31-f3ed-5dfd-af36-aa31aae2dd44",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-06-01 04:10:19.849772"
+  },
+  {
+    "id": "131c413f-427d-5cd9-b53a-d935463a6c7c",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:09:40.15859"
+  },
+  {
+    "id": "0f1c3af3-3e0a-55c5-b93a-dfa941c7f538",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:09:40.16182"
+  },
+  {
+    "id": "151c4465-44b6-5863-b73a-dc6f4873a81e",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-08-14 04:09:40.165921"
+  },
+  {
+    "id": "22b4fce9-fa77-5f23-9dc8-332f304391b6",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-question-offer",
+    "createdAt": "2026-06-13 04:02:21.16502"
+  },
+  {
+    "id": "28b5065b-0123-51c1-93c8-230d36ef449c",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-question-offer",
+    "createdAt": "2026-06-13 04:02:21.358404"
+  },
+  {
+    "id": "6de57663-26b2-5197-98f5-140b7f6da306",
+    "cell": "tr-a2-aorist:translation",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-question-offer",
+    "createdAt": "2026-06-13 04:02:21.548317"
+  },
+  {
+    "id": "c006d520-ad6f-5504-9a2d-ebb815d6818d",
+    "cell": "tr-a2-aorist:sentence_construction",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-07 04:20:26.469357"
+  },
+  {
+    "id": "db81f968-2c66-5942-90c3-500edcfb8dd7",
+    "cell": "tr-a2-aorist:sentence_construction",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-08 04:00:54.364633"
+  },
+  {
+    "id": "e128a3cd-8fcb-5447-9c97-c7abbdb22b9a",
+    "cell": "tr-a2-aorist:sentence_construction",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:07:42.261248"
+  },
+  {
+    "id": "de289f14-0c75-5af8-9997-c2d43c958dc9",
+    "cell": "tr-a2-aorist:sentence_construction",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-positive-affirmative",
+    "createdAt": "2026-06-14 04:07:42.26147"
+  },
+  {
+    "id": "f7860f12-1070-566a-a4ec-c406f3699163",
+    "cell": "tr-a2-aorist:sentence_construction",
+    "language": "TR",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "variant": "aorist-negative-maz",
+    "createdAt": "2026-06-19 04:19:00.548842"
+  },
+  {
+    "id": "c62285b5-1940-507d-8d83-5421282275fc",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:47.661288"
+  },
+  {
+    "id": "c1227dd6-9c95-59cc-8883-4c10a4cc9c89",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:47.661595"
+  },
+  {
+    "id": "6c582ecc-cc9b-567c-9cde-9dd015cce55d",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:48.034471"
+  },
+  {
+    "id": "6f583385-4ff0-5fcb-9fde-a2a796e9832e",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:48.037141"
+  },
+  {
+    "id": "6e5831f2-ced4-5206-9ede-a10a180620ff",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:48.037554"
+  },
+  {
+    "id": "68582880-c828-5f68-a0de-a444115a6e19",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:48.04811"
+  },
+  {
+    "id": "6b582d39-4b7e-58b7-a3de-a91b92770bea",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:33:48.222938"
+  },
+  {
+    "id": "c5228422-9823-52b8-8c83-5284a93f13cd",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-dir",
+    "createdAt": "2026-06-19 04:33:47.658324"
+  },
+  {
+    "id": "bf227ab0-9ecf-5556-8a83-4f4aa705d82b",
+    "cell": "tr-b1-causative-voice:translation",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-dir",
+    "createdAt": "2026-06-19 04:33:47.84685"
+  },
+  {
+    "id": "d2c93c1e-5cbf-5184-8858-d8b876b57f61",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.280182"
+  },
+  {
+    "id": "d4c93f44-5a86-55fa-8e58-e2667d613247",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.2826"
+  },
+  {
+    "id": "d0c938f8-5ef8-5d0e-8a58-dbf278eebb03",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.464244"
+  },
+  {
+    "id": "cec935d2-6131-5898-8458-d244840ce52d",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.466463"
+  },
+  {
+    "id": "cfc93765-e24e-565d-8558-d3e102f0475c",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.46808"
+  },
+  {
+    "id": "7fd5bd4a-ed49-5a9e-8262-f352390d3f97",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.65504"
+  },
+  {
+    "id": "7ad5b56b-67ba-55c5-8562-f829b144eee0",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.655958"
+  },
+  {
+    "id": "76d5af1f-7511-5b01-b962-e4cdbe9c54ac",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.839829"
+  },
+  {
+    "id": "75d5ad8c-f3f5-5d3c-b862-e3303fb8f27d",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.843346"
+  },
+  {
+    "id": "6dcee52f-5b9c-5437-bc65-265bf3349056",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:18.855396"
+  },
+  {
+    "id": "6fcee855-5963-58ad-ba65-2321f0fb54b4",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.028276"
+  },
+  {
+    "id": "68cedd50-def2-5d86-b765-1e4a6fdeb6e3",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.030411"
+  },
+  {
+    "id": "69cedee3-600f-5b4b-b865-1fe7eec21912",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.03188"
+  },
+  {
+    "id": "6bcee209-5dd5-5fc1-b665-1cadec88dd70",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.21435"
+  },
+  {
+    "id": "72d12ba5-48d3-500b-b568-26478093fb26",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.219965"
+  },
+  {
+    "id": "6dd123c6-c344-5b32-b868-2b1efd3e21b3",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.408289"
+  },
+  {
+    "id": "6cd12233-4227-5d6d-b768-298179e84840",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.429534"
+  },
+  {
+    "id": "01c9bdfd-a2fe-5149-8055-550576010050",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.621262"
+  },
+  {
+    "id": "fec9b944-241a-5f0e-8155-56a2f956d9c3",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.777888"
+  },
+  {
+    "id": "f8c9afd2-2ac6-51ac-b755-468000028ca9",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.965288"
+  },
+  {
+    "id": "f9c9b165-abe3-5f71-b855-481d7ee5eed8",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-19 04:35:19.966537"
+  },
+  {
+    "id": "31b44676-612b-548e-824a-ed12b61f0d5f",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-20 04:05:37.262891"
+  },
+  {
+    "id": "32b44809-e248-5253-834a-eeaf35026f8e",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-20 04:05:37.264872"
+  },
+  {
+    "id": "35b44cc2-5cb9-5d7a-864a-f386b1ac961b",
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "variant": "causative-t",
+    "createdAt": "2026-06-20 04:05:37.271465"
+  },
+  {
+    "id": "7b2ef8c4-c05f-5f56-8915-4e1a63642e43",
+    "cell": "tr-b2-double-voice:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-of-causative",
+    "createdAt": "2026-07-19 05:03:53.698302"
+  },
+  {
+    "id": "f1f8c1ca-9648-5baa-985c-19d661968453",
+    "cell": "tr-b2-double-voice:translation",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-of-causative",
+    "createdAt": "2026-07-19 05:03:54.082826"
+  },
+  {
+    "id": "99607493-b2d6-5e83-883b-f28fa274edfa",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:39.96244"
+  },
+  {
+    "id": "98607300-31ba-50be-873b-f0f223918bcb",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:39.967998"
+  },
+  {
+    "id": "9c60794c-2d47-59aa-8b3b-f7662804030f",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:40.152121"
+  },
+  {
+    "id": "a0607f98-3a9f-5ee6-bf3b-e40a1aac9d43",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:40.158398"
+  },
+  {
+    "id": "21dc2cab-ad1f-59ad-b3b1-35f158866ee8",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:40.53022"
+  },
+  {
+    "id": "23dc2fd1-af58-5537-b5b1-392b5abfaa8a",
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "language": "TR",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "variant": "causative-plus-passive",
+    "createdAt": "2026-07-19 04:55:40.537885"
+  }
+]
