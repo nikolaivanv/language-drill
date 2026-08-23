@@ -1,0 +1,2185 @@
+{
+  "runName": "de-b1-2026-08-23",
+  "promptVersion": "construction-coverage@2026-08-19",
+  "seed": "default",
+  "samplePerCell": 24,
+  "partial": true,
+  "stoppedReason": "1 point(s) failed enumeration and were never examined",
+  "summary": {
+    "pointsEnumerated": 26,
+    "pointsInScope": 27,
+    "pointsSingleConstruction": 0,
+    "cellsClassified": 54,
+    "rowsSampled": 1228,
+    "findings": 34,
+    "enumerationSuspect": 1,
+    "dismissed": 0,
+    "thinCellsSkipped": 0,
+    "enumerationErrors": 1,
+    "classificationErrors": 0,
+    "proposalErrors": 0,
+    "costUsd": 1.6999530000000007
+  },
+  "findings": [
+    {
+      "cellKey": "de-b1-adjectives-as-nouns:translation",
+      "grammarPointKey": "de-b1-adjectives-as-nouns",
+      "grammarPointName": "Adjectives as nouns",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nominalized-adj-etwas-nichts",
+          "label": "Neuter abstract nominalization after etwas/nichts/viel (strong -es)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nominalized-adj-definite",
+          "label": "Nominalized adjective with definite article",
+          "mustRepresent": true,
+          "count": 11,
+          "share": 0.4583333333333333
+        },
+        {
+          "id": "nominalized-adj-indefinite",
+          "label": "Nominalized adjective with indefinite article",
+          "mustRepresent": true,
+          "count": 11,
+          "share": 0.4583333333333333
+        },
+        {
+          "id": "nominalized-adj-etwas-nichts",
+          "label": "Neuter abstract nominalization after etwas/nichts/viel (strong -es)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "nominalized-adj-superlative",
+          "label": "Nominalized superlative adjective (das Wichtigste)",
+          "mustRepresent": false,
+          "count": 2,
+          "share": 0.08333333333333333
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nominalized-adj-definite\",\n    directive: \"Write a sentence using a nominalized adjective or participle with a definite article (der/die/das/die). The nominalized adjective must be capitalized and carry full adjective declension, e.g. 'Die Deutschen feiern heute.'\",\n    share: 3,\n  },\n  {\n    id: \"nominalized-adj-indefinite\",\n    directive: \"Write a sentence using a nominalized adjective or participle with an indefinite article or kein-word. The nominalized adjective must be capitalized and carry full adjective declension, e.g. 'Ein Bekannter hat mich angerufen.'\",\n    share: 3,\n  },\n  {\n    id: \"nominalized-adj-etwas-nichts\",\n    directive: \"Write a sentence using a neuter abstract nominalization after etwas, nichts, or viel. The nominalized adjective must take the strong -es ending and be capitalized, e.g. 'Gibt es etwas Neues?' or 'Er hat nichts Besonderes gesagt.'\",\n    share: 3,\n  },\n  {\n    id: \"nominalized-adj-superlative\",\n    directive: \"Write a sentence using a nominalized superlative adjective with a definite article. The nominalized superlative must be capitalized, e.g. 'Das Wichtigste kommt zum Schluss.'\",\n    share: 1,\n  },\n],",
+        "notes": "The `nominalized-adj-etwas-nichts` variant had zero realized exercises and is the most distinctive sub-construction of this point; it gets equal share-3 weight alongside the two article variants to force consistent generation. The superlative variant is kept at share-1 as non-load-bearing but still present to prevent dropout."
+      }
+    },
+    {
+      "cellKey": "de-b1-es-expressions:cloze",
+      "grammarPointKey": "de-b1-es-expressions",
+      "grammarPointName": "Expressions with es",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "es-placeholder-clause",
+          "label": "Placeholder es for a following clause (Es freut mich, dass ...)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "es-disappears-on-fronting",
+          "label": "Placeholder es drops when the clause is fronted (Dass du kommst, freut mich)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "es-impersonal-weather-time",
+          "label": "Impersonal es (weather / time / state)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08695652173913043
+        },
+        {
+          "id": "es-fixed-expressions",
+          "label": "Fixed expressions with es (es tut mir leid, es gibt)",
+          "mustRepresent": true,
+          "count": 20,
+          "share": 0.8695652173913043
+        },
+        {
+          "id": "es-placeholder-clause",
+          "label": "Placeholder es for a following clause (Es freut mich, dass ...)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "es-disappears-on-fronting",
+          "label": "Placeholder es drops when the clause is fronted (Dass du kommst, freut mich)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"es-fixed-expressions\",\n    directive: \"Write a sentence using a fixed expression with 'es': e.g. 'Es gibt hier viele Möglichkeiten.' or 'Es tut mir leid, dass ich zu spät komme.'\",\n    share: 3,\n  },\n  {\n    id: \"es-impersonal-weather-time\",\n    directive: \"Write a sentence using impersonal 'es' for weather, time, or a general state: e.g. 'Es schneit seit heute Morgen.' or 'Es ist schon fast Mitternacht.'\",\n    share: 3,\n  },\n  {\n    id: \"es-placeholder-clause\",\n    directive: \"Write a sentence where 'es' is a placeholder subject or object for a following dass-clause or infinitive clause: e.g. 'Es freut mich, dass du gekommen bist.' or 'Es ist wichtig, regelmäßig zu üben.'\",\n    share: 3,\n  },\n  {\n    id: \"es-disappears-on-fronting\",\n    directive: \"Write a sentence where a dass-clause or infinitive clause is moved to the front, causing the placeholder 'es' to disappear: e.g. 'Dass du gekommen bist, freut mich.' or 'Regelmäßig zu üben ist wichtig.'\",\n    share: 3,\n  },\n],",
+        "notes": "All four variants are given equal share (3) because the measured pool is dominated by es-fixed-expressions (20/24) while the other three are severely under-represented (0–2/24); equal weighting rebalances generation without over-correcting. The es-disappears-on-fronting variant had zero realizations and its directive explicitly names the fronting transformation with a concrete exemplar to ensure generators produce it reliably."
+      }
+    },
+    {
+      "cellKey": "de-b1-es-expressions:translation",
+      "grammarPointKey": "de-b1-es-expressions",
+      "grammarPointName": "Expressions with es",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 21,
+      "unresolved": 3,
+      "missing": [
+        {
+          "id": "es-disappears-on-fronting",
+          "label": "Placeholder es drops when the clause is fronted (Dass du kommst, freut mich)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "es-impersonal-weather-time",
+          "label": "Impersonal es (weather / time / state)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.19047619047619047
+        },
+        {
+          "id": "es-fixed-expressions",
+          "label": "Fixed expressions with es (es tut mir leid, es gibt)",
+          "mustRepresent": true,
+          "count": 14,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "es-placeholder-clause",
+          "label": "Placeholder es for a following clause (Es freut mich, dass ...)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.14285714285714285
+        },
+        {
+          "id": "es-disappears-on-fronting",
+          "label": "Placeholder es drops when the clause is fronted (Dass du kommst, freut mich)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"es-fixed-expressions\",\n    directive: \"Write a sentence using a fixed expression with 'es': e.g. 'Es tut mir leid, dass du krank bist.' or 'Es gibt hier viele Möglichkeiten.'\",\n    share: 3,\n  },\n  {\n    id: \"es-impersonal-weather-time\",\n    directive: \"Write a sentence using impersonal 'es' for weather, time, or a general state: e.g. 'Es schneit seit heute Morgen.' or 'Es ist schon fast Mitternacht.'\",\n    share: 2,\n  },\n  {\n    id: \"es-placeholder-clause\",\n    directive: \"Write a sentence where 'es' is a placeholder subject for a following dass- or zu-clause: e.g. 'Es freut mich, dass du kommst.' or 'Es ist wichtig, pünktlich zu sein.'\",\n    share: 2,\n  },\n  {\n    id: \"es-disappears-on-fronting\",\n    directive: \"Write a sentence where the subordinate clause is fronted to position 1, causing the placeholder 'es' to disappear: e.g. 'Dass du kommst, freut mich.' or 'Pünktlich zu sein, ist wichtig.'\",\n    share: 2,\n  },\n],",
+        "notes": "Fixed expressions dominated the pool (14/24) while fronting was never generated (0/24). Shares are equalised across the three underrepresented variants and fixed expressions are given only a slight plurality (3 vs 2 each) so no single construction can crowd out the others."
+      }
+    },
+    {
+      "cellKey": "de-b1-futur-i:cloze",
+      "grammarPointKey": "de-b1-futur-i",
+      "grammarPointName": "Futur I",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "present-tense-scheduled-future",
+          "label": "Present tense + time adverb for scheduled future",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "werden-infinitive-future",
+          "label": "werden + infinitive (prediction/promise/resolution)",
+          "mustRepresent": true,
+          "count": 22,
+          "share": 0.9166666666666666
+        },
+        {
+          "id": "present-tense-scheduled-future",
+          "label": "Present tense + time adverb for scheduled future",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "werden-wohl-assumption",
+          "label": "werden + wohl (epistemic assumption)",
+          "mustRepresent": false,
+          "count": 2,
+          "share": 0.08333333333333333
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"werden-infinitive-future\",\n    directive: \"Write an exercise practising 'werden + infinitive' for a prediction, promise, or resolution. Example target sentence: 'Nächstes Jahr werden wir ein Haus bauen.'\",\n    share: 3,\n  },\n  {\n    id: \"present-tense-scheduled-future\",\n    directive: \"Write an exercise practising the plain present tense with a time adverb to express a scheduled future event. Example target sentence: 'Morgen fahre ich nach Köln.'\",\n    share: 2,\n  },\n  {\n    id: \"werden-wohl-assumption\",\n    directive: \"Write an exercise practising 'werden + wohl + infinitive' to express an epistemic assumption. Example target sentence: 'Er wird wohl noch im Büro sein.'\",\n    share: 2,\n  },\n],",
+        "notes": "The present-tense-scheduled-future variant had 0/24 coverage and werden-wohl-assumption only 2/24, so both are given share 2 to force meaningful representation. The prototypical werden-infinitive construction keeps a plurality at share 3 (≈43% of the pool) without crowding out the other two."
+      }
+    },
+    {
+      "cellKey": "de-b1-futur-i:translation",
+      "grammarPointKey": "de-b1-futur-i",
+      "grammarPointName": "Futur I",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "present-tense-scheduled-future",
+          "label": "Present tense + time adverb for scheduled future",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "werden-infinitive-future",
+          "label": "werden + infinitive (prediction/promise/resolution)",
+          "mustRepresent": true,
+          "count": 21,
+          "share": 0.875
+        },
+        {
+          "id": "present-tense-scheduled-future",
+          "label": "Present tense + time adverb for scheduled future",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "werden-wohl-assumption",
+          "label": "werden + wohl (epistemic assumption)",
+          "mustRepresent": false,
+          "count": 3,
+          "share": 0.125
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"werden-infinitive-future\",\n    directive: \"Write an exercise using 'werden + infinitive' to express a prediction, promise, or resolution. Example: 'Ich werde dich nie vergessen.'\",\n    share: 3,\n  },\n  {\n    id: \"present-tense-scheduled-future\",\n    directive: \"Write an exercise using the present tense with a time adverb to express a scheduled future event. Example: 'Morgen fahre ich nach Köln.'\",\n    share: 3,\n  },\n  {\n    id: \"werden-wohl-assumption\",\n    directive: \"Write an exercise using 'werden + wohl + infinitive' to express an epistemic assumption. Example: 'Er wird wohl noch im Büro sein.'\",\n    share: 2,\n  },\n],",
+        "notes": "The present-tense-scheduled-future variant had zero realized exercises out of 24 sampled, so it receives a share equal to the prototypical werden-infinitive construction to force meaningful pool representation. The werden-wohl variant was under-represented (3/24) and is not load-bearing, so it gets a slightly lower share of 2 to keep it present without over-indexing."
+      }
+    },
+    {
+      "cellKey": "de-b1-genitive:cloze",
+      "grammarPointKey": "de-b1-genitive",
+      "grammarPointName": "Genitive case",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "proper-name-genitive-s",
+          "label": "Proper-name genitive with -s (Marias Auto)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "genitive-preposition",
+          "label": "Genitive prepositions (trotz, wegen, innerhalb, außerhalb + genitive NP)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "genitive-article-noun-ending",
+          "label": "Genitive article + noun -(e)s ending (des/der + noun inflection)",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "genitive-adjective-en-ending",
+          "label": "Adjective -en ending in genitive (des schlechten Wetters)",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.2916666666666667
+        },
+        {
+          "id": "proper-name-genitive-s",
+          "label": "Proper-name genitive with -s (Marias Auto)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "proper-name-genitive-apostrophe",
+          "label": "Proper-name genitive with bare apostrophe for names ending in s/ss/x/z (Fritz' Schwester)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "genitive-preposition",
+          "label": "Genitive prepositions (trotz, wegen, innerhalb, außerhalb + genitive NP)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "temporal-genitive-fixed",
+          "label": "Fixed temporal genitive (eines Tages)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "von-paraphrase",
+          "label": "von-paraphrase as colloquial substitute for genitive",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"genitive-article-noun-ending\",\n    directive: \"Write a sentence using a genitive noun phrase with the correct genitive article (des/der) and the -(e)s noun ending on a masculine or neuter noun. Example: 'Der Titel des Buches gefällt mir.'\",\n    share: 3,\n  },\n  {\n    id: \"genitive-adjective-en-ending\",\n    directive: \"Write a sentence using a genitive noun phrase that includes an adjective with the -en ending after a genitive article. Example: 'Trotz des schlechten Wetters blieben wir draußen.'\",\n    share: 2,\n  },\n  {\n    id: \"proper-name-genitive-s\",\n    directive: \"Write a sentence using a proper-name genitive where the name does NOT end in s/ß/x/z, adding -s directly to the name. Example: 'Das ist Marias Auto.'\",\n    share: 2,\n  },\n  {\n    id: \"proper-name-genitive-apostrophe\",\n    directive: \"Write a sentence using a proper-name genitive where the name ends in s, ß, x, or z, so a bare apostrophe is used instead of -s. Example: 'Das ist Fritz' Schwester.'\",\n    share: 1,\n  },\n  {\n    id: \"genitive-preposition\",\n    directive: \"Write a sentence using one of the genitive prepositions trotz, wegen, innerhalb, or außerhalb followed by a full genitive noun phrase. Example: 'Wegen des starken Regens fiel das Konzert aus.'\",\n    share: 2,\n  },\n  {\n    id: \"temporal-genitive-fixed\",\n    directive: \"Write a sentence using a fixed temporal genitive expression such as 'eines Tages', 'eines Abends', or 'eines Morgens'. Example: 'Eines Tages wird alles besser.'\",\n    share: 1,\n  },\n  {\n    id: \"von-paraphrase\",\n    directive: \"Write a sentence using a von-paraphrase as a colloquial substitute for a genitive construction. Example: 'Das Auto von meiner Schwester ist neu.'\",\n    share: 1,\n  },\n],",
+        "notes": "Four variants had zero realized exercises (proper-name-s, proper-name-apostrophe, temporal-genitive, von-paraphrase) and the genitive-preposition variant was nearly absent at 1/24; explicit directives with concrete exemplars for each will force the generator to surface all sub-constructions. The prototypical article+noun-ending variant gets share 3 for plurality, adjective-en-ending and proper-name-s get share 2 to address their under-coverage, and the three lighter variants each get share 1 consistent with their not-load-bearing or lower-priority status."
+      }
+    },
+    {
+      "cellKey": "de-b1-genitive:translation",
+      "grammarPointKey": "de-b1-genitive",
+      "grammarPointName": "Genitive case",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "genitive-adjective-en-ending",
+          "label": "Adjective -en ending in genitive (des schlechten Wetters)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "proper-name-genitive-s",
+          "label": "Proper-name genitive with -s (Marias Auto)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "genitive-article-noun-ending",
+          "label": "Genitive article + noun -(e)s ending (des/der + noun inflection)",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "genitive-adjective-en-ending",
+          "label": "Adjective -en ending in genitive (des schlechten Wetters)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "proper-name-genitive-s",
+          "label": "Proper-name genitive with -s (Marias Auto)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "proper-name-genitive-apostrophe",
+          "label": "Proper-name genitive with bare apostrophe for names ending in s/ss/x/z (Fritz' Schwester)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "genitive-preposition",
+          "label": "Genitive prepositions (trotz, wegen, innerhalb, außerhalb + genitive NP)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.3333333333333333
+        },
+        {
+          "id": "temporal-genitive-fixed",
+          "label": "Fixed temporal genitive (eines Tages)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "von-paraphrase",
+          "label": "von-paraphrase as colloquial substitute for genitive",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"genitive-article-noun-ending\",\n    directive:\n      \"Write a sentence using the genitive with a definite article and a masculine or neuter noun that takes the -(e)s ending (e.g. 'Der Titel des Buches gefällt mir.'). The genitive NP must be the core focus of the sentence.\",\n    share: 3,\n  },\n  {\n    id: \"genitive-adjective-en-ending\",\n    directive:\n      \"Write a sentence in which a genitive noun phrase contains an attributive adjective with the -en ending (e.g. 'Trotz des schlechten Wetters blieben wir zu Hause.'). Both the adjective ending and the noun inflection must be visible.\",\n    share: 3,\n  },\n  {\n    id: \"proper-name-genitive-s\",\n    directive:\n      \"Write a sentence using a proper name that does NOT end in s/ß/x/z to express possession with the genitive -s suffix (e.g. 'Das ist Marias Auto.'). The possessor must be a personal name.\",\n    share: 2,\n  },\n  {\n    id: \"proper-name-genitive-apostrophe\",\n    directive:\n      \"Write a sentence using a proper name that ends in s, ß, x, or z to express possession with a bare apostrophe and no added -s (e.g. 'Fritz' Schwester ist Ärztin.'). The apostrophe must be the only possessive marker.\",\n    share: 1,\n  },\n  {\n    id: \"genitive-preposition\",\n    directive:\n      \"Write a sentence using one of the genitive prepositions trotz, wegen, innerhalb, or außerhalb followed by a full genitive NP (e.g. 'Wegen des starken Regens fiel das Konzert aus.'). The preposition and the genitive NP must both be clearly present.\",\n    share: 3,\n  },\n  {\n    id: \"temporal-genitive-fixed\",\n    directive:\n      \"Write a sentence containing a fixed temporal genitive expression such as 'eines Tages', 'eines Abends', or 'eines Morgens' (e.g. 'Eines Tages wird alles besser.'). The temporal genitive must function as a sentence adverbial.\",\n    share: 1,\n  },\n  {\n    id: \"von-paraphrase\",\n    directive:\n      \"Write a sentence in a colloquial register that uses 'von + dative' as a paraphrase for a genitive possessive (e.g. 'Das Auto von meinem Bruder ist neu.'). The von-phrase must stand where a genitive NP would appear in formal German.\",\n    share: 1,\n  },\n],",
+        "notes": "Four constructions (genitive-adjective-en-ending, proper-name-genitive-s, temporal-genitive-fixed, von-paraphrase) had zero realizations; proper-name-genitive-apostrophe also had zero but is flagged not-load-bearing. Shares give the two highest-priority load-bearing constructions (article+noun-ending, adjective-en-ending, genitive-preposition) a share of 3 each so they dominate the pool, while the three lighter variants each hold share 1 to guarantee regular appearance without crowding out core forms."
+      }
+    },
+    {
+      "cellKey": "de-b1-hin-her:cloze",
+      "grammarPointKey": "de-b1-hin-her",
+      "grammarPointName": "Directional adverbs hin and her",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "hin-her-bare",
+          "label": "Bare hin / her (speaker perspective)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "wo-hin-her-split-question",
+          "label": "Split questions Wo … hin? / Wo … her?",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "hin-her-bare",
+          "label": "Bare hin / her (speaker perspective)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "hin-her-compounds",
+          "label": "Prepositional compounds (hinein/herein, hinaus/heraus, hinauf/herauf, hinunter/herunter)",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "colloquial-variants",
+          "label": "Colloquial short forms (rein/raus/runter etc.)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "separable-prefix",
+          "label": "hin/her compounds as separable verb prefixes",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.2916666666666667
+        },
+        {
+          "id": "wo-hin-her-split-question",
+          "label": "Split questions Wo … hin? / Wo … her?",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"hin-her-compounds\",\n    directive:\n      \"Use a prepositional compound of hin or her (hinein, herein, hinaus, heraus, hinauf, herauf, hinunter, herunter) as the core of the sentence. Example: 'Komm herein!' or 'Er lief hinaus.'\",\n    share: 3,\n  },\n  {\n    id: \"separable-prefix\",\n    directive:\n      \"Use a hin- or her- compound as a separable verb prefix, split from its stem in a conjugated sentence. Example: 'Er ging die Treppe hinauf.' or 'Sie kam hereingelaufen.'\",\n    share: 2,\n  },\n  {\n    id: \"hin-her-bare\",\n    directive:\n      \"Use bare hin or bare her (not compounded with a preposition) to express direction away from or toward the speaker. Example: 'Geh hin!' or 'Komm her!'\",\n    share: 2,\n  },\n  {\n    id: \"wo-hin-her-split-question\",\n    directive:\n      \"Form a split directional question with Wo … hin? or Wo … her?, placing hin or her at the end of the clause. Example: 'Wo gehst du hin?' or 'Wo kommst du her?'\",\n    share: 2,\n  },\n  {\n    id: \"colloquial-variants\",\n    directive:\n      \"Use a colloquial short form (rein, raus, rüber, runter, rauf) in place of the full herein/hinein etc. compound, in an informal register. Example: 'Komm rein!' or 'Er ist rausgegangen.'\",\n    share: 1,\n  },\n],",
+        "notes": "hin-her-compounds held a 67 % monopoly while bare hin/her and the split-question pattern had near-zero coverage; shares are set so compounds keep a plurality (3/10) without crowding out the four underrepresented variants. colloquial-variants is marked non-load-bearing in the data so it receives the minimum share of 1."
+      }
+    },
+    {
+      "cellKey": "de-b1-konjunktiv-ii-past:sentence_construction",
+      "grammarPointKey": "de-b1-konjunktiv-ii-past",
+      "grammarPointName": "Konjunktiv II past (hätte/wäre + participle)",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "waere-participle-standalone",
+          "label": "wäre + past participle (sein-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "haette-participle-standalone",
+          "label": "hätte + past participle (haben-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        },
+        {
+          "id": "waere-participle-standalone",
+          "label": "wäre + past participle (sein-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wenn-clause-konjunktiv-ii-past",
+          "label": "Wenn-clause with Konjunktiv II past (unreal past condition)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.7916666666666666
+        },
+        {
+          "id": "beinahe-fast-konjunktiv-ii-past",
+          "label": "beinahe/fast + wäre/hätte + participle (near-event)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"wenn-clause-konjunktiv-ii-past\",\n    directive: \"Write a sentence using a Wenn-clause with Konjunktiv II past (hätte/wäre + past participle) expressing an unreal past condition and its consequence, e.g. 'Wenn ich früher aufgestanden wäre, hätte ich den Zug nicht verpasst.'\",\n    share: 3,\n  },\n  {\n    id: \"haette-participle-standalone\",\n    directive: \"Write a standalone sentence (no Wenn-clause) using hätte + past participle of a haben-verb to express a regret or missed opportunity, e.g. 'Ich hätte mehr lernen sollen.'\",\n    share: 2,\n  },\n  {\n    id: \"waere-participle-standalone\",\n    directive: \"Write a standalone sentence (no Wenn-clause) using wäre + past participle of a sein-verb to express a counterfactual past event, e.g. 'Ich wäre lieber zu Hause geblieben.'\",\n    share: 2,\n  },\n  {\n    id: \"beinahe-fast-konjunktiv-ii-past\",\n    directive: \"Write a sentence using beinahe or fast with wäre or hätte + past participle to describe a near-event, e.g. 'Ich wäre beinahe vom Fahrrad gefallen.'\",\n    share: 1,\n  },\n],",
+        "notes": "The wenn-clause variant was crowding out all others at 79 % of sampled exercises; wäre-standalone and beinahe/fast had zero coverage. Shares 3-2-2-1 give wenn-clause a plurality (~37 %) while guaranteeing meaningful generation pressure on every variant, including the non-load-bearing beinahe/fast form."
+      }
+    },
+    {
+      "cellKey": "de-b1-konjunktiv-ii-past:translation",
+      "grammarPointKey": "de-b1-konjunktiv-ii-past",
+      "grammarPointName": "Konjunktiv II past (hätte/wäre + participle)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "waere-participle-standalone",
+          "label": "wäre + past participle (sein-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "haette-participle-standalone",
+          "label": "hätte + past participle (haben-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "waere-participle-standalone",
+          "label": "wäre + past participle (sein-verbs, standalone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wenn-clause-konjunktiv-ii-past",
+          "label": "Wenn-clause with Konjunktiv II past (unreal past condition)",
+          "mustRepresent": true,
+          "count": 22,
+          "share": 0.9166666666666666
+        },
+        {
+          "id": "beinahe-fast-konjunktiv-ii-past",
+          "label": "beinahe/fast + wäre/hätte + participle (near-event)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"wenn-clause-konjunktiv-ii-past\",\n    directive: \"Write a Konjunktiv II past sentence using a Wenn-clause expressing an unreal past condition, e.g. 'Wenn ich früher aufgestanden wäre, hätte ich den Zug noch erwischt.'\",\n    share: 3,\n  },\n  {\n    id: \"haette-participle-standalone\",\n    directive: \"Write a standalone Konjunktiv II past sentence using hätte + past participle (haben-verb, no Wenn-clause), e.g. 'Ich hätte das Angebot annehmen sollen.'\",\n    share: 1,\n  },\n  {\n    id: \"waere-participle-standalone\",\n    directive: \"Write a standalone Konjunktiv II past sentence using wäre + past participle (sein-verb, no Wenn-clause), e.g. 'Sie wäre lieber zu Hause geblieben.'\",\n    share: 1,\n  },\n  {\n    id: \"beinahe-fast-konjunktiv-ii-past\",\n    directive: \"Write a Konjunktiv II past sentence expressing a near-event using beinahe or fast with wäre/hätte + past participle, e.g. 'Er wäre beinahe vom Fahrrad gefallen.'\",\n    share: 1,\n  },\n],",
+        "notes": "The wenn-clause variant dominated the pool (22/24) while three constructions were severely under-represented or absent. Shares of 3-1-1-1 give the prototypical wenn-clause a plurality (~50%) while guaranteeing meaningful generation pressure on the standalone and beinahe/fast variants. The beinahe/fast variant is marked not load-bearing in the spec but is included here so the pool is not entirely void of it."
+      }
+    },
+    {
+      "cellKey": "de-b1-n-declension:cloze",
+      "grammarPointKey": "de-b1-n-declension",
+      "grammarPointName": "n-declension (weak masculine nouns)",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "herr-oblique-herrn",
+          "label": "Herr -> Herrn in oblique cases",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "name-subtype-genitive-ns",
+          "label": "Name-subtype: genitive -(e)ns (des Namens, des Gedankens)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-masc-oblique-en",
+          "label": "Standard weak masculine: -(e)n in all oblique cases",
+          "mustRepresent": true,
+          "count": 23,
+          "share": 1
+        },
+        {
+          "id": "herr-oblique-herrn",
+          "label": "Herr -> Herrn in oblique cases",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "name-subtype-genitive-ns",
+          "label": "Name-subtype: genitive -(e)ns (des Namens, des Gedankens)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "herz-mixed-declension",
+          "label": "das Herz: mixed n-declension pattern",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weak-masc-oblique-en\",\n    directive:\n      \"Write a sentence using a standard weak masculine noun (e.g. Kollege, Student, Mensch, Nachbar, Junge) in an oblique case (accusative, dative, or genitive) so that the -(e)n ending is clearly visible, e.g. 'Ich habe den Studenten angerufen.'\",\n    share: 3,\n  },\n  {\n    id: \"herr-oblique-herrn\",\n    directive:\n      \"Write a sentence in which 'Herr' appears in an oblique case (accusative, dative, or genitive) and takes the form 'Herrn', e.g. 'Wir haben Herrn Müller gestern getroffen.' or 'Das Paket gehört Herrn Schmidt.'\",\n    share: 1,\n  },\n  {\n    id: \"name-subtype-genitive-ns\",\n    directive:\n      \"Write a sentence that requires the genitive -(e)ns form of a Name-subtype noun (Name → des Namens, Gedanke → des Gedankens, Wille → des Willens), e.g. 'Der Name des Studenten fehlt auf der Liste.' or 'Die Kraft des Willens ist beeindruckend.'\",\n    share: 1,\n  },\n  {\n    id: \"herz-mixed-declension\",\n    directive:\n      \"Write a sentence using 'das Herz' in an oblique case that shows its mixed n-declension pattern (dative: dem Herzen; genitive: des Herzens), e.g. 'Er sprach mit gebrochenem Herzen.' or 'Der Schmerz des Herzens war spürbar.'\",\n    share: 1,\n  },\n],",
+        "notes": "Three variants were at 0/24 coverage; adding explicit directives with concrete exemplars forces the generator to target each sub-construction. The prototypical weak-masc-oblique-en variant keeps share 3 (≈ 50 % of the pool) while the three gap variants each get share 1, giving roughly equal exposure to the underrepresented patterns. herz-mixed-declension is marked not load-bearing in the spec but is included here so it can accumulate organic coverage without being excluded."
+      }
+    },
+    {
+      "cellKey": "de-b1-n-declension:translation",
+      "grammarPointKey": "de-b1-n-declension",
+      "grammarPointName": "n-declension (weak masculine nouns)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "herr-oblique-herrn",
+          "label": "Herr -> Herrn in oblique cases",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "name-subtype-genitive-ns",
+          "label": "Name-subtype: genitive -(e)ns (des Namens, des Gedankens)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-masc-oblique-en",
+          "label": "Standard weak masculine: -(e)n in all oblique cases",
+          "mustRepresent": true,
+          "count": 23,
+          "share": 1
+        },
+        {
+          "id": "herr-oblique-herrn",
+          "label": "Herr -> Herrn in oblique cases",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "name-subtype-genitive-ns",
+          "label": "Name-subtype: genitive -(e)ns (des Namens, des Gedankens)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "herz-mixed-declension",
+          "label": "das Herz: mixed n-declension pattern",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weak-masc-oblique-en\",\n    directive:\n      \"Write a sentence using a standard weak masculine noun (e.g. Kollege, Student, Mensch, Junge, Nachbar) in an oblique case (accusative, dative, or genitive) so that the -(e)n ending is clearly visible, e.g. 'Ich habe den Studenten gefragt.'\",\n    share: 3,\n  },\n  {\n    id: \"herr-oblique-herrn\",\n    directive:\n      \"Write a sentence in which 'Herr' appears in an oblique case (accusative, dative, or genitive) and takes the form 'Herrn', e.g. 'Wir haben Herrn Müller eingeladen.' or 'Sie sprach mit Herrn Schmidt.'\",\n    share: 1,\n  },\n  {\n    id: \"name-subtype-genitive-ns\",\n    directive:\n      \"Write a sentence that requires the genitive -(e)ns form of a Name-subtype noun (Name, Gedanke, or Wille), e.g. 'Der Name des Gedankens war schwer zu merken.' or 'Die Bedeutung des Namens ist unklar.'\",\n    share: 1,\n  },\n  {\n    id: \"herz-mixed-declension\",\n    directive:\n      \"Write a sentence using 'das Herz' in an oblique case that shows its mixed n-declension pattern (dative: dem Herzen; genitive: des Herzens), e.g. 'Er sprach mit gebrochenem Herzen.' or 'Der Schmerz des Herzens war spürbar.'\",\n    share: 1,\n  },\n],",
+        "notes": "Three variants were completely unsampled (0/24): herr-oblique-herrn, name-subtype-genitive-ns, and herz-mixed-declension. Share 3:1:1:1 gives the prototypical weak-masc-oblique-en a plurality (~50%) while guaranteeing the three gap variants each target ~17% of the pool. herz-mixed-declension is marked not load-bearing in the spec but is included at share 1 so it receives light, consistent coverage without dominating."
+      }
+    },
+    {
+      "cellKey": "de-b1-passive-werden:translation",
+      "grammarPointKey": "de-b1-passive-werden",
+      "grammarPointName": "Passive: past tenses and with modals",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "passive-perfekt-worden",
+          "label": "Passive Perfekt with 'worden' (ist + Partizip II + worden)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "passive-praeteritum",
+          "label": "Passive Präteritum (wurde + Partizip II)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "passive-perfekt-worden",
+          "label": "Passive Perfekt with 'worden' (ist + Partizip II + worden)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "passive-modal",
+          "label": "Passive with modal verb (modal + Partizip II + werden)",
+          "mustRepresent": true,
+          "count": 18,
+          "share": 0.75
+        },
+        {
+          "id": "passive-agent-von-durch",
+          "label": "Agent phrase with 'von' (people/causers) vs. 'durch' (means/intermediary)",
+          "mustRepresent": false,
+          "count": 3,
+          "share": 0.125
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"passive-modal\",\n    directive: \"Write a sentence using a modal-verb passive (modal + Partizip II + werden). Example: 'Das Formular muss vollständig ausgefüllt werden.'\",\n    share: 3,\n  },\n  {\n    id: \"passive-praeteritum\",\n    directive: \"Write a sentence using the Präteritum passive (wurde + Partizip II). Example: 'Der Brief wurde gestern geschrieben.'\",\n    share: 3,\n  },\n  {\n    id: \"passive-perfekt-worden\",\n    directive: \"Write a sentence using the Perfekt passive with 'worden' (ist/sind + Partizip II + worden). Example: 'Das Gesetz ist 2002 eingeführt worden.'\",\n    share: 3,\n  },\n  {\n    id: \"passive-agent-von-durch\",\n    directive: \"Write a passive sentence (any tense) that includes an explicit agent phrase: use 'von' for a person or causer (e.g. 'von der Ärztin'), or 'durch' for a means or intermediary (e.g. 'durch einen Sturm'). Example: 'Das Paket wurde von einem Kurier gebracht.' / 'Die Brücke wurde durch den Sturm zerstört.'\",\n    share: 3,\n  },\n],",
+        "notes": "passive-modal was dominating at 75 % of sampled exercises while passive-perfekt-worden had zero coverage. Equal shares of 3 force the generator to distribute evenly across all four constructions, giving each a target of ~25 % of the pool without letting any single variant crowd out the others."
+      }
+    },
+    {
+      "cellKey": "de-b1-plusquamperfekt-nachdem:cloze",
+      "grammarPointKey": "de-b1-plusquamperfekt-nachdem",
+      "grammarPointName": "Plusquamperfekt and nachdem",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "hatte-vs-war-auxiliary-choice",
+          "label": "Choosing hatte vs war as Plusquamperfekt auxiliary",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nachdem-plusquamperfekt-praeteritum",
+          "label": "nachdem + Plusquamperfekt → Präteritum/Perfekt main clause",
+          "mustRepresent": true,
+          "count": 24,
+          "share": 1
+        },
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "hatte-vs-war-auxiliary-choice",
+          "label": "Choosing hatte vs war as Plusquamperfekt auxiliary",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "plusquamperfekt-standalone-anteriority",
+          "label": "Plusquamperfekt without nachdem to mark anteriority (e.g. with als)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nachdem-plusquamperfekt-praeteritum\",\n    directive: \"Write a sentence using 'nachdem' where the subordinate clause contains the Plusquamperfekt (hatte/war + Partizip II) and the main clause uses the Präteritum or Perfekt. Example: 'Nachdem wir gegessen hatten, gingen wir spazieren.'\",\n    share: 3,\n  },\n  {\n    id: \"nachdem-perfekt-present-future\",\n    directive: \"Write a sentence using 'nachdem' where the subordinate clause contains the Perfekt (haben/sein + Partizip II) and the main clause uses the Präsens or Futur. Example: 'Nachdem ich gegessen habe, gehe ich spazieren.'\",\n    share: 1,\n  },\n  {\n    id: \"hatte-vs-war-auxiliary-choice\",\n    directive: \"Write a Plusquamperfekt sentence that requires choosing between 'hatte' and 'war' as the auxiliary — use a motion or change-of-state verb that takes 'war' (e.g. 'fahren', 'einschlafen', 'ankommen'). Example: 'Nachdem sie eingeschlafen war, löschte er das Licht.'\",\n    share: 1,\n  },\n  {\n    id: \"plusquamperfekt-standalone-anteriority\",\n    directive: \"Write a sentence that expresses past-before-past using the Plusquamperfekt WITHOUT 'nachdem' — use a temporal connector such as 'als', 'bevor', or an adverb like 'schon'. Example: 'Ich war schon eingeschlafen, als du angerufen hast.'\",\n    share: 1,\n  },\n],",
+        "notes": "The exercise pool was entirely saturated by the prototypical nachdem + Plusquamperfekt → Präteritum pattern; the three zero-coverage variants are now each given share 1 against the prototype's share 3, targeting roughly 50 % prototype / 50 % spread. The standalone-anteriority variant (marked not load-bearing) is included at share 1 rather than excluded, because it appears in the point's own positive examples and zero coverage is a meaningful gap."
+      }
+    },
+    {
+      "cellKey": "de-b1-plusquamperfekt-nachdem:sentence_construction",
+      "grammarPointKey": "de-b1-plusquamperfekt-nachdem",
+      "grammarPointName": "Plusquamperfekt and nachdem",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "hatte-vs-war-auxiliary-choice",
+          "label": "Choosing hatte vs war as Plusquamperfekt auxiliary",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nachdem-plusquamperfekt-praeteritum",
+          "label": "nachdem + Plusquamperfekt → Präteritum/Perfekt main clause",
+          "mustRepresent": true,
+          "count": 24,
+          "share": 1
+        },
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "hatte-vs-war-auxiliary-choice",
+          "label": "Choosing hatte vs war as Plusquamperfekt auxiliary",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "plusquamperfekt-standalone-anteriority",
+          "label": "Plusquamperfekt without nachdem to mark anteriority (e.g. with als)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nachdem-plusquamperfekt-praeteritum\",\n    directive: \"Write a sentence using 'nachdem' where the subordinate clause contains a Plusquamperfekt (hatte/war + Partizip II) and the main clause uses Präteritum or Perfekt. Example: 'Nachdem wir gegessen hatten, gingen wir spazieren.'\",\n    share: 3,\n  },\n  {\n    id: \"nachdem-perfekt-present-future\",\n    directive: \"Write a sentence using 'nachdem' where the subordinate clause contains a Perfekt (haben/sein + Partizip II) and the main clause uses present tense or future tense. Example: 'Nachdem ich gegessen habe, gehe ich spazieren.'\",\n    share: 1,\n  },\n  {\n    id: \"hatte-vs-war-auxiliary-choice\",\n    directive: \"Write a Plusquamperfekt sentence that requires choosing between 'hatte' and 'war' as the auxiliary — use a motion or change-of-state verb requiring 'war' (e.g. 'war gegangen', 'war eingeschlafen') alongside or contrasted with a transitive verb requiring 'hatte'. Example: 'Nachdem sie eingeschlafen war, hatte er das Licht ausgemacht.'\",\n    share: 1,\n  },\n  {\n    id: \"plusquamperfekt-standalone-anteriority\",\n    directive: \"Write a sentence that expresses past-before-past anteriority using the Plusquamperfekt WITHOUT 'nachdem' — use a connector such as 'als', 'weil', or 'da' instead, or use the Plusquamperfekt in the main clause. Example: 'Ich war schon eingeschlafen, als du angerufen hast.'\",\n    share: 1,\n  },\n],",
+        "notes": "The exercise pool was entirely saturated by the prototypical 'nachdem + Plusquamperfekt → Präteritum' pattern (24/24), leaving three constructions at zero coverage. The share-3 / share-1 / share-1 / share-1 weighting targets ~50% for the prototype while guaranteeing meaningful generation pressure on all three uncovered variants; 'plusquamperfekt-standalone-anteriority' is flagged not load-bearing in the data but is retained at share 1 because it is explicitly taught by the point's description and positive examples."
+      }
+    },
+    {
+      "cellKey": "de-b1-plusquamperfekt-nachdem:translation",
+      "grammarPointKey": "de-b1-plusquamperfekt-nachdem",
+      "grammarPointName": "Plusquamperfekt and nachdem",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nachdem-plusquamperfekt-praeteritum",
+          "label": "nachdem + Plusquamperfekt → Präteritum/Perfekt main clause",
+          "mustRepresent": true,
+          "count": 22,
+          "share": 0.9166666666666666
+        },
+        {
+          "id": "nachdem-perfekt-present-future",
+          "label": "nachdem + Perfekt → present/future main clause",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "hatte-vs-war-auxiliary-choice",
+          "label": "Choosing hatte vs war as Plusquamperfekt auxiliary",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "plusquamperfekt-standalone-anteriority",
+          "label": "Plusquamperfekt without nachdem to mark anteriority (e.g. with als)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nachdem-plusquamperfekt-praeteritum\",\n    directive:\n      \"Write a sentence using 'nachdem' where the subordinate clause contains a Plusquamperfekt (hatte/war + Partizip II) and the main clause uses Präteritum or Perfekt. Example: 'Nachdem wir gegessen hatten, gingen wir spazieren.'\",\n    share: 3,\n  },\n  {\n    id: \"nachdem-perfekt-present-future\",\n    directive:\n      \"Write a sentence using 'nachdem' where the subordinate clause contains a Perfekt (haben/sein + Partizip II) and the main clause uses Präsens or Futur I. Example: 'Nachdem ich gegessen habe, gehe ich spazieren.'\",\n    share: 3,\n  },\n  {\n    id: \"hatte-vs-war-auxiliary-choice\",\n    directive:\n      \"Write a Plusquamperfekt sentence (with or without 'nachdem') that requires deliberate choice between 'hatte' and 'war' as the auxiliary — use a motion or change-of-state verb that takes 'war'. Example: 'Nachdem sie eingeschlafen war, löschte er das Licht.'\",\n    share: 2,\n  },\n  {\n    id: \"plusquamperfekt-standalone-anteriority\",\n    directive:\n      \"Write a sentence that expresses past-before-past WITHOUT 'nachdem', using the Plusquamperfekt in a clause introduced by 'als', 'weil', or as a standalone statement. Example: 'Ich war schon eingeschlafen, als du angerufen hast.'\",\n    share: 2,\n  },\n],",
+        "notes": "The pool is almost entirely nachdem + Plusquamperfekt → Präteritum exercises; the nachdem + Perfekt → present/future pairing and standalone anteriority (als etc.) have zero coverage. Shares are set so the dominant variant gets a plurality (~30 %) while the two zero-coverage variants each claim ~20 %, forcing meaningful diversification without over-correcting away from the prototypical construction."
+      }
+    },
+    {
+      "cellKey": "de-b1-statt-ohne-zu:cloze",
+      "grammarPointKey": "de-b1-statt-ohne-zu",
+      "grammarPointName": "(an)statt/ohne … zu and (an)statt/ohne dass",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "statt-ohne-dass-clause",
+          "label": "(an)statt dass / ohne dass + full subordinate clause (different subjects)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "statt-ohne-zu-infinitive",
+          "label": "(an)statt/ohne … zu + infinitive (same subject)",
+          "mustRepresent": true,
+          "count": 24,
+          "share": 1
+        },
+        {
+          "id": "statt-ohne-dass-clause",
+          "label": "(an)statt dass / ohne dass + full subordinate clause (different subjects)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"statt-ohne-zu-infinitive\",\n    directive: \"Use (an)statt … zu or ohne … zu with an infinitive clause where both clauses share the same subject, e.g. 'Er verließ den Raum, ohne ein Wort zu sagen.'\",\n    share: 3,\n  },\n  {\n    id: \"statt-ohne-dass-clause\",\n    directive: \"Use (an)statt dass or ohne dass with a full subordinate clause where the two clauses have different subjects, e.g. 'Sie half mir, ohne dass ich fragen musste.'\",\n    share: 3,\n  },\n],",
+        "notes": "The dass-clause variant was completely absent (0/24). Equal shares of 3 are assigned to both variants so neither dominates, directly targeting the zero-coverage gap without over-correcting."
+      }
+    },
+    {
+      "cellKey": "de-b1-two-part-conjunctions:translation",
+      "grammarPointKey": "de-b1-two-part-conjunctions",
+      "grammarPointName": "Two-part conjunctions",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "sowohl-als-auch",
+          "label": "sowohl … als auch (both … and)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "entweder-oder",
+          "label": "entweder … oder (either … or)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nicht-nur-sondern-auch",
+          "label": "nicht nur … sondern auch (not only … but also)",
+          "mustRepresent": true,
+          "count": 13,
+          "share": 0.5416666666666666
+        },
+        {
+          "id": "sowohl-als-auch",
+          "label": "sowohl … als auch (both … and)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "weder-noch",
+          "label": "weder … noch (neither … nor, no nicht)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "entweder-oder",
+          "label": "entweder … oder (either … or)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zwar-aber",
+          "label": "zwar … aber (admittedly … but)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "je-desto-umso",
+          "label": "je … desto/umso + comparative (the more … the more)",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.2916666666666667
+        },
+        {
+          "id": "und-zwar",
+          "label": "und zwar (namely / that is)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nicht-nur-sondern-auch\",\n    directive: \"Use the two-part conjunction 'nicht nur … sondern auch' (not only … but also). Example: 'Sie spricht nicht nur Spanisch, sondern auch Türkisch.'\",\n    share: 3,\n  },\n  {\n    id: \"sowohl-als-auch\",\n    directive: \"Use the two-part conjunction 'sowohl … als auch' (both … and). Example: 'Er spricht sowohl Deutsch als auch Englisch.'\",\n    share: 2,\n  },\n  {\n    id: \"weder-noch\",\n    directive: \"Use the two-part conjunction 'weder … noch' (neither … nor) without 'nicht'. Example: 'Er isst weder Fleisch noch Fisch.'\",\n    share: 2,\n  },\n  {\n    id: \"entweder-oder\",\n    directive: \"Use the two-part conjunction 'entweder … oder' (either … or). Example: 'Entweder kommst du mit, oder ich gehe allein.'\",\n    share: 2,\n  },\n  {\n    id: \"zwar-aber\",\n    directive: \"Use the two-part conjunction 'zwar … aber' (admittedly … but). Example: 'Das Buch ist zwar lang, aber sehr interessant.'\",\n    share: 2,\n  },\n  {\n    id: \"je-desto-umso\",\n    directive: \"Use the two-part conjunction 'je … desto' or 'je … umso' with comparatives; the je-clause must be verb-final and the desto/umso-clause must have subject-verb inversion. Example: 'Je mehr ich lerne, desto besser verstehe ich die Grammatik.'\",\n    share: 2,\n  },\n  {\n    id: \"und-zwar\",\n    directive: \"Use 'und zwar' (namely / that is) to append a specification to a preceding clause. Example: 'Ich komme morgen, und zwar um acht.'\",\n    share: 1,\n  },\n],",
+        "notes": "Four variants had zero realized exercises (sowohl-als-auch, entweder-oder, und-zwar) or near-zero (weder-noch, zwar-aber); nicht-nur-sondern-auch was dominating at 13/24. Shares give nicht-nur-sondern-auch a plurality (3) while distributing the remaining weight evenly across the five core variants (2 each) and down-weighting und-zwar (1) as non-load-bearing, targeting roughly 21% / 14% / 14% / 14% / 14% / 14% / 7% of the pool."
+      }
+    },
+    {
+      "cellKey": "de-b1-zu-infinitive:cloze",
+      "grammarPointKey": "de-b1-zu-infinitive",
+      "grammarPointName": "Infinitive with zu",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "zu-infinitive-after-noun",
+          "label": "zu-infinitive after noun (Lust, Zeit, Angst…)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "brauchen-nicht-zu",
+          "label": "nicht/nur brauchen + zu-infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-infinitive-no-zu",
+          "label": "Bare infinitive after modals and gehen/sehen/hören/lassen (no zu)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "zu-infinitive-after-verb",
+          "label": "zu-infinitive after verb (versuchen, vergessen, anfangen…)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "zu-infinitive-after-noun",
+          "label": "zu-infinitive after noun (Lust, Zeit, Angst…)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zu-infinitive-after-adjective",
+          "label": "zu-infinitive after adjective (wichtig, schwierig…)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "zu-inside-separable-verb",
+          "label": "zu inserted inside separable verb (an-zu-rufen)",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.5
+        },
+        {
+          "id": "brauchen-nicht-zu",
+          "label": "nicht/nur brauchen + zu-infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-infinitive-no-zu",
+          "label": "Bare infinitive after modals and gehen/sehen/hören/lassen (no zu)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"zu-infinitive-after-verb\",\n    directive: \"Write a sentence using a zu-infinitive clause after a verb such as versuchen, vergessen, or anfangen. Example: 'Sie versucht, jeden Tag zu laufen.'\",\n    share: 3,\n  },\n  {\n    id: \"zu-infinitive-after-noun\",\n    directive: \"Write a sentence using a zu-infinitive clause after a noun such as Lust, Zeit, or Angst. Example: 'Er hat keine Lust, heute zu kochen.'\",\n    share: 2,\n  },\n  {\n    id: \"zu-infinitive-after-adjective\",\n    directive: \"Write a sentence using a zu-infinitive clause after a predicate adjective such as wichtig, schwierig, or schön. Example: 'Es ist schwierig, diese Aufgabe zu lösen.'\",\n    share: 2,\n  },\n  {\n    id: \"zu-inside-separable-verb\",\n    directive: \"Write a sentence where zu is inserted inside a separable verb in the infinitive, splitting the prefix from the stem. Example: 'Ich habe vergessen, dich anzurufen.'\",\n    share: 1,\n  },\n  {\n    id: \"brauchen-nicht-zu\",\n    directive: \"Write a sentence using nicht brauchen or nur brauchen followed by a zu-infinitive. Example: 'Du brauchst nicht zu warten.'\",\n    share: 2,\n  },\n  {\n    id: \"bare-infinitive-no-zu\",\n    directive: \"Write a sentence using a bare infinitive (no zu) after a modal verb or after gehen, sehen, hören, or lassen. Example: 'Sie lässt das Kind draußen spielen.'\",\n    share: 2,\n  },\n],",
+        "notes": "Three variants had zero realized exercises (zu-infinitive-after-noun, brauchen-nicht-zu, bare-infinitive-no-zu) and one was over-represented (zu-inside-separable-verb at 50%). Shares are set to give the prototypical after-verb construction a plurality (3) while lifting all zero-coverage variants to share 2, and capping the already-saturated separable-verb variant at share 1."
+      }
+    },
+    {
+      "cellKey": "de-b1-zu-infinitive:translation",
+      "grammarPointKey": "de-b1-zu-infinitive",
+      "grammarPointName": "Infinitive with zu",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "zu-infinitive-after-noun",
+          "label": "zu-infinitive after noun (Lust, Zeit, Angst…)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "brauchen-nicht-zu",
+          "label": "nicht/nur brauchen + zu-infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-infinitive-no-zu",
+          "label": "Bare infinitive after modals and gehen/sehen/hören/lassen (no zu)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "zu-infinitive-after-verb",
+          "label": "zu-infinitive after verb (versuchen, vergessen, anfangen…)",
+          "mustRepresent": true,
+          "count": 13,
+          "share": 0.5416666666666666
+        },
+        {
+          "id": "zu-infinitive-after-noun",
+          "label": "zu-infinitive after noun (Lust, Zeit, Angst…)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zu-infinitive-after-adjective",
+          "label": "zu-infinitive after adjective (wichtig, schwierig…)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "zu-inside-separable-verb",
+          "label": "zu inserted inside separable verb (an-zu-rufen)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        },
+        {
+          "id": "brauchen-nicht-zu",
+          "label": "nicht/nur brauchen + zu-infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-infinitive-no-zu",
+          "label": "Bare infinitive after modals and gehen/sehen/hören/lassen (no zu)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"zu-infinitive-after-verb\",\n    directive: \"Write a sentence using a zu-infinitive clause after a verb such as versuchen, vergessen, or anfangen. Example: 'Sie versucht, jeden Tag zu laufen.'\",\n    share: 3,\n  },\n  {\n    id: \"zu-infinitive-after-noun\",\n    directive: \"Write a sentence using a zu-infinitive clause after a noun such as Lust, Zeit, or Angst. Example: 'Er hat keine Lust, heute zu arbeiten.'\",\n    share: 2,\n  },\n  {\n    id: \"zu-infinitive-after-adjective\",\n    directive: \"Write a sentence using a zu-infinitive clause after a predicate adjective such as wichtig, schwierig, or schön. Example: 'Es ist schwierig, das richtig auszusprechen.'\",\n    share: 2,\n  },\n  {\n    id: \"zu-inside-separable-verb\",\n    directive: \"Write a sentence where zu is inserted inside a separable verb in the infinitive, such as anzurufen, aufzuhören, or mitzumachen. Example: 'Ich habe vergessen, dich anzurufen.'\",\n    share: 2,\n  },\n  {\n    id: \"brauchen-nicht-zu\",\n    directive: \"Write a sentence using nicht brauchen or nur brauchen followed by a zu-infinitive. Example: 'Du brauchst nicht zu warten.'\",\n    share: 2,\n  },\n  {\n    id: \"bare-infinitive-no-zu\",\n    directive: \"Write a sentence using a bare infinitive (no zu) after a modal verb or after gehen, sehen, hören, or lassen. Example: 'Sie lässt das Kind draußen spielen.'\",\n    share: 2,\n  },\n],",
+        "notes": "Three constructions (zu-infinitive-after-noun, brauchen-nicht-zu, bare-infinitive-no-zu) had zero realized exercises in 24 samples and are the critical gaps. The prototypical after-verb construction gets share 3 for plurality, while all five other variants each get share 2 to ensure the pool is spread across all six sub-constructions without any single one dominating."
+      }
+    },
+    {
+      "cellKey": "de-b1-dative-reflexive-body:cloze",
+      "grammarPointKey": "de-b1-dative-reflexive-body",
+      "grammarPointName": "Dative of involvement: body parts and benefactives",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 15,
+      "classified": 15,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "dative-benefactive",
+          "label": "Benefactive dative (doing something for someone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "dative-reflexive-body-part",
+          "label": "Dative reflexive with body part / clothing (self-directed)",
+          "mustRepresent": true,
+          "count": 14,
+          "share": 0.9333333333333333
+        },
+        {
+          "id": "dative-third-party-body-part",
+          "label": "Dative of affected person with body part / clothing (other-directed)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.06666666666666667
+        },
+        {
+          "id": "dative-benefactive",
+          "label": "Benefactive dative (doing something for someone)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "dative-involuntary-involvement",
+          "label": "Dative of involuntary involvement / malefactive",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"dative-reflexive-body-part\",\n    directive: \"Write a sentence in which the subject performs an action on their own body part or clothing using a dative reflexive pronoun and the definite article instead of a possessive — e.g. 'Ich wasche mir die Hände.'\",\n    share: 3,\n  },\n  {\n    id: \"dative-third-party-body-part\",\n    directive: \"Write a sentence in which one person performs an action on another person's body part or clothing, using a dative pronoun or noun phrase and the definite article instead of a possessive — e.g. 'Die Mutter putzt dem Kind die Nase.'\",\n    share: 1,\n  },\n  {\n    id: \"dative-benefactive\",\n    directive: \"Write a sentence in which the dative marks a person who benefits from the action (benefactive dative), with no body part involved — e.g. 'Er trägt ihr den Koffer zum Auto.'\",\n    share: 1,\n  },\n  {\n    id: \"dative-involuntary-involvement\",\n    directive: \"Write a sentence in which the dative marks a person who is involuntarily affected by an undesirable event (malefactive / involuntary-involvement dative) — e.g. 'Mir ist die Tasse kaputtgegangen.'\",\n    share: 1,\n  },\n],",
+        "notes": "The pool was overwhelmingly dominated by the self-directed reflexive body-part construction (14/15); the three other constructions were near-zero. Shares of 3-1-1-1 target ~50 % for the prototypical variant while guaranteeing meaningful representation of the three under-covered constructions. The involuntary-involvement variant was flagged not load-bearing but is retained at share 1 so it is not silently dropped from the pool."
+      }
+    },
+    {
+      "cellKey": "de-b1-progressive-equivalents:translation",
+      "grammarPointKey": "de-b1-progressive-equivalents",
+      "grammarPointName": "Expressing the English progressive",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 15,
+      "classified": 14,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "beim-nominalized-infinitive",
+          "label": "beim + nominalized infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "gerade-present",
+          "label": "gerade + plain present",
+          "mustRepresent": true,
+          "count": 11,
+          "share": 0.7857142857142857
+        },
+        {
+          "id": "dabei-sein-zu-infinitive",
+          "label": "(gerade) dabei sein + zu-infinitive",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.21428571428571427
+        },
+        {
+          "id": "beim-nominalized-infinitive",
+          "label": "beim + nominalized infinitive",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "am-progressive-colloquial",
+          "label": "am + nominalized infinitive (colloquial/regional)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"gerade-present\",\n    directive: \"Use gerade + plain present tense to express an ongoing action. Example: 'Ich lese gerade ein gutes Buch.'\",\n    share: 3,\n  },\n  {\n    id: \"dabei-sein-zu-infinitive\",\n    directive: \"Use (gerade) dabei sein + zu-infinitive to express an ongoing action. Example: 'Sie ist gerade dabei, die Koffer zu packen.'\",\n    share: 1,\n  },\n  {\n    id: \"beim-nominalized-infinitive\",\n    directive: \"Use beim + nominalized infinitive (capitalized noun) to express an ongoing action. Example: 'Ich bin beim Kochen.'\",\n    share: 1,\n  },\n  {\n    id: \"am-progressive-colloquial\",\n    directive: \"Use am + nominalized infinitive in a colloquial/regional register to express an ongoing action. Example: 'Ich bin am Lesen.'\",\n    share: 1,\n  },\n],",
+        "notes": "gerade-present was dominating at ~73% of samples while beim-nominalized-infinitive and am-progressive-colloquial had zero coverage. Shares of 3-1-1-1 target gerade-present at ~50% of the pool, giving the three minority variants a fair combined half while keeping the prototypical construction in plurality. am-progressive-colloquial is marked non-load-bearing in the spec but is included at share 1 so it appears occasionally without distorting the pool."
+      }
+    },
+    {
+      "cellKey": "de-b1-modal-particles-basic:translation",
+      "grammarPointKey": "de-b1-modal-particles-basic",
+      "grammarPointName": "Modal particles I (denn, doch, eigentlich, ja, mal)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "coverage-spec",
+      "sampled": 14,
+      "classified": 14,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "ja-shared-knowledge-surprise",
+          "label": "'ja' marking shared knowledge or surprise",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "denn-softening-question",
+          "label": "'denn' softening a question",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.07142857142857142
+        },
+        {
+          "id": "doch-contradiction-urging",
+          "label": "'doch' marking contradiction or urging",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.42857142857142855
+        },
+        {
+          "id": "eigentlich-casual-aside",
+          "label": "'eigentlich' as casual aside / by the way",
+          "mustRepresent": false,
+          "count": 3,
+          "share": 0.21428571428571427
+        },
+        {
+          "id": "ja-shared-knowledge-surprise",
+          "label": "'ja' marking shared knowledge or surprise",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "mal-casualizing-request",
+          "label": "'mal' casualizing a request or imperative",
+          "mustRepresent": false,
+          "count": 4,
+          "share": 0.2857142857142857
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"particle\",\n      values: [\n        \"denn-softening-question\",\n        \"doch-contradiction-urging\",\n        \"eigentlich-casual-aside\",\n        \"ja-shared-knowledge-surprise\",\n        \"mal-casualizing-request\",\n      ],\n    },\n  ],\n  minApprovedPerValue: {\n    \"denn-softening-question\": 4,\n    \"doch-contradiction-urging\": 4,\n    \"eigentlich-casual-aside\": 3,\n    \"ja-shared-knowledge-surprise\": 4,\n    \"mal-casualizing-request\": 3,\n  },\n},",
+        "notes": "denn (1/14) and ja (0/14) are critically under-represented, so both receive a floor of 4. doch is already healthy at 6/14 but gets a floor of 4 to prevent future regression. The two load-bearing variants eigentlich and mal keep a lighter floor of 3, consistent with their \"not load-bearing\" status."
+      }
+    },
+    {
+      "cellKey": "de-b1-schon-noch-erst:cloze",
+      "grammarPointKey": "de-b1-schon-noch-erst",
+      "grammarPointName": "schon, noch, erst",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 14,
+      "classified": 14,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nicht-mehr-no-longer",
+          "label": "nicht mehr (no longer)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "erst-not-until",
+          "label": "erst (not until / later than expected)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "schon-already",
+          "label": "schon (already / earlier than expected)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.07142857142857142
+        },
+        {
+          "id": "noch-still",
+          "label": "noch (still / ongoing beyond expectation)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.21428571428571427
+        },
+        {
+          "id": "noch-nicht-not-yet",
+          "label": "noch nicht (not yet)",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.5
+        },
+        {
+          "id": "nicht-mehr-no-longer",
+          "label": "nicht mehr (no longer)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "erst-not-until",
+          "label": "erst (not until / later than expected)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "erst-scalar-restriction",
+          "label": "erst with quantity (only / as few as)",
+          "mustRepresent": false,
+          "count": 3,
+          "share": 0.21428571428571427
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"schon-already\",\n    directive: \"Write an exercise that requires the learner to use or identify 'schon' meaning 'already / earlier than expected', e.g. 'Bist du schon fertig?'\",\n    share: 3,\n  },\n  {\n    id: \"noch-still\",\n    directive: \"Write an exercise that requires the learner to use or identify 'noch' meaning 'still / ongoing beyond expectation', e.g. 'Er schläft noch.'\",\n    share: 2,\n  },\n  {\n    id: \"noch-nicht-not-yet\",\n    directive: \"Write an exercise that requires the learner to use or identify 'noch nicht' meaning 'not yet', e.g. 'Nein, ich bin noch nicht fertig.'\",\n    share: 2,\n  },\n  {\n    id: \"nicht-mehr-no-longer\",\n    directive: \"Write an exercise that requires the learner to use or identify 'nicht mehr' meaning 'no longer', e.g. 'Sie wohnt nicht mehr hier.'\",\n    share: 3,\n  },\n  {\n    id: \"erst-not-until\",\n    directive: \"Write an exercise that requires the learner to use or identify 'erst' meaning 'not until / later than expected', e.g. 'Er kommt erst um zehn Uhr.'\",\n    share: 3,\n  },\n  {\n    id: \"erst-scalar-restriction\",\n    directive: \"Write an exercise that requires the learner to use or identify 'erst' with a quantity meaning 'only / as few as' (implying more to come), e.g. 'Ich habe erst drei Seiten gelesen.'\",\n    share: 1,\n  },\n],",
+        "notes": "Both 'nicht-mehr-no-longer' and 'erst-not-until' had zero realized exercises despite being core teaching targets, so they receive the highest share (3) alongside 'schon-already'. The over-represented 'noch-nicht-not-yet' is capped at share 2, and the non-load-bearing 'erst-scalar-restriction' is kept at share 1 to prevent it crowding out the others."
+      }
+    },
+    {
+      "cellKey": "de-b1-schon-noch-erst:translation",
+      "grammarPointKey": "de-b1-schon-noch-erst",
+      "grammarPointName": "schon, noch, erst",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 14,
+      "classified": 14,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nicht-mehr-no-longer",
+          "label": "nicht mehr (no longer)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "schon-already",
+          "label": "schon (already / earlier than expected)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.14285714285714285
+        },
+        {
+          "id": "noch-still",
+          "label": "noch (still / ongoing beyond expectation)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.21428571428571427
+        },
+        {
+          "id": "noch-nicht-not-yet",
+          "label": "noch nicht (not yet)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.42857142857142855
+        },
+        {
+          "id": "nicht-mehr-no-longer",
+          "label": "nicht mehr (no longer)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "erst-not-until",
+          "label": "erst (not until / later than expected)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.14285714285714285
+        },
+        {
+          "id": "erst-scalar-restriction",
+          "label": "erst with quantity (only / as few as)",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.07142857142857142
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"schon-already\",\n    directive: \"Write an exercise targeting 'schon' meaning 'already / earlier than expected'. Use a context where something has happened sooner than anticipated, e.g. 'Bist du schon fertig?' or 'Er hat schon gegessen.'\",\n    share: 3,\n  },\n  {\n    id: \"noch-still\",\n    directive: \"Write an exercise targeting 'noch' meaning 'still / ongoing beyond expectation'. The situation must be continuing longer than expected, e.g. 'Sie schläft noch.' or 'Er wartet noch auf die Antwort.'\",\n    share: 2,\n  },\n  {\n    id: \"noch-nicht-not-yet\",\n    directive: \"Write an exercise targeting 'noch nicht' meaning 'not yet'. The action is expected but has not happened yet, e.g. 'Ich habe noch nicht gegessen.' or 'Das Paket ist noch nicht angekommen.'\",\n    share: 2,\n  },\n  {\n    id: \"nicht-mehr-no-longer\",\n    directive: \"Write an exercise targeting 'nicht mehr' meaning 'no longer / not anymore'. Something that was true has ceased to be, e.g. 'Sie wohnt nicht mehr hier.' or 'Er arbeitet nicht mehr bei der Firma.'\",\n    share: 3,\n  },\n  {\n    id: \"erst-not-until\",\n    directive: \"Write an exercise targeting 'erst' meaning 'not until / later than expected'. Use a time expression to show the delay feels later than desired, e.g. 'Er kommt erst um zehn Uhr.' or 'Der Zug fährt erst morgen ab.'\",\n    share: 3,\n  },\n  {\n    id: \"erst-scalar-restriction\",\n    directive: \"Write an exercise targeting 'erst' with a quantity meaning 'only / as few as', implying more is expected or will follow, e.g. 'Ich habe erst drei Seiten gelesen.' or 'Sie hat erst einen Kaffee getrunken.'\",\n    share: 1,\n  },\n],",
+        "notes": "nicht-mehr-no-longer was completely unrepresented (0/14) and schon-already and erst-not-until were severely under-sampled (2/14 each); shares are set to 3 for those three plus nicht-mehr to pull them to plurality without any single variant dominating. noch-nicht is already the strongest (6/14) so its share is held at 2 to let the pool rebalance. erst-scalar-restriction is marked not load-bearing and stays at share 1."
+      }
+    },
+    {
+      "cellKey": "de-b1-adjectives-as-nouns:cloze",
+      "grammarPointKey": "de-b1-adjectives-as-nouns",
+      "grammarPointName": "Adjectives as nouns",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "nominalized-adj-etwas-nichts",
+          "label": "Neuter abstract nominalization after etwas/nichts/viel (strong -es)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        }
+      ],
+      "counts": [
+        {
+          "id": "nominalized-adj-definite",
+          "label": "Nominalized adjective with definite article",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.34782608695652173
+        },
+        {
+          "id": "nominalized-adj-indefinite",
+          "label": "Nominalized adjective with indefinite article",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.5217391304347826
+        },
+        {
+          "id": "nominalized-adj-etwas-nichts",
+          "label": "Neuter abstract nominalization after etwas/nichts/viel (strong -es)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "nominalized-adj-superlative",
+          "label": "Nominalized superlative adjective (das Wichtigste)",
+          "mustRepresent": false,
+          "count": 2,
+          "share": 0.08695652173913043
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nominalized-adj-indefinite\",\n    directive: \"Write a sentence using a nominalized adjective or participle with an indefinite article (or no article), correctly declined as a noun. Example: 'Ein Bekannter von mir wohnt in Wien.'\",\n    share: 3,\n  },\n  {\n    id: \"nominalized-adj-definite\",\n    directive: \"Write a sentence using a nominalized adjective or participle with a definite article, correctly capitalized and declined. Example: 'Die Deutschen feiern gern.'\",\n    share: 2,\n  },\n  {\n    id: \"nominalized-adj-etwas-nichts\",\n    directive: \"Write a sentence using a neuter abstract nominalized adjective after 'etwas', 'nichts', or 'viel', with the strong -es ending. Example: 'Gibt es etwas Neues?' or 'Er hat nichts Besonderes gesagt.'\",\n    share: 2,\n  },\n  {\n    id: \"nominalized-adj-superlative\",\n    directive: \"Write a sentence using a nominalized superlative adjective with a definite article, correctly capitalized. Example: 'Das Wichtigste kommt zum Schluss.'\",\n    share: 2,\n  },\n],",
+        "notes": "The etwas/nichts and superlative variants were severely under-represented (1/24 and 2/24). Shares are set to 3-2-2-2 so the prototypical indefinite form retains a plurality (~33%) without crowding out the three other constructions, each targeting ~22% of the pool."
+      }
+    },
+    {
+      "cellKey": "de-b1-articles-use:cloze",
+      "grammarPointKey": "de-b1-articles-use",
+      "grammarPointName": "Article use: generalizations, names and abstracts",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "definite-article-body-attribute-noun",
+          "label": "Definite article replacing possessive with body/attribute nouns",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "definite-article-generalization",
+          "label": "Definite article for generic/species generalizations",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "definite-article-abstract-mass-noun",
+          "label": "Definite article with abstract/mass nouns in general sense",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "definite-article-gendered-country-name",
+          "label": "Definite article with feminine/masculine/plural country names",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "definite-article-adjective-qualified-proper-name",
+          "label": "Definite article with adjective-qualified proper names",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "definite-article-body-attribute-noun",
+          "label": "Definite article replacing possessive with body/attribute nouns",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "no-article-bare-language-name",
+          "label": "Zero article with bare (unqualified) language names",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"definite-article-abstract-mass-noun\",\n    directive: \"Write a sentence using a definite article with an abstract or mass noun in its general sense (e.g., 'Die Geduld ist eine Tugend.'). Do NOT use a partitive or partial context.\",\n    share: 3,\n  },\n  {\n    id: \"definite-article-generalization\",\n    directive: \"Write a sentence using a definite article to make a generic species or class generalization (e.g., 'Der Mensch ist ein Gewohnheitstier.' or 'Die Katze ist ein Raubtier.').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-gendered-country-name\",\n    directive: \"Write a sentence using a definite article with a feminine, masculine, or plural country name (e.g., 'Sie kommt aus der Schweiz.', 'Er reist in den Iran.', 'Die Niederlande sind bekannt für ihre Tulpen.').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-adjective-qualified-proper-name\",\n    directive: \"Write a sentence in which an adjective-qualified proper name (person, country, city, or era) takes a definite article (e.g., 'Das heutige Deutschland hat sechzehn Bundesländer.', 'Der alte Goethe schrieb noch Gedichte.').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-body-attribute-noun\",\n    directive: \"Write a sentence in which the definite article replaces a possessive pronoun before a body-part or personal-attribute noun (e.g., 'Er hob die Hand.', 'Sie schüttelte den Kopf.', 'Ihm tat der Rücken weh.').\",\n    share: 2,\n  },\n],",
+        "notes": "The abstract/mass-noun variant dominated the pool (16/24) while four other constructions were near-zero; shares are set so abstract/mass stays the plurality (3) but each underrepresented variant gets an equal share (2), targeting roughly 27 % abstract/mass and ~18 % each for the rest. The non-load-bearing zero-article variant is intentionally omitted."
+      }
+    },
+    {
+      "cellKey": "de-b1-articles-use:translation",
+      "grammarPointKey": "de-b1-articles-use",
+      "grammarPointName": "Article use: generalizations, names and abstracts",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "definite-article-generalization",
+          "label": "Definite article for generic/species generalizations",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        }
+      ],
+      "counts": [
+        {
+          "id": "definite-article-generalization",
+          "label": "Definite article for generic/species generalizations",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "definite-article-abstract-mass-noun",
+          "label": "Definite article with abstract/mass nouns in general sense",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.43478260869565216
+        },
+        {
+          "id": "definite-article-gendered-country-name",
+          "label": "Definite article with feminine/masculine/plural country names",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.2608695652173913
+        },
+        {
+          "id": "definite-article-adjective-qualified-proper-name",
+          "label": "Definite article with adjective-qualified proper names",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.13043478260869565
+        },
+        {
+          "id": "definite-article-body-attribute-noun",
+          "label": "Definite article replacing possessive with body/attribute nouns",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.13043478260869565
+        },
+        {
+          "id": "no-article-bare-language-name",
+          "label": "Zero article with bare (unqualified) language names",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"definite-article-generalization\",\n    directive: \"Write a sentence using the definite article to make a generic generalization about a species or category of beings, following the pattern 'Der/Die/Das [Noun] + predicate' (e.g. 'Der Mensch ist ein Gewohnheitstier.').\",\n    share: 3,\n  },\n  {\n    id: \"definite-article-abstract-mass-noun\",\n    directive: \"Write a sentence using the definite article before an abstract or mass noun used in its fully general sense (e.g. 'Die Geduld ist eine Tugend.' — not a partitive/partial context like 'Er hat Geduld').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-gendered-country-name\",\n    directive: \"Write a sentence using the definite article with a feminine, masculine, or plural country name (e.g. 'Sie kommt aus der Schweiz.', 'Er reist in den Iran.', 'Wir fahren in die Niederlande.').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-adjective-qualified-proper-name\",\n    directive: \"Write a sentence in which an adjective-qualified proper name (person, country, or city) takes the definite article it would otherwise lack (e.g. 'Das heutige Deutschland hat sechzehn Bundesländer.', 'Der alte Goethe lebte in Weimar.').\",\n    share: 2,\n  },\n  {\n    id: \"definite-article-body-attribute-noun\",\n    directive: \"Write a sentence in which the definite article replaces a possessive pronoun before a body-part or personal-attribute noun, with the possessor identified by the subject or dative (e.g. 'Er hob die Hand.', 'Sie schüttelte den Kopf.', 'Ihm tat der Rücken weh.').\",\n    share: 2,\n  },\n  {\n    id: \"no-article-bare-language-name\",\n    directive: \"Write a sentence using a bare (unqualified) language name with no article (e.g. 'Sie spricht Deutsch.', 'Er lernt Arabisch.').\",\n    share: 1,\n  },\n],",
+        "notes": "The generalization variant was critically under-represented (1/24) so it receives the highest share (3) to pull it to ~25% of the pool; all other substantive variants get share 2 for balanced coverage. The non-load-bearing zero-article variant keeps share 1 so it stays present but doesn't crowd out the core constructions."
+      }
+    },
+    {
+      "cellKey": "de-b1-dass-clause-perfekt:translation",
+      "grammarPointKey": "de-b1-dass-clause-perfekt",
+      "grammarPointName": "dass-clauses with the Perfekt",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "dass-perfekt-sein",
+          "label": "dass-clause with Perfekt (sein auxiliary)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "dass-perfekt-haben",
+          "label": "dass-clause with Perfekt (haben auxiliary)",
+          "mustRepresent": true,
+          "count": 23,
+          "share": 0.9583333333333334
+        },
+        {
+          "id": "dass-perfekt-sein",
+          "label": "dass-clause with Perfekt (sein auxiliary)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"dass-perfekt-haben\",\n    directive: \"Write a dass-clause where the Perfekt is formed with 'haben': the past participle and 'hat/haben/hatte…' both appear at the end of the clause in that order. Example: 'Ich glaube, dass er das Buch gelesen hat.'\",\n    share: 3,\n  },\n  {\n    id: \"dass-perfekt-sein\",\n    directive: \"Write a dass-clause where the Perfekt is formed with 'sein': the past participle and 'ist/sind/war…' both appear at the end of the clause in that order. Example: 'Sie sagt, dass wir zu spät gekommen sind.'\",\n    share: 3,\n  },\n],",
+        "notes": "The sein-auxiliary variant was almost entirely absent (1/24). Equal shares of 3 are used here because neither variant is more prototypical than the other — both are core to the point — so the pool should be split evenly rather than giving either a plurality."
+      }
+    },
+    {
+      "cellKey": "de-b1-hin-her:translation",
+      "grammarPointKey": "de-b1-hin-her",
+      "grammarPointName": "Directional adverbs hin and her",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "hin-her-bare",
+          "label": "Bare hin / her (speaker perspective)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "hin-her-bare",
+          "label": "Bare hin / her (speaker perspective)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "hin-her-compounds",
+          "label": "Prepositional compounds (hinein/herein, hinaus/heraus, hinauf/herauf, hinunter/herunter)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.7916666666666666
+        },
+        {
+          "id": "colloquial-variants",
+          "label": "Colloquial short forms (rein/raus/runter etc.)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "separable-prefix",
+          "label": "hin/her compounds as separable verb prefixes",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "wo-hin-her-split-question",
+          "label": "Split questions Wo … hin? / Wo … her?",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"hin-her-compounds\",\n    directive: \"Use a prepositional compound of hin or her (hinein, herein, hinaus, heraus, hinauf, herauf, hinunter, herunter) as the core of the sentence. Example: 'Sie lief heraus.'\",\n    share: 3,\n  },\n  {\n    id: \"hin-her-bare\",\n    directive: \"Use bare 'hin' or 'her' (not compounded with a preposition) to express direction toward or away from the speaker. Example: 'Komm her!' or 'Geh hin!'\",\n    share: 1,\n  },\n  {\n    id: \"separable-prefix\",\n    directive: \"Use a hin- or her- compound as a separable verb prefix, split from its stem in a main clause. Example: 'Er sah zu ihr hinüber.' or 'Sie kam auf mich zu herüber.'\",\n    share: 1,\n  },\n  {\n    id: \"wo-hin-her-split-question\",\n    directive: \"Write a split question where 'hin' or 'her' is separated from 'wo' and placed at the end of the clause. Example: 'Wo gehst du hin?' or 'Wo kommst du her?'\",\n    share: 1,\n  },\n  {\n    id: \"colloquial-variants\",\n    directive: \"Use a colloquial short form (rein, raus, rauf, runter, rüber) in place of the full herein/hinein compound. Example: 'Komm rein!' or 'Er ist rausgegangen.'\",\n    share: 1,\n  },\n],",
+        "notes": "hin-her-compounds held a plurality at share 3 (≈ 37 % of pool) to preserve its dominant but non-monopolising role; the four underrepresented variants each receive share 1 to force meaningful rotation. colloquial-variants is marked non-load-bearing in the data but is included at share 1 so it appears occasionally without inflating its weight."
+      }
+    },
+    {
+      "cellKey": "de-b1-passive-werden:cloze",
+      "grammarPointKey": "de-b1-passive-werden",
+      "grammarPointName": "Passive: past tenses and with modals",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "passive-modal",
+          "label": "Passive with modal verb (modal + Partizip II + werden)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "passive-praeteritum",
+          "label": "Passive Präteritum (wurde + Partizip II)",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.375
+        },
+        {
+          "id": "passive-perfekt-worden",
+          "label": "Passive Perfekt with 'worden' (ist + Partizip II + worden)",
+          "mustRepresent": true,
+          "count": 14,
+          "share": 0.5833333333333334
+        },
+        {
+          "id": "passive-modal",
+          "label": "Passive with modal verb (modal + Partizip II + werden)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "passive-agent-von-durch",
+          "label": "Agent phrase with 'von' (people/causers) vs. 'durch' (means/intermediary)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"passive-praeteritum\",\n    directive: \"Write a sentence using the Passive Präteritum (wurde + Partizip II), e.g. 'Der Brief wurde gestern geschrieben.'\",\n    share: 3,\n  },\n  {\n    id: \"passive-perfekt-worden\",\n    directive: \"Write a sentence using the Passive Perfekt with 'worden' (ist/sind + Partizip II + worden), e.g. 'Das Gesetz ist 2002 eingeführt worden.'\",\n    share: 2,\n  },\n  {\n    id: \"passive-modal\",\n    directive: \"Write a sentence using the passive with a modal verb (modal + Partizip II + werden), e.g. 'Das Formular muss vollständig ausgefüllt werden.'\",\n    share: 3,\n  },\n  {\n    id: \"passive-agent-von-durch\",\n    directive: \"Write a passive sentence that includes an agent phrase: use 'von' for a person or causer (e.g. 'von der Ärztin'), or 'durch' for a means or intermediary (e.g. 'durch einen Sturm').\",\n    share: 1,\n  },\n],",
+        "notes": "passive-modal was critically under-represented (1/24) and passive-agent-von-durch was entirely absent (0/24); both receive boosted or equal share to force meaningful pool coverage. passive-praeteritum and passive-modal share 3 each to co-anchor the pool without letting any single variant dominate."
+      }
+    },
+    {
+      "cellKey": "de-b1-subordinate-conjunctions:sentence_construction",
+      "grammarPointKey": "de-b1-subordinate-conjunctions",
+      "grammarPointName": "Subordinating conjunctions and verb-final order",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "subject-verb-inversion-after-fronted-clause",
+          "label": "Subject-verb inversion in main clause after fronted subordinate clause",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "verb-final-subordinate-clause",
+          "label": "Verb-final order after subordinating conjunction",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "subject-verb-inversion-after-fronted-clause",
+          "label": "Subject-verb inversion in main clause after fronted subordinate clause",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "obwohl-vs-trotzdem",
+          "label": "Subordinating obwohl vs adverbial trotzdem",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.2916666666666667
+        },
+        {
+          "id": "obligatory-comma",
+          "label": "Obligatory comma between main and subordinate clause",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "als-vs-wenn",
+          "label": "als (single past event) vs wenn (repeated or future)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"verb-final-subordinate-clause\",\n    directive:\n      \"Write an exercise that requires the learner to produce or identify verb-final word order inside a subordinate clause introduced by one of: da, während, bevor, falls, sobald, solange, seitdem, bis. Example target sentence: 'Ich warte, bis der Zug ankommt.'\",\n    share: 3,\n  },\n  {\n    id: \"subject-verb-inversion-after-fronted-clause\",\n    directive:\n      \"Write an exercise where the subordinate clause comes FIRST (position 1) and the learner must apply subject-verb inversion in the following main clause. Example target sentence: 'Sobald ich zu Hause bin, rufe ich dich an.'\",\n    share: 3,\n  },\n  {\n    id: \"obwohl-vs-trotzdem\",\n    directive:\n      \"Write an exercise that contrasts the subordinating conjunction 'obwohl' (verb-final, requires comma, counts as one clause) with the adverb 'trotzdem' (main-clause, verb in position 2). The learner must choose the correct word or rewrite one form as the other. Example pair: 'Obwohl es regnet, gehen wir spazieren.' ↔ 'Es regnet, trotzdem gehen wir spazieren.'\",\n    share: 2,\n  },\n  {\n    id: \"obligatory-comma\",\n    directive:\n      \"Write an exercise focused on the obligatory comma that separates a main clause from a subordinate clause (or vice-versa). Present a sentence with the comma missing or misplaced and ask the learner to correct it. Example: 'Ich rufe dich an sobald ich zu Hause bin.' → 'Ich rufe dich an, sobald ich zu Hause bin.'\",\n    share: 1,\n  },\n  {\n    id: \"als-vs-wenn\",\n    directive:\n      \"Write an exercise that contrasts 'als' (single completed past event) with 'wenn' (repeated past events or future/conditional events). The learner must choose the correct conjunction. Example pair: 'Als ich Kind war, wohnte ich in Berlin.' vs 'Wenn es schneit, bleibe ich zu Hause.'\",\n    share: 1,\n  },\n],",
+        "notes": "The two non-load-bearing variants (obligatory-comma, als-vs-wenn) are included at share 1 so they appear in the pool without dominating it; their directives are concrete enough for a generator to produce targeted items without ambiguity. subject-verb-inversion-after-fronted-clause is raised to share 3 to compensate for its near-zero measured coverage (1/24)."
+      }
+    },
+    {
+      "cellKey": "de-b1-subordinate-conjunctions:translation",
+      "grammarPointKey": "de-b1-subordinate-conjunctions",
+      "grammarPointName": "Subordinating conjunctions and verb-final order",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "verb-final-subordinate-clause",
+          "label": "Verb-final order after subordinating conjunction",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "verb-final-subordinate-clause",
+          "label": "Verb-final order after subordinating conjunction",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "subject-verb-inversion-after-fronted-clause",
+          "label": "Subject-verb inversion in main clause after fronted subordinate clause",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "obwohl-vs-trotzdem",
+          "label": "Subordinating obwohl vs adverbial trotzdem",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "obligatory-comma",
+          "label": "Obligatory comma between main and subordinate clause",
+          "mustRepresent": false,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "als-vs-wenn",
+          "label": "als (single past event) vs wenn (repeated or future)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"verb-final-subordinate-clause\",\n    directive: \"Write an exercise that requires the learner to produce or identify correct verb-final word order inside a subordinate clause introduced by a subordinating conjunction (da, während, bevor, falls, sobald, solange, seitdem, or bis). Example target sentence: 'Ich warte, bis der Zug ankommt.'\",\n    share: 3,\n  },\n  {\n    id: \"subject-verb-inversion-after-fronted-clause\",\n    directive: \"Write an exercise where the subordinate clause is fronted (comes before the main clause), requiring the learner to apply subject-verb inversion in the main clause so that the finite verb immediately follows the comma. Example target sentence: 'Sobald ich zu Hause bin, rufe ich dich an.'\",\n    share: 1,\n  },\n  {\n    id: \"obwohl-vs-trotzdem\",\n    directive: \"Write an exercise that contrasts subordinating 'obwohl' (which triggers verb-final order and requires a comma) with adverbial 'trotzdem' (which appears in main-clause position and triggers subject-verb inversion). Example pair: 'Obwohl es regnet, gehen wir spazieren.' vs 'Es regnet, trotzdem gehen wir spazieren.'\",\n    share: 1,\n  },\n  {\n    id: \"obligatory-comma\",\n    directive: \"Write an exercise that focuses on correct placement of the obligatory comma separating the main clause and the subordinate clause, including both clause orders (main-then-sub and sub-then-main). Example target sentence: 'Wir gehen spazieren, obwohl es regnet.'\",\n    share: 1,\n  },\n  {\n    id: \"als-vs-wenn\",\n    directive: \"Write an exercise that contrasts subordinating 'als' (used for a single completed event in the past) with 'wenn' (used for repeated past events or future/conditional events). Example pair: 'Als ich Kind war, wohnte ich in Berlin.' vs 'Wenn ich Zeit habe, lese ich gern.'\",\n    share: 1,\n  },\n],",
+        "notes": "The core verb-final-subordinate-clause variant was nearly absent (1/24) despite being the defining feature of the point, so it receives a plurality share of 3; all other variants get share 1 to spread the remaining pool evenly. The als-vs-wenn variant was completely unrepresented (0/24) and gets an explicit directive so generators have a concrete model to follow."
+      }
+    },
+    {
+      "cellKey": "de-b1-um-zu-damit:translation",
+      "grammarPointKey": "de-b1-um-zu-damit",
+      "grammarPointName": "Purpose: um … zu vs damit",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "B1",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "um-zu-infinitive-same-subject",
+          "label": "um … zu + infinitive (same subject)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "um-zu-infinitive-same-subject",
+          "label": "um … zu + infinitive (same subject)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "damit-finite-clause-different-subject",
+          "label": "damit + finite clause (different subjects)",
+          "mustRepresent": true,
+          "count": 22,
+          "share": 0.9166666666666666
+        },
+        {
+          "id": "damit-finite-clause-same-subject",
+          "label": "damit + finite clause (same subjects)",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "fuer-zu-infinitive-error",
+          "label": "für + infinitive (English-interference error)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"um-zu-infinitive-same-subject\",\n    directive: \"Write a purpose-clause sentence using 'um … zu' + infinitive where the main-clause subject and the purpose-clause subject are identical. Example: 'Ich spare Geld, um ein Auto zu kaufen.'\",\n    share: 3,\n  },\n  {\n    id: \"damit-finite-clause-different-subject\",\n    directive: \"Write a purpose-clause sentence using 'damit' + a full finite clause where the main-clause subject and the damit-clause subject are different people or entities. Example: 'Sie spricht laut, damit die Kinder sie hören können.'\",\n    share: 1,\n  },\n  {\n    id: \"damit-finite-clause-same-subject\",\n    directive: \"Write a purpose-clause sentence using 'damit' + a full finite clause even though both clauses share the same subject (the stylistically marked but grammatical alternative to 'um … zu'). Example: 'Er trainiert täglich, damit er fitter wird.'\",\n    share: 1,\n  },\n  {\n    id: \"fuer-zu-infinitive-error\",\n    directive: \"Present a sentence that incorrectly uses 'für … zu' + infinitive as a purpose clause (English-interference error) and ask the learner to correct it to the proper 'um … zu' construction. Example: 'Ich lerne Deutsch, *für in Berlin zu arbeiten.' → 'Ich lerne Deutsch, um in Berlin zu arbeiten.'\",\n    share: 1,\n  },\n],",
+        "notes": "The pool was dominated by damit + different-subject (22/24); um … zu — the prototypical and pedagogically primary construction — appeared only once. Shares of 3-1-1-1 target ~50 % um … zu coverage while keeping all four variants in rotation; the error-repair variant recovers the 0/24 English-interference gap without inflating its weight."
+      }
+    }
+  ],
+  "enumerationSuspect": [
+    {
+      "cellKey": "de-b1-um-zu-damit:sentence_construction",
+      "unresolved": 11,
+      "sampled": 24
+    }
+  ],
+  "dismissed": [],
+  "thinCells": [],
+  "enumerationErrors": [
+    {
+      "grammarPointKey": "de-b1-reason-consequence-connectors",
+      "message": "id 'nämlich-medial-reason' must be kebab-case (after 2 attempts)"
+    }
+  ],
+  "classificationErrors": [],
+  "proposalErrors": [],
+  "neverEnumerated": []
+}
