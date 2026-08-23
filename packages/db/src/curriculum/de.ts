@@ -231,6 +231,28 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // rejects an override that cannot cover them. Every other B2 target stays at
 // the default 50.
 //
+// 2026-08-23d: batch 5 — the last six points whose diversity dimension does not
+// touch a case/number/comparison axis. de-b1-schon-noch-erst REMOVES its
+// polarity coverageSpec (see the note at the point itself): the axis could
+// require a negative row but not say which one, and the pool came out
+// noch nicht 13 / nicht mehr 0 — the exact confusion the point exists to fix.
+// de-b2-konjunktiv-ii splits by syntactic FRAME, not synthetic-vs-würde, which
+// is a form choice available inside every frame.
+//
+// Two targetOverrides raised to cover MIN_PER_VARIANT: de-b1-modal-particles-basic
+// 15 -> 20 and de-b1-schon-noch-erst 15 -> 20 (the latter replacing a removed
+// polarity floor sum of 13).
+//
+// WHAT REMAINS UNAUTHORED, and why it is a clean boundary: 56 of the 74 points
+// with findings now declare variants. Of the 18 that do not, 7 were examined
+// and rejected on the record (de-a1-es-gibt, de-a1-imperative,
+// de-a1-modal-verbs-present, de-a1-numbers-ordinals, de-a1-present-regular,
+// de-a2-reflexive-verbs, de-b1-subordinate-conjunctions). The other 11 all
+// carry a case, number or comparison coverageSpec — the axis class that often
+// IS the dimension the variants would encode — and four of those are
+// conjugationSuitable, so their spec cannot simply be deleted and needs
+// `coverageSpec.appliesTo` scoping instead. They are listed in the backlog.
+//
 // Bump clears target-reached / low-yield suppression so the touched cells
 // re-run under the rotation. At-target cells additionally need demote:pool.
 export const CURRICULUM_VERSION_DE = '2026-08-23';
@@ -284,10 +306,6 @@ const deCurriculum: readonly GrammarPoint[] = [
     // below — a draft can be both "werden" and "3sg".
     constructionVariants: [
       { id: 'sein-present', directive: "a present-tense form of 'sein' (bin/bist/ist/sind/seid)" },
-      {
-        id: 'haben-present',
-        directive: "a present-tense form of 'haben' (habe/hast/hat/haben/habt)",
-      },
       {
         id: 'werden-present',
         directive: "a present-tense form of 'werden' meaning 'to become' (werde/wirst/wird)",
@@ -795,11 +813,6 @@ const deCurriculum: readonly GrammarPoint[] = [
       },
       { id: 'um-clock-time', directive: 'um + a clock time (um neun Uhr, um halb drei)' },
       { id: 'im-months-seasons', directive: 'im + a month or a season (im Juli, im Sommer)' },
-      {
-        id: 'von-bis-ab-spans',
-        directive:
-          'von … bis or ab marking a time SPAN rather than a point (von Montag bis Freitag, ab nächster Woche)',
-      },
       {
         id: 'dative-relative-time',
         directive:
@@ -2736,6 +2749,32 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Komm doch mit!',
       'Das ist ja interessant!',
     ],
+    // Particle CHOICE is not expressible as a coverage axis, so the audit's
+    // coverage-spec routing does not apply here — variants are the mechanism.
+    constructionVariants: [
+      {
+        id: 'denn-softening-question',
+        directive: 'denn SOFTENING a question, making it friendly rather than blunt (Was machst du denn hier?)',
+      },
+      {
+        id: 'doch-contradiction-urging',
+        directive:
+          'doch marking CONTRADICTION of an assumption, or URGING in an imperative (Komm doch mit!; Das habe ich dir doch gesagt)',
+      },
+      {
+        id: 'ja-shared-knowledge-surprise',
+        directive:
+          'ja marking SHARED KNOWLEDGE or surprise at something evident (Das ist ja interessant!; Du weißt ja, wie das ist)',
+      },
+      {
+        id: 'eigentlich-casual-aside',
+        directive: 'eigentlich introducing a casual ASIDE or change of topic (Wie heißt du eigentlich?)',
+      },
+      {
+        id: 'mal-casualizing-request',
+        directive: 'mal CASUALIZING a request or imperative (Komm mal her; Kannst du mir mal helfen?)',
+      },
+    ],
     examplesNegative: ['*Denn was machst du hier? (denn as a softening particle cannot be fronted)'],
     commonErrors: [
       'Fronting the particle ("*Denn was machst du?" — particles live in the Mittelfeld).',
@@ -2745,7 +2784,10 @@ const deCurriculum: readonly GrammarPoint[] = [
     // Several particles are licensed in most slots, so a bare blank is
     // unrecoverable; translation + theory carry the point.
     clozeUnsuitable: true,
-    targetOverride: 15,
+    // Raised 15 -> 20 on 2026-08-23 to cover 5 constructionVariants at
+    // MIN_PER_VARIANT. The point names five particles, so five is not
+    // over-declaring.
+    targetOverride: 20,
   },
   {
     key: 'de-b1-dative-reflexive-body',
@@ -2768,6 +2810,25 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er zieht sich die Schuhe an.',
       'Die Mutter putzt dem Kind die Nase.',
       'Er trägt ihr den Koffer zum Auto.',
+    ],
+    // Who the dative refers to (self / third party / beneficiary) is orthogonal
+    // to the person axis below, which pins the SUBJECT.
+    constructionVariants: [
+      {
+        id: 'dative-reflexive-body-part',
+        directive:
+          'a REFLEXIVE dative with a body part or clothing, the action directed at oneself (Ich wasche mir die Hände; Er zieht sich die Schuhe an)',
+      },
+      {
+        id: 'dative-third-party-body-part',
+        directive:
+          'a dative naming a THIRD PARTY affected in their body part or clothing, not the subject (Die Mutter putzt dem Kind die Nase)',
+      },
+      {
+        id: 'dative-benefactive',
+        directive:
+          'a BENEFACTIVE dative — doing something FOR someone, with no body part involved (Er trägt ihr den Koffer zum Auto; Ich hole dir einen Kaffee)',
+      },
     ],
     examplesNegative: ['*Ich wasche mich die Hände.', '*Er zieht seine Schuhe sich an.'],
     commonErrors: [
@@ -2822,15 +2883,19 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-schon-noch-erst',
-    coverageSpec: {
-      axes: [
-        // The negative pairs (noch nicht / nicht mehr) are named core
-        // content and their confusion is a listed commonError;
-        // default-affirmative generation starves exactly that contrast.
-        // Sum 13 ≤ targetOverride 15.
-        { name: 'polarity', floors: { affirmative: 8, negative: 5 } },
-      ],
-    },
+    // The `polarity` coverageSpec added 2026-07-17 is REMOVED here (2026-08-23),
+    // and this is a narrowing rather than a loss. Its comment read: "the
+    // negative pairs (noch nicht / nicht mehr) are named core content and their
+    // confusion is a listed commonError; default-affirmative generation starves
+    // exactly that contrast." The axis delivered the first half and could not
+    // deliver the second — a polarity floor can require a NEGATIVE row but not
+    // say WHICH negative, and the pool came out noch nicht 13 / nicht mehr 0,
+    // so the confusion the point exists to fix was never drilled.
+    //
+    // These particles ARE the polarity dimension, so keeping both mechanisms
+    // would send "target affirmative" and "MUST use noch nicht" into one draft
+    // prompt with no arbitration. The variants below give each negative its own
+    // quota, which is strictly stronger than the floor was.
     kind: 'grammar',
     name: 'schon, noch, erst',
     description:
@@ -2842,13 +2907,40 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er kommt erst um zehn Uhr.',
       'Sie wohnt nicht mehr hier.',
     ],
+    constructionVariants: [
+      {
+        id: 'schon-already',
+        directive: 'schon — already, earlier than expected (Bist du schon fertig?)',
+      },
+      {
+        id: 'noch-still',
+        directive: 'noch — still, ongoing beyond expectation (Er schläft noch; Wohnst du noch dort?)',
+      },
+      {
+        id: 'noch-nicht-not-yet',
+        directive:
+          'noch nicht — NOT YET, the state has not started but is expected to (Nein, noch nicht; Sie ist noch nicht angekommen)',
+      },
+      {
+        id: 'nicht-mehr-no-longer',
+        directive:
+          'nicht mehr — NO LONGER, the state has ended, the mirror image of noch nicht (Sie wohnt nicht mehr hier)',
+      },
+      {
+        id: 'erst-not-until',
+        directive:
+          'erst — not until, later than expected, where nur would be wrong (Er kommt erst um zehn Uhr)',
+      },
+    ],
     examplesNegative: ['*Er kommt nur um zehn Uhr. (meaning "not until ten")', '*Ich bin noch nicht mehr fertig.'],
     commonErrors: [
       'Using nur for "not until" ("*Er kommt nur um zehn" instead of "erst um zehn").',
       'Confusing noch nicht (not yet) with nicht mehr (no longer).',
       'Dropping schon/noch and losing the expectation contrast the sentence needs.',
     ],
-    targetOverride: 15,
+    // Raised 15 -> 20 on 2026-08-23 to cover 5 constructionVariants at
+    // MIN_PER_VARIANT, replacing the removed polarity floor sum of 13.
+    targetOverride: 20,
   },
   {
     key: 'de-b1-progressive-equivalents',
@@ -2992,6 +3084,31 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er tut so, als ob er nichts wüsste.',
       'Hätte ich das gewusst, wäre ich zu Hause geblieben.',
     ],
+    // Split by SYNTACTIC FRAME. Deliberately NOT by synthetic (käme) vs würde-
+    // periphrasis: that is a choice of FORM available inside every one of these
+    // frames, so the two sets are not alternatives to each other.
+    constructionVariants: [
+      {
+        id: 'unreal-present-condition-wenn',
+        directive:
+          'an unreal PRESENT condition with an explicit wenn-clause (Wenn ich Zeit hätte, würde ich kommen)',
+      },
+      {
+        id: 'verb-first-conditional',
+        directive:
+          'a VERB-FIRST conditional with wenn omitted, the finite verb opening the clause (Hätte ich das gewusst, wäre ich zu Hause geblieben)',
+      },
+      {
+        id: 'unreal-wish-exclamative',
+        directive:
+          'an unreal WISH or exclamative rather than a condition, typically with doch or nur (Wenn ich das doch wüsste!; Wäre ich nur früher gekommen!)',
+      },
+      {
+        id: 'als-ob-unreal-comparison',
+        directive:
+          'an unreal COMPARISON with als ob (or bare als + verb-first) plus Konjunktiv II (Er tut so, als ob er nichts wüsste)',
+      },
+    ],
     examplesNegative: ['*Wenn ich Zeit habe, würde ich kommen.', '*Wenn ich Zeit hätte, ich würde kommen.'],
     commonErrors: [
       'Pairing a real-conditional present indicative with a Konjunktiv II main clause.',
@@ -3122,6 +3239,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Beim Lesen vergesse ich die Zeit.',
       'Zur Verbesserung der Qualität wurden neue Regeln eingeführt.',
       'Das Gute an dieser Idee ist die Einfachheit.',
+    ],
+    constructionVariants: [
+      {
+        id: 'nominalized-infinitive',
+        directive:
+          'a NOMINALIZED INFINITIVE used as a plain noun, capitalized and neuter (Das Lesen macht Spaß; beim Kochen)',
+      },
+      {
+        id: 'nominalized-adjective',
+        directive:
+          'a NOMINALIZED ADJECTIVE, capitalized and still carrying its adjective ending (Das Gute an dieser Idee; etwas Neues)',
+      },
+      {
+        id: 'derived-noun-verbal-paraphrase',
+        directive:
+          'a DERIVED noun inside a prepositional phrase that paraphrases a verbal clause (Zur Verbesserung der Qualität = um die Qualität zu verbessern)',
+      },
+      {
+        id: 'nominalized-infinitive-prepositional-paraphrase',
+        directive:
+          'a nominalized infinitive inside a PREPOSITIONAL phrase paraphrasing a temporal clause (Beim Lesen vergesse ich die Zeit = während ich lese)',
+      },
     ],
     examplesNegative: ['*das lesen macht Spaß', '*die Lesen'],
     commonErrors: [
@@ -3689,6 +3828,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich hoffe, dich bald wiederzusehen.',
       'Wir freuen uns darauf, dass ihr uns besucht.',
       'Ich hoffe auf eine baldige Antwort.',
+    ],
+    constructionVariants: [
+      {
+        id: 'zu-infinitive-same-subject',
+        directive:
+          'a zu-infinitive replacing the dass-clause, available because both clauses share a SUBJECT (Ich hoffe, dich bald wiederzusehen)',
+      },
+      {
+        id: 'nominal-phrase-replacement',
+        directive:
+          'a NOMINAL phrase replacing the dass-clause entirely, with no verb at all (Ich hoffe auf eine baldige Antwort)',
+      },
+      {
+        id: 'obligatory-correlate-darauf-damit',
+        directive:
+          'an OBLIGATORY da(r)+preposition correlate introducing the dass-clause, required by the governing verb (Wir freuen uns darauf, dass ihr uns besucht)',
+      },
     ],
     examplesNegative: ['*Ich hoffe, dass ich dich bald wiederzusehen.', '*Wir freuen uns, dass ihr uns besucht, darauf.'],
     commonErrors: [
