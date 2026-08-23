@@ -1,0 +1,1534 @@
+{
+  "runName": "de-a1-2026-08-23",
+  "promptVersion": "construction-coverage@2026-08-19",
+  "seed": "default",
+  "samplePerCell": 24,
+  "partial": false,
+  "stoppedReason": null,
+  "summary": {
+    "pointsEnumerated": 19,
+    "pointsInScope": 19,
+    "pointsSingleConstruction": 0,
+    "cellsClassified": 41,
+    "rowsSampled": 787,
+    "findings": 21,
+    "enumerationSuspect": 2,
+    "dismissed": 0,
+    "thinCellsSkipped": 0,
+    "enumerationErrors": 0,
+    "classificationErrors": 0,
+    "proposalErrors": 0,
+    "costUsd": 1.016277
+  },
+  "findings": [
+    {
+      "cellKey": "de-a1-present-regular:sentence_construction",
+      "grammarPointKey": "de-a1-present-regular",
+      "grammarPointName": "Present tense: regular conjugation",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "coverage-spec",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "s-sz-z-stem-du-contraction",
+          "label": "Only -t (no -s) added in du-form after s/ß/z stems (du heißt)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "regular-present-default-endings",
+          "label": "Default present endings (-e/-st/-t/-en/-t/-en)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.8260869565217391
+        },
+        {
+          "id": "e-insertion-td-stems",
+          "label": "Epenthetic -e- before -st/-t after t/d stems (arbeitest, findet)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.17391304347826086
+        },
+        {
+          "id": "s-sz-z-stem-du-contraction",
+          "label": "Only -t (no -s) added in du-form after s/ß/z stems (du heißt)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "eln-verb-ich-e-drop",
+          "label": "-eln verb ich-form with stem-e dropped (ich sammle)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"construction\",\n      values: [\n        \"regular-present-default-endings\",\n        \"e-insertion-td-stems\",\n        \"s-sz-z-stem-du-contraction\",\n        \"eln-verb-ich-e-drop\",\n      ],\n    },\n  ],\n  floors: [\n    { construction: \"regular-present-default-endings\", minApproved: 10 },\n    { construction: \"e-insertion-td-stems\",            minApproved: 4  },\n    { construction: \"s-sz-z-stem-du-contraction\",      minApproved: 3  },\n    { construction: \"eln-verb-ich-e-drop\",             minApproved: 2  },\n  ],\n},",
+        "notes": "The two zero-coverage constructions (s/ß/z-stem du-contraction and -eln ich-form e-drop) need explicit floors to force generation. The -eln floor is intentionally low (2) since it is marked not load-bearing, while the default-endings floor is capped at 10 to leave room for the minority constructions without over-constraining the pool."
+      }
+    },
+    {
+      "cellKey": "de-a1-articles-nominative:cloze",
+      "grammarPointKey": "de-a1-articles-nominative",
+      "grammarPointName": "Definite, indefinite and negative articles — nominative",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "predicate-nominative-sein-werden-bleiben",
+          "label": "Predicate complement of sein/werden/bleiben stays nominative",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "definite-article-nominative",
+          "label": "Definite article in nominative (der/das/die)",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.35
+        },
+        {
+          "id": "indefinite-article-nominative",
+          "label": "Indefinite article in nominative (ein/ein/eine)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "negative-article-nominative",
+          "label": "Negative article in nominative (kein/kein/keine)",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.5
+        },
+        {
+          "id": "predicate-nominative-sein-werden-bleiben",
+          "label": "Predicate complement of sein/werden/bleiben stays nominative",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"definite-article-nominative\",\n    directive: \"Write a sentence where a DEFINITE article (der / das / die) marks the grammatical subject in the nominative case. Example: 'Der Hund schläft.'\",\n    share: 3,\n  },\n  {\n    id: \"indefinite-article-nominative\",\n    directive: \"Write a sentence where an INDEFINITE article (ein / ein / eine) marks the grammatical subject in the nominative case. Example: 'Eine Frau steht an der Tür.'\",\n    share: 3,\n  },\n  {\n    id: \"negative-article-nominative\",\n    directive: \"Write a sentence where the NEGATIVE article (kein / kein / keine) marks the grammatical subject in the nominative case. Example: 'Kein Bus kommt heute.'\",\n    share: 2,\n  },\n  {\n    id: \"predicate-nominative-sein-werden-bleiben\",\n    directive: \"Write a sentence where the predicate complement of sein, werden, or bleiben carries a nominative article (der / das / die / ein / eine / kein / keine) — NOT an accusative form. Example: 'Er ist ein guter Lehrer.' or 'Sie bleibt die Beste.'\",\n    share: 3,\n  },\n],",
+        "notes": "The `predicate-nominative-sein-werden-bleiben` variant had 0/20 realized exercises, so it receives a share of 3 (equal to the highest-priority variants) to force strong representation. The negative-article variant was already over-represented at 10/20, so its share is reduced to 2 to rebalance the pool without starving it."
+      }
+    },
+    {
+      "cellKey": "de-a1-imperative:translation",
+      "grammarPointKey": "de-a1-imperative",
+      "grammarPointName": "Imperative (Sie, du, ihr)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "imperative-du-stem-change",
+          "label": "du-imperative with e→i(e) stem change (Nimm!, Fahr!)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "imperative-sie",
+          "label": "Sie-imperative (Gehen Sie!)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.2
+        },
+        {
+          "id": "imperative-du-regular",
+          "label": "du-imperative, regular stem (Geh!, Fahr!)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "id": "imperative-du-stem-change",
+          "label": "du-imperative with e→i(e) stem change (Nimm!, Fahr!)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "imperative-ihr",
+          "label": "ihr-imperative, stem + -t (Geht!, Kommt!)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.2
+        },
+        {
+          "id": "imperative-sein-irregular",
+          "label": "Irregular imperative of sein (Sei!, Seien Sie!)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "imperative-wir-suggestion",
+          "label": "wir-imperative for suggestions (Gehen wir!)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "id": "imperative-bare-infinitive-sign",
+          "label": "Bare-infinitive command in public signs (Nicht rauchen!)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"imperative-sie\",\n    directive: \"Write a sentence using the Sie-imperative (verb + Sie, e.g. 'Gehen Sie bitte …!'). The verb must be in the Sie-imperative form with the pronoun Sie following it.\",\n    share: 3,\n  },\n  {\n    id: \"imperative-du-regular\",\n    directive: \"Write a sentence using the du-imperative with a regular stem — drop -st and the optional -e (e.g. 'Geh!', 'Fahr!', 'Komm!'). Do NOT use a verb with an e→i(e) stem change.\",\n    share: 2,\n  },\n  {\n    id: \"imperative-du-stem-change\",\n    directive: \"Write a sentence using the du-imperative of a strong verb that has an e→i(e) stem change (e.g. 'Nimm!', 'Iss!', 'Sprich!'). The stem-changed form must appear; no -e ending is added.\",\n    share: 3,\n  },\n  {\n    id: \"imperative-ihr\",\n    directive: \"Write a sentence using the ihr-imperative (stem + -t, e.g. 'Geht!', 'Kommt her!', 'Wartet!'). Address a group explicitly or make the plural context clear.\",\n    share: 2,\n  },\n  {\n    id: \"imperative-sein-irregular\",\n    directive: \"Write a sentence using the irregular imperative of 'sein' in any person: du → 'Sei …!', ihr → 'Seid …!', Sie → 'Seien Sie …!', wir → 'Seien wir …!'. The form of 'sein' must be the main imperative.\",\n    share: 2,\n  },\n  {\n    id: \"imperative-wir-suggestion\",\n    directive: \"Write a sentence using the wir-imperative to make a suggestion (infinitive + wir, e.g. 'Gehen wir!', 'Fangen wir an!'). The structure must be infinitive-first with wir following.\",\n    share: 2,\n  },\n  {\n    id: \"imperative-bare-infinitive-sign\",\n    directive: \"Write a public-sign-style command using a bare infinitive (e.g. 'Nicht rauchen!', 'Bitte anschnallen!', 'Einsteigen!'). No subject or conjugated verb should appear.\",\n    share: 1,\n  },\n],",
+        "notes": "imperative-du-stem-change and imperative-bare-infinitive-sign were both at 0/20; giving stem-change a share of 3 (equal to Sie-form) ensures it gets strong generator attention. bare-infinitive-sign is marked not load-bearing so share 1 keeps it present but light."
+      }
+    },
+    {
+      "cellKey": "de-a1-modal-verbs-present:cloze",
+      "grammarPointKey": "de-a1-modal-verbs-present",
+      "grammarPointName": "Modal verbs in the present + verb bracket",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "modal-present-verb-bracket",
+          "label": "Verb bracket: modal finite + bare infinitive clause-finally",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "modal-present-irregular-singular",
+          "label": "Modal verb irregular 1sg/3sg forms (no ending, umlaut drop)",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.6
+        },
+        {
+          "id": "modal-present-verb-bracket",
+          "label": "Verb bracket: modal finite + bare infinitive clause-finally",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-no-zu-infinitive",
+          "label": "No 'zu' before the infinitive after a modal",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-present-regular-plural",
+          "label": "Modal verb regular plural forms",
+          "mustRepresent": false,
+          "count": 7,
+          "share": 0.35
+        },
+        {
+          "id": "moechte-forms",
+          "label": "möchte-forms as a modal-like paradigm",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.05
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"modal-present-irregular-singular\",\n    directive:\n      \"Write a sentence using a modal verb (können, wollen, müssen, dürfen, sollen, or mögen) in the 1st-person singular (ich) or 3rd-person singular (er/sie/es) present tense, showing the endingless irregular form with umlaut dropped (e.g. 'Ich kann heute nicht kommen.').\",\n    share: 3,\n  },\n  {\n    id: \"modal-present-verb-bracket\",\n    directive:\n      \"Write a sentence that clearly illustrates the verb bracket: the finite modal verb stands second and the bare infinitive appears at the very end of the clause (e.g. 'Er muss morgen früh aufstehen.').\",\n    share: 1,\n  },\n  {\n    id: \"modal-sollen-suggestion\",\n    directive:\n      \"Write a yes/no question using 'Sollen wir …?' to make a suggestion ('Shall we …?'), with the bare infinitive at the end (e.g. 'Sollen wir eine Pause machen?').\",\n    share: 1,\n  },\n  {\n    id: \"moechte-forms\",\n    directive:\n      \"Write a sentence or question using a möchte-form (möchte, möchtest, möchten, etc.) as a polite modal-like expression, with the bare infinitive at the end of the clause (e.g. 'Möchtest du einen Kaffee trinken?').\",\n    share: 1,\n  },\n],",
+        "notes": "The two load-bearing zero-coverage variants (modal-present-verb-bracket and modal-sollen-suggestion) each get share 1 alongside moechte-forms, while the already-healthy irregular-singular gets share 3 to keep its plurality without crowding out the gaps. modal-no-zu-infinitive and modal-present-regular-plural are not load-bearing and are omitted from the variant list so they don't dilute the pool; the verb-bracket directive implicitly exercises no-zu and plural forms will surface naturally across all variants."
+      }
+    },
+    {
+      "cellKey": "de-a1-modal-verbs-present:sentence_construction",
+      "grammarPointKey": "de-a1-modal-verbs-present",
+      "grammarPointName": "Modal verbs in the present + verb bracket",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "modal-present-irregular-singular",
+          "label": "Modal verb irregular 1sg/3sg forms (no ending, umlaut drop)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "modal-present-irregular-singular",
+          "label": "Modal verb irregular 1sg/3sg forms (no ending, umlaut drop)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-present-verb-bracket",
+          "label": "Verb bracket: modal finite + bare infinitive clause-finally",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.95
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-no-zu-infinitive",
+          "label": "No 'zu' before the infinitive after a modal",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-present-regular-plural",
+          "label": "Modal verb regular plural forms",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "moechte-forms",
+          "label": "möchte-forms as a modal-like paradigm",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.05
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"modal-present-verb-bracket\",\n    directive: \"Write a sentence using a present-tense modal verb (können, wollen, müssen, dürfen, sollen, or mögen) with a bare infinitive placed at the end of the clause, forming a verb bracket. Example: 'Wir müssen morgen früh aufstehen.'\",\n    share: 3,\n  },\n  {\n    id: \"modal-present-irregular-singular\",\n    directive: \"Write a sentence where the subject is 'ich' or 'er/sie/es' and the modal verb (können, wollen, müssen, dürfen, or mögen) appears in its irregular 1st- or 3rd-person singular form — no personal ending, umlaut dropped where applicable. Example: 'Ich kann heute nicht kommen.' or 'Er muss das wissen.'\",\n    share: 3,\n  },\n  {\n    id: \"modal-sollen-suggestion\",\n    directive: \"Write a yes/no question using 'Sollen wir …?' to make a suggestion ('Shall we …?'), with the bare infinitive at the end. Example: 'Sollen wir eine Pause machen?'\",\n    share: 2,\n  },\n  {\n    id: \"moechte-forms\",\n    directive: \"Write a sentence using a möchte-form (möchte, möchtest, möchten, etc.) as a modal-like verb with a bare infinitive at the end of the clause. Example: 'Möchtest du einen Kaffee trinken?'\",\n    share: 2,\n  },\n],",
+        "notes": "Four variants are defined: the dominant verb-bracket construction and the irregular-singular forms each get share 3 (together ~46% of the pool), while the sollen-suggestion and möchte-forms each get share 2 (~18% each), ensuring all load-bearing gaps are actively targeted. The three non-load-bearing variants (modal-no-zu-infinitive, modal-present-regular-plural) are intentionally omitted from the variant list to keep generation focused; they will be picked up incidentally through the other variants."
+      }
+    },
+    {
+      "cellKey": "de-a1-modal-verbs-present:translation",
+      "grammarPointKey": "de-a1-modal-verbs-present",
+      "grammarPointName": "Modal verbs in the present + verb bracket",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "modal-present-verb-bracket",
+          "label": "Verb bracket: modal finite + bare infinitive clause-finally",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "modal-present-irregular-singular",
+          "label": "Modal verb irregular 1sg/3sg forms (no ending, umlaut drop)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.95
+        },
+        {
+          "id": "modal-present-verb-bracket",
+          "label": "Verb bracket: modal finite + bare infinitive clause-finally",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-sollen-suggestion",
+          "label": "'Sollen wir …?' for suggestions ('Shall we …?')",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-no-zu-infinitive",
+          "label": "No 'zu' before the infinitive after a modal",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "modal-present-regular-plural",
+          "label": "Modal verb regular plural forms",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "moechte-forms",
+          "label": "möchte-forms as a modal-like paradigm",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.05
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"modal-present-irregular-singular\",\n    directive:\n      \"Write a sentence using a modal verb (können, wollen, müssen, dürfen, sollen, or mögen) in the 1st-person singular (ich) or 3rd-person singular (er/sie/es) present tense, showing the endingless irregular form with umlaut dropped (e.g. 'Ich kann heute nicht kommen.').\",\n    share: 3,\n  },\n  {\n    id: \"modal-present-verb-bracket\",\n    directive:\n      \"Write a sentence that clearly demonstrates the verb bracket: the finite modal verb stands second and the bare infinitive stands at the very end of the clause, with other material in between (e.g. 'Wir müssen morgen früh aufstehen.').\",\n    share: 3,\n  },\n  {\n    id: \"modal-sollen-suggestion\",\n    directive:\n      \"Write a yes/no question using 'Sollen wir …?' to make a suggestion meaning 'Shall we …?', with a bare infinitive at the end (e.g. 'Sollen wir eine Pause machen?').\",\n    share: 2,\n  },\n  {\n    id: \"modal-no-zu-infinitive\",\n    directive:\n      \"Write a sentence with a modal verb followed directly by a bare infinitive (no 'zu'), and make the absence of 'zu' salient by choosing a verb that would normally take 'zu' in a non-modal context (e.g. 'Er versucht zu schlafen' → modal version: 'Er muss schlafen.').\",\n    share: 1,\n  },\n  {\n    id: \"modal-present-regular-plural\",\n    directive:\n      \"Write a sentence using a modal verb in a 1st-, 2nd-, or 3rd-person plural present-tense form (wir/ihr/sie), showing the regular plural ending (e.g. 'Ihr dürft hier nicht parken.' or 'Sie können Deutsch sprechen.').\",\n    share: 2,\n  },\n  {\n    id: \"moechte-forms\",\n    directive:\n      \"Write a sentence or question using a möchte-form (möchte, möchtest, möchten, etc.) as a polite modal-like expression of desire, with a bare infinitive at the end of the clause (e.g. 'Möchtest du einen Kaffee trinken?').\",\n    share: 1,\n  },\n],",
+        "notes": "Five constructions were at 0/20 coverage because the pool was dominated by irregular-singular forms; adding explicit constructionVariants with weighted shares forces the generator to distribute across all six sub-constructions. The irregular-singular and verb-bracket variants each get share 3 (prototypical/load-bearing), plural and sollen-suggestion get share 2, and the two non-load-bearing variants (no-zu, möchte) get share 1 so they stay represented without crowding the core forms."
+      }
+    },
+    {
+      "cellKey": "de-a1-numbers-ordinals:translation",
+      "grammarPointKey": "de-a1-numbers-ordinals",
+      "grammarPointName": "Numbers, ordinals and dates",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 19,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "year-reading",
+          "label": "Year reading as hundreds (neunzehnhundert...)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "cardinal-units-before-tens",
+          "label": "Units-before-tens compound cardinals (einundzwanzig)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.2631578947368421
+        },
+        {
+          "id": "eins-vs-ein-eine",
+          "label": "eins standalone vs ein/eine before a noun",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05263157894736842
+        },
+        {
+          "id": "year-reading",
+          "label": "Year reading as hundreds (neunzehnhundert...)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "ordinal-te-ste",
+          "label": "Regular ordinal suffixes -te (2-19) and -ste (20+)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05263157894736842
+        },
+        {
+          "id": "ordinal-irregular",
+          "label": "Irregular ordinals erste, dritte, siebte",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15789473684210525
+        },
+        {
+          "id": "date-am-ordinal",
+          "label": "Dates with am + ordinal (am achten Mai)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.42105263157894735
+        },
+        {
+          "id": "mal-adverb",
+          "label": "-mal frequency adverbs (einmal, zweimal)",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.05263157894736842
+        },
+        {
+          "id": "decimal-comma",
+          "label": "Decimal comma notation (2,5)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"date-am-ordinal\",\n    directive: \"Write a sentence using a date with 'am' + ordinal adjective, e.g. 'Ich habe am achten Mai Geburtstag.'\",\n    share: 3,\n  },\n  {\n    id: \"cardinal-units-before-tens\",\n    directive: \"Write a sentence using a units-before-tens compound cardinal written as one word, e.g. 'Das macht einundzwanzig Euro.'\",\n    share: 2,\n  },\n  {\n    id: \"ordinal-irregular\",\n    directive: \"Write a sentence using one of the irregular ordinals erste, dritte, or siebte, e.g. 'Heute ist der dritte Oktober.'\",\n    share: 2,\n  },\n  {\n    id: \"eins-vs-ein-eine\",\n    directive: \"Write a sentence that contrasts standalone 'eins' (e.g. counting or answering) with 'ein' or 'eine' directly before a noun, e.g. 'Ich habe nur eins, aber sie kauft eine Tasche.'\",\n    share: 2,\n  },\n  {\n    id: \"ordinal-te-ste\",\n    directive: \"Write a sentence using a regular ordinal with the -te suffix (for 2–19) or -ste suffix (for 20+), e.g. 'Er wohnt im zwanzigsten Stockwerk.' or 'Sie ist die fünfte in der Reihe.'\",\n    share: 2,\n  },\n  {\n    id: \"year-reading\",\n    directive: \"Write a sentence that reads a year aloud as hundreds, e.g. 'Er wurde neunzehnhundertachtundneunzig geboren.' (1998).\",\n    share: 2,\n  },\n  {\n    id: \"mal-adverb\",\n    directive: \"Write a sentence using a -mal frequency adverb, e.g. 'Wir waren schon zweimal in Berlin.'\",\n    share: 1,\n  },\n  {\n    id: \"decimal-comma\",\n    directive: \"Write a sentence using a number with a German decimal comma, e.g. 'Das kostet zwei Komma fünf Euro (2,5 €).'\",\n    share: 1,\n  },\n],",
+        "notes": "date-am-ordinal was the only well-covered variant (8/20) and keeps a plurality share of 3; all six under-covered load-bearing constructions get share 2 to force meaningful representation; the two non-load-bearing variants (mal-adverb, decimal-comma) get share 1 so they appear but don't crowd the pool. Total share is 15, giving date-am-ordinal ~20 %, each share-2 variant ~13 %, and each share-1 variant ~7 %."
+      }
+    },
+    {
+      "cellKey": "de-a1-plural-formation:cloze",
+      "grammarPointKey": "de-a1-plural-formation",
+      "grammarPointName": "Noun plurals",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "coverage-spec",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "plural-e-umlaut",
+          "label": "Plural with -e ending plus umlaut",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "plural-s",
+          "label": "Plural with -s ending",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "plural-e",
+          "label": "Plural with -e ending (no umlaut)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.3
+        },
+        {
+          "id": "plural-e-umlaut",
+          "label": "Plural with -e ending plus umlaut",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "plural-er-umlaut",
+          "label": "Plural with -er ending plus umlaut",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.4
+        },
+        {
+          "id": "plural-en",
+          "label": "Plural with -(e)n ending",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "plural-s",
+          "label": "Plural with -s ending",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "plural-zero",
+          "label": "Plural with zero ending (with or without umlaut)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"plural-class\",\n      values: [\n        \"plural-e\",\n        \"plural-e-umlaut\",\n        \"plural-er-umlaut\",\n        \"plural-en\",\n        \"plural-s\",\n        \"plural-zero\",\n      ],\n    },\n  ],\n  minApprovedPerValue: {\n    \"plural-e\":         4,\n    \"plural-e-umlaut\":  4,\n    \"plural-er-umlaut\": 4,\n    \"plural-en\":        4,\n    \"plural-s\":         4,\n    \"plural-zero\":      4,\n  },\n},",
+        "notes": "The measured pool is heavily skewed toward -er-umlaut (8/20) and completely missing -s (0/20); a floor of 4 approved exercises per plural class forces balanced representation across all six classes without over-constraining total pool size. The axis ids reuse the existing kebab-case ids exactly so no coverage history is reset."
+      }
+    },
+    {
+      "cellKey": "de-a1-present-irregular:cloze",
+      "grammarPointKey": "de-a1-present-irregular",
+      "grammarPointName": "Present tense: sein, haben, werden, wissen and stem-changing verbs",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "werden-present",
+          "label": "Present tense of 'werden' (to become)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wissen-present",
+          "label": "Present tense of 'wissen' (to know)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "sein-present",
+          "label": "Present tense of 'sein' (to be)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "haben-present",
+          "label": "Present tense of 'haben' (to have)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.4
+        },
+        {
+          "id": "werden-present",
+          "label": "Present tense of 'werden' (to become)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wissen-present",
+          "label": "Present tense of 'wissen' (to know)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "stem-change-e-to-i",
+          "label": "Stem-change e→i in du/er forms (e.g. sprechen→spricht)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "id": "stem-change-e-to-ie",
+          "label": "Stem-change e→ie in du/er forms (e.g. lesen→liest)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "stem-change-a-to-ae",
+          "label": "Stem-change a→ä in du/er forms (e.g. fahren→fährt)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "no-stem-change-ich-plural",
+          "label": "Absence of stem change in ich-form and plural",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"sein-present\",\n    directive: \"Write an exercise practising the present tense of 'sein'. Use at least two different persons (e.g. 'Er ist müde.', 'Wir sind zu Hause.').\",\n    share: 3,\n  },\n  {\n    id: \"haben-present\",\n    directive: \"Write an exercise practising the present tense of 'haben'. Use at least two different persons (e.g. 'Sie hat Hunger.', 'Ich habe keine Zeit.').\",\n    share: 3,\n  },\n  {\n    id: \"werden-present\",\n    directive: \"Write an exercise practising the present tense of 'werden'. Use at least two different persons (e.g. 'Er wird Arzt.', 'Du wirst müde.').\",\n    share: 3,\n  },\n  {\n    id: \"wissen-present\",\n    directive: \"Write an exercise practising the present tense of 'wissen'. Use at least two different persons (e.g. 'Ich weiß es nicht.', 'Sie weiß die Antwort.').\",\n    share: 3,\n  },\n  {\n    id: \"stem-change-e-to-i\",\n    directive: \"Write an exercise practising the e→i stem change in the du- or er/sie/es-form of a verb such as sprechen→spricht, geben→gibt, or essen→isst. The sentence must contain the stem-changed form.\",\n    share: 2,\n  },\n  {\n    id: \"stem-change-e-to-ie\",\n    directive: \"Write an exercise practising the e→ie stem change in the du- or er/sie/es-form of a verb such as lesen→liest, sehen→sieht, or empfehlen→empfiehlt. The sentence must contain the stem-changed form.\",\n    share: 2,\n  },\n  {\n    id: \"stem-change-a-to-ae\",\n    directive: \"Write an exercise practising the a→ä stem change in the du- or er/sie/es-form of a verb such as fahren→fährt, schlafen→schläft, or tragen→trägt. The sentence must contain the stem-changed form.\",\n    share: 2,\n  },\n  {\n    id: \"no-stem-change-ich-plural\",\n    directive: \"Write an exercise that contrasts a stem-changing verb in the ich-form or a plural form (wir/sie/Sie) with its du/er stem-changed form, making clear that the stem change is absent in the ich-form and plural (e.g. 'Ich fahre, aber er fährt.').\",\n    share: 1,\n  },\n],",
+        "notes": "werden-present, wissen-present, and no-stem-change-ich-plural were all at 0/20; sein-present was critically under-represented at 2/20. Shares are set to 3 for the four irregular-verb variants (sein, haben, werden, wissen) so each targets ~18% of the pool, 2 for the three stem-change types (~12% each), and 1 for the contrastive no-stem-change variant (~6%), keeping it present without over-weighting a non-load-bearing construction."
+      }
+    },
+    {
+      "cellKey": "de-a1-present-irregular:translation",
+      "grammarPointKey": "de-a1-present-irregular",
+      "grammarPointName": "Present tense: sein, haben, werden, wissen and stem-changing verbs",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "sein-present",
+          "label": "Present tense of 'sein' (to be)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "werden-present",
+          "label": "Present tense of 'werden' (to become)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "stem-change-a-to-ae",
+          "label": "Stem-change a→ä in du/er forms (e.g. fahren→fährt)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        }
+      ],
+      "counts": [
+        {
+          "id": "sein-present",
+          "label": "Present tense of 'sein' (to be)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "haben-present",
+          "label": "Present tense of 'haben' (to have)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.3
+        },
+        {
+          "id": "werden-present",
+          "label": "Present tense of 'werden' (to become)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wissen-present",
+          "label": "Present tense of 'wissen' (to know)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "id": "stem-change-e-to-i",
+          "label": "Stem-change e→i in du/er forms (e.g. sprechen→spricht)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "stem-change-e-to-ie",
+          "label": "Stem-change e→ie in du/er forms (e.g. lesen→liest)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.3
+        },
+        {
+          "id": "stem-change-a-to-ae",
+          "label": "Stem-change a→ä in du/er forms (e.g. fahren→fährt)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "no-stem-change-ich-plural",
+          "label": "Absence of stem change in ich-form and plural",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"sein-present\",\n    directive: \"Write an exercise practising the present tense of 'sein'. Use at least one conjugated form of 'sein' (bin, bist, ist, sind, seid) in the target sentence, e.g. 'Sie ist müde.'\",\n    share: 3,\n  },\n  {\n    id: \"haben-present\",\n    directive: \"Write an exercise practising the present tense of 'haben'. Use at least one conjugated form of 'haben' (habe, hast, hat, haben, habt) in the target sentence, e.g. 'Er hat Hunger.'\",\n    share: 2,\n  },\n  {\n    id: \"werden-present\",\n    directive: \"Write an exercise practising the present tense of 'werden'. Use at least one conjugated form of 'werden' (werde, wirst, wird, werden, werdet) in the target sentence, e.g. 'Es wird kalt.'\",\n    share: 3,\n  },\n  {\n    id: \"wissen-present\",\n    directive: \"Write an exercise practising the present tense of 'wissen'. Use at least one conjugated form of 'wissen' (weiß, weißt, wissen, wisst) in the target sentence, e.g. 'Ich weiß die Antwort nicht.'\",\n    share: 2,\n  },\n  {\n    id: \"stem-change-e-to-i\",\n    directive: \"Write an exercise practising the e→i stem change in the du- or er/sie/es-form of a present-tense verb. Use a verb such as sprechen→spricht, geben→gibt, or nehmen→nimmt in the target sentence, e.g. 'Du sprichst sehr gut Deutsch.'\",\n    share: 3,\n  },\n  {\n    id: \"stem-change-e-to-ie\",\n    directive: \"Write an exercise practising the e→ie stem change in the du- or er/sie/es-form of a present-tense verb. Use a verb such as lesen→liest, sehen→sieht, or empfehlen→empfiehlt in the target sentence, e.g. 'Er liest jeden Abend ein Buch.'\",\n    share: 2,\n  },\n  {\n    id: \"stem-change-a-to-ae\",\n    directive: \"Write an exercise practising the a→ä stem change in the du- or er/sie/es-form of a present-tense verb. Use a verb such as fahren→fährt, schlafen→schläft, or tragen→trägt in the target sentence, e.g. 'Er fährt jeden Tag mit dem Bus.'\",\n    share: 3,\n  },\n  {\n    id: \"no-stem-change-ich-plural\",\n    directive: \"Write an exercise that highlights the absence of a stem change in the ich-form or a plural form of a stem-changing verb. The target sentence must use the ich-, wir-, ihr-, or sie/Sie-form of a verb that would change in du/er, e.g. 'Ich fahre morgen nach Berlin.' or 'Wir lesen zusammen.'\",\n    share: 2,\n  },\n],",
+        "notes": "sein-present, werden-present, stem-change-a-to-ae, and no-stem-change-ich-plural were all at 0–1/20, so they receive share 3 to boost generation priority. haben-present, wissen-present, and stem-change-e-to-ie were already partially covered and sit at share 2. no-stem-change-ich-plural is marked not load-bearing in the source data but is included here so the generator is at least nudged toward it without dominating the pool."
+      }
+    },
+    {
+      "cellKey": "de-a1-questions:cloze",
+      "grammarPointKey": "de-a1-questions",
+      "grammarPointName": "W-questions, yes/no questions and doch",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "doch-answer-negative-question",
+          "label": "Doch as positive answer to a negative yes/no question",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "w-question-verb-second",
+          "label": "W-question with verb in second position",
+          "mustRepresent": true,
+          "count": 17,
+          "share": 0.85
+        },
+        {
+          "id": "yes-no-question-verb-first",
+          "label": "Yes/no question with verb in first position",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "doch-answer-negative-question",
+          "label": "Doch as positive answer to a negative yes/no question",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"w-question-verb-second\",\n    directive: \"Write a W-question using one of the question words wer, was, wo, wohin, woher, wann, wie, or warum with the finite verb in second position. Example: 'Woher kommst du?'\",\n    share: 3,\n  },\n  {\n    id: \"yes-no-question-verb-first\",\n    directive: \"Write a yes/no question with the finite verb in first position (no question word). Example: 'Hast du heute Zeit?'\",\n    share: 2,\n  },\n  {\n    id: \"doch-answer-negative-question\",\n    directive: \"Write a negative yes/no question followed by a doch reply that answers it positively. Example: 'Hast du keine Zeit? — Doch, ich habe Zeit.'\",\n    share: 2,\n  },\n],",
+        "notes": "The doch construction had zero realized exercises and yes/no questions were heavily under-represented (3/20) while W-questions dominated (17/20). Shares of 3-2-2 give W-questions a plurality (~43 %) without letting them crowd out the other two constructions."
+      }
+    },
+    {
+      "cellKey": "de-a1-temporal-prepositions:cloze",
+      "grammarPointKey": "de-a1-temporal-prepositions",
+      "grammarPointName": "Temporal prepositions",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "im-months-seasons",
+          "label": "im + month / season",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "fuer-accusative-duration",
+          "label": "für + accusative for duration",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-accusative-time",
+          "label": "Bare accusative time phrase (no preposition)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "am-days-parts-of-day",
+          "label": "am + day of week / part of day",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.5
+        },
+        {
+          "id": "um-clock-time",
+          "label": "um + clock time",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.2
+        },
+        {
+          "id": "im-months-seasons",
+          "label": "im + month / season",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "von-bis-ab-spans",
+          "label": "von … bis / ab for time spans",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "in-dative-relative-future",
+          "label": "in + dative for relative future time",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "fuer-accusative-duration",
+          "label": "für + accusative for duration",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-accusative-time",
+          "label": "Bare accusative time phrase (no preposition)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "vor-nach-dative-relative-time",
+          "label": "vor / nach + dative for relative past/sequence time",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "in-der-nacht",
+          "label": "in der Nacht (night as special case)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"am-days-parts-of-day\",\n    directive: \"Write a sentence using 'am' with a day of the week or part of the day (e.g. 'am Dienstag', 'am Morgen', 'am Abend'). The temporal phrase must be the focus of the sentence.\",\n    share: 3,\n  },\n  {\n    id: \"um-clock-time\",\n    directive: \"Write a sentence using 'um' with a specific clock time (e.g. 'um acht Uhr', 'um halb drei'). The time expression must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"im-months-seasons\",\n    directive: \"Write a sentence using 'im' with a month or season (e.g. 'im Oktober', 'im Winter'). The temporal phrase must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"von-bis-ab-spans\",\n    directive: \"Write a sentence using either 'von … bis' or 'ab' to express a time span or start point (e.g. 'von Montag bis Freitag', 'ab nächster Woche'). The span expression must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"in-dative-relative-future\",\n    directive: \"Write a sentence using 'in' with a dative noun phrase to express a future time offset (e.g. 'in zehn Minuten', 'in einer Stunde', 'in zwei Wochen'). The relative-future phrase must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"fuer-accusative-duration\",\n    directive: \"Write a sentence using 'für' with an accusative noun phrase to express a duration (e.g. 'für drei Tage', 'für eine Woche'). The duration phrase must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"bare-accusative-time\",\n    directive: \"Write a sentence with a bare accusative time phrase and NO preposition (e.g. 'jeden Tag', 'den ganzen Abend', 'nächste Woche', 'letzten Monat'). The accusative time phrase must be the focus of the sentence.\",\n    share: 2,\n  },\n  {\n    id: \"vor-nach-dative-relative-time\",\n    directive: \"Write a sentence using 'vor' or 'nach' with a dative noun phrase to express relative past or sequential time (e.g. 'vor einer Stunde', 'nach dem Frühstück'). The temporal phrase must be the focus of the sentence.\",\n    share: 1,\n  },\n  {\n    id: \"in-der-nacht\",\n    directive: \"Write a sentence using the fixed phrase 'in der Nacht' to express nighttime (e.g. 'In der Nacht ist es sehr ruhig.'). The phrase must be the focus of the sentence.\",\n    share: 1,\n  },\n],",
+        "notes": "The pool was dominated by am-days-parts-of-day (10/20) while fuer-accusative-duration, bare-accusative-time, vor-nach-dative-relative-time, and in-der-nacht had zero coverage. The prototypical 'am' variant keeps a plurality at share 3, all load-bearing under-covered variants are raised to share 2, and the two non-load-bearing variants (vor/nach, in der Nacht) sit at share 1 to ensure they appear without crowding the core constructions."
+      }
+    },
+    {
+      "cellKey": "de-a1-temporal-prepositions:translation",
+      "grammarPointKey": "de-a1-temporal-prepositions",
+      "grammarPointName": "Temporal prepositions",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "im-months-seasons",
+          "label": "im + month / season",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "von-bis-ab-spans",
+          "label": "von … bis / ab for time spans",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "fuer-accusative-duration",
+          "label": "für + accusative for duration",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "am-days-parts-of-day",
+          "label": "am + day of week / part of day",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.25
+        },
+        {
+          "id": "um-clock-time",
+          "label": "um + clock time",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.5
+        },
+        {
+          "id": "im-months-seasons",
+          "label": "im + month / season",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "von-bis-ab-spans",
+          "label": "von … bis / ab for time spans",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "in-dative-relative-future",
+          "label": "in + dative for relative future time",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "fuer-accusative-duration",
+          "label": "für + accusative for duration",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "bare-accusative-time",
+          "label": "Bare accusative time phrase (no preposition)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        },
+        {
+          "id": "vor-nach-dative-relative-time",
+          "label": "vor / nach + dative for relative past/sequence time",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "in-der-nacht",
+          "label": "in der Nacht (night as special case)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"am-days-parts-of-day\",\n    directive: \"Write a sentence using 'am' with a day of the week or part of the day to express when something happens (e.g. 'am Dienstag', 'am Morgen', 'am Abend').\",\n    share: 3,\n  },\n  {\n    id: \"um-clock-time\",\n    directive: \"Write a sentence using 'um' with a specific clock time (e.g. 'um acht Uhr', 'um halb drei', 'um 14:30 Uhr').\",\n    share: 2,\n  },\n  {\n    id: \"im-months-seasons\",\n    directive: \"Write a sentence using 'im' with a month or season to express when something happens (e.g. 'im März', 'im Winter', 'im Frühling').\",\n    share: 2,\n  },\n  {\n    id: \"von-bis-ab-spans\",\n    directive: \"Write a sentence using 'von … bis' or 'ab' to express a time span or start point (e.g. 'von Montag bis Freitag', 'ab nächster Woche', 'von 9 bis 17 Uhr').\",\n    share: 2,\n  },\n  {\n    id: \"in-dative-relative-future\",\n    directive: \"Write a sentence using 'in' with a dative noun phrase to express a future time relative to now (e.g. 'in zehn Minuten', 'in einer Stunde', 'in zwei Wochen').\",\n    share: 2,\n  },\n  {\n    id: \"fuer-accusative-duration\",\n    directive: \"Write a sentence using 'für' with an accusative noun phrase to express a duration (e.g. 'für drei Tage', 'für eine Woche', 'für zwei Stunden').\",\n    share: 2,\n  },\n  {\n    id: \"bare-accusative-time\",\n    directive: \"Write a sentence with a bare accusative time phrase and no preposition (e.g. 'jeden Tag', 'den ganzen Abend', 'nächste Woche', 'letzten Monat').\",\n    share: 2,\n  },\n  {\n    id: \"vor-nach-dative-relative-time\",\n    directive: \"Write a sentence using 'vor' or 'nach' with a dative noun phrase to express relative past or sequential time (e.g. 'vor einer Stunde', 'nach dem Frühstück', 'vor zwei Tagen').\",\n    share: 1,\n  },\n  {\n    id: \"in-der-nacht\",\n    directive: \"Write a sentence using 'in der Nacht' to express that something happens at night (e.g. 'In der Nacht schläft er schlecht.').\",\n    share: 1,\n  },\n],",
+        "notes": "Five constructions were at zero or near-zero coverage (von-bis-ab-spans, fuer-accusative-duration, vor-nach-dative-relative-time, in-der-nacht) or severely under-represented (im-months-seasons, in-dative-relative-future, bare-accusative-time). The dominant um-clock-time variant (10/20) is reined in to share 2, while am-days-parts-of-day retains a plurality at share 3 as the prototypical construction; the two non-load-bearing variants (vor-nach and in-der-nacht) are included at share 1 to ensure they appear without distorting the pool."
+      }
+    },
+    {
+      "cellKey": "de-a1-v2-word-order:cloze",
+      "grammarPointKey": "de-a1-v2-word-order",
+      "grammarPointName": "V2 word order in main clauses",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "v2-subject-initial",
+          "label": "Subject in position 1, verb in position 2 (SVO baseline)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "v2-subject-initial",
+          "label": "Subject in position 1, verb in position 2 (SVO baseline)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "v2-fronted-adverb",
+          "label": "Fronted adverb in position 1, verb in position 2, subject after verb",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.95
+        },
+        {
+          "id": "v2-fronted-object",
+          "label": "Fronted object in position 1, verb in position 2, subject after verb",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "v2-coordinator-not-position1",
+          "label": "Clause-initial coordinator (und/aber/denn) does NOT count as position 1",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"v2-subject-initial\",\n    directive: \"Write a German main clause where the subject occupies position 1 and the finite verb immediately follows in position 2 (SVO baseline), e.g. 'Ich gehe heute ins Kino.'\",\n    share: 3,\n  },\n  {\n    id: \"v2-fronted-adverb\",\n    directive: \"Write a German main clause where a time or place adverb occupies position 1, the finite verb follows in position 2, and the subject comes after the verb (verb-second inversion), e.g. 'Heute gehe ich ins Kino.'\",\n    share: 1,\n  },\n  {\n    id: \"v2-fronted-object\",\n    directive: \"Write a German main clause where a direct or indirect object occupies position 1, the finite verb follows in position 2, and the subject comes after the verb (verb-second inversion), e.g. 'Den Apfel esse ich gern.'\",\n    share: 1,\n  },\n  {\n    id: \"v2-coordinator-not-position1\",\n    directive: \"Write two German main clauses joined by 'und', 'aber', or 'denn'. The coordinator must NOT count as position 1: the finite verb of the second clause must still be in position 2 relative to its first constituent, e.g. 'Ich bin müde, aber heute gehe ich trotzdem ins Kino.'\",\n    share: 1,\n  },\n],",
+        "notes": "The pool was almost entirely v2-fronted-adverb (19/20); the SVO baseline and coordinator edge-case had zero coverage. Giving v2-subject-initial a share of 3 makes it the plurality (~50%) without crowding out the three rarer variants, each at share 1 (~17% each)."
+      }
+    },
+    {
+      "cellKey": "de-a1-v2-word-order:translation",
+      "grammarPointKey": "de-a1-v2-word-order",
+      "grammarPointName": "V2 word order in main clauses",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "v2-subject-initial",
+          "label": "Subject in position 1, verb in position 2 (SVO baseline)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "v2-subject-initial",
+          "label": "Subject in position 1, verb in position 2 (SVO baseline)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "v2-fronted-adverb",
+          "label": "Fronted adverb in position 1, verb in position 2, subject after verb",
+          "mustRepresent": true,
+          "count": 20,
+          "share": 1
+        },
+        {
+          "id": "v2-fronted-object",
+          "label": "Fronted object in position 1, verb in position 2, subject after verb",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "v2-coordinator-not-position1",
+          "label": "Clause-initial coordinator (und/aber/denn) does NOT count as position 1",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"v2-subject-initial\",\n    directive: \"Write a German main clause with the SUBJECT in position 1 and the finite verb in position 2 (SVO baseline). Example: 'Ich gehe heute ins Kino.'\",\n    share: 3,\n  },\n  {\n    id: \"v2-fronted-adverb\",\n    directive: \"Write a German main clause with a TIME or PLACE ADVERB in position 1, the finite verb in position 2, and the subject immediately after the verb (verb-second inversion). Example: 'Heute gehe ich ins Kino.'\",\n    share: 1,\n  },\n  {\n    id: \"v2-fronted-object\",\n    directive: \"Write a German main clause with the OBJECT fronted to position 1, the finite verb in position 2, and the subject immediately after the verb. Example: 'Den Apfel esse ich jeden Tag.'\",\n    share: 1,\n  },\n  {\n    id: \"v2-coordinator-not-position1\",\n    directive: \"Write two German main clauses joined by 'und', 'aber', or 'denn'. The coordinator must NOT count as position 1: the finite verb of the second clause must still be in position 2 of that clause, with the subject in position 1. Example: 'Ich lese ein Buch, aber sie geht spazieren.'\",\n    share: 1,\n  },\n],",
+        "notes": "All three non-adverb variants were at 0/20; the adverb variant was monopolising the pool at 20/20. Subject-initial gets share 3 as the prototypical baseline (plurality without dominance), and the three marked variants each get share 1, targeting roughly 50 % subject-initial and ~17 % each for the others."
+      }
+    },
+    {
+      "cellKey": "de-a1-zero-article:translation",
+      "grammarPointKey": "de-a1-zero-article",
+      "grammarPointName": "Zero article: professions, nationalities and indefinite plurals",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 20,
+      "classified": 20,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "zero-article-als-role-phrase",
+          "label": "Zero article in als-role phrases (als Kind, als Lehrerin arbeiten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "zero-article-profession-nationality-sein-werden",
+          "label": "Zero article after sein/werden (profession, nationality, religion)",
+          "mustRepresent": true,
+          "count": 17,
+          "share": 0.85
+        },
+        {
+          "id": "zero-article-indefinite-plural-mass-noun",
+          "label": "Zero article with indefinite plurals and mass nouns",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "zero-article-als-role-phrase",
+          "label": "Zero article in als-role phrases (als Kind, als Lehrerin arbeiten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "article-returns-with-adjective",
+          "label": "Article restored when noun is modified by adjective (eine gute Ärztin)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zero-article-language-names",
+          "label": "Zero article with language names",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"zero-article-profession-nationality-sein-werden\",\n    directive: \"Write a sentence using sein or werden with a profession, nationality, or religion and NO article before the noun (e.g. 'Sie ist Ärztin.' or 'Er wird Ingenieur.').\",\n    share: 3,\n  },\n  {\n    id: \"zero-article-indefinite-plural-mass-noun\",\n    directive: \"Write a sentence with an indefinite plural or mass noun that takes NO article (e.g. 'Wir haben Äpfel und Brot gekauft.' or 'Er trinkt Kaffee.').\",\n    share: 2,\n  },\n  {\n    id: \"zero-article-als-role-phrase\",\n    directive: \"Write a sentence containing an als-role phrase with NO article before the noun (e.g. 'Als Kind habe ich in München gewohnt.' or 'Sie arbeitet als Lehrerin.').\",\n    share: 2,\n  },\n  {\n    id: \"article-returns-with-adjective\",\n    directive: \"Write a sentence where a profession or role noun after sein is modified by an adjective, so the article IS required (e.g. 'Sie ist eine gute Ärztin.' or 'Er ist ein erfahrener Lehrer.').\",\n    share: 1,\n  },\n  {\n    id: \"zero-article-language-names\",\n    directive: \"Write a sentence using a language name with NO article (e.g. 'Ich lerne Deutsch.' or 'Sie spricht Spanisch und Französisch.').\",\n    share: 1,\n  },\n],",
+        "notes": "The profession/nationality variant dominated the pool (17/20) while three variants had zero coverage. Shares of 3-2-2-1-1 give the prototypical construction a plurality (~33%) without crowding out the under-represented ones; als-role and adjective-restoration variants each target ~22% and ~11% respectively, which should surface them reliably within a 20-sample pool."
+      }
+    },
+    {
+      "cellKey": "de-a1-plural-formation:translation",
+      "grammarPointKey": "de-a1-plural-formation",
+      "grammarPointName": "Noun plurals",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "coverage-spec",
+      "sampled": 19,
+      "classified": 19,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "plural-en",
+          "label": "Plural with -(e)n ending",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "plural-e",
+          "label": "Plural with -e ending (no umlaut)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.21052631578947367
+        },
+        {
+          "id": "plural-e-umlaut",
+          "label": "Plural with -e ending plus umlaut",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.21052631578947367
+        },
+        {
+          "id": "plural-er-umlaut",
+          "label": "Plural with -er ending plus umlaut",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.42105263157894735
+        },
+        {
+          "id": "plural-en",
+          "label": "Plural with -(e)n ending",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "plural-s",
+          "label": "Plural with -s ending",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05263157894736842
+        },
+        {
+          "id": "plural-zero",
+          "label": "Plural with zero ending (with or without umlaut)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.10526315789473684
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"plural-class\",\n      values: [\n        \"plural-e\",\n        \"plural-e-umlaut\",\n        \"plural-er-umlaut\",\n        \"plural-en\",\n        \"plural-s\",\n        \"plural-zero\",\n      ],\n    },\n  ],\n  minApprovedPerValue: {\n    \"plural-class\": {\n      \"plural-e\":         4,\n      \"plural-e-umlaut\":  4,\n      \"plural-er-umlaut\": 4,\n      \"plural-en\":        4,\n      \"plural-s\":         4,\n      \"plural-zero\":      4,\n    },\n  },\n},",
+        "notes": "Sets a floor of 4 approved exercises per plural class, matching the current best-covered variants and forcing generation to close the gaps for `plural-en` (0/19) and `plural-s` (1/19). The floor is intentionally modest so existing approved exercises for `plural-er-umlaut` (8) are not wasted."
+      }
+    },
+    {
+      "cellKey": "de-a1-es-gibt:cloze",
+      "grammarPointKey": "de-a1-es-gibt",
+      "grammarPointName": "es gibt + accusative",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 12,
+      "classified": 12,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "gibt-invariable",
+          "label": "gibt stays invariable regardless of what follows",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "es-gibt-accusative",
+          "label": "es gibt + accusative noun phrase",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 1
+        },
+        {
+          "id": "gibt-invariable",
+          "label": "gibt stays invariable regardless of what follows",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "es-gibt-vs-sein-location",
+          "label": "es gibt vs. sein for locating known specific items",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"es-gibt-accusative\",\n    directive: \"Write a sentence or question using 'es gibt' with an accusative noun phrase to express existence or availability. Example: 'Es gibt einen Park in der Nähe.'\",\n    share: 3,\n  },\n  {\n    id: \"gibt-invariable\",\n    directive: \"Write a sentence where 'es gibt' is followed by a plural accusative noun phrase, making clear that 'gibt' stays invariable (never 'geben') regardless of what follows. Example: 'Es gibt viele Cafés in dieser Stadt.'\",\n    share: 1,\n  },\n  {\n    id: \"es-gibt-vs-sein-location\",\n    directive: \"Write a pair of contrasting sentences: one using 'es gibt' to assert the existence of something unspecified, and one using 'sein' to state the location of a known specific item. Example: 'Es gibt einen Supermarkt hier. — Der Supermarkt ist um die Ecke.'\",\n    share: 1,\n  },\n],",
+        "notes": "The existing pool is saturated with plain accusative uses (12/12) while the invariable-gibt and es-gibt-vs-sein contrasts have zero coverage. The gibt-invariable variant uses plural NPs to make the invariability salient; es-gibt-vs-sein-location is marked not load-bearing so share 1 keeps it present but light."
+      }
+    },
+    {
+      "cellKey": "de-a1-es-gibt:translation",
+      "grammarPointKey": "de-a1-es-gibt",
+      "grammarPointName": "es gibt + accusative",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 12,
+      "classified": 12,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "gibt-invariable",
+          "label": "gibt stays invariable regardless of what follows",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "es-gibt-accusative",
+          "label": "es gibt + accusative noun phrase",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 1
+        },
+        {
+          "id": "gibt-invariable",
+          "label": "gibt stays invariable regardless of what follows",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "es-gibt-vs-sein-location",
+          "label": "es gibt vs. sein for locating known specific items",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"es-gibt-accusative\",\n    directive: \"Write a sentence or question using 'es gibt' with an accusative noun phrase to express existence or availability. Example: 'Es gibt einen Park in der Nähe.'\",\n    share: 3,\n  },\n  {\n    id: \"gibt-invariable\",\n    directive: \"Write a sentence where 'es gibt' is followed by a plural noun phrase, making clear that 'gibt' stays invariable (never 'geben') regardless of what follows. Example: 'Es gibt viele Restaurants in dieser Stadt.'\",\n    share: 1,\n  },\n  {\n    id: \"es-gibt-vs-sein-location\",\n    directive: \"Write a pair of sentences contrasting 'es gibt' for introducing an unknown/unspecified item with 'sein' for locating a known specific item. Example: 'Es gibt einen Supermarkt hier. — Der Supermarkt ist um die Ecke.'\",\n    share: 1,\n  },\n],",
+        "notes": "The existing pool is saturated with plain accusative uses; 'gibt-invariable' and 'es-gibt-vs-sein-location' have zero realized coverage. Shares of 3/1/1 target ~60 % for the prototypical construction while guaranteeing the two uncovered variants each receive roughly 20 % of new generation. 'es-gibt-vs-sein-location' is marked not load-bearing in the spec but still needs representation, so it keeps share 1 rather than being dropped."
+      }
+    },
+    {
+      "cellKey": "de-a1-zero-article:cloze",
+      "grammarPointKey": "de-a1-zero-article",
+      "grammarPointName": "Zero article: professions, nationalities and indefinite plurals",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "construction-variants",
+      "sampled": 10,
+      "classified": 10,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "zero-article-als-role-phrase",
+          "label": "Zero article in als-role phrases (als Kind, als Lehrerin arbeiten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "zero-article-profession-nationality-sein-werden",
+          "label": "Zero article after sein/werden (profession, nationality, religion)",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.7
+        },
+        {
+          "id": "zero-article-indefinite-plural-mass-noun",
+          "label": "Zero article with indefinite plurals and mass nouns",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.2
+        },
+        {
+          "id": "zero-article-als-role-phrase",
+          "label": "Zero article in als-role phrases (als Kind, als Lehrerin arbeiten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "article-returns-with-adjective",
+          "label": "Article restored when noun is modified by adjective (eine gute Ärztin)",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.1
+        },
+        {
+          "id": "zero-article-language-names",
+          "label": "Zero article with language names",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"zero-article-profession-nationality-sein-werden\",\n    directive:\n      \"Write a sentence using sein or werden where the predicate noun (a profession, nationality, or religion) takes NO article. Example: 'Ich bin Lehrerin.' or 'Er wird Arzt.'\",\n    share: 3,\n  },\n  {\n    id: \"zero-article-indefinite-plural-mass-noun\",\n    directive:\n      \"Write a sentence where an indefinite plural or mass noun appears without any article (equivalent to English 'some'). Example: 'Wir haben Äpfel und Brot gekauft.'\",\n    share: 2,\n  },\n  {\n    id: \"zero-article-als-role-phrase\",\n    directive:\n      \"Write a sentence containing an als-role phrase where the noun after als takes NO article. Example: 'Als Kind habe ich in Bonn gewohnt.' or 'Sie arbeitet als Lehrerin.'\",\n    share: 2,\n  },\n  {\n    id: \"article-returns-with-adjective\",\n    directive:\n      \"Write a sentence where a profession or role noun after sein or werden IS modified by an adjective, so the indefinite article is restored. Example: 'Sie ist eine gute Ärztin.'\",\n    share: 2,\n  },\n  {\n    id: \"zero-article-language-names\",\n    directive:\n      \"Write a sentence where a language name is used without any article (e.g. after sprechen, lernen, or auf). Example: 'Sie spricht Deutsch und Französisch.'\",\n    share: 1,\n  },\n],",
+        "notes": "The prototype construction (sein/werden + bare profession) was crowding out four other constructions, especially als-role phrases and language names which had zero realized exercises. Shares are set so the prototype targets ~30 % of the pool while each underrepresented variant gets a meaningful slice; article-returns-with-adjective is given share 2 (not 1) because it is a contrastive foil that is pedagogically important even though it was marked not load-bearing."
+      }
+    },
+    {
+      "cellKey": "de-a1-present-regular:cloze",
+      "grammarPointKey": "de-a1-present-regular",
+      "grammarPointName": "Present tense: regular conjugation",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A1",
+      "mechanism": "coverage-spec",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "s-sz-z-stem-du-contraction",
+          "label": "Only -t (no -s) added in du-form after s/ß/z stems (du heißt)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "regular-present-default-endings",
+          "label": "Default present endings (-e/-st/-t/-en/-t/-en)",
+          "mustRepresent": true,
+          "count": 21,
+          "share": 0.875
+        },
+        {
+          "id": "e-insertion-td-stems",
+          "label": "Epenthetic -e- before -st/-t after t/d stems (arbeitest, findet)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "s-sz-z-stem-du-contraction",
+          "label": "Only -t (no -s) added in du-form after s/ß/z stems (du heißt)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "eln-verb-ich-e-drop",
+          "label": "-eln verb ich-form with stem-e dropped (ich sammle)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"stem-class\",\n      values: [\n        \"regular-present-default-endings\",\n        \"e-insertion-td-stems\",\n        \"s-sz-z-stem-du-contraction\",\n        \"eln-verb-ich-e-drop\",\n      ],\n    },\n  ],\n  minApprovedPerValue: {\n    \"regular-present-default-endings\": 8,\n    \"e-insertion-td-stems\": 4,\n    \"s-sz-z-stem-du-contraction\": 4,\n    \"eln-verb-ich-e-drop\": 2,\n  },\n},",
+        "notes": "The pool is heavily skewed toward default endings (21/24) while the three orthographic sub-rules are starved (2, 1, 0). Floors of 8/4/4/2 force meaningful representation of every stem class without over-constraining the default majority; the -eln floor is kept low (2) because it is marked not load-bearing."
+      }
+    }
+  ],
+  "enumerationSuspect": [
+    {
+      "cellKey": "de-a1-noun-gender:cloze",
+      "unresolved": 9,
+      "sampled": 20
+    },
+    {
+      "cellKey": "de-a1-noun-gender:translation",
+      "unresolved": 10,
+      "sampled": 20
+    }
+  ],
+  "dismissed": [],
+  "thinCells": [],
+  "enumerationErrors": [],
+  "classificationErrors": [],
+  "proposalErrors": [],
+  "neverEnumerated": []
+}

@@ -1,0 +1,2026 @@
+{
+  "runName": "de-a2-2026-08-23",
+  "promptVersion": "construction-coverage@2026-08-19",
+  "seed": "default",
+  "samplePerCell": 24,
+  "partial": false,
+  "stoppedReason": null,
+  "summary": {
+    "pointsEnumerated": 31,
+    "pointsInScope": 31,
+    "pointsSingleConstruction": 4,
+    "cellsClassified": 55,
+    "rowsSampled": 1276,
+    "findings": 30,
+    "enumerationSuspect": 1,
+    "dismissed": 0,
+    "thinCellsSkipped": 0,
+    "enumerationErrors": 0,
+    "classificationErrors": 0,
+    "proposalErrors": 0,
+    "costUsd": 1.6634280000000001
+  },
+  "findings": [
+    {
+      "cellKey": "de-a2-adjective-declension-definite:translation",
+      "grammarPointKey": "de-a2-adjective-declension-definite",
+      "grammarPointName": "Adjective declension after der/das/die",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "coverage-spec",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "weak-adj-nom-sg",
+          "label": "Weak adj. -e in nominative singular (all genders)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "weak-adj-fem-neut-acc-sg",
+          "label": "Weak adj. -e in feminine/neuter accusative singular",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-adj-nom-sg",
+          "label": "Weak adj. -e in nominative singular (all genders)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "weak-adj-fem-neut-acc-sg",
+          "label": "Weak adj. -e in feminine/neuter accusative singular",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "weak-adj-en-elsewhere",
+          "label": "Weak adj. -en in all other slots (masc. acc., all datives, genitive, plural)",
+          "mustRepresent": true,
+          "count": 24,
+          "share": 1
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"weak-adj-slot\",\n      values: [\n        \"weak-adj-nom-sg\",\n        \"weak-adj-fem-neut-acc-sg\",\n        \"weak-adj-en-elsewhere\",\n      ],\n    },\n  ],\n  minApprovedPerValue: 6,\n},",
+        "notes": "All 24 sampled exercises landed in weak-adj-en-elsewhere; the two -e slots (nominative singular and feminine/neuter accusative singular) have zero coverage. A floor of 6 per value forces the generator to produce meaningful representation of every slot before the pool is considered approved."
+      }
+    },
+    {
+      "cellKey": "de-a2-adjective-declension-indefinite:cloze",
+      "grammarPointKey": "de-a2-adjective-declension-indefinite",
+      "grammarPointName": "Adjective declension after ein/kein/possessives",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "coverage-spec",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "mixed-decl-fem-nom-acc",
+          "label": "Feminine nominative/accusative: -e (eine neue Lampe)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "mixed-decl-masc-nom",
+          "label": "Masculine nominative: -er (ein neuer Tisch)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "mixed-decl-neut-nom-acc",
+          "label": "Neuter nominative/accusative: -es (ein neues Haus)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "mixed-decl-fem-nom-acc",
+          "label": "Feminine nominative/accusative: -e (eine neue Lampe)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "mixed-decl-oblique-en",
+          "label": "Oblique cases: -en (einen neuen Tisch, mit einem neuen Auto)",
+          "mustRepresent": true,
+          "count": 15,
+          "share": 0.625
+        },
+        {
+          "id": "mixed-decl-el-er-stem-drop",
+          "label": "Stem-vowel drop in -el/-er adjectives (dunkles, teures)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "mixed-decl-hoch-irregular",
+          "label": "Irregular stem of 'hoch' when inflected (hoher Turm)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "mixed-decl-indeclinable-color-loans",
+          "label": "Indeclinable color loanwords (rosa, lila stay bare)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"construction\",\n      values: [\n        \"mixed-decl-masc-nom\",\n        \"mixed-decl-neut-nom-acc\",\n        \"mixed-decl-fem-nom-acc\",\n        \"mixed-decl-oblique-en\",\n      ],\n    },\n  ],\n  minimumApprovedPerValue: {\n    \"mixed-decl-masc-nom\": 5,\n    \"mixed-decl-neut-nom-acc\": 5,\n    \"mixed-decl-fem-nom-acc\": 5,\n    \"mixed-decl-oblique-en\": 5,\n  },\n},",
+        "notes": "The three non-load-bearing variants (stem-drop, hoch, indeclinable loans) are excluded from the spec so they don't inflate the required pool size. The floor of 5 per load-bearing value ensures fem-nom-acc and neut-nom-acc (currently at 0 and 3) must be genuinely represented, while the over-represented oblique-en (15) is capped implicitly by the generator needing to satisfy all four values."
+      }
+    },
+    {
+      "cellKey": "de-a2-comparison:cloze",
+      "grammarPointKey": "de-a2-comparison",
+      "grammarPointName": "Comparative and superlative",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "irregular-comparative-superlative",
+          "label": "Irregular comparatives and superlatives (gut/besser, viel/mehr, etc.)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "gern-lieber-am-liebsten",
+          "label": "Preference ladder gern / lieber / am liebsten with verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "comparative-er",
+          "label": "Comparative with -er (+ umlaut)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "superlative-am-sten",
+          "label": "Superlative with am -sten (+ umlaut)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "irregular-comparative-superlative",
+          "label": "Irregular comparatives and superlatives (gut/besser, viel/mehr, etc.)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "als-after-comparative",
+          "label": "als after a comparative",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.375
+        },
+        {
+          "id": "genauso-wie-equality",
+          "label": "Equality comparison with (genauso) … wie",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "gern-lieber-am-liebsten",
+          "label": "Preference ladder gern / lieber / am liebsten with verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"comparative-er\",\n    directive: \"Write a sentence using a comparative adjective formed with -er (including umlaut where required, e.g. alt → älter). Example: 'München ist älter als Berlin.'\",\n    share: 3,\n  },\n  {\n    id: \"superlative-am-sten\",\n    directive: \"Write a sentence using a superlative formed with am …sten (including umlaut where required, e.g. kalt → am kältesten). Example: 'Der Januar ist am kältesten.'\",\n    share: 2,\n  },\n  {\n    id: \"irregular-comparative-superlative\",\n    directive: \"Write a sentence using an irregular comparative or superlative: gut/besser/am besten, viel/mehr/am meisten, or hoch/höher/am höchsten. Example: 'Dieses Buch ist besser als das andere.'\",\n    share: 2,\n  },\n  {\n    id: \"als-after-comparative\",\n    directive: \"Write a sentence that uses als directly after a comparative adjective to introduce the second element of comparison. Example: 'Sie läuft schneller als ihr Bruder.'\",\n    share: 2,\n  },\n  {\n    id: \"genauso-wie-equality\",\n    directive: \"Write a sentence expressing equality using (genauso) … wie. Example: 'Er ist genauso groß wie sein Vater.'\",\n    share: 2,\n  },\n  {\n    id: \"gern-lieber-am-liebsten\",\n    directive: \"Write a sentence (or a short set of up to three sentences) using at least one of gern / lieber / am liebsten with a verb to express preference. Example: 'Ich esse gern Pizza, aber am liebsten esse ich Pasta.'\",\n    share: 2,\n  },\n],",
+        "notes": "The `gern-lieber-am-liebsten` variant had zero realizations and `irregular-comparative-superlative` only one, so both receive share 2 to lift them into the pool alongside the other under-represented variants. `comparative-er` gets share 3 as the prototypical construction, giving it a plurality (~23%) without dominating the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-comparison:translation",
+      "grammarPointKey": "de-a2-comparison",
+      "grammarPointName": "Comparative and superlative",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "comparative-er",
+          "label": "Comparative with -er (+ umlaut)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "gern-lieber-am-liebsten",
+          "label": "Preference ladder gern / lieber / am liebsten with verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "comparative-er",
+          "label": "Comparative with -er (+ umlaut)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "superlative-am-sten",
+          "label": "Superlative with am -sten (+ umlaut)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        },
+        {
+          "id": "irregular-comparative-superlative",
+          "label": "Irregular comparatives and superlatives (gut/besser, viel/mehr, etc.)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "als-after-comparative",
+          "label": "als after a comparative",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        },
+        {
+          "id": "genauso-wie-equality",
+          "label": "Equality comparison with (genauso) … wie",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.4166666666666667
+        },
+        {
+          "id": "gern-lieber-am-liebsten",
+          "label": "Preference ladder gern / lieber / am liebsten with verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"comparative-er\",\n    directive: \"Write a sentence using a comparative adjective formed with -er (including umlaut where applicable), e.g. 'Berlin ist größer als München.'\",\n    share: 3,\n  },\n  {\n    id: \"superlative-am-sten\",\n    directive: \"Write a sentence using a superlative formed with am …sten (including umlaut where applicable), e.g. 'Der Mount Everest ist am höchsten.'\",\n    share: 1,\n  },\n  {\n    id: \"irregular-comparative-superlative\",\n    directive: \"Write a sentence using an irregular comparative or superlative (gut → besser → am besten; viel → mehr → am meisten; hoch → höher → am höchsten), e.g. 'Dieses Buch ist besser als jenes.'\",\n    share: 1,\n  },\n  {\n    id: \"als-after-comparative\",\n    directive: \"Write a sentence that uses als directly after a comparative adjective to introduce the second element of comparison, e.g. 'Sie läuft schneller als ihr Bruder.'\",\n    share: 1,\n  },\n  {\n    id: \"genauso-wie-equality\",\n    directive: \"Write a sentence expressing equality using (genauso) … wie, e.g. 'Er ist genauso groß wie sein Vater.'\",\n    share: 1,\n  },\n  {\n    id: \"gern-lieber-am-liebsten\",\n    directive: \"Write a sentence using the preference ladder gern / lieber / am liebsten with a verb to express a preference, e.g. 'Ich esse gern Pizza, aber am liebsten esse ich Pasta.'\",\n    share: 3,\n  },\n],",
+        "notes": "comparative-er and gern-lieber-am-liebsten were both at 0/24 — they receive a share of 3 each (matching the prototypical slot) to aggressively recover coverage. The four remaining variants each get share 1 since they already show some presence; this targets roughly equal representation across the pool without letting any single construction dominate."
+      }
+    },
+    {
+      "cellKey": "de-a2-dative-accusative-objects:translation",
+      "grammarPointKey": "de-a2-dative-accusative-objects",
+      "grammarPointName": "Order of dative and accusative objects",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "acc-before-dat-pronoun-pronoun",
+          "label": "Accusative pronoun before dative pronoun",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "dat-before-acc-noun-noun",
+          "label": "Dative noun before accusative noun",
+          "mustRepresent": true,
+          "count": 22,
+          "share": 0.9166666666666666
+        },
+        {
+          "id": "acc-before-dat-pronoun-pronoun",
+          "label": "Accusative pronoun before dative pronoun",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "pronoun-before-noun",
+          "label": "Pronoun object before noun object",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "two-accusative-verbs",
+          "label": "Verbs taking two accusative objects (kosten, lehren, fragen)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"dat-before-acc-noun-noun\",\n    directive: \"Write a sentence with a two-object verb (geben, schenken, zeigen, or erklären) where BOTH objects are full noun phrases and the dative noun phrase precedes the accusative noun phrase, e.g. 'Ich schenke meiner Mutter einen Blumenstrauß.'\",\n    share: 3,\n  },\n  {\n    id: \"acc-before-dat-pronoun-pronoun\",\n    directive: \"Write a sentence with a two-object verb (geben, schenken, zeigen, or erklären) where BOTH objects are pronouns and the accusative pronoun comes BEFORE the dative pronoun, e.g. 'Ich gebe es ihm.'\",\n    share: 3,\n  },\n  {\n    id: \"pronoun-before-noun\",\n    directive: \"Write a sentence with a two-object verb (geben, schenken, zeigen, or erklären) where one object is a pronoun and the other is a full noun phrase, and the pronoun object comes BEFORE the noun object, e.g. 'Ich zeige dir die Fotos.' or 'Ich erkläre es meinem Bruder.'\",\n    share: 3,\n  },\n  {\n    id: \"two-accusative-verbs\",\n    directive: \"Write a sentence using a verb that takes two accusative objects (kosten, lehren, or fragen), e.g. 'Das kostet mich keinen Cent.'\",\n    share: 1,\n  },\n],",
+        "notes": "The two critical zero-coverage variants (acc-before-dat-pronoun-pronoun and pronoun-before-noun) are given equal share to dat-before-acc-noun-noun so each targets ~27% of the pool. The non-load-bearing two-accusative-verbs variant is retained at share 1 (~9%) to avoid complete omission without distorting the core coverage."
+      }
+    },
+    {
+      "cellKey": "de-a2-demonstratives-welch:cloze",
+      "grammarPointKey": "de-a2-demonstratives-welch",
+      "grammarPointName": "Demonstratives and question articles (dieser, welcher, was für ein)",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "stressed-der-demonstrative-pronoun",
+          "label": "Stressed der/das/die as demonstrative pronoun",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "was-fuer-ein-question-article",
+          "label": "was fuer ein? asking about kind or quality",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "derselbe-the-same",
+          "label": "derselbe/dieselbe/dasselbe fused article + selb-",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "dieser-declined-attributive",
+          "label": "dieser/dieses/diese as attributive demonstrative adjective",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.7916666666666666
+        },
+        {
+          "id": "stressed-der-demonstrative-pronoun",
+          "label": "Stressed der/das/die as demonstrative pronoun",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "welcher-question-article",
+          "label": "welch- as question article (choice from known set)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "was-fuer-ein-question-article",
+          "label": "was fuer ein? asking about kind or quality",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "so-ein-solch-such-a",
+          "label": "so ein / solch- expressing 'such a'",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "derselbe-the-same",
+          "label": "derselbe/dieselbe/dasselbe fused article + selb-",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "jener-formal-demonstrative",
+          "label": "jener as formal/written demonstrative",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"dieser-declined-attributive\",\n    directive:\n      \"Write a sentence using 'dieser', 'dieses', or 'diese' as an attributive demonstrative adjective before a noun, correctly declined for gender and case (e.g. 'Dieser Käse schmeckt super.').\",\n    share: 3,\n  },\n  {\n    id: \"stressed-der-demonstrative-pronoun\",\n    directive:\n      \"Write a sentence using a stressed 'der', 'das', or 'die' as a demonstrative pronoun (standing alone, replacing a noun) to point out or evaluate something (e.g. 'Der ist wirklich gut!' or 'Die kenne ich nicht.').\",\n    share: 1,\n  },\n  {\n    id: \"welcher-question-article\",\n    directive:\n      \"Write a question using 'welcher', 'welches', or 'welche' as a question article to ask someone to choose from a known set (e.g. 'Welches Buch liest du gerade?').\",\n    share: 1,\n  },\n  {\n    id: \"was-fuer-ein-question-article\",\n    directive:\n      \"Write a question using 'was für ein', 'was für eine', or 'was für eines' to ask about the kind or quality of something (e.g. 'Was für ein Auto hast du?' or 'Was für eine Musik magst du?').\",\n    share: 1,\n  },\n  {\n    id: \"derselbe-the-same\",\n    directive:\n      \"Write a sentence using 'derselbe', 'dieselbe', 'dasselbe', or an inflected form (e.g. 'denselben', 'im selben') to express 'the same' with the fused article + selb- construction (e.g. 'Er macht immer denselben Fehler.' or 'Wir wohnen im selben Haus.').\",\n    share: 1,\n  },\n],",
+        "notes": "The existing pool is heavily skewed toward 'dieser'-attributive (19/24); five constructions had zero or near-zero coverage. The share-3 plurality for 'dieser-declined-attributive' keeps it dominant (~37 %) while the four share-1 slots each target ~12 %, rescuing the zero-coverage load-bearing variants. The two explicitly not-load-bearing variants ('so-ein-solch-' and 'jener') are omitted from the pool to avoid diluting coverage of the tested constructions."
+      }
+    },
+    {
+      "cellKey": "de-a2-demonstratives-welch:translation",
+      "grammarPointKey": "de-a2-demonstratives-welch",
+      "grammarPointName": "Demonstratives and question articles (dieser, welcher, was für ein)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "dieser-declined-attributive",
+          "label": "dieser/dieses/diese as attributive demonstrative adjective",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "stressed-der-demonstrative-pronoun",
+          "label": "Stressed der/das/die as demonstrative pronoun",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "derselbe-the-same",
+          "label": "derselbe/dieselbe/dasselbe fused article + selb-",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "dieser-declined-attributive",
+          "label": "dieser/dieses/diese as attributive demonstrative adjective",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "stressed-der-demonstrative-pronoun",
+          "label": "Stressed der/das/die as demonstrative pronoun",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "welcher-question-article",
+          "label": "welch- as question article (choice from known set)",
+          "mustRepresent": true,
+          "count": 18,
+          "share": 0.75
+        },
+        {
+          "id": "was-fuer-ein-question-article",
+          "label": "was fuer ein? asking about kind or quality",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "so-ein-solch-such-a",
+          "label": "so ein / solch- expressing 'such a'",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "derselbe-the-same",
+          "label": "derselbe/dieselbe/dasselbe fused article + selb-",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "jener-formal-demonstrative",
+          "label": "jener as formal/written demonstrative",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"welcher-question-article\",\n    directive: \"Write an exercise targeting welch- as a question article selecting from a known set (e.g. 'Welches Buch liest du gerade?').\",\n    share: 1,\n  },\n  {\n    id: \"was-fuer-ein-question-article\",\n    directive: \"Write an exercise targeting was für ein? asking about kind or quality (e.g. 'Was für ein Auto hast du?').\",\n    share: 1,\n  },\n  {\n    id: \"dieser-declined-attributive\",\n    directive: \"Write an exercise targeting dieser/dieses/diese as an attributive demonstrative adjective declined like the definite article (e.g. 'Dieser Käse schmeckt super.' or 'Ich mag dieses Buch.').\",\n    share: 3,\n  },\n  {\n    id: \"stressed-der-demonstrative-pronoun\",\n    directive: \"Write an exercise targeting stressed der/das/die used as a demonstrative pronoun standing alone (e.g. 'Der ist gut!' or 'Die kenne ich nicht.').\",\n    share: 3,\n  },\n  {\n    id: \"derselbe-the-same\",\n    directive: \"Write an exercise targeting derselbe/dieselbe/dasselbe (and inflected forms) expressing 'the same', with the fused article + selb- construction (e.g. 'Er macht denselben Fehler.' or 'Wir wohnen im selben Haus.').\",\n    share: 2,\n  },\n  {\n    id: \"so-ein-solch-such-a\",\n    directive: \"Write an exercise targeting so ein or solch- expressing 'such a' (e.g. 'So ein schöner Tag!' or 'Solche Fehler passieren.').\",\n    share: 1,\n  },\n  {\n    id: \"jener-formal-demonstrative\",\n    directive: \"Write an exercise targeting jener/jenes/jene as a formal or written demonstrative (e.g. 'Jener Mann war sehr höflich.').\",\n    share: 1,\n  },\n],",
+        "notes": "welcher-question-article was monopolising the pool at 18/24; dieser-declined-attributive and stressed-der-demonstrative-pronoun get share 3 (the two core prototypical constructions) to give them a plurality without crowding out the rest. derselbe gets share 2 as a morphologically complex but load-bearing form; the two non-load-bearing variants (so-ein, jener) each get share 1 to ensure light but consistent presence."
+      }
+    },
+    {
+      "cellKey": "de-a2-destination-prepositions:cloze",
+      "grammarPointKey": "de-a2-destination-prepositions",
+      "grammarPointName": "Saying \"to\": nach, zu, in, an, auf",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "nach-cities-countries",
+          "label": "nach + city/country (no article)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "in-enterable-places-countries",
+          "label": "in + enterable places / article-bearing countries",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "nach-cities-countries",
+          "label": "nach + city/country (no article)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zu-people-institutions",
+          "label": "zu(m/r) + people and institutions",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.3333333333333333
+        },
+        {
+          "id": "in-enterable-places-countries",
+          "label": "in + enterable places / article-bearing countries",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "an-edges-water",
+          "label": "an(s) + edges and bodies of water",
+          "mustRepresent": true,
+          "count": 13,
+          "share": 0.5416666666666666
+        },
+        {
+          "id": "auf-islands-events",
+          "label": "auf + islands and events",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "nach-hause-motion",
+          "label": "nach Hause (motion toward home)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "zu-hause-location",
+          "label": "zu Hause (location at home)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nach-cities-countries\",\n    directive: \"Write a sentence using 'nach' with a city or country that takes no article to express travel destination (e.g. 'Wir fliegen nach Berlin.').\",\n    share: 3,\n  },\n  {\n    id: \"zu-people-institutions\",\n    directive: \"Write a sentence using 'zu' (contracted as 'zum' or 'zur' where appropriate) with a person or institution as the destination (e.g. 'Ich gehe zum Arzt.').\",\n    share: 2,\n  },\n  {\n    id: \"in-enterable-places-countries\",\n    directive: \"Write a sentence using 'in' (with accusative article) with an enterable place or an article-bearing country as the destination (e.g. 'Sie geht in die Schule.' or 'Wir reisen in die Schweiz.').\",\n    share: 2,\n  },\n  {\n    id: \"an-edges-water\",\n    directive: \"Write a sentence using 'an' (contracted as 'ans' where appropriate) with a body of water or edge location as the destination (e.g. 'Im Sommer fahren wir ans Meer.').\",\n    share: 1,\n  },\n  {\n    id: \"nach-hause-motion\",\n    directive: \"Write a sentence using the fixed phrase 'nach Hause' to express movement toward home (e.g. 'Er kommt nach Hause.').\",\n    share: 1,\n  },\n],",
+        "notes": "nach-cities-countries (0/24), in-enterable-places-countries (1/24), and nach-hause-motion (2/24) are severely under-represented while an-edges-water dominates at 13/24. The two non-load-bearing variants (auf-islands-events, zu-hause-location) are omitted from the pool entirely to keep generation focused on the five constructions that must be covered. Share weights give nach-cities-countries a plurality (3) as the prototypical case while capping an-edges-water at share 1 to break its current dominance."
+      }
+    },
+    {
+      "cellKey": "de-a2-destination-prepositions:translation",
+      "grammarPointKey": "de-a2-destination-prepositions",
+      "grammarPointName": "Saying \"to\": nach, zu, in, an, auf",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "nach-cities-countries",
+          "label": "nach + city/country (no article)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "nach-hause-motion",
+          "label": "nach Hause (motion toward home)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nach-cities-countries",
+          "label": "nach + city/country (no article)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.043478260869565216
+        },
+        {
+          "id": "zu-people-institutions",
+          "label": "zu(m/r) + people and institutions",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.30434782608695654
+        },
+        {
+          "id": "in-enterable-places-countries",
+          "label": "in + enterable places / article-bearing countries",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.17391304347826086
+        },
+        {
+          "id": "an-edges-water",
+          "label": "an(s) + edges and bodies of water",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.391304347826087
+        },
+        {
+          "id": "auf-islands-events",
+          "label": "auf + islands and events",
+          "mustRepresent": false,
+          "count": 2,
+          "share": 0.08695652173913043
+        },
+        {
+          "id": "nach-hause-motion",
+          "label": "nach Hause (motion toward home)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "zu-hause-location",
+          "label": "zu Hause (location at home)",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nach-cities-countries\",\n    directive: \"Use 'nach' with a city or article-less country as the destination. Example: 'Wir fliegen nach Berlin.' Generate a sentence where someone travels nach + [city or country without article].\",\n    share: 3,\n  },\n  {\n    id: \"zu-people-institutions\",\n    directive: \"Use 'zu' (contracted as 'zum' or 'zur' where appropriate) with a person or institution as the destination. Example: 'Ich gehe zum Arzt.' Generate a sentence where someone goes zu(m/r) + [person or institution].\",\n    share: 2,\n  },\n  {\n    id: \"in-enterable-places-countries\",\n    directive: \"Use 'in' (with accusative article) with an enterable place or an article-bearing country as the destination. Example: 'Sie geht in die Schule.' or 'Wir reisen in die Schweiz.' Generate a sentence where someone goes in + [enterable place or article-bearing country].\",\n    share: 2,\n  },\n  {\n    id: \"an-edges-water\",\n    directive: \"Use 'an' (contracted as 'ans' where appropriate) with a body of water or edge location as the destination. Example: 'Im Sommer fahren wir ans Meer.' Generate a sentence where someone goes an(s) + [body of water or edge location].\",\n    share: 2,\n  },\n  {\n    id: \"auf-islands-events\",\n    directive: \"Use 'auf' with an island or an event as the destination. Example: 'Wir fahren auf die Insel.' or 'Sie geht auf ein Konzert.' Generate a sentence where someone goes auf + [island or event].\",\n    share: 1,\n  },\n  {\n    id: \"nach-hause-motion\",\n    directive: \"Use the fixed phrase 'nach Hause' to express motion toward home (not location). Example: 'Er fährt nach Hause.' Generate a sentence where someone is going/travelling nach Hause.\",\n    share: 2,\n  },\n  {\n    id: \"zu-hause-location\",\n    directive: \"Use the fixed phrase 'zu Hause' to express being located at home (not motion). Example: 'Sie bleibt zu Hause.' Generate a sentence where someone is staying or is zu Hause.\",\n    share: 1,\n  },\n],",
+        "notes": "nach-cities-countries (1/24) and nach-hause-motion (0/24) are the most severely under-represented; zu-hause-location (0/24) is also absent but marked non-load-bearing. Shares give nach-cities-countries a plurality (3/13 ≈ 23%) to correct its near-zero coverage, while the two Hause idioms each get dedicated weight to guarantee they appear; an-edges-water is already over-represented at 9/24 so its share is held to 2."
+      }
+    },
+    {
+      "cellKey": "de-a2-indefinite-pronouns-basic:cloze",
+      "grammarPointKey": "de-a2-indefinite-pronouns-basic",
+      "grammarPointName": "Basic indefinite pronouns (man, jemand, etwas …)",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "einen-einem-accusative-dative-of-man",
+          "label": "einen/einem as accusative/dative of man",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "man-3sg-general",
+          "label": "man + 3rd-person singular verb for general statements",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08333333333333333
+        },
+        {
+          "id": "einen-einem-accusative-dative-of-man",
+          "label": "einen/einem as accusative/dative of man",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "jemand-niemand-nominative",
+          "label": "jemand/niemand in nominative (for people)",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.4166666666666667
+        },
+        {
+          "id": "jemanden-jemandem-oblique",
+          "label": "jemanden/jemandem in accusative/dative (for people)",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.375
+        },
+        {
+          "id": "etwas-nichts-things",
+          "label": "etwas/nichts for things (uninflected)",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "alles-alle",
+          "label": "alles/alle for 'everything/everyone'",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"man-3sg-general\",\n    directive: \"Write a sentence using 'man' with a 3rd-person singular verb to make a general statement, e.g. 'Man muss viel trinken, wenn es heiß ist.'\",\n    share: 3,\n  },\n  {\n    id: \"einen-einem-accusative-dative-of-man\",\n    directive: \"Write a sentence using 'einen' (accusative of man) or 'einem' (dative of man) in a general statement, e.g. 'Das kann einen wirklich müde machen.' or 'Hier kann einem niemand helfen.'\",\n    share: 3,\n  },\n  {\n    id: \"jemand-niemand-nominative\",\n    directive: \"Write a sentence using 'jemand' or 'niemand' in the nominative case as the subject, e.g. 'Niemand war zu Hause.'\",\n    share: 2,\n  },\n  {\n    id: \"jemanden-jemandem-oblique\",\n    directive: \"Write a sentence using 'jemanden' (accusative) or 'jemandem' (dative) as an object, e.g. 'Ich habe jemanden gesehen.' or 'Kannst du jemandem helfen?'\",\n    share: 2,\n  },\n  {\n    id: \"etwas-nichts-things\",\n    directive: \"Write a sentence using 'etwas' or 'nichts' to refer to a thing or idea (uninflected), e.g. 'Hast du etwas gehört? — Nein, nichts.'\",\n    share: 3,\n  },\n  {\n    id: \"alles-alle\",\n    directive: \"Write a sentence using 'alles' (everything) or 'alle' (everyone/all), e.g. 'Alles war ruhig.' or 'Alle haben gelacht.'\",\n    share: 2,\n  },\n],",
+        "notes": "man-3sg-general and etwas-nichts-things were severely under-represented (2/24 and 3/24), and einen-einem and alles-alle had zero coverage; all six variants are now explicitly directed with concrete exemplars. man-3sg-general and etwas-nichts-things receive share 3 alongside einen-einem (also share 3, to force its emergence) so no single variant dominates the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-indefinite-pronouns-basic:translation",
+      "grammarPointKey": "de-a2-indefinite-pronouns-basic",
+      "grammarPointName": "Basic indefinite pronouns (man, jemand, etwas …)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "einen-einem-accusative-dative-of-man",
+          "label": "einen/einem as accusative/dative of man",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "man-3sg-general",
+          "label": "man + 3rd-person singular verb for general statements",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.17391304347826086
+        },
+        {
+          "id": "einen-einem-accusative-dative-of-man",
+          "label": "einen/einem as accusative/dative of man",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "jemand-niemand-nominative",
+          "label": "jemand/niemand in nominative (for people)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.21739130434782608
+        },
+        {
+          "id": "jemanden-jemandem-oblique",
+          "label": "jemanden/jemandem in accusative/dative (for people)",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.391304347826087
+        },
+        {
+          "id": "etwas-nichts-things",
+          "label": "etwas/nichts for things (uninflected)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.21739130434782608
+        },
+        {
+          "id": "alles-alle",
+          "label": "alles/alle for 'everything/everyone'",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"man-3sg-general\",\n    directive: \"Write a sentence using 'man' with a 3rd-person singular verb to make a general statement, e.g. 'Man muss viel Wasser trinken.'\",\n    share: 3,\n  },\n  {\n    id: \"einen-einem-accusative-dative-of-man\",\n    directive: \"Write a sentence using 'einen' (accusative of man) or 'einem' (dative of man) in a general statement, e.g. 'Das kann einen wirklich müde machen.' or 'Hier kann einem niemand helfen.'\",\n    share: 3,\n  },\n  {\n    id: \"jemand-niemand-nominative\",\n    directive: \"Write a sentence using 'jemand' or 'niemand' in the nominative case as the subject, e.g. 'Niemand war zu Hause.'\",\n    share: 2,\n  },\n  {\n    id: \"jemanden-jemandem-oblique\",\n    directive: \"Write a sentence using 'jemanden' (accusative) or 'jemandem' (dative) as a non-subject argument, e.g. 'Ich habe jemanden gesehen.' or 'Sie hat jemandem geholfen.'\",\n    share: 2,\n  },\n  {\n    id: \"etwas-nichts-things\",\n    directive: \"Write a sentence using 'etwas' or 'nichts' to refer to a thing or concept (uninflected), e.g. 'Hast du etwas gehört? — Nein, nichts.'\",\n    share: 2,\n  },\n  {\n    id: \"alles-alle\",\n    directive: \"Write a sentence using 'alles' (everything) or 'alle' (everyone) as an indefinite pronoun, e.g. 'Alles ist gut.' or 'Alle waren eingeladen.'\",\n    share: 2,\n  },\n],",
+        "notes": "The two zero-coverage variants (einen-einem-accusative-dative-of-man and alles-alle) receive share 3 and 2 respectively to force meaningful representation; man-3sg-general also gets share 3 as the prototypical construction without letting it dominate. The jemanden-jemandem-oblique variant, which was over-represented at 9/24, is kept at share 2 to rebalance it toward the pool average."
+      }
+    },
+    {
+      "cellKey": "de-a2-konjunktiv-ii-polite:translation",
+      "grammarPointKey": "de-a2-konjunktiv-ii-polite",
+      "grammarPointName": "Konjunktiv II for wishes and polite requests",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "sollte-advice",
+          "label": "sollte + infinitive (advice/suggestion)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "haette-gern",
+          "label": "hätte gern + noun (polite wish/order)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.3333333333333333
+        },
+        {
+          "id": "koennte-request",
+          "label": "könnte + infinitive (polite request/question)",
+          "mustRepresent": true,
+          "count": 15,
+          "share": 0.625
+        },
+        {
+          "id": "sollte-advice",
+          "label": "sollte + infinitive (advice/suggestion)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wuerde-infinitive",
+          "label": "würde + infinitive (general Konjunktiv II)",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"koennte-request\",\n    directive: \"Write an exercise using 'könnte' for a polite request or question, e.g. 'Könntest du mir kurz helfen?'\",\n    share: 3,\n  },\n  {\n    id: \"haette-gern\",\n    directive: \"Write an exercise using 'hätte gern' followed by a noun phrase to express a polite wish or order, e.g. 'Ich hätte gern einen Kaffee.'\",\n    share: 3,\n  },\n  {\n    id: \"sollte-advice\",\n    directive: \"Write an exercise using 'sollte' followed by an infinitive to give advice or a suggestion, e.g. 'Du solltest mehr schlafen.'\",\n    share: 3,\n  },\n  {\n    id: \"wuerde-infinitive\",\n    directive: \"Write an exercise using 'würde' followed by an infinitive as a general softened/polite Konjunktiv II form, e.g. 'Ich würde das anders machen.'\",\n    share: 1,\n  },\n],",
+        "notes": "sollte-advice had zero realizations and würde-infinitive only one, so all four variants are given equal weight (3) except würde-infinitive (1), which the description marks as non-load-bearing. Equal shares for the three core variants prevent koennte-request from continuing to dominate the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-lassen:translation",
+      "grammarPointKey": "de-a2-lassen",
+      "grammarPointName": "lassen + infinitive",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 20,
+      "unresolved": 4,
+      "missing": [
+        {
+          "id": "lass-uns-suggestion",
+          "label": "Lass uns + infinitive: making suggestions",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "lassen-causative",
+          "label": "lassen causative: having something done",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "lassen-permissive",
+          "label": "lassen permissive: letting someone do something",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.6
+        },
+        {
+          "id": "lass-uns-suggestion",
+          "label": "Lass uns + infinitive: making suggestions",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "lassen-stem-change",
+          "label": "Stem change lässt in 2sg/3sg",
+          "mustRepresent": false,
+          "count": 5,
+          "share": 0.25
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"lassen-causative\",\n    directive: \"Write an exercise targeting the causative use of lassen (having something done by someone else). Use a sentence like 'Ich lasse mein Fahrrad reparieren.' — the subject arranges for an action to be performed, not performs it themselves.\",\n    share: 3,\n  },\n  {\n    id: \"lassen-permissive\",\n    directive: \"Write an exercise targeting the permissive use of lassen (letting/allowing someone to do something). Use a sentence like 'Meine Eltern lassen mich nicht ausgehen.' — the subject grants or withholds permission for another person's action.\",\n    share: 2,\n  },\n  {\n    id: \"lass-uns-suggestion\",\n    directive: \"Write an exercise targeting the fixed suggestion formula 'Lass uns + bare infinitive'. Use a sentence like 'Lass uns ins Kino gehen!' — the speaker proposes a joint activity using this imperative construction.\",\n    share: 2,\n  },\n  {\n    id: \"lassen-stem-change\",\n    directive: \"Write an exercise that requires the learner to produce or identify the stem-changed form lässt in the 2nd or 3rd person singular present. Use a sentence like 'Er lässt das Auto waschen.' or 'Lässt du mich das machen?'\",\n    share: 1,\n  },\n],",
+        "notes": "The lass-uns-suggestion variant had zero realizations and lassen-causative was severely under-represented (3/24) despite being the first-listed construction. Shares of 3-2-2-1 give causative a plurality (~37.5 %) while ensuring all three semantically load-bearing variants each draw meaningful generation weight; stem-change is kept at share 1 because it is flagged not load-bearing and naturally co-occurs with the other variants."
+      }
+    },
+    {
+      "cellKey": "de-a2-measure-expressions:cloze",
+      "grammarPointKey": "de-a2-measure-expressions",
+      "grammarPointName": "Measure and quantity expressions",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 23,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "measure-no-von",
+          "label": "Measured substance follows measure noun directly, without von",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "distributive-je",
+          "label": "Distributive je + numeral (je zwei Karten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "masc-neut-measure-singular",
+          "label": "Masculine/neuter measure nouns stay singular after numerals",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.34782608695652173
+        },
+        {
+          "id": "fem-measure-plural",
+          "label": "Feminine measure nouns pluralize after numerals",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.391304347826087
+        },
+        {
+          "id": "measure-no-von",
+          "label": "Measured substance follows measure noun directly, without von",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "halb-adjective",
+          "label": "halb declined as adjective (eine halbe Stunde)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.08695652173913043
+        },
+        {
+          "id": "haelfte-noun",
+          "label": "die Hälfte as a standalone noun",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "anderthalb-zweieinhalb",
+          "label": "Fractional numerals anderthalb / zweieinhalb",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "distributive-je",
+          "label": "Distributive je + numeral (je zwei Karten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "distributive-article",
+          "label": "Distributive definite article with time/price expressions (zweimal die Woche, drei Euro das Kilo)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.17391304347826086
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"masc-neut-measure-singular\",\n    directive: \"Write a sentence using a masculine or neuter measure noun in its singular form after a numeral (e.g. 'zwei Glas Bier', 'drei Stück Kuchen', '100 Gramm Käse'). The measure noun must NOT be pluralized.\",\n    share: 3,\n  },\n  {\n    id: \"fem-measure-plural\",\n    directive: \"Write a sentence using a feminine measure noun pluralized after a numeral (e.g. 'zwei Tassen Kaffee', 'drei Flaschen Milch', 'vier Scheiben Brot'). The measure noun must appear in its plural form.\",\n    share: 2,\n  },\n  {\n    id: \"measure-no-von\",\n    directive: \"Write a sentence where a measured substance follows its measure noun directly, without 'von' (e.g. 'eine Flasche Wasser', 'ein Glas Orangensaft', 'ein Stück Käse'). The word 'von' must not appear between the measure noun and the substance.\",\n    share: 2,\n  },\n  {\n    id: \"halb-adjective\",\n    directive: \"Write a sentence using 'halb' declined as an adjective agreeing with a following noun (e.g. 'eine halbe Stunde', 'ein halbes Kilo', 'einen halben Liter'). Do not use the standalone noun 'Hälfte'.\",\n    share: 2,\n  },\n  {\n    id: \"haelfte-noun\",\n    directive: \"Write a sentence using 'die Hälfte' as a standalone noun (e.g. 'Die Hälfte des Kuchens ist noch übrig.', 'Er hat die Hälfte gegessen.').\",\n    share: 1,\n  },\n  {\n    id: \"anderthalb-zweieinhalb\",\n    directive: \"Write a sentence using the fractional numeral 'anderthalb' or 'zweieinhalb' with a measure or time noun (e.g. 'anderthalb Stunden', 'zweieinhalb Kilo Äpfel', 'anderthalb Liter Milch').\",\n    share: 1,\n  },\n  {\n    id: \"distributive-je\",\n    directive: \"Write a sentence using distributive 'je' before a numeral to express 'each' or 'per' (e.g. 'Wir bekommen je zwei Karten.', 'Die Kinder bekommen je ein Stück Kuchen.').\",\n    share: 2,\n  },\n  {\n    id: \"distributive-article\",\n    directive: \"Write a sentence using a distributive definite article in a time or price expression (e.g. 'zweimal die Woche', 'drei Euro das Kilo', 'einmal den Monat'). The definite article must carry the distributive meaning.\",\n    share: 2,\n  },\n],",
+        "notes": "Four variants had zero realized exercises (measure-no-von, haelfte-noun, anderthalb-zweieinhalb, distributive-je) and two more were severely under-represented; shares are set so the two prototypical constructions (masc-neut-measure-singular at 3, fem-measure-plural at 2) hold a plurality without crowding out the rest. The two non-load-bearing variants (haelfte-noun, anderthalb-zweieinhalb) are kept at share 1 so they appear but don't dominate."
+      }
+    },
+    {
+      "cellKey": "de-a2-measure-expressions:translation",
+      "grammarPointKey": "de-a2-measure-expressions",
+      "grammarPointName": "Measure and quantity expressions",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 20,
+      "unresolved": 4,
+      "missing": [
+        {
+          "id": "measure-no-von",
+          "label": "Measured substance follows measure noun directly, without von",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "halb-adjective",
+          "label": "halb declined as adjective (eine halbe Stunde)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "distributive-je",
+          "label": "Distributive je + numeral (je zwei Karten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "masc-neut-measure-singular",
+          "label": "Masculine/neuter measure nouns stay singular after numerals",
+          "mustRepresent": true,
+          "count": 14,
+          "share": 0.7
+        },
+        {
+          "id": "fem-measure-plural",
+          "label": "Feminine measure nouns pluralize after numerals",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.15
+        },
+        {
+          "id": "measure-no-von",
+          "label": "Measured substance follows measure noun directly, without von",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "halb-adjective",
+          "label": "halb declined as adjective (eine halbe Stunde)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.05
+        },
+        {
+          "id": "haelfte-noun",
+          "label": "die Hälfte as a standalone noun",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "anderthalb-zweieinhalb",
+          "label": "Fractional numerals anderthalb / zweieinhalb",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "distributive-je",
+          "label": "Distributive je + numeral (je zwei Karten)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "distributive-article",
+          "label": "Distributive definite article with time/price expressions (zweimal die Woche, drei Euro das Kilo)",
+          "mustRepresent": true,
+          "count": 2,
+          "share": 0.1
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"masc-neut-measure-singular\",\n    directive: \"Write a sentence using a masculine or neuter measure noun in its singular form after a numeral (e.g. 'zwei Glas Bier', 'drei Stück Kuchen', '100 Gramm Käse'). The measure noun must NOT take a plural ending.\",\n    share: 3,\n  },\n  {\n    id: \"fem-measure-plural\",\n    directive: \"Write a sentence using a feminine measure noun in its plural form after a numeral (e.g. 'zwei Tassen Kaffee', 'drei Flaschen Milch', 'vier Scheiben Brot'). The feminine measure noun must carry its plural ending.\",\n    share: 2,\n  },\n  {\n    id: \"measure-no-von\",\n    directive: \"Write a sentence where a measured substance follows its measure noun directly, without 'von' (e.g. 'eine Flasche Wasser', 'ein Glas Orangensaft', 'ein Stück Käse'). Do NOT insert 'von' between the measure noun and the substance.\",\n    share: 2,\n  },\n  {\n    id: \"halb-adjective\",\n    directive: \"Write a sentence using 'halb' declined as an adjective agreeing with a following noun (e.g. 'eine halbe Stunde', 'ein halbes Kilo', 'einen halben Liter'). 'halb' must carry an adjective ending, not appear as a standalone noun.\",\n    share: 2,\n  },\n  {\n    id: \"haelfte-noun\",\n    directive: \"Write a sentence using 'die Hälfte' as a standalone noun (e.g. 'Die Hälfte des Kuchens ist schon weg.', 'Er hat die Hälfte seines Geldes ausgegeben.'). Use the noun 'Hälfte', not the adjective 'halb'.\",\n    share: 1,\n  },\n  {\n    id: \"anderthalb-zweieinhalb\",\n    directive: \"Write a sentence using the fractional numeral 'anderthalb' or 'zweieinhalb' with a measure or time noun (e.g. 'anderthalb Stunden', 'zweieinhalb Kilo Äpfel', 'anderthalb Liter Milch').\",\n    share: 1,\n  },\n  {\n    id: \"distributive-je\",\n    directive: \"Write a sentence using distributive 'je' before a numeral to express 'each / per' (e.g. 'Wir bekommen je zwei Karten.', 'Die Kinder bekommen je einen Apfel.', 'Je drei Schüler arbeiten zusammen.').\",\n    share: 1,\n  },\n  {\n    id: \"distributive-article\",\n    directive: \"Write a sentence using a distributive definite article in a time or price expression (e.g. 'zweimal die Woche', 'drei Euro das Kilo', 'einmal den Monat'). The definite article must carry the distributive meaning 'per'.\",\n    share: 1,\n  },\n],",
+        "notes": "The two dominant variants (masc-neut-measure-singular at share 3, fem-measure-plural and measure-no-von at share 2 each) hold a plurality without crowding out the five underrepresented constructions, each weighted at share 1. The four zero-coverage variants — measure-no-von, haelfte-noun, anderthalb-zweieinhalb, and distributive-je — all receive explicit, generator-actionable directives with concrete exemplars to break their current blind spots."
+      }
+    },
+    {
+      "cellKey": "de-a2-nicht-sondern:translation",
+      "grammarPointKey": "de-a2-nicht-sondern",
+      "grammarPointName": "aber vs sondern",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "aber-contrast",
+          "label": "aber (contrastive but, no negation)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "nicht-nur-sondern-auch",
+          "label": "nicht nur … sondern auch (not only … but also)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "nicht-x-sondern-y",
+          "label": "nicht X, sondern Y (corrective but)",
+          "mustRepresent": true,
+          "count": 24,
+          "share": 1
+        },
+        {
+          "id": "aber-contrast",
+          "label": "aber (contrastive but, no negation)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "nicht-nur-sondern-auch",
+          "label": "nicht nur … sondern auch (not only … but also)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"nicht-x-sondern-y\",\n    directive: \"Write an exercise practising the corrective 'but' with explicit negation: nicht X, sondern Y. Example: 'Ich komme nicht aus Spanien, sondern aus Portugal.'\",\n    share: 3,\n  },\n  {\n    id: \"aber-contrast\",\n    directive: \"Write an exercise practising 'aber' as a contrastive 'but' with no negation involved. Example: 'Der Kurs ist schwer, aber interessant.'\",\n    share: 1,\n  },\n  {\n    id: \"nicht-nur-sondern-auch\",\n    directive: \"Write an exercise practising the 'nicht nur … sondern auch' (not only … but also) construction. Example: 'Sie spricht nicht nur Deutsch, sondern auch Türkisch.'\",\n    share: 1,\n  },\n],",
+        "notes": "The pool was monopolised by nicht-x-sondern-y (24/24); aber-contrast and nicht-nur-sondern-auch had zero coverage. Shares of 3 / 1 / 1 target ~50 % for the prototypical corrective construction while guaranteeing meaningful representation of the two neglected variants."
+      }
+    },
+    {
+      "cellKey": "de-a2-past-participle-formation:cloze",
+      "grammarPointKey": "de-a2-past-participle-formation",
+      "grammarPointName": "Past participle formation",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "no-ge-ieren-verbs",
+          "label": "No ge- with -ieren verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-past-participle-ge-t",
+          "label": "Weak participle: ge-...-t",
+          "mustRepresent": true,
+          "count": 7,
+          "share": 0.2916666666666667
+        },
+        {
+          "id": "strong-past-participle-ge-en-ablaut",
+          "label": "Strong participle: ge-...-en with ablaut",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.3333333333333333
+        },
+        {
+          "id": "no-ge-inseparable-prefix",
+          "label": "No ge- with inseparable-prefix verbs",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "no-ge-ieren-verbs",
+          "label": "No ge- with -ieren verbs",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "infix-ge-separable-verbs",
+          "label": "Infix ge- inside separable-prefix verbs",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weak-past-participle-ge-t\",\n    directive: \"Use a WEAK past participle (ge-…-t pattern) in the sentence, e.g. 'gemacht', 'gearbeitet', 'gekauft'.\",\n    share: 3,\n  },\n  {\n    id: \"strong-past-participle-ge-en-ablaut\",\n    directive: \"Use a STRONG past participle (ge-…-en with ablaut) in the sentence, e.g. 'getrunken', 'geschrieben', 'gefahren'.\",\n    share: 3,\n  },\n  {\n    id: \"no-ge-inseparable-prefix\",\n    directive: \"Use a past participle of an INSEPARABLE-PREFIX verb (no ge- prefix) in the sentence, e.g. 'verstanden', 'besucht', 'erklärt'.\",\n    share: 2,\n  },\n  {\n    id: \"no-ge-ieren-verbs\",\n    directive: \"Use a past participle of a VERB ENDING IN -ieren (no ge- prefix, ends in -iert) in the sentence, e.g. 'studiert', 'telefoniert', 'fotografiert'.\",\n    share: 2,\n  },\n  {\n    id: \"infix-ge-separable-verbs\",\n    directive: \"Use a past participle of a SEPARABLE-PREFIX verb (ge- appears as an infix between prefix and stem) in the sentence, e.g. 'eingekauft', 'aufgestanden', 'mitgebracht'.\",\n    share: 2,\n  },\n],",
+        "notes": "The `no-ge-ieren-verbs` variant had zero realized exercises and `no-ge-inseparable-prefix` was also underweight; both now receive share 2 alongside the separable-infix variant to force meaningful pool representation. The two dominant weak/strong patterns keep share 3 each, giving them a plurality (~25% each) without crowding out the three no-ge/infix variants (~50% combined)."
+      }
+    },
+    {
+      "cellKey": "de-a2-quantifiers-other:cloze",
+      "grammarPointKey": "de-a2-quantifiers-other",
+      "grammarPointName": "Quantifiers: jeder, alle, viel(e), ein paar, ander-",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 22,
+      "unresolved": 2,
+      "missing": [
+        {
+          "id": "viel-wenig-undeclined-mass",
+          "label": "viel/wenig undeclined before mass nouns",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "ander-adjective-declension",
+          "label": "ander- declining like an adjective",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.045454545454545456
+        }
+      ],
+      "counts": [
+        {
+          "id": "jeder-singular-declension",
+          "label": "jeder/jedes/jede declining like dieser with singular verb",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.5454545454545454
+        },
+        {
+          "id": "viel-wenig-undeclined-mass",
+          "label": "viel/wenig undeclined before mass nouns",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "viele-wenige-declined-plural",
+          "label": "viele/wenige declined before count nouns in the plural",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.18181818181818182
+        },
+        {
+          "id": "ein-paar-invariable",
+          "label": "ein paar (a few) as invariable quantifier",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.22727272727272727
+        },
+        {
+          "id": "ander-adjective-declension",
+          "label": "ander- declining like an adjective",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.045454545454545456
+        },
+        {
+          "id": "ein-bisschen-ein-wenig-invariable",
+          "label": "ein bisschen/ein wenig as invariable quantifiers",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"jeder-singular-declension\",\n    directive: \"Write a sentence using jeder, jedes, or jede (declining like dieser) with a singular noun and a singular verb. Example: Jeder Schüler bekommt ein Buch.\",\n    share: 3,\n  },\n  {\n    id: \"viel-wenig-undeclined-mass\",\n    directive: \"Write a sentence using undeclined viel or wenig directly before a singular mass noun (no ending). Example: Ich habe wenig Zeit und viel Arbeit.\",\n    share: 2,\n  },\n  {\n    id: \"viele-wenige-declined-plural\",\n    directive: \"Write a sentence using viele or wenige with a declined plural count noun. Example: Viele Freunde kamen zur Party, aber wenige Fehler wurden gemacht.\",\n    share: 2,\n  },\n  {\n    id: \"ein-paar-invariable\",\n    directive: \"Write a sentence using the invariable quantifier ein paar (meaning 'a few') before a plural noun. Example: Wir warten noch ein paar Minuten.\",\n    share: 2,\n  },\n  {\n    id: \"ander-adjective-declension\",\n    directive: \"Write a sentence using ander- declined as an adjective (with the correct ending for gender, case, and article). Example: Gibt es einen anderen Weg? / Das ist eine andere Frage.\",\n    share: 2,\n  },\n  {\n    id: \"ein-bisschen-ein-wenig-invariable\",\n    directive: \"Write a sentence using the invariable quantifier ein bisschen or ein wenig before a mass noun or adjective. Example: Ich brauche ein bisschen Hilfe. / Sie ist ein wenig müde.\",\n    share: 1,\n  },\n],",
+        "notes": "viel-wenig-undeclined-mass and ein-bisschen-ein-wenig-invariable were both at 0/24; all five load-bearing variants get share ≥ 2 so the generator is explicitly steered toward each. jeder-singular-declension retains a plurality (share 3) but cannot dominate the pool, targeting roughly 25% of draws."
+      }
+    },
+    {
+      "cellKey": "de-a2-quantifiers-other:translation",
+      "grammarPointKey": "de-a2-quantifiers-other",
+      "grammarPointName": "Quantifiers: jeder, alle, viel(e), ein paar, ander-",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "viel-wenig-undeclined-mass",
+          "label": "viel/wenig undeclined before mass nouns",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "viele-wenige-declined-plural",
+          "label": "viele/wenige declined before count nouns in the plural",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "jeder-singular-declension",
+          "label": "jeder/jedes/jede declining like dieser with singular verb",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "viel-wenig-undeclined-mass",
+          "label": "viel/wenig undeclined before mass nouns",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "viele-wenige-declined-plural",
+          "label": "viele/wenige declined before count nouns in the plural",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "ein-paar-invariable",
+          "label": "ein paar (a few) as invariable quantifier",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.5
+        },
+        {
+          "id": "ander-adjective-declension",
+          "label": "ander- declining like an adjective",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "ein-bisschen-ein-wenig-invariable",
+          "label": "ein bisschen/ein wenig as invariable quantifiers",
+          "mustRepresent": false,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"jeder-singular-declension\",\n    directive: \"Write a sentence using 'jeder', 'jedes', or 'jede' declining like 'dieser' with a singular noun and a singular verb. Example: 'Jeder Schüler bekommt ein Buch.'\",\n    share: 3,\n  },\n  {\n    id: \"viel-wenig-undeclined-mass\",\n    directive: \"Write a sentence using undeclined 'viel' or 'wenig' directly before a singular mass noun (no ending). Example: 'Ich habe wenig Zeit und viel Arbeit.'\",\n    share: 2,\n  },\n  {\n    id: \"viele-wenige-declined-plural\",\n    directive: \"Write a sentence using declined 'viele' or 'wenige' before a plural count noun. Example: 'Viele Freunde haben wenige Fehler gemacht.'\",\n    share: 2,\n  },\n  {\n    id: \"ein-paar-invariable\",\n    directive: \"Write a sentence using invariable 'ein paar' (meaning 'a few') before a plural noun. Example: 'Wir warten noch ein paar Minuten.'\",\n    share: 1,\n  },\n  {\n    id: \"ander-adjective-declension\",\n    directive: \"Write a sentence using 'ander-' declined like an adjective (e.g. 'der andere', 'einen anderen', 'etwas anderes'). Example: 'Gibt es einen anderen Weg?'\",\n    share: 2,\n  },\n  {\n    id: \"ein-bisschen-ein-wenig-invariable\",\n    directive: \"Write a sentence using invariable 'ein bisschen' or 'ein wenig' before a mass noun or adjective. Example: 'Ich brauche noch ein bisschen Geduld.'\",\n    share: 2,\n  },\n],",
+        "notes": "The pool is dominated by 'ein-paar-invariable' (12/24) while three constructions sit at 0–1 hits; shares are set to actively suppress 'ein-paar' (share 1) and boost the four under-represented variants to share 2 each, with 'jeder-singular-declension' at share 3 as the prototypical construction. 'ein-bisschen-ein-wenig-invariable' is kept in the rotation despite being marked non-load-bearing so it doesn't vanish entirely from the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-reflexive-verbs:cloze",
+      "grammarPointKey": "de-a2-reflexive-verbs",
+      "grammarPointName": "Reflexive verbs",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 22,
+      "unresolved": 2,
+      "missing": [
+        {
+          "id": "reflexive-pronoun-position-main-clause",
+          "label": "Reflexive pronoun placed after the finite verb in main clauses",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "accusative-reflexive-pronoun-agreement",
+          "label": "Accusative reflexive pronoun agreeing with subject (mich/dich/sich/uns/euch/sich)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.8636363636363636
+        },
+        {
+          "id": "reflexive-pronoun-position-main-clause",
+          "label": "Reflexive pronoun placed after the finite verb in main clauses",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "reciprocal-plural-sich",
+          "label": "Plural subject + sich giving reciprocal 'each other' reading",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.13636363636363635
+        },
+        {
+          "id": "einander-gegenseitig-reciprocal",
+          "label": "Explicit reciprocal markers: einander (miteinander, voneinander) and gegenseitig",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"accusative-reflexive-pronoun-agreement\",\n    directive:\n      \"Write a sentence using a reflexive verb where the accusative reflexive pronoun (mich / dich / sich / uns / euch / sich) agrees with the subject. Example: 'Er freut sich über das Geschenk.'\",\n    share: 3,\n  },\n  {\n    id: \"reflexive-pronoun-position-main-clause\",\n    directive:\n      \"Write a main clause with a reflexive verb where the reflexive pronoun appears immediately after the finite verb. Example: 'Sie duscht sich jeden Abend.'\",\n    share: 1,\n  },\n  {\n    id: \"reciprocal-plural-sich\",\n    directive:\n      \"Write a sentence with a plural subject and a reflexive verb so that 'sich' carries the reciprocal 'each other' reading. Example: 'Wir treffen uns jeden Freitag.'\",\n    share: 1,\n  },\n  {\n    id: \"einander-gegenseitig-reciprocal\",\n    directive:\n      \"Write a sentence using an explicit reciprocal marker — einander, miteinander, voneinander, or gegenseitig — to express 'each other'. Example: 'Sie helfen einander gern.' or 'Wir verstehen uns gegenseitig gut.'\",\n    share: 1,\n  },\n],",
+        "notes": "Two variants had zero realized exercises (reflexive-pronoun-position-main-clause and einander-gegenseitig-reciprocal); all four are now explicitly directed. The dominant accusative-agreement variant gets share 3 to hold a plurality (~50%) without crowding out the others, which each target ~17% of the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-verb-preposition-complements:cloze",
+      "grammarPointKey": "de-a2-verb-preposition-complements",
+      "grammarPointName": "Verbs with fixed prepositions + wo(r)-/da(r)-forms",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "verb-fixed-preposition",
+          "label": "Verb + fixed preposition + noun phrase",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "preposition-pronoun-people",
+          "label": "Preposition + personal pronoun / wer for people (auf wen, auf ihn ...)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "verb-fixed-preposition",
+          "label": "Verb + fixed preposition + noun phrase",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "wor-question-things",
+          "label": "wo(r)- question form for things (worauf, wofür, wovon ...)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.3333333333333333
+        },
+        {
+          "id": "dar-backreference-things",
+          "label": "da(r)- back-reference for things (darauf, dafür, davon ...)",
+          "mustRepresent": true,
+          "count": 16,
+          "share": 0.6666666666666666
+        },
+        {
+          "id": "preposition-pronoun-people",
+          "label": "Preposition + personal pronoun / wer for people (auf wen, auf ihn ...)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"verb-fixed-preposition\",\n    directive: \"Write a sentence using a verb with a fixed preposition followed by a noun phrase (e.g. 'Sie wartet auf den Zug.' / 'Er träumt von einer Weltreise.').\",\n    share: 3,\n  },\n  {\n    id: \"wor-question-things\",\n    directive: \"Write a wo(r)- question targeting the prepositional complement of a verb with a fixed preposition, where the complement refers to a thing (e.g. 'Worauf wartest du?' / 'Wofür interessierst du dich?').\",\n    share: 1,\n  },\n  {\n    id: \"dar-backreference-things\",\n    directive: \"Write a sentence using a da(r)- form to refer back to a thing that is the prepositional complement of a verb with a fixed preposition (e.g. 'Darauf warte ich schon lange.' / 'Dafür interessiere ich mich sehr.').\",\n    share: 1,\n  },\n  {\n    id: \"preposition-pronoun-people\",\n    directive: \"Write a question or sentence where the prepositional complement of a verb with a fixed preposition refers to a person, using preposition + wer or preposition + personal pronoun — NOT a wo(r)- form (e.g. 'Auf wen wartest du?' / 'Für wen interessierst du dich?' / 'Ich warte auf ihn.').\",\n    share: 1,\n  },\n],",
+        "notes": "The two zero-coverage variants (`verb-fixed-preposition` and `preposition-pronoun-people`) are the critical gaps; giving the base construction a share of 3 targets ~43 % of the pool for it while guaranteeing the people-pronoun contrast gets dedicated slots. The `dar-backreference-things` variant was over-represented at 67 % of samples, so its share of 1 will naturally dilute it once the generator draws from all four variants."
+      }
+    },
+    {
+      "cellKey": "de-a2-weil-deshalb:cloze",
+      "grammarPointKey": "de-a2-weil-deshalb",
+      "grammarPointName": "Cause and consequence: weil vs deshalb (and denn)",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "denn-main-clause-order",
+          "label": "denn + plain main-clause word order (reason)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weil-verb-final",
+          "label": "weil + verb-final subordinate clause (reason)",
+          "mustRepresent": true,
+          "count": 14,
+          "share": 0.5833333333333334
+        },
+        {
+          "id": "deshalb-inversion",
+          "label": "deshalb + verb-subject inversion (consequence)",
+          "mustRepresent": true,
+          "count": 10,
+          "share": 0.4166666666666667
+        },
+        {
+          "id": "denn-main-clause-order",
+          "label": "denn + plain main-clause word order (reason)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weil-verb-final\",\n    directive: \"Write a sentence using 'weil' to give a reason; the finite verb must appear at the end of the weil-clause. Example: 'Ich bleibe zu Hause, weil ich krank bin.'\",\n    share: 3,\n  },\n  {\n    id: \"deshalb-inversion\",\n    directive: \"Write a sentence using 'deshalb' to state a consequence; 'deshalb' must be the first element of its clause and be immediately followed by the finite verb, then the subject. Example: 'Ich bin krank, deshalb bleibe ich zu Hause.'\",\n    share: 2,\n  },\n  {\n    id: \"denn-main-clause-order\",\n    directive: \"Write a sentence using 'denn' to add a reason; the clause after 'denn' must use plain main-clause word order (subject before verb, no inversion). Example: 'Ich bleibe zu Hause, denn ich bin krank.'\",\n    share: 2,\n  },\n],",
+        "notes": "'denn-main-clause-order' had zero realizations in 24 samples, so it receives a share of 2 to guarantee meaningful generation pressure without overtaking the prototypical 'weil' construction. 'deshalb-inversion' is bumped to share 2 as well since it was under-represented at 10/24."
+      }
+    },
+    {
+      "cellKey": "de-a2-weil-deshalb:translation",
+      "grammarPointKey": "de-a2-weil-deshalb",
+      "grammarPointName": "Cause and consequence: weil vs deshalb (and denn)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "denn-main-clause-order",
+          "label": "denn + plain main-clause word order (reason)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "weil-verb-final",
+          "label": "weil + verb-final subordinate clause (reason)",
+          "mustRepresent": true,
+          "count": 6,
+          "share": 0.25
+        },
+        {
+          "id": "deshalb-inversion",
+          "label": "deshalb + verb-subject inversion (consequence)",
+          "mustRepresent": true,
+          "count": 18,
+          "share": 0.75
+        },
+        {
+          "id": "denn-main-clause-order",
+          "label": "denn + plain main-clause word order (reason)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weil-verb-final\",\n    directive: \"Write a sentence using 'weil' to give a reason, with the verb at the end of the subordinate clause. Example: 'Ich bleibe zu Hause, weil ich krank bin.'\",\n    share: 3,\n  },\n  {\n    id: \"deshalb-inversion\",\n    directive: \"Write a sentence using 'deshalb' to state a consequence, with verb-subject inversion immediately after 'deshalb'. Example: 'Ich bin krank, deshalb bleibe ich zu Hause.'\",\n    share: 2,\n  },\n  {\n    id: \"denn-main-clause-order\",\n    directive: \"Write a sentence using 'denn' to add a reason, keeping plain main-clause word order after 'denn' (subject before verb). Example: 'Ich bleibe zu Hause, denn ich bin krank.'\",\n    share: 2,\n  },\n],",
+        "notes": "The pool is heavily skewed toward deshalb-inversion (18/24) while denn has zero coverage. Shares of 3-2-2 give weil a plurality (~43%) and guarantee denn is targeted at roughly the same rate as deshalb, breaking the existing bias without over-correcting away from the prototypical weil construction."
+      }
+    },
+    {
+      "cellKey": "de-a2-wenn-als:translation",
+      "grammarPointKey": "de-a2-wenn-als",
+      "grammarPointName": "wenn vs als",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "wenn-present-future-condition",
+          "label": "wenn + present/future or conditional",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "als-single-past-event",
+          "label": "als + single completed past event/period",
+          "mustRepresent": true,
+          "count": 15,
+          "share": 0.625
+        },
+        {
+          "id": "wenn-repeated-past",
+          "label": "wenn (immer wenn) + repeated past events",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.375
+        },
+        {
+          "id": "wenn-present-future-condition",
+          "label": "wenn + present/future or conditional",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "verb-final-subordinate-clause",
+          "label": "Verb-final word order in wenn/als clause",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"als-single-past-event\",\n    directive: \"Use 'als' to introduce a single completed past event or period. Example: 'Als ich ein Kind war, wohnten wir auf dem Land.'\",\n    share: 3,\n  },\n  {\n    id: \"wenn-repeated-past\",\n    directive: \"Use 'wenn' (or 'immer wenn') to express a repeated or habitual event in the past. Example: 'Immer wenn es schneite, blieben wir zu Hause.'\",\n    share: 2,\n  },\n  {\n    id: \"wenn-present-future-condition\",\n    directive: \"Use 'wenn' to express a present/future condition or a general conditional. Example: 'Wenn ich Zeit habe, gehe ich spazieren.'\",\n    share: 2,\n  },\n],",
+        "notes": "wenn-present-future-condition had 0/24 coverage and wenn-repeated-past was under-represented at 9/24, so both receive share 2 to pull generation weight away from the dominant als-single-past-event variant. verb-final-subordinate-clause is marked not load-bearing and is omitted as a variant; it is a candidate for a coverageSpec axis if word-order errors become a separate concern."
+      }
+    },
+    {
+      "cellKey": "de-a2-wissen-kennen:cloze",
+      "grammarPointKey": "de-a2-wissen-kennen",
+      "grammarPointName": "wissen vs kennen (vs können)",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 14,
+      "classified": 14,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "koennen-for-skills",
+          "label": "können + infinitive (mastered skill)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "wissen-with-clause",
+          "label": "wissen + subordinate clause (factual knowledge)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.35714285714285715
+        },
+        {
+          "id": "kennen-with-noun-phrase",
+          "label": "kennen + noun phrase (familiarity)",
+          "mustRepresent": true,
+          "count": 9,
+          "share": 0.6428571428571429
+        },
+        {
+          "id": "koennen-for-skills",
+          "label": "können + infinitive (mastered skill)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"kennen-with-noun-phrase\",\n    directive: \"Write an exercise targeting 'kennen' + noun phrase expressing familiarity with a person, place, or thing. Example: 'Ich kenne diesen Film.'\",\n    share: 3,\n  },\n  {\n    id: \"wissen-with-clause\",\n    directive: \"Write an exercise targeting 'wissen' + subordinate clause expressing factual knowledge. Example: 'Ich weiß, wo er wohnt.'\",\n    share: 2,\n  },\n  {\n    id: \"koennen-for-skills\",\n    directive: \"Write an exercise targeting 'können' + infinitive expressing a mastered skill. Example: 'Sie kann gut kochen.'\",\n    share: 2,\n  },\n],",
+        "notes": "koennen-for-skills was completely absent (0/14) and wissen-with-clause was underrepresented (5/14), so both receive share 2 alongside the dominant kennen-with-noun-phrase at share 3, targeting roughly equal three-way coverage without letting any single variant monopolize the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-wissen-kennen:translation",
+      "grammarPointKey": "de-a2-wissen-kennen",
+      "grammarPointName": "wissen vs kennen (vs können)",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 14,
+      "classified": 13,
+      "unresolved": 1,
+      "missing": [
+        {
+          "id": "koennen-for-skills",
+          "label": "können + infinitive (mastered skill)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "wissen-with-clause",
+          "label": "wissen + subordinate clause (factual knowledge)",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.38461538461538464
+        },
+        {
+          "id": "kennen-with-noun-phrase",
+          "label": "kennen + noun phrase (familiarity)",
+          "mustRepresent": true,
+          "count": 8,
+          "share": 0.6153846153846154
+        },
+        {
+          "id": "koennen-for-skills",
+          "label": "können + infinitive (mastered skill)",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"kennen-with-noun-phrase\",\n    directive: \"Write an exercise targeting kennen + noun phrase (familiarity with a person, place, or thing). Example: 'Ich kenne diesen Film.'\",\n    share: 3,\n  },\n  {\n    id: \"wissen-with-clause\",\n    directive: \"Write an exercise targeting wissen + subordinate clause (factual knowledge). Example: 'Ich weiß, wo er wohnt.'\",\n    share: 2,\n  },\n  {\n    id: \"koennen-for-skills\",\n    directive: \"Write an exercise targeting können + infinitive expressing a mastered skill. Example: 'Sie kann gut kochen.'\",\n    share: 2,\n  },\n],",
+        "notes": "koennen-for-skills had zero realized exercises in 14 samples, so its share is raised to match wissen-with-clause and force meaningful pool representation. kennen-with-noun-phrase retains a plurality share (3) as the prototypical construction without dominating the pool."
+      }
+    },
+    {
+      "cellKey": "de-a2-seit-present:cloze",
+      "grammarPointKey": "de-a2-seit-present",
+      "grammarPointName": "seit + present tense",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 12,
+      "classified": 12,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "seit-perfekt-negated",
+          "label": "seit + Perfekt for negated or non-ongoing events",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "counts": [
+        {
+          "id": "seit-present-ongoing",
+          "label": "seit/schon + present tense for ongoing situation",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 1
+        },
+        {
+          "id": "seit-perfekt-negated",
+          "label": "seit + Perfekt for negated or non-ongoing events",
+          "mustRepresent": true,
+          "count": 0,
+          "share": 0
+        },
+        {
+          "id": "seit-not-fuer",
+          "label": "seit vs. fuer for duration-so-far",
+          "mustRepresent": false,
+          "count": 0,
+          "share": 0
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"seit-present-ongoing\",\n    directive: \"Write a sentence using seit or schon with the PRESENT tense to express an ongoing situation that started in the past and still holds now. Example: 'Ich lerne seit zwei Jahren Deutsch.'\",\n    share: 3,\n  },\n  {\n    id: \"seit-perfekt-negated\",\n    directive: \"Write a sentence using seit with the PERFEKT tense to express a negated or non-ongoing event (something that has not happened for a period). Example: 'Ich habe ihn seit Jahren nicht gesehen.'\",\n    share: 3,\n  },\n  {\n    id: \"seit-not-fuer\",\n    directive: \"Write a contrastive sentence or minimal pair that illustrates the difference between seit (duration up to now) and für (duration of a planned or bounded period). Example: 'Ich wohne seit einem Jahr hier.' vs. 'Ich fahre für eine Woche nach Hamburg.'\",\n    share: 1,\n  },\n],",
+        "notes": "seit-present-ongoing was monopolising the pool (12/12); seit-perfekt-negated is the core contrastive rule taught by this point and had zero coverage. seit-not-fuer is marked not load-bearing so it receives a minimal share-1 weight to keep it present without over-indexing."
+      }
+    },
+    {
+      "cellKey": "de-a2-adjective-declension-definite:cloze",
+      "grammarPointKey": "de-a2-adjective-declension-definite",
+      "grammarPointName": "Adjective declension after der/das/die",
+      "type": "cloze",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "coverage-spec",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "weak-adj-fem-neut-acc-sg",
+          "label": "Weak adj. -e in feminine/neuter accusative singular",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-adj-nom-sg",
+          "label": "Weak adj. -e in nominative singular (all genders)",
+          "mustRepresent": true,
+          "count": 4,
+          "share": 0.16666666666666666
+        },
+        {
+          "id": "weak-adj-fem-neut-acc-sg",
+          "label": "Weak adj. -e in feminine/neuter accusative singular",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "weak-adj-en-elsewhere",
+          "label": "Weak adj. -en in all other slots (masc. acc., all datives, genitive, plural)",
+          "mustRepresent": true,
+          "count": 19,
+          "share": 0.7916666666666666
+        }
+      ],
+      "proposal": {
+        "mechanism": "coverage-spec",
+        "snippet": "coverageSpec: {\n  axes: [\n    {\n      id: \"weak-adj-slot\",\n      values: [\n        \"weak-adj-nom-sg\",\n        \"weak-adj-fem-neut-acc-sg\",\n        \"weak-adj-en-elsewhere\",\n      ],\n    },\n  ],\n  minApprovedPerValue: {\n    \"weak-adj-nom-sg\": 6,\n    \"weak-adj-fem-neut-acc-sg\": 6,\n    \"weak-adj-en-elsewhere\": 6,\n  },\n},",
+        "notes": "The pool is heavily skewed toward -en endings (19/24) while the two -e slots are starved (4 and 1 respectively). A floor of 6 approved exercises per slot forces balanced representation of all three weak-declension contexts without over-constraining the dominant -en-elsewhere variant."
+      }
+    },
+    {
+      "cellKey": "de-a2-past-participle-formation:translation",
+      "grammarPointKey": "de-a2-past-participle-formation",
+      "grammarPointName": "Past participle formation",
+      "type": "translation",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "no-ge-ieren-verbs",
+          "label": "No ge- with -ieren verbs",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "weak-past-participle-ge-t",
+          "label": "Weak participle: ge-...-t",
+          "mustRepresent": true,
+          "count": 12,
+          "share": 0.5
+        },
+        {
+          "id": "strong-past-participle-ge-en-ablaut",
+          "label": "Strong participle: ge-...-en with ablaut",
+          "mustRepresent": true,
+          "count": 5,
+          "share": 0.20833333333333334
+        },
+        {
+          "id": "no-ge-inseparable-prefix",
+          "label": "No ge- with inseparable-prefix verbs",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        },
+        {
+          "id": "no-ge-ieren-verbs",
+          "label": "No ge- with -ieren verbs",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "infix-ge-separable-verbs",
+          "label": "Infix ge- inside separable-prefix verbs",
+          "mustRepresent": true,
+          "count": 3,
+          "share": 0.125
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"weak-past-participle-ge-t\",\n    directive: \"Use a WEAK past participle (ge-…-t pattern) in the sentence, e.g. 'gemacht', 'gearbeitet', 'gekauft'.\",\n    share: 3,\n  },\n  {\n    id: \"strong-past-participle-ge-en-ablaut\",\n    directive: \"Use a STRONG past participle (ge-…-en with ablaut) in the sentence, e.g. 'getrunken', 'geschrieben', 'gefahren'.\",\n    share: 3,\n  },\n  {\n    id: \"no-ge-inseparable-prefix\",\n    directive: \"Use a past participle of an INSEPARABLE-PREFIX verb (no ge- prefix) in the sentence, e.g. 'verstanden', 'besucht', 'erklärt'.\",\n    share: 2,\n  },\n  {\n    id: \"no-ge-ieren-verbs\",\n    directive: \"Use a past participle of a VERB ENDING IN -ieren (no ge- prefix, ends in -iert) in the sentence, e.g. 'studiert', 'telefoniert', 'fotografiert'.\",\n    share: 2,\n  },\n  {\n    id: \"infix-ge-separable-verbs\",\n    directive: \"Use a past participle of a SEPARABLE-PREFIX verb (ge- appears between prefix and stem) in the sentence, e.g. 'eingekauft', 'aufgestanden', 'mitgebracht'.\",\n    share: 2,\n  },\n],",
+        "notes": "The measured pool is heavily skewed toward weak participles (12/24) while -ieren verbs appear only once. Shares are set so weak and strong each hold a plurality at 3, with the three structurally distinct no-ge-/infix-ge- patterns each at 2, targeting roughly equal representation across all five constructions without letting any single variant dominate."
+      }
+    },
+    {
+      "cellKey": "de-a2-perfekt-with-haben:sentence_construction",
+      "grammarPointKey": "de-a2-perfekt-with-haben",
+      "grammarPointName": "Perfekt with haben",
+      "type": "sentence_construction",
+      "language": "DE",
+      "cefrLevel": "A2",
+      "mechanism": "construction-variants",
+      "sampled": 24,
+      "classified": 24,
+      "unresolved": 0,
+      "missing": [
+        {
+          "id": "haben-perfekt-intransitive",
+          "label": "haben + past participle (intransitive verb)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        }
+      ],
+      "counts": [
+        {
+          "id": "haben-perfekt-transitive",
+          "label": "haben + past participle (transitive verb)",
+          "mustRepresent": true,
+          "count": 13,
+          "share": 0.5416666666666666
+        },
+        {
+          "id": "haben-perfekt-intransitive",
+          "label": "haben + past participle (intransitive verb)",
+          "mustRepresent": true,
+          "count": 1,
+          "share": 0.041666666666666664
+        },
+        {
+          "id": "participle-final-position",
+          "label": "Past participle in clause-final position",
+          "mustRepresent": false,
+          "count": 10,
+          "share": 0.4166666666666667
+        }
+      ],
+      "proposal": {
+        "mechanism": "construction-variants",
+        "snippet": "constructionVariants: [\n  {\n    id: \"haben-perfekt-transitive\",\n    directive: \"Write a Perfekt sentence using 'haben' + past participle of a transitive verb (verb that takes a direct object), e.g. 'Er hat den Brief geschrieben.'\",\n    share: 3,\n  },\n  {\n    id: \"haben-perfekt-intransitive\",\n    directive: \"Write a Perfekt sentence using 'haben' + past participle of an intransitive verb that takes 'haben' (not 'sein'), e.g. 'Sie hat lange geschlafen.'\",\n    share: 3,\n  },\n  {\n    id: \"participle-final-position\",\n    directive: \"Write a Perfekt sentence with 'haben' where the past participle is explicitly placed at the very end of the clause, e.g. 'Wir haben das Lied zusammen gesungen.'\",\n    share: 1,\n  },\n],",
+        "notes": "The intransitive variant was critically under-realized (1/24), so its share is raised to match the transitive variant's weight. The participle-final-position variant is marked non-load-bearing in the data, so it retains a minimal share of 1 to keep it present without distorting the pool."
+      }
+    }
+  ],
+  "enumerationSuspect": [
+    {
+      "cellKey": "de-a2-weil-deshalb:sentence_construction",
+      "unresolved": 14,
+      "sampled": 24
+    }
+  ],
+  "dismissed": [],
+  "thinCells": [],
+  "enumerationErrors": [],
+  "classificationErrors": [],
+  "proposalErrors": [],
+  "neverEnumerated": []
+}
