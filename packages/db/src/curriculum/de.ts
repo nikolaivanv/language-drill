@@ -211,6 +211,26 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // Every target stays at the B1 default of 50 or the point's existing
 // targetOverride.
 //
+// 2026-08-23c: batch 4 — thirteen B2 points, completing the authoring pass.
+// de-b2-temporal-connectors and de-b2-consecutive-connectors both ran 24/24 in
+// translation on a single frame — the temporal one had EVERY subordinate
+// clause at 0, drilling only the nominal paraphrase. de-b2-passive-alternatives
+// missed four of seven alternatives outright (man, -bar, bekommen-passive,
+// subjectless dative), and de-b2-subjective-modals had dürfte, könnte and will
+// all at 0.
+//
+// de-b2-subjective-modals splits by MODAL, not by perfect-vs-present
+// infinitive: past reference cuts across all five modals, so those could never
+// be alternatives to one another. Its pool's dominant label (22 of 24) was
+// exactly that non-disjoint one — a reminder that the audit's `counts` measure
+// whatever the classifier was told to choose between, not necessarily a real
+// axis.
+//
+// de-b2-modal-particles-advanced needed its targetOverride raised 12 -> 16:
+// four variants require 4 * MIN_PER_VARIANT slots and the curriculum invariant
+// rejects an override that cannot cover them. Every other B2 target stays at
+// the default 50.
+//
 // Bump clears target-reached / low-yield suppression so the touched cells
 // re-run under the rotation. At-target cells additionally need demote:pool.
 export const CURRICULUM_VERSION_DE = '2026-08-23';
@@ -3032,6 +3052,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Sie behauptet, sie sei krank.',
       'Er fragte, ob wir kämen, und sagte, wir sollten warten.',
     ],
+    constructionVariants: [
+      {
+        id: 'konjunktiv-i-declarative',
+        directive:
+          'Konjunktiv I reporting a DECLARATIVE statement (Der Minister sagte, er habe keine Zeit; Sie behauptet, sie sei krank)',
+      },
+      {
+        id: 'konjunktiv-ii-fallback',
+        directive:
+          'Konjunktiv II substituted BECAUSE the Konjunktiv I form would be identical to the indicative — typically the plural or 1sg (Sie sagten, sie kämen später — not *sie kommen)',
+      },
+      {
+        id: 'indirect-question-ob-w',
+        directive:
+          'an indirect QUESTION introduced by ob or a W-word, in Konjunktiv I (Er fragte, ob wir Zeit hätten; Sie wollte wissen, wann der Zug abfahre)',
+      },
+      {
+        id: 'indirect-command-solle-moege',
+        directive:
+          'an indirect COMMAND or request rendered with solle or möge (Er sagte, wir sollten warten; Sie bat, er möge sich melden)',
+      },
+    ],
     examplesNegative: ['*Der Minister sagte, er hat keine Zeit. (in formal news writing)'],
     commonErrors: [
       'Using the indicative in formal indirect speech.',
@@ -3101,6 +3143,18 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Das Fenster ist geöffnet — es ist frisch hier.',
       'Der Tisch war schon gedeckt, als die Gäste kamen.',
     ],
+    constructionVariants: [
+      {
+        id: 'zustandspassiv-present',
+        directive:
+          'PRESENT Zustandspassiv — ist + past participle, describing a state that holds now (Das Fenster ist geöffnet)',
+      },
+      {
+        id: 'zustandspassiv-past',
+        directive:
+          'PAST Zustandspassiv — war + past participle, describing a state that held at a past reference point (Der Tisch war schon gedeckt, als die Gäste kamen)',
+      },
+    ],
     examplesNegative: ['*Das Fenster ist von Maria geöffnet, sieh mal! (agent with state reading)'],
     commonErrors: [
       'Using the sein-passive for an ongoing process ("*Das Haus ist gerade gebaut" instead of "wird gerade gebaut").',
@@ -3122,6 +3176,43 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Der Antrag ist bis Freitag einzureichen.',
       'Ihm wurde sofort geholfen.',
       'Sie bekam das Buch geschenkt.',
+    ],
+    constructionVariants: [
+      {
+        id: 'man-passive-alternative',
+        directive:
+          'an ACTIVE clause with the impersonal subject man, standing in for a passive (Man löst das Problem leicht; Hier spricht man Deutsch)',
+      },
+      {
+        id: 'sich-lassen-infinitive',
+        directive:
+          'sich lassen + infinitive, "can be …-ed" (Das Problem lässt sich leicht lösen)',
+      },
+      {
+        id: 'bar-adjective',
+        directive:
+          'a -bar ADJECTIVE carrying the passive-possibility meaning (Das Problem ist lösbar; Der Text ist kaum lesbar)',
+      },
+      {
+        id: 'sein-zu-infinitive',
+        directive:
+          'sein + zu + infinitive, expressing obligation or possibility (Der Antrag ist bis Freitag einzureichen)',
+      },
+      {
+        id: 'bekommen-passive',
+        directive:
+          'the bekommen/kriegen-passive, which promotes the DATIVE recipient to subject (Sie bekam das Buch geschenkt; Er bekam die Stelle angeboten)',
+      },
+      {
+        id: 'subjectless-passive-dative',
+        directive:
+          'a SUBJECTLESS passive whose verb governs the dative, so the dative object stays dative and never becomes nominative (Ihm wurde sofort geholfen — never *Er wurde geholfen)',
+      },
+      {
+        id: 'subjectless-passive-es-wird',
+        directive:
+          'a SUBJECTLESS passive of an intransitive verb, with expletive es in first position (Es wird getanzt; Es wurde viel gelacht)',
+      },
     ],
     examplesNegative: ['*Er wurde geholfen.', '*Das Problem lässt sich leicht gelöst.'],
     commonErrors: [
@@ -3156,6 +3247,38 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Der Zeuge will nichts gesehen haben.',
       'Das Restaurant soll ausgezeichnet sein.',
     ],
+    // Split by the MODAL, which is the disjoint dimension. NOT by perfect vs
+    // present infinitive: past reference cuts ACROSS all five modals, so a
+    // draft can be both "soll" and "perfect infinitive" and the two could never
+    // be alternatives to each other. (The pool's dominant label was exactly
+    // that non-disjoint one — 22 of 24.)
+    constructionVariants: [
+      {
+        id: 'muss-epistemic-present',
+        directive:
+          'muss expressing a NEAR-CERTAIN deduction from evidence (Er muss krank sein; Er muss krank gewesen sein)',
+      },
+      {
+        id: 'duerfte-epistemic',
+        directive:
+          'dürfte grading the claim as PROBABLE — never permission (Das dürfte stimmen; Sie dürfte schon zu Hause sein)',
+      },
+      {
+        id: 'koennte-kann-epistemic',
+        directive:
+          'könnte or kann expressing epistemic POSSIBILITY, weaker than dürfte (Das könnte stimmen; Er kann sich geirrt haben)',
+      },
+      {
+        id: 'soll-hearsay',
+        directive:
+          'soll reporting HEARSAY — "is said to", "reportedly" — not obligation (Das Restaurant soll ausgezeichnet sein)',
+      },
+      {
+        id: 'will-self-claim',
+        directive:
+          'will reporting an UNVERIFIED SELF-CLAIM by the subject — "claims to" — not intention or future (Der Zeuge will nichts gesehen haben)',
+      },
+    ],
     examplesNegative: ['*Er musste krank gewesen sein. (for a present deduction about the past)'],
     commonErrors: [
       'Expressing a deduction about the past with a past-tense modal instead of modal + perfect infinitive ("Er muss … gewesen sein", not "*Er musste … sein").',
@@ -3176,6 +3299,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich habe gestern arbeiten müssen.',
       'Du hättest mich anrufen können!',
       'Es ärgert mich, dass ich so lange habe warten müssen.',
+    ],
+    constructionVariants: [
+      {
+        id: 'modal-perfekt-double-infinitive',
+        directive:
+          'a modal Perfekt in a MAIN clause, using the Ersatzinfinitiv — infinitive + infinitive, never the participle (Ich habe gestern arbeiten müssen — not *gemusst)',
+      },
+      {
+        id: 'konjunktiv-ii-past-modal',
+        directive:
+          'Konjunktiv II past with a modal — hätte + infinitive + können/müssen/sollen, typically a reproach or missed possibility (Du hättest mich anrufen können!)',
+      },
+      {
+        id: 'subordinate-clause-auxiliary-fronting',
+        directive:
+          'the same double infinitive inside a SUBORDINATE clause, where the finite auxiliary moves BEFORE the two infinitives instead of standing last (…, dass ich so lange habe warten müssen)',
+      },
     ],
     examplesNegative: ['*Ich habe gestern arbeiten gemusst.', '*…, dass ich so lange warten müssen habe.'],
     commonErrors: [
@@ -3270,6 +3410,33 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Vor der Abreise müssen wir noch packen.',
       'Wir haben gepackt. Danach sind wir losgefahren.',
     ],
+    constructionVariants: [
+      {
+        id: 'temporal-clause-nachdem-bevor-waehrend-seit-bis',
+        directive:
+          'a full temporal SUBORDINATE CLAUSE with a finite verb, introduced by nachdem, bevor, während, seit or bis (Nachdem wir gegessen hatten, gingen wir spazieren)',
+      },
+      {
+        id: 'temporal-prep-phrase-vor-nach-seit-bis-zu-dative',
+        directive:
+          'a temporal PREPOSITIONAL PHRASE with vor / nach / seit / bis zu + dative, the nominal counterpart of such a clause (Vor der Abreise müssen wir noch packen)',
+      },
+      {
+        id: 'temporal-prep-phrase-waehrend-genitive',
+        directive:
+          'während + GENITIVE as a temporal prepositional phrase — the formal register, not während + dative (Während des Konzerts klingelte sein Handy)',
+      },
+      {
+        id: 'bei-dative-simultaneity',
+        directive:
+          'bei + dative of a NOMINALIZED INFINITIVE, marking simultaneity (Beim Einsteigen bitte die Fahrkarte bereithalten)',
+      },
+      {
+        id: 'stand-alone-temporal-adverb',
+        directive:
+          'a STAND-ALONE temporal adverb linking two independent sentences — vorher, zuvor, danach, anschließend (Wir haben gepackt. Danach sind wir losgefahren)',
+      },
+    ],
     examplesNegative: ['*Nach wir gegessen hatten, gingen wir spazieren.', '*Während dem Konzert. (formal register)'],
     commonErrors: [
       'Using a preposition with a full clause ("*nach wir gegessen hatten" — needs nachdem).',
@@ -3344,6 +3511,33 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Zwar war das Hotel teuer, aber es hat sich gelohnt.',
       'Selbst wenn du recht hast, solltest du höflicher sein.',
     ],
+    constructionVariants: [
+      {
+        id: 'obwohl-subordinate-clause',
+        directive:
+          'obwohl or obgleich introducing a verb-final SUBORDINATE clause (Obwohl das Hotel teuer war, hat es sich gelohnt)',
+      },
+      {
+        id: 'trotzdem-main-clause-inversion',
+        directive:
+          'trotzdem or dennoch as a MAIN-clause adverb, forcing verb-subject inversion (Das Hotel war teuer; trotzdem hat es sich gelohnt)',
+      },
+      {
+        id: 'trotz-genitive-nominal',
+        directive:
+          'trotz + a GENITIVE nominal phrase, with no clause at all (Trotz des Verbots wurde weiter geraucht)',
+      },
+      {
+        id: 'zwar-aber-two-part',
+        directive:
+          'the two-part zwar … aber, conceding the point before contradicting it (Zwar war das Hotel teuer, aber es hat sich gelohnt)',
+      },
+      {
+        id: 'selbst-auch-wenn-intensified',
+        directive:
+          'selbst wenn or auch wenn, "even if" — an INTENSIFIED concessive over a hypothetical rather than a fact (Selbst wenn du recht hast, solltest du höflicher sein)',
+      },
+    ],
     examplesNegative: ['*Trotz es verboten war, wurde geraucht.', '*Obwohl war das Hotel teuer, …'],
     commonErrors: [
       'Putting a clause after trotz ("*trotz es verboten war" — needs obwohl).',
@@ -3364,6 +3558,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Es regnete stark, sodass das Spiel abgebrochen wurde.',
       'Es war so laut, dass ich nichts verstehen konnte.',
       'Das Problem ist zu komplex, als dass man es schnell lösen könnte.',
+    ],
+    constructionVariants: [
+      {
+        id: 'sodass-result-clause',
+        directive:
+          'a sodass result clause attached to a complete main clause, with NO so in the main clause (Es regnete stark, sodass das Spiel abgebrochen wurde)',
+      },
+      {
+        id: 'so-adjective-dass',
+        directive:
+          'the SPLIT pattern so + adjective/adverb in the main clause … plain dass in the result clause (Es war so laut, dass ich nichts verstehen konnte)',
+      },
+      {
+        id: 'main-clause-connector-inversion',
+        directive:
+          'a MAIN-clause consecutive connector — folglich, infolgedessen, demzufolge, somit — taking V2 inversion rather than a subordinate clause (Er kam zu spät; folglich verpasste er den Zug)',
+      },
+      {
+        id: 'zu-als-dass-konjunktiv-ii',
+        directive:
+          'the NEGATIVE-result frame zu + adjective … als dass + Konjunktiv II, where the result does NOT come about (Das Problem ist zu komplex, als dass man es schnell lösen könnte)',
+      },
     ],
     examplesNegative: ['*Es war so laut, sodass ich nichts verstehen konnte.', '*Es regnete stark, sodass wurde das Spiel abgebrochen.'],
     commonErrors: [
@@ -3569,6 +3785,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Es gibt keinen Grund für diese Aufregung.',
       'Er ist stolz darauf, die Prüfung bestanden zu haben.',
     ],
+    constructionVariants: [
+      {
+        id: 'fixed-prep-noun-phrase',
+        directive:
+          'a NOUN with its fixed preposition governing a noun phrase (die Angst vor + dative; der Grund für + accusative)',
+      },
+      {
+        id: 'fixed-prep-adjective-phrase',
+        directive:
+          'an ADJECTIVE with its fixed preposition governing a noun phrase (stolz auf + accusative; abhängig von + dative)',
+      },
+      {
+        id: 'dar-correlate-dass-clause',
+        directive:
+          'the da(r)-CORRELATE followed by a dass-clause or an infinitive clause, because the complement is a clause rather than a noun phrase (Er ist stolz darauf, die Prüfung bestanden zu haben)',
+      },
+    ],
     examplesNegative: ['*Sie ist stolz über ihre Arbeit.', '*die Angst über Spinnen'],
     commonErrors: [
       'Transferring the English preposition ("*stolz über", "*abhängig auf").',
@@ -3619,6 +3852,33 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Glücklicherweise war der Fehler vermeidbar.',
       'Das Arbeitszimmer ist im ersten Stock.',
     ],
+    constructionVariants: [
+      {
+        id: 'noun-suffix-ung-heit-keit-schaft-nis',
+        directive:
+          'a noun derived with -ung, -heit, -keit, -schaft or -nis, where the choice of suffix is the point (Freundlichkeit, Verbesserung, Freiheit, Freundschaft)',
+      },
+      {
+        id: 'negating-prefix-un-miss',
+        directive:
+          'a word negated by the prefix un- or miss- (unmöglich, unzufrieden, Missverständnis, missachten)',
+      },
+      {
+        id: 'adjective-suffix-lich-ig-isch-bar-los-voll-frei',
+        directive:
+          'an adjective derived with -lich, -ig, -isch, -bar, -los, -voll or -frei (vermeidbar, sprachlos, sinnvoll, zuckerfrei)',
+      },
+      {
+        id: 'adverbial-suffix-weise',
+        directive:
+          'a sentence adverb derived with -weise, commenting on the whole proposition (glücklicherweise, normalerweise, möglicherweise)',
+      },
+      {
+        id: 'fugen-s-compound-linking',
+        directive:
+          'a noun COMPOUND requiring the linking Fugen-s between its parts (Arbeitszimmer, Geburtstagsgeschenk, Sicherheitsgurt)',
+      },
+    ],
     examplesNegative: ['*die Freundlichheit', '*das Arbeitzimmer'],
     commonErrors: [
       'Choosing -heit vs -keit wrongly ("*Freundlichheit" — adjectives in -lich/-ig take -keit).',
@@ -3637,6 +3897,28 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesPositive: [
       'Ich habe ihn gestern wegen des Termins kurz im Büro gesehen.',
       'Sie hat es mir gestern erklärt.',
+    ],
+    constructionVariants: [
+      {
+        id: 'pronoun-before-np',
+        directive:
+          'an unstressed PRONOUN placed before a full noun phrase or adverbial in the Mittelfeld (Ich habe ihn gestern … gesehen — not *gestern ihn)',
+      },
+      {
+        id: 'acc-before-dat-two-pronouns',
+        directive:
+          'TWO pronoun objects, where the accusative precedes the dative (Sie hat es mir erklärt — not *mir es)',
+      },
+      {
+        id: 'tekamolo-adverbial-order',
+        directive:
+          'several ADVERBIALS ordered by the TeKaMoLo default — temporal, causal, modal, local (Ich habe gestern wegen des Termins kurz im Büro gearbeitet)',
+      },
+      {
+        id: 'nicht-placement',
+        directive:
+          'the placement of NICHT — immediately before the constituent it negates, or late in the Mittelfeld for whole-clause negation (Ich habe ihn gestern nicht gesehen; Er kommt nicht heute, sondern morgen)',
+      },
     ],
     examplesNegative: ['*Ich habe gestern ihn im Büro kurz gesehen.', '*Sie hat mir es gestern erklärt.'],
     commonErrors: [
@@ -3685,6 +3967,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er ist wohl schon nach Hause gegangen.',
       'Das wird schon klappen!',
     ],
+    constructionVariants: [
+      {
+        id: 'halt-eben-resigned-acceptance',
+        directive:
+          'halt or eben marking RESIGNED ACCEPTANCE of an unchangeable fact (Das ist halt so — da kann man nichts machen)',
+      },
+      {
+        id: 'wohl-supposition',
+        directive:
+          'wohl marking an epistemic SUPPOSITION the speaker cannot confirm (Er ist wohl schon nach Hause gegangen)',
+      },
+      {
+        id: 'schon-concessive-reassurance',
+        directive:
+          'schon offering CONCESSIVE REASSURANCE — playing down a worry rather than marking time (Das wird schon klappen!; Das schaffst du schon)',
+      },
+      {
+        id: 'bloss-nur-urgency-warning',
+        directive:
+          'bloß or nur adding URGENCY to a warning, wish or command (Mach das bloß nicht!; Wenn er nur bald käme!)',
+      },
+    ],
     examplesNegative: ['*Halt das ist so.'],
     commonErrors: [
       'Fronting the particle ("*Halt das ist so").',
@@ -3693,7 +3997,11 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     prerequisiteKeys: ['de-b1-modal-particles-basic'],
     clozeUnsuitable: true,
-    targetOverride: 12,
+    // Raised 12 -> 16 on 2026-08-23: four constructionVariants need
+    // 4 * MIN_PER_VARIANT slots, and the curriculum invariant rejects a
+    // targetOverride that cannot cover them. 16 is still narrow, and the
+    // point's own name lists five particles, so four is not over-declaring.
+    targetOverride: 16,
   },
 
   {
@@ -3709,6 +4017,41 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er hat den Wecker nicht gehört und verschlafen.',
       'Der Bus hat das Verkehrsschild umgefahren.',
       'Wir haben die Baustelle weiträumig umfahren.',
+    ],
+    constructionVariants: [
+      {
+        id: 'be-transitivizer',
+        directive:
+          'the be- prefix TRANSITIVIZING a verb, so a prepositional object becomes a direct one (antworten auf → beantworten; steigen in → besteigen)',
+      },
+      {
+        id: 'ver-completion-error-change',
+        directive:
+          'the ver- prefix marking completion, an ERROR, or a change of state (verschlafen, sich verlaufen, verbrennen)',
+      },
+      {
+        id: 'er-achievement',
+        directive:
+          'the er- prefix marking an ACHIEVEMENT or successful outcome (erreichen, erarbeiten, erkämpfen)',
+      },
+      {
+        id: 'ent-removal',
+        directive: 'the ent- prefix marking REMOVAL or reversal (entfernen, entpacken, entkommen)',
+      },
+      {
+        id: 'zer-to-pieces',
+        directive: "the zer- prefix meaning 'to pieces' (zerbrechen, zerreißen, zerstören)",
+      },
+      {
+        id: 'variable-prefix-separable-literal',
+        directive:
+          'a VARIABLE prefix (um-, durch-, über-, unter-) used SEPARABLY with its literal reading, so it detaches and takes ge- inside (Der Bus hat das Schild umgefahren — knocked it down)',
+      },
+      {
+        id: 'variable-prefix-inseparable-figurative',
+        directive:
+          'the SAME variable prefix used INSEPARABLY with its figurative reading, so it stays attached and takes no ge- (Wir haben die Baustelle umfahren — drove around it)',
+      },
     ],
     examplesNegative: ['*Ich habe die Frage geantwortet.', '*Er hat das Schild umfahren. (meaning "knocked it down" — that reading needs umgefahren)'],
     commonErrors: [
