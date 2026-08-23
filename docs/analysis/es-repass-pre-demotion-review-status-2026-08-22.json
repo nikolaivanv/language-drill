@@ -1,0 +1,93 @@
+{
+ "purpose": "Pre-demotion review_status for the ES rows the 2026-08-20 variant repass could have touched. The es-variant-repass-*-demote-ids-*.json captures record WHICH rows were demoted and note only that prior status was 'auto-approved or manual-approved' \u2014 not which. demote:pool writes no rollback artifact, so that lived solely in the Neon snapshot branches. Extracted so those branches can be deleted without losing rollback fidelity. The TR equivalent is tr-repass-pre-demotion-review-status-2026-08-22.json.",
+ "rule": "Every ES CLOZE row restores to 'auto-approved' \u2014 cloze has NO manual-approved rows at all (0 of 4,464 on the snapshot). For translation and sentence_construction, restore to 'manual-approved' if the id appears below, otherwise 'auto-approved'. Always set demotion_reason = NULL.",
+ "sources": [
+  {
+   "branch": "br-raspy-night-anjwk99z",
+   "name": "snapshot-variant-seeds-2026-08-20",
+   "forked": "2026-08-19T22:05:50Z",
+   "note": "the earlier fork \u2014 the authoritative pre-repass state, and the only one holding the 3 manual-approved translation rows the main repass then demoted"
+  },
+  {
+   "branch": "br-proud-leaf-anhky01u",
+   "name": "snapshot-variant-seeds-batch11-2026-08-20",
+   "forked": "2026-08-20T11:19:57Z",
+   "note": "later fork, after the main demotion; shows 21 manual-approved translations rather than 24, which is how the 3 demoted ones were identified"
+  }
+ ],
+ "counts": {
+  "cloze_manual_approved": 0,
+  "translation_manual_approved": 24,
+  "sentence_construction_manual_approved": 32
+ },
+ "manualApprovedThatWereDemoted": {
+  "ids": [
+   "84dc60e1-0dec-50b7-85b5-cb5b67990d7a",
+   "f1d4bdb3-fb23-5c8b-beb8-cb47a2dcfc0a",
+   "fed710c1-5bf9-5067-8fbb-236bb5a660d2"
+  ],
+  "note": "Verified on prod 2026-08-22: all three are review_status='rejected', demotion_reason='pool-hygiene'. Restoring them as 'auto-approved' would silently discard a human review decision \u2014 the concrete reason this extraction was worth doing."
+ },
+ "manualApprovedIds": {
+  "translation": [
+   "84dc60e1-0dec-50b7-85b5-cb5b67990d7a",
+   "e83f16a8-636e-5a10-a8ec-2e3cbfbd7669",
+   "e94156d2-c843-5d5c-95e4-8af0d286db31",
+   "ea3f19ce-65a8-559a-aaec-3176c1f6b20b",
+   "eb3f1b61-e6c4-535f-abec-331340da143a",
+   "eb4159f8-bd25-53aa-a3e4-a186e2177c9f",
+   "ec415b8b-3e42-516f-a4e4-a32360fadece",
+   "ed415d1e-baec-5820-a1e4-9e4cdfde40fd",
+   "ee415eb1-3c08-55e5-a2e4-9fe95ec1a32c",
+   "ef3f21ad-eb37-5a73-a7ec-2c9f454c8b7e",
+   "ef416044-c197-5abe-9fe4-9b12dda5055b",
+   "ef974c86-0207-57bc-9181-6ea0dc71f0d1",
+   "f04161d7-42b4-5883-a0e4-9caf5c88678a",
+   "f0974e19-8324-5581-9281-703d5b555300",
+   "f141636a-bf5e-5f34-9de4-97d8db6bc9b9",
+   "f1d4bdb3-fb23-5c8b-beb8-cb47a2dcfc0a",
+   "f24164fd-407b-5cf9-9ee4-99755a4f2be8",
+   "f3d6ff70-cfbf-58f0-94bb-2b7c3d6eb189",
+   "f5e3ce89-88c3-5b95-92bd-64f96db9910c",
+   "f9975c44-f6e9-5e0a-9f81-8536ec02923f",
+   "fa975dd7-7806-5bcf-a081-86d36ae5f46e",
+   "fb975f6a-f4b0-5280-9d81-81fce9c9569d",
+   "fce3d98e-108b-5bf8-89bd-5674e5f14055",
+   "fed710c1-5bf9-5067-8fbb-236bb5a660d2"
+  ],
+  "sentence_construction": [
+   "1994ce79-5641-530b-812d-8587fb5b1b2e",
+   "2a976cdc-ad34-52d8-b1f1-e454ac9c5f19",
+   "310b2512-3eb8-5dce-9fd1-60f26267085f",
+   "35b56b03-d88b-5835-9678-de495c164608",
+   "38b56fbc-5be1-5184-9178-d638e1a55b1d",
+   "3bb57475-df37-5ad3-9478-db0f62c1f8ee",
+   "3fb57ac1-e3a9-51e7-9078-d49b556a9322",
+   "472beef4-5962-5ce2-b063-38fe26504067",
+   "49ff6c6b-d668-5e61-a150-85adc7ab3a8c",
+   "4dff72b7-d1f5-574d-a550-8c21c338c348",
+   "4eb353c7-82d3-5e0b-bf76-7c77b15a7b9a",
+   "5a3394a9-cdfa-5bdb-a1fb-97d70c64bfae",
+   "5c3397cf-c74f-593d-a3fb-9b1105b90cc8",
+   "5d339962-486b-5702-a4fb-9cae890ee63b",
+   "5ec775ba-c11c-5c30-9138-f1ac38f7ea65",
+   "60339e1b-c2dc-5229-a7fb-a18501469584",
+   "8a1896e2-2d0d-5782-91ce-15aee04c3fbb",
+   "a332ae67-ce8f-5f07-9621-557b73bcfd96",
+   "b303a2f3-b17e-5e7b-95d4-5c070f36f352",
+   "b712b3c9-c299-5755-99d9-aa69da138854",
+   "b7fbc035-68ea-58cb-92e5-fec768d6bae6",
+   "bd03b2b1-a660-54c9-9bd4-65b515e2a638",
+   "be2448c0-0a79-58e8-a44a-5de49d00f119",
+   "c012c1f4-510d-5a56-8ed9-98aa61dbd90b",
+   "c305faba-1925-5576-91d6-924a2b0a61bf",
+   "c5948410-ae40-51a6-9ec1-d8babb9b6c23",
+   "c5d82e7a-636d-547e-a9c7-f3521ff54857",
+   "d19496f4-a0e8-5c6a-aac1-ec16c8f2d1ef",
+   "d812b806-1ffb-5cb0-a477-68bc0116dce5",
+   "da7f5e82-dc7a-5bb0-a700-c1ac2b4358e5",
+   "e305fd64-c87e-5ea0-a36a-9a8c008bad91",
+   "e64bdd97-4648-57d7-b989-b0cb313cb416"
+  ]
+ }
+}
