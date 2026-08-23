@@ -172,6 +172,25 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // its polarity axis; de-a1-present-irregular's split on verb LEXEME and stem
 // class, both orthogonal to its person axis.
 //
+// 2026-08-23a: batch 2 — ten A2 points. Total collapses among them:
+// de-a2-weil-deshalb (denn 0 of 44 across both cells — the one causal
+// connector that keeps plain main-clause order), de-a2-wissen-kennen (können
+// for skills 0 of 27), de-a2-seit-present (seit+Perfekt 0/12),
+// de-a2-verb-preposition-complements (BOTH the bare verb+preposition frame and
+// the preposition+pronoun-for-people frame at 0/24, leaving only the wo(r)-/
+// da(r)- forms), de-a2-measure-expressions (measure-no-von 0, distributive je
+// 0) and de-a2-dative-accusative-objects (the pronoun-pronoun order that
+// REVERSES to accusative-first — its own commonError — 0/24).
+//
+// de-a2-reflexive-verbs was examined and NOT authored: its `reciprocal-plural`
+// construction requires a plural subject, which would contradict a `person:
+// 1sg` target from the spec it already carries, and
+// `reflexive-pronoun-position-main-clause` is a property of all 19 sampled rows
+// rather than an alternative to them.
+//
+// Every target here stays at the A2 default of 30 or the point's existing
+// targetOverride — no cell inflates, checked with `resolveCellTargetFor`.
+//
 // Bump clears target-reached / low-yield suppression so the touched cells
 // re-run under the rotation. At-target cells additionally need demote:pool.
 export const CURRICULUM_VERSION_DE = '2026-08-23';
@@ -866,6 +885,18 @@ const deCurriculum: readonly GrammarPoint[] = [
     cefrLevel: A2,
     language: DE,
     examplesPositive: ['Ich habe ein Buch gelesen.', 'Wir haben gestern gearbeitet.'],
+    constructionVariants: [
+      {
+        id: 'haben-perfekt-transitive',
+        directive:
+          'haben + past participle of a TRANSITIVE verb, with a direct object present (Ich habe ein Buch gelesen)',
+      },
+      {
+        id: 'haben-perfekt-intransitive',
+        directive:
+          'haben + past participle of an INTRANSITIVE verb that still takes haben rather than sein — durative or atelic, no change of location (Wir haben gestern gearbeitet; Er hat lange geschlafen)',
+      },
+    ],
     examplesNegative: ['*Ich bin ein Buch gelesen.'],
     commonErrors: [
       'Using sein with transitive verbs ("*ich bin ein Buch gelesen").',
@@ -902,6 +933,31 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich habe den Brief geschrieben.',
       'Wir haben im Supermarkt eingekauft.',
       'Sie hat in Wien Medizin studiert.',
+    ],
+    constructionVariants: [
+      {
+        id: 'weak-past-participle-ge-t',
+        directive: 'a WEAK participle shaped ge-…-t with an unchanged stem (gemacht, gekauft, gearbeitet)',
+      },
+      {
+        id: 'strong-past-participle-ge-en-ablaut',
+        directive:
+          'a STRONG participle shaped ge-…-en with an ablaut vowel change (geschrieben, getrunken, gesprochen)',
+      },
+      {
+        id: 'no-ge-inseparable-prefix',
+        directive:
+          'an INSEPARABLE-prefix verb (be-, ver-, er-, ent-, emp-, ge-, zer-), which takes NO ge- at all (besucht, verstanden, erzählt)',
+      },
+      {
+        id: 'no-ge-ieren-verbs',
+        directive: 'a verb in -ieren, which takes NO ge- (studiert, telefoniert, fotografiert)',
+      },
+      {
+        id: 'infix-ge-separable-verbs',
+        directive:
+          'a SEPARABLE-prefix verb, where ge- goes INSIDE between prefix and stem (eingekauft, aufgestanden, mitgebracht)',
+      },
     ],
     examplesNegative: ['*Ich habe das nicht verstehen.', '*Er hat Deutsch gestudiert.'],
     commonErrors: [
@@ -1108,6 +1164,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich bleibe zu Hause, weil ich krank bin.',
       'Ich bin krank, deshalb bleibe ich zu Hause.',
       'Ich bleibe zu Hause, denn ich bin krank.',
+    ],
+    constructionVariants: [
+      {
+        id: 'weil-verb-final',
+        directive:
+          'weil introducing a REASON in a subordinate clause with the finite verb LAST (Ich bleibe zu Hause, weil ich krank bin)',
+      },
+      {
+        id: 'deshalb-inversion',
+        directive:
+          'deshalb (or darum/deswegen) introducing a CONSEQUENCE in a main clause, forcing verb-subject inversion (Ich bin krank, deshalb bleibe ich zu Hause)',
+      },
+      {
+        id: 'denn-main-clause-order',
+        directive:
+          'denn introducing a REASON but keeping plain MAIN-clause order — subject then finite verb, no inversion and no verb-final (Ich bleibe zu Hause, denn ich bin krank)',
+      },
     ],
     examplesNegative: ['*Ich bleibe zu Hause, weil ich bin krank.', '*Ich bin krank, deshalb ich bleibe zu Hause.'],
     commonErrors: [
@@ -1317,6 +1390,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Könntest du mir kurz helfen?',
       'Du solltest mehr schlafen.',
     ],
+    constructionVariants: [
+      {
+        id: 'haette-gern',
+        directive:
+          'hätte gern + a NOUN, the polite way to order or wish for something (Ich hätte gern einen Kaffee)',
+      },
+      {
+        id: 'koennte-request',
+        directive:
+          'könnte + infinitive as a polite REQUEST or question (Könntest du mir kurz helfen?)',
+      },
+      {
+        id: 'sollte-advice',
+        directive:
+          'sollte + infinitive giving ADVICE or a suggestion, not a request (Du solltest mehr schlafen)',
+      },
+      {
+        id: 'wuerde-infinitive',
+        directive:
+          'würde + infinitive as the general Konjunktiv II periphrasis (Ich würde das anders machen)',
+      },
+    ],
     examplesNegative: ['*Ich habe gern einen Kaffee. (as an order)', '*Kannst du mir helfen könntest?'],
     commonErrors: [
       'Ordering with the blunt indicative where the polite form is expected ("Ich will einen Kaffee" instead of "Ich hätte gern …").',
@@ -1365,6 +1460,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich interessiere mich für Geschichte.',
       'Worauf wartest du? — Auf den Bus.',
       'Auf wen wartest du? — Auf meinen Bruder.',
+    ],
+    constructionVariants: [
+      {
+        id: 'verb-fixed-preposition',
+        directive:
+          'a verb with its FIXED preposition followed by a full noun phrase, where the preposition is lexically governed and not translatable from English (Ich interessiere mich für Geschichte; Wir warten auf den Bus)',
+      },
+      {
+        id: 'wor-question-things',
+        directive:
+          'a wo(r)- question form asking about a THING (Worauf wartest du?; Wofür interessierst du dich?)',
+      },
+      {
+        id: 'dar-backreference-things',
+        directive:
+          'a da(r)- form back-referencing a THING already mentioned (Ich warte darauf; Ich interessiere mich dafür)',
+      },
+      {
+        id: 'preposition-pronoun-people',
+        directive:
+          'the preposition + a PERSONAL PRONOUN or wen/wem, because the complement is a PERSON and wo(r)-/da(r)- are therefore impossible (Auf wen wartest du?; Ich warte auf ihn)',
+      },
     ],
     examplesNegative: ['*Ich interessiere mich an Geschichte.', '*Auf was wartest du? (in careful usage)'],
     commonErrors: [
@@ -1547,6 +1664,37 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Sie geht in die Schule.',
       'Im Sommer fahren wir ans Meer.',
     ],
+    constructionVariants: [
+      {
+        id: 'nach-cities-countries',
+        directive:
+          'nach + a city or an article-less country as the destination (Wir fliegen nach Italien; Sie fährt nach Berlin)',
+      },
+      {
+        id: 'zu-people-institutions',
+        directive:
+          'zu(m/r) + a PERSON or an institution as the destination (Ich gehe zum Arzt; Sie geht zur Post)',
+      },
+      {
+        id: 'in-enterable-places-countries',
+        directive:
+          'in + an ENTERABLE place, or a country that requires an article (Sie geht in die Schule; Wir fahren in die Schweiz)',
+      },
+      {
+        id: 'an-edges-water',
+        directive:
+          'an(s) + an edge or a body of water as the destination (Im Sommer fahren wir ans Meer; Er geht ans Fenster)',
+      },
+      {
+        id: 'auf-islands-events',
+        directive: 'auf + an island or an event as the destination (Wir fahren auf eine Insel; Sie geht auf eine Party)',
+      },
+      {
+        id: 'nach-hause-motion',
+        directive:
+          'the fixed nach Hause for MOTION toward home, as against zu Hause for location (Ich gehe jetzt nach Hause)',
+      },
+    ],
     examplesNegative: ['*Ich gehe nach dem Arzt.', '*Wir fliegen zu Italien.'],
     commonErrors: [
       'Using nach for people or institutions ("*nach dem Arzt" instead of "zum Arzt").',
@@ -1568,6 +1716,18 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich lerne seit zwei Jahren Deutsch.',
       'Wir wohnen schon lange in Berlin.',
     ],
+    constructionVariants: [
+      {
+        id: 'seit-present-ongoing',
+        directive:
+          'seit or schon with the PRESENT tense for a situation that started earlier and is still going on (Ich lerne seit zwei Jahren Deutsch)',
+      },
+      {
+        id: 'seit-perfekt-negated',
+        directive:
+          'seit with the PERFEKT, for an event that is negated or otherwise not ongoing (Ich habe ihn seit Monaten nicht gesehen)',
+      },
+    ],
     examplesNegative: ['*Ich habe seit zwei Jahren Deutsch gelernt. (meaning "and still do")'],
     commonErrors: [
       'Using the Perfekt for an ongoing situation ("*Ich habe hier seit 2020 gewohnt" while still living there).',
@@ -1588,6 +1748,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich weiß, wo er wohnt.',
       'Ich kenne diesen Film.',
       'Sie kann gut kochen.',
+    ],
+    constructionVariants: [
+      {
+        id: 'wissen-with-clause',
+        directive:
+          'wissen + a subordinate CLAUSE expressing a known fact (Ich weiß, wo er wohnt; Weißt du, wann der Zug kommt?)',
+      },
+      {
+        id: 'kennen-with-noun-phrase',
+        directive:
+          'kennen + a NOUN PHRASE expressing familiarity with a person, place or thing (Ich kenne diesen Film; Kennst du seine Schwester?)',
+      },
+      {
+        id: 'koennen-for-skills',
+        directive:
+          'können + an infinitive (or a bare language name) for a MASTERED SKILL, where English "know how to" tempts wissen (Sie kann gut kochen; Er kann Deutsch)',
+      },
     ],
     examplesNegative: ['*Ich kenne, wo er wohnt.', '*Ich weiß diesen Film.'],
     commonErrors: [
@@ -1641,6 +1818,28 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Ich gebe es ihm.',
       'Ich zeige dir die Fotos.',
     ],
+    constructionVariants: [
+      {
+        id: 'dat-before-acc-noun-noun',
+        directive:
+          'BOTH objects are full nouns, so the DATIVE comes first (Ich gebe meinem Bruder das Buch)',
+      },
+      {
+        id: 'acc-before-dat-pronoun-pronoun',
+        directive:
+          'BOTH objects are pronouns, which REVERSES the order — accusative first (Ich gebe es ihm — never *Ich gebe ihm es)',
+      },
+      {
+        id: 'pronoun-before-noun',
+        directive:
+          'one object is a pronoun and the other a noun, so the PRONOUN comes first whatever its case (Ich zeige dir die Fotos; Ich gebe es meinem Bruder)',
+      },
+      {
+        id: 'two-accusative-verbs',
+        directive:
+          'a verb taking TWO accusative objects rather than a dative and an accusative (Das kostet mich einen Euro; Er fragt mich etwas; Sie lehrt ihn Deutsch)',
+      },
+    ],
     examplesNegative: ['*Ich gebe das Buch meinem Bruder gern. (neutral order)', '*Ich gebe ihm es.'],
     commonErrors: [
       'Putting two pronouns in dative-first order ("*Ich gebe ihm es" instead of "Ich gebe es ihm").',
@@ -1665,6 +1864,36 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Die Tomaten kosten drei Euro das Kilo.',
       'Sie hat eine halbe Stunde gewartet.',
       'Wir bekommen je zwei Karten.',
+    ],
+    constructionVariants: [
+      {
+        id: 'masc-neut-measure-singular',
+        directive:
+          'a MASCULINE or NEUTER measure noun kept SINGULAR after a numeral (zwei Glas Bier, drei Kilo Äpfel, zwei Euro)',
+      },
+      {
+        id: 'fem-measure-plural',
+        directive:
+          'a FEMININE measure noun PLURALIZED after a numeral (zwei Flaschen Wasser, drei Tassen Kaffee)',
+      },
+      {
+        id: 'measure-no-von',
+        directive:
+          'the measured substance standing directly after the measure noun in apposition, with NO von (eine Flasche Wasser — never *eine Flasche von Wasser)',
+      },
+      {
+        id: 'halb-adjective',
+        directive: 'halb declined as an ADJECTIVE before the noun (eine halbe Stunde, ein halbes Kilo)',
+      },
+      {
+        id: 'distributive-je',
+        directive: 'distributive je + numeral, one share each (Wir bekommen je zwei Karten)',
+      },
+      {
+        id: 'distributive-article',
+        directive:
+          'a distributive DEFINITE ARTICLE in a rate expression of time or price (zweimal die Woche, drei Euro das Kilo)',
+      },
     ],
     examplesNegative: ['*eine Flasche von Wasser', '*Das kostet zwei Euros.'],
     commonErrors: [
