@@ -142,7 +142,39 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // on their own if they stay low-yield. See docs/analysis/generation-run-2026-08-17.md
 // rec #1b for the standing question of whether a prompt-version mismatch should
 // clear suppression too — that would remove the need for bumps like this one.
-export const CURRICULUM_VERSION_DE = '2026-08-17';
+//
+// 2026-08-23: declares `constructionVariants` on seven A1 points whose pools
+// had collapsed onto a subset of the constructions their own descriptions
+// claim — batch 1 of the DE construction-coverage sweep
+// (docs/analysis/de-construction-coverage-backlog-2026-08-23.md). The sharpest
+// was de-a1-v2-word-order: the SVO baseline, the first word order any learner
+// meets, was 0% of BOTH cells (cloze 19/20 and translation 20/20 were a
+// fronted adverb).
+//
+// Two points from the same batch were deliberately NOT authored, and the
+// reasons generalize to the rest of the sweep:
+//   - de-a1-modal-verbs-present — its "complementary collapse" (cloze 12/0,
+//     SC 0/19, translation 19/0 between `irregular-singular` and
+//     `verb-bracket`) is a CLASSIFIER artifact, not a pool defect: the two
+//     co-occur in nearly every modal sentence, so a forced single label flips
+//     per cell. Its `person` spec also already owns the singular/plural
+//     dimension those two encode.
+//   - de-a1-es-gibt — `gibt-invariable` is a property of all 12 sampled rows,
+//     not a disjoint alternative a per-draft directive could request.
+// de-a1-numbers-ordinals was authored and then REVERTED: it carries
+// `selfRevealingElicitation` (added 2026-08-13 above), which is mutually
+// exclusive with constructionVariants because both claim the single seed slot.
+// The curriculum invariant caught it.
+//
+// Two specs were left in place and worked AROUND rather than removed:
+// de-a1-articles-nominative's variants split on the syntactic ROLE of the
+// nominative NP (subject vs predicate complement) because der/ein vs kein IS
+// its polarity axis; de-a1-present-irregular's split on verb LEXEME and stem
+// class, both orthogonal to its person axis.
+//
+// Bump clears target-reached / low-yield suppression so the touched cells
+// re-run under the rotation. At-target cells additionally need demote:pool.
+export const CURRICULUM_VERSION_DE = '2026-08-23';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -188,6 +220,38 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er fährt jeden Tag mit dem Bus.',
       'Du sprichst sehr gut Deutsch.',
       'Sie ist müde und hat Hunger.',
+    ],
+    // Disjoint by LEXEME / stem class, which is orthogonal to the person axis
+    // below — a draft can be both "werden" and "3sg".
+    constructionVariants: [
+      { id: 'sein-present', directive: "a present-tense form of 'sein' (bin/bist/ist/sind/seid)" },
+      {
+        id: 'haben-present',
+        directive: "a present-tense form of 'haben' (habe/hast/hat/haben/habt)",
+      },
+      {
+        id: 'werden-present',
+        directive: "a present-tense form of 'werden' meaning 'to become' (werde/wirst/wird)",
+      },
+      {
+        id: 'wissen-present',
+        directive: "a present-tense form of 'wissen' (weiß/weißt/weiß/wissen/wisst)",
+      },
+      {
+        id: 'stem-change-e-to-i',
+        directive:
+          'a verb whose stem vowel changes e→i in the du/er-form (sprechen→sprichst/spricht, geben→gibst/gibt, helfen→hilfst/hilft)',
+      },
+      {
+        id: 'stem-change-e-to-ie',
+        directive:
+          'a verb whose stem vowel changes e→ie in the du/er-form (lesen→liest, sehen→siehst/sieht, empfehlen→empfiehlt)',
+      },
+      {
+        id: 'stem-change-a-to-ae',
+        directive:
+          'a verb whose stem vowel changes a→ä in the du/er-form (fahren→fährst/fährt, schlafen→schläft, tragen→trägt)',
+      },
     ],
     examplesNegative: ['*Er fahrt jeden Tag mit dem Bus.', '*Du lest gern Bücher.'],
     commonErrors: [
@@ -253,6 +317,42 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Die Bücher liegen auf dem Tisch.',
       'Wir haben zwei Autos und drei Fahrräder.',
     ],
+    // Plural CLASS is not expressible as a coverage axis (CoverageAxis is a
+    // closed set of seven and none of them is "plural class"), so the audit's
+    // coverage-spec routing does not apply — variants are the only mechanism
+    // that can pin these.
+    constructionVariants: [
+      {
+        id: 'plural-e',
+        directive:
+          'a noun whose plural adds -e with NO umlaut (der Tisch → Tische, das Jahr → Jahre)',
+      },
+      {
+        id: 'plural-e-umlaut',
+        directive:
+          'a noun whose plural adds -e AND takes an umlaut (die Stadt → Städte, der Sohn → Söhne)',
+      },
+      {
+        id: 'plural-er-umlaut',
+        directive:
+          'a noun whose plural adds -er, with an umlaut where the vowel allows one (das Buch → Bücher, das Kind → Kinder)',
+      },
+      {
+        id: 'plural-en',
+        directive:
+          'a noun whose plural adds -(e)n, the default for feminines in -e (die Lampe → Lampen, die Frau → Frauen)',
+      },
+      {
+        id: 'plural-s',
+        directive:
+          'a noun whose plural adds -s, typically a loanword or an abbreviation (das Auto → Autos, das Hotel → Hotels)',
+      },
+      {
+        id: 'plural-zero',
+        directive:
+          'a noun whose plural adds NO ending, with or without an umlaut (der Apfel → Äpfel, das Fenster → Fenster)',
+      },
+    ],
     examplesNegative: ['*Ich brauche zwei Buchs.'],
     commonErrors: [
       'Adding English -s to every noun ("*die Buchs", "*die Stadts").',
@@ -280,6 +380,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Der Hund schläft.',
       'Eine Frau steht an der Tür.',
       'Das ist kein Problem.',
+    ],
+    // Split by the SYNTACTIC ROLE of the nominative NP, not by article type:
+    // der/ein vs kein is exactly the polarity axis above, so article-type
+    // variants would send two contradictory MUSTs into one draft prompt. Role
+    // is orthogonal — a predicate complement can be definite, indefinite or
+    // negative — and the predicate half is what the pool was missing (0/20).
+    constructionVariants: [
+      {
+        id: 'nominative-subject-np',
+        directive:
+          'the nominative noun phrase is the SUBJECT of the clause (Der Hund schläft; Eine Frau steht an der Tür)',
+      },
+      {
+        id: 'predicate-nominative-sein-werden-bleiben',
+        directive:
+          'the nominative noun phrase is the PREDICATE COMPLEMENT of sein, werden or bleiben, which keeps it nominative rather than accusative (Er ist ein guter Lehrer; Sie wird Ärztin; Das bleibt kein Geheimnis)',
+      },
     ],
     examplesNegative: ['*Das Hund schläft.'],
     commonErrors: [
@@ -404,6 +521,23 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Hast du heute Zeit?',
       'Hast du keine Zeit? — Doch, ich habe Zeit.',
     ],
+    constructionVariants: [
+      {
+        id: 'w-question-verb-second',
+        directive:
+          'a W-question (wer, was, wo, wohin, woher, wann, wie, warum) with the finite verb in SECOND position (Woher kommst du?)',
+      },
+      {
+        id: 'yes-no-question-verb-first',
+        directive:
+          'a yes/no question with the finite verb in FIRST position and no question word (Hast du heute Zeit?)',
+      },
+      {
+        id: 'doch-answer-negative-question',
+        directive:
+          'a NEGATIVE yes/no question answered positively with doch, where ja would be wrong (Hast du keine Zeit? — Doch, ich habe Zeit)',
+      },
+    ],
     examplesNegative: ['*Wo du wohnst?'],
     commonErrors: [
       'Leaving the verb at the end or in third position in W-questions ("*Wo du wohnst?").',
@@ -421,6 +555,28 @@ const deCurriculum: readonly GrammarPoint[] = [
     cefrLevel: A1,
     language: DE,
     examplesPositive: ['Heute gehe ich ins Kino.', 'Ich gehe heute ins Kino.'],
+    constructionVariants: [
+      {
+        id: 'v2-subject-initial',
+        directive:
+          'the SUBJECT occupies position 1 and the finite verb position 2 — the plain SVO baseline, with nothing fronted (Ich gehe heute ins Kino)',
+      },
+      {
+        id: 'v2-fronted-adverb',
+        directive:
+          'an ADVERB or adverbial phrase (time, place, manner) occupies position 1, so the subject moves after the finite verb (Heute gehe ich ins Kino)',
+      },
+      {
+        id: 'v2-fronted-object',
+        directive:
+          'an OBJECT occupies position 1, so the subject moves after the finite verb (Diesen Film kenne ich schon)',
+      },
+      {
+        id: 'v2-coordinator-not-position1',
+        directive:
+          'the clause opens with a coordinating conjunction (und, aber, denn, oder) which does NOT count as position 1, so subject-then-verb order follows it (Und ich gehe ins Kino)',
+      },
+    ],
     examplesNegative: ['*Heute ich gehe ins Kino.'],
     commonErrors: [
       'Calquing English SVO when a fronted adverb pushes the subject after the verb.',
@@ -462,6 +618,32 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Er wird Arzt.',
       'Wir haben Äpfel und Brot gekauft.',
       'Als Kind habe ich in Bonn gewohnt.',
+    ],
+    constructionVariants: [
+      {
+        id: 'zero-article-profession-nationality-sein-werden',
+        directive:
+          'a bare profession, nationality or religion after sein or werden (Ich bin Lehrerin; Er wird Arzt; Sie ist Österreicherin)',
+      },
+      {
+        id: 'zero-article-indefinite-plural-mass-noun',
+        directive:
+          'a bare indefinite PLURAL or MASS noun where English would use "some" (Wir haben Äpfel gekauft; Wir brauchen Milch)',
+      },
+      {
+        id: 'zero-article-als-role-phrase',
+        directive:
+          'a bare noun inside an als-role phrase naming a capacity or life stage (Als Kind habe ich in Bonn gewohnt; Sie arbeitet als Lehrerin)',
+      },
+      {
+        id: 'article-returns-with-adjective',
+        directive:
+          'the SAME kind of noun but modified by an adjective, so the indefinite article comes BACK (Sie ist eine gute Ärztin — not *gute Ärztin)',
+      },
+      {
+        id: 'zero-article-language-names',
+        directive: 'a bare language name (Er spricht Deutsch; Ich lerne Spanisch)',
+      },
     ],
     examplesNegative: ['*Ich bin eine Lehrerin.', '*Er wird ein Arzt.'],
     commonErrors: [
@@ -546,6 +728,34 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Im Sommer fahren wir ans Meer.',
       'Der Zug kommt in zehn Minuten.',
       'Wir bleiben den ganzen Tag zu Hause.',
+    ],
+    constructionVariants: [
+      {
+        id: 'am-days-parts-of-day',
+        directive: 'am + a day of the week or a part of the day (am Montag, am Abend)',
+      },
+      { id: 'um-clock-time', directive: 'um + a clock time (um neun Uhr, um halb drei)' },
+      { id: 'im-months-seasons', directive: 'im + a month or a season (im Juli, im Sommer)' },
+      {
+        id: 'von-bis-ab-spans',
+        directive:
+          'von … bis or ab marking a time SPAN rather than a point (von Montag bis Freitag, ab nächster Woche)',
+      },
+      {
+        id: 'dative-relative-time',
+        directive:
+          'in / vor / nach + DATIVE for time relative to now or to another event (in zehn Minuten, vor einer Stunde, nach dem Essen)',
+      },
+      {
+        id: 'fuer-accusative-duration',
+        directive:
+          'für + ACCUSATIVE for an intended duration, where the span is planned rather than elapsed (Wir fahren für zwei Tage nach Berlin)',
+      },
+      {
+        id: 'bare-accusative-time',
+        directive:
+          'a bare ACCUSATIVE time phrase with NO preposition at all (jeden Tag, den ganzen Abend, nächste Woche, letzten Monat)',
+      },
     ],
     examplesNegative: ['*Ich habe an Montag Zeit.', '*Wir bleiben für den ganzen Tag zu Hause.'],
     commonErrors: [
