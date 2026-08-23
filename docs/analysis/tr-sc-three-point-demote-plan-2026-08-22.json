@@ -1,0 +1,141 @@
+[
+  {
+    "cell": "tr-a2-aorist:cloze",
+    "cefr": "A2",
+    "type": "cloze",
+    "grammarPoint": "tr-a2-aorist",
+    "approved": 46,
+    "target": 30,
+    "labelled": 46,
+    "need": 20,
+    "planned": 19,
+    "alloc": [
+      {
+        "variant": "aorist-positive-affirmative",
+        "take": 13
+      },
+      {
+        "variant": "aorist-negative-maz",
+        "take": 6
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-aorist:translation",
+    "cefr": "A2",
+    "type": "translation",
+    "grammarPoint": "tr-a2-aorist",
+    "approved": 46,
+    "target": 30,
+    "labelled": 46,
+    "need": 17,
+    "planned": 15,
+    "alloc": [
+      {
+        "variant": "aorist-positive-affirmative",
+        "take": 7
+      },
+      {
+        "variant": "aorist-negative-maz",
+        "take": 5
+      },
+      {
+        "variant": "aorist-question-offer",
+        "take": 3
+      }
+    ]
+  },
+  {
+    "cell": "tr-a2-aorist:sentence_construction",
+    "cefr": "A2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-a2-aorist",
+    "approved": 48,
+    "target": 30,
+    "labelled": 26,
+    "need": 28,
+    "planned": 5,
+    "alloc": [
+      {
+        "variant": "aorist-positive-affirmative",
+        "take": 4
+      },
+      {
+        "variant": "aorist-negative-maz",
+        "take": 1
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-causative-voice:translation",
+    "cefr": "B1",
+    "type": "translation",
+    "grammarPoint": "tr-b1-causative-voice",
+    "approved": 50,
+    "target": 50,
+    "labelled": 50,
+    "need": 11,
+    "planned": 9,
+    "alloc": [
+      {
+        "variant": "causative-t",
+        "take": 7
+      },
+      {
+        "variant": "causative-dir",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-b1-causative-voice:sentence_construction",
+    "cefr": "B1",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b1-causative-voice",
+    "approved": 76,
+    "target": 50,
+    "labelled": 56,
+    "need": 44,
+    "planned": 24,
+    "alloc": [
+      {
+        "variant": "causative-t",
+        "take": 24
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-double-voice:translation",
+    "cefr": "B2",
+    "type": "translation",
+    "grammarPoint": "tr-b2-double-voice",
+    "approved": 16,
+    "target": 15,
+    "labelled": 15,
+    "need": 4,
+    "planned": 2,
+    "alloc": [
+      {
+        "variant": "causative-of-causative",
+        "take": 2
+      }
+    ]
+  },
+  {
+    "cell": "tr-b2-double-voice:sentence_construction",
+    "cefr": "B2",
+    "type": "sentence_construction",
+    "grammarPoint": "tr-b2-double-voice",
+    "approved": 14,
+    "target": 15,
+    "labelled": 13,
+    "need": 8,
+    "planned": 6,
+    "alloc": [
+      {
+        "variant": "causative-plus-passive",
+        "take": 6
+      }
+    ]
+  }
+]
