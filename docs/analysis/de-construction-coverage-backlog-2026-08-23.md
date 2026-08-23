@@ -225,18 +225,101 @@ Recommendation: add a `singular` floor. This is a spec change on a
 variant-authoring decision, and it is called out separately here rather than
 folded into bucket A.
 
+## Authoring outcome (batches 1–5, same branch)
+
+**56 of the 74 points with findings now declare `constructionVariants`**, up
+from the 11 that #631 left. DE goes from 11 to 52 variant-declaring points
+overall (the difference is points that already declared and raised no finding
+this run).
+
+| batch | level | points | commit |
+|---|---|---|---|
+| 1 | A1 | 7 | `Declare the constructions seven collapsed DE A1 points never generated` |
+| 2 | A2 | 10 | `… ten collapsed DE A2 points …` |
+| 3 | B1 | 11 | `… eleven collapsed DE B1 points …` |
+| 4 | B2 | 13 | `… thirteen collapsed DE B2 points …` |
+| 5 | mixed | 6 | `Declare six more DE points, and keep every cell target in the allow-list` |
+
+One `coverageSpec` was removed (`de-b1-schon-noch-erst`, polarity) and three
+`targetOverride`s raised to cover `MIN_PER_VARIANT`.
+
+### The 18 points deliberately left unauthored
+
+**Seven rejected on the record**, each for a reason that generalizes:
+
+| point | why |
+|---|---|
+| `de-a1-es-gibt` | `gibt-invariable` is a property of all 12 rows, not a disjoint alternative |
+| `de-a1-modal-verbs-present` | classifier artifact — `verb-bracket` and `irregular-singular` co-occur in nearly every modal sentence, so the forced single label flipped per cell (12/0, 0/19, 19/0) |
+| `de-b1-subordinate-conjunctions` | same artifact — a fronted subordinate clause is both verb-final and inverted (17/17) |
+| `de-a2-reflexive-verbs` | `reciprocal-plural-sich` needs a plural subject, contradicting a `person: 1sg` target from its existing spec |
+| `de-a1-imperative` | `du`-stem-change is lexical inside person=2sg, and the person spec is demonstrably working (4/5/4/5 balanced) |
+| `de-a1-present-regular` | `s/ß/z`-stem contraction is a stem class inside 2sg; deferred with the above |
+| `de-a1-numbers-ordinals` | carries `selfRevealingElicitation`, mutually exclusive with variants — the curriculum invariant caught it |
+
+**Eleven blocked on the RISK-axis check.** Every one carries a `case`, `number`
+or `comparison` spec, the axis class that often *is* the dimension its variants
+would encode:
+
+`de-a2-adjective-declension-definite`, `de-a2-adjective-declension-indefinite`,
+`de-a2-comparison`, `de-a2-demonstratives-welch`,
+`de-a2-indefinite-pronouns-basic`, `de-a2-quantifiers-other`,
+`de-b1-adjectives-as-nouns`, `de-b1-n-declension`, `de-b1-passive-werden`,
+`de-b2-extended-attributes`, `de-b2-indefinite-pronouns`.
+
+Four of these are `conjugationSuitable` (`adjective-declension-*`,
+`n-declension`), so their spec cannot be deleted — the invariant requires a
+person/case/number axis for the conjugation cell to seed from. They need
+`coverageSpec.appliesTo` scoping (the #690 mechanism, added for
+`tr-a1-ablative-dative`), which is a per-point judgement rather than a batch
+edit. `de-b1-n-declension` is the clearest candidate: its pool is 23/23 and
+**23/23** on the plain oblique `-en`, with `Herr → Herrn` at 0.
+
+### One trap worth recording
+
+`admin.test.ts` asserts that every cell target resolves to a value in a literal
+allow-list (`[5, 6, 8, 10, 12, 15, 16, 20, 24, 25, 30, 44, 48, 50, 75]`). Seven
+variants on an A1 cell resolve to 28, which is not in it. Batch 1 shipped that
+regression and the lambda suite **passed anyway**, because a stale
+`@language-drill/db` dist meant the lambda tests never saw the curriculum
+change. It surfaced only after a rebuild. The inverse of the usual stale-dist
+trap: stale dist can fake a PASS, not just a failure. Batch 5 trims those two
+lists to six variants and verifies every DE cell target against the allow-list
+programmatically.
+
 ## What is NOT done
 
-1. **Authoring.** 121 findings over 81 points is larger than ES (which took 14
-   PRs) and TR (4 batches). None of bucket A is authored yet.
-2. **The prod repass.** Sized read-only against prod 2026-08-23: the 11
-   existing variant points hold 916 approved cloze/translation rows and are
-   already **96% variant-labelled** (only 65 rows outstanding, 47 of them the
-   single `de-b1-um-zu-damit:sentence_construction` cell). Labelling cost for
-   the *existing* points is therefore near zero; the cost will come from
-   whatever bucket A adds.
-3. **`de-b1-relative-pronouns` demotion** — the zip residue described above.
-   Independent of variant authoring.
+1. **The eleven RISK-axis points** described above, plus the `appliesTo` work
+   the four `conjugationSuitable` ones need.
+2. **The prod repass — the whole point of the exercise, and it is gated on
+   merge + deploy.** Per the ES and TR records the order is: merge, confirm the
+   Production Deploy is green (the generation Lambda must have the variant lists
+   live BEFORE headroom is opened), snapshot a Neon branch, run
+   `backfill:variant-seeds --apply --name <run>`, archive the artifact outside
+   the gitignored `packages/db/backfill-runs/`, capture row ids into
+   `docs/analysis/`, then `demote:pool --reason pool-hygiene` — **never
+   `quality`**, which revokes learners' credit.
+
+   Sizing, measured read-only against prod 2026-08-23: the 11 pre-existing
+   variant points hold 916 approved cloze/translation rows and are already
+   **96% variant-labelled** (65 rows outstanding, 47 of them the single
+   `de-b1-um-zu-damit:sentence_construction` cell). So labelling cost for those
+   is near zero; the cost comes from the 45 newly-declared points. At the ES
+   measured rate (~$0.00145/row) relabelling the affected DE pool is roughly
+   **$8–10**.
+
+   A `push-prompts` step is **not** needed: these batches touch only `de.ts`,
+   no prompt file and no `*_PROMPT_VERSION`. Variant lists are curriculum data
+   injected into the per-draft user prompt from deployed code, not a
+   Langfuse-hosted body — the same reasoning recorded for the TR repass.
+
+3. **Bucket C demotion is large and partly independent of the new authoring.**
+   Nine pre-existing variant points are still collapsed and need only the
+   demote half of the repass — `de-b2-causal-connectors:translation` is
+   **49/49** on one variant, `de-b2-modal-connectors:translation` 46/49,
+   `de-a2-nicht-sondern:translation` 28/28. `de-b1-relative-pronouns` belongs in
+   the same demotion pass for the zip-residue reason above, though it declares
+   no variants.
 4. **Three points remain unexamined across the three languages** for the
    kebab-case enumeration fault; DE contributes `de-b1-reason-consequence-connectors`.
 5. **Nothing is verified as an outcome.** As with ES and TR, "pools become
