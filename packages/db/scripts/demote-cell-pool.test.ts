@@ -13,12 +13,17 @@
  * covered here.
  */
 
-import { asc } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
 import type { Db } from '../src/client';
 import { exercises } from '../src/schema';
-import { parseDemoteArgs, selectRowsToDemote, type SelectRowsArgs } from './demote-cell-pool';
+import {
+  findUnmatchedIds,
+  parseDemoteArgs,
+  selectRowsToDemote,
+  type SelectRowsArgs,
+} from './demote-cell-pool';
 
 describe('parseDemoteArgs', () => {
   const required = [
@@ -31,7 +36,7 @@ describe('parseDemoteArgs', () => {
     expect(args).toEqual({
       language: 'TR', cefr: 'A1', type: 'cloze',
       grammarPoint: 'tr-a1-numbers-ordinals',
-      contentIlike: null, apply: false, reason: 'quality', limit: null,
+      contentIlike: null, apply: false, reason: 'quality', limit: null, idsFile: null,
     });
   });
 
@@ -112,6 +117,79 @@ describe('parseDemoteArgs — limit', () => {
   });
 });
 
+describe('parseDemoteArgs — ids-file', () => {
+  const base = [
+    '--language', 'DE', '--cefr', 'B1', '--type', 'cloze',
+    '--grammar-point', 'de-b1-relative-pronouns', '--reason', 'pool-hygiene',
+  ];
+
+  it('defaults idsFile to null', () => {
+    expect(parseDemoteArgs(base).idsFile).toBeNull();
+  });
+
+  it('parses --ids-file as a path, without reading it', () => {
+    // Parsing stays pure so it is unit-testable with no filesystem: main()
+    // resolves and reads the path.
+    const args = parseDemoteArgs([...base, '--ids-file', 'docs/analysis/worklist.json.txt']);
+    expect(args.idsFile).toBe('docs/analysis/worklist.json.txt');
+  });
+
+  it('rejects --ids-file given as the final token with no value', () => {
+    // Same trap as --limit: a bare trailing flag must not silently resolve to
+    // "no ids file" and demote the whole cell.
+    expect(() => parseDemoteArgs([...base, '--ids-file'])).toThrow(/--ids-file/);
+  });
+
+  it('rejects --ids-file combined with --limit', () => {
+    // The id list IS the cap. Combining them is ambiguous — which subset of
+    // the named rows would the limit keep? — and silently demoting fewer rows
+    // than the file names is the exact failure this flag exists to prevent.
+    expect(() => parseDemoteArgs([...base, '--ids-file', 'w.txt', '--limit', '5'])).toThrow(
+      /--ids-file.*--limit|--limit.*--ids-file/s,
+    );
+  });
+
+  it('rejects --ids-file combined with --content-ilike', () => {
+    // Both narrow the selection. An operator who passes both almost certainly
+    // believes one of them is doing nothing.
+    expect(() =>
+      parseDemoteArgs([...base, '--ids-file', 'w.txt', '--content-ilike', 'deren']),
+    ).toThrow(/--ids-file.*--content-ilike|--content-ilike.*--ids-file/s);
+  });
+});
+
+describe('findUnmatchedIds', () => {
+  it('returns the ids that no selected row carries', () => {
+    const rows = [{ id: 'aaaaaaaa-0000-4000-8000-000000000001' }];
+    expect(
+      findUnmatchedIds(
+        ['aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002'],
+        rows,
+      ),
+    ).toEqual(['bbbbbbbb-0000-4000-8000-000000000002']);
+  });
+
+  it('is empty when every requested id was selected', () => {
+    const rows = [
+      { id: 'aaaaaaaa-0000-4000-8000-000000000001' },
+      { id: 'bbbbbbbb-0000-4000-8000-000000000002' },
+    ];
+    expect(
+      findUnmatchedIds(
+        ['aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002'],
+        rows,
+      ),
+    ).toEqual([]);
+  });
+
+  it('compares case-insensitively, so an uppercase worklist is not reported as missing', () => {
+    // parseIdsFile lowercases what it reads, but ids coming back from Postgres
+    // could differ in case; a false "missing" here would block a correct run.
+    const rows = [{ id: 'AAAAAAAA-0000-4000-8000-000000000001' }];
+    expect(findUnmatchedIds(['aaaaaaaa-0000-4000-8000-000000000001'], rows)).toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // selectRowsToDemote — against a fake Db (no real Postgres connection)
 // ---------------------------------------------------------------------------
@@ -128,7 +206,17 @@ const SELECT_ARGS: SelectRowsArgs = {
   grammarPoint: 'es-b1-impersonal-plural',
   contentIlike: null,
   limit: null,
+  ids: null,
 };
+
+/** The cell filters `selectRowsToDemote` always applies, for the ids test below. */
+const baseFilters = (a: SelectRowsArgs) => [
+  eq(exercises.language, a.language),
+  eq(exercises.difficulty, a.cefr),
+  eq(exercises.type, a.type),
+  eq(exercises.grammarPointKey, a.grammarPoint),
+  inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+];
 
 /**
  * Mimics Drizzle's chained `select().from().where()` builder, which is
@@ -141,6 +229,7 @@ const SELECT_ARGS: SelectRowsArgs = {
 function makeFakeDb(rows: typeof FIXTURE_ROWS) {
   const calls = {
     whereCalls: 0,
+    whereArg: undefined as unknown,
     orderByArg: undefined as unknown,
     limitArg: undefined as number | undefined,
   };
@@ -154,8 +243,9 @@ function makeFakeDb(rows: typeof FIXTURE_ROWS) {
   const db = {
     select: (_projection: unknown) => ({
       from: (_table: unknown) => ({
-        where: (_condition: unknown) => {
+        where: (condition: unknown) => {
           calls.whereCalls += 1;
+          calls.whereArg = condition;
           return {
             ...thenable(rows),
             orderBy: (ordering: unknown) => {
@@ -209,5 +299,52 @@ describe('selectRowsToDemote — capped selection', () => {
     // here as a second `.where()` call.
     expect(calls.whereCalls).toBe(1);
     expect(rows).toEqual(FIXTURE_ROWS);
+  });
+});
+
+describe('selectRowsToDemote — ids-file selection', () => {
+  const IDS = ['aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002'];
+
+  it('adds an id filter ON TOP of the cell filters, so an ids file cannot reach another cell', async () => {
+    const { db, calls } = makeFakeDb(FIXTURE_ROWS);
+    const args: SelectRowsArgs = { ...SELECT_ARGS, ids: IDS };
+
+    await selectRowsToDemote(db, args);
+
+    // Pins that the ids actually reach the query AND that the cell filters
+    // survive alongside them. A regression that dropped either half would let
+    // a worklist demote rows outside the cell the operator named.
+    expect(calls.whereArg).toEqual(and(...baseFilters(args), inArray(exercises.id, [...IDS])));
+  });
+
+  it('applies neither orderBy nor limit — the id list is the selection, not a slice of it', async () => {
+    const { db, calls } = makeFakeDb(FIXTURE_ROWS);
+
+    await selectRowsToDemote(db, { ...SELECT_ARGS, ids: IDS });
+
+    expect(calls.orderByArg).toBeUndefined();
+    expect(calls.limitArg).toBeUndefined();
+  });
+
+  it('without ids, the where clause carries no id filter (unchanged from pre-flag behavior)', async () => {
+    const { db, calls } = makeFakeDb(FIXTURE_ROWS);
+
+    await selectRowsToDemote(db, SELECT_ARGS);
+
+    expect(calls.whereArg).toEqual(and(...baseFilters(SELECT_ARGS)));
+  });
+
+  it('still combines the cell filters with --content-ilike when no ids are given', async () => {
+    const { db, calls } = makeFakeDb(FIXTURE_ROWS);
+    const args: SelectRowsArgs = { ...SELECT_ARGS, contentIlike: 'deren' };
+
+    await selectRowsToDemote(db, args);
+
+    expect(calls.whereArg).toEqual(
+      and(
+        ...baseFilters(args),
+        sql`${exercises.contentJson}::text ILIKE ${'%deren%'}`,
+      ),
+    );
   });
 });
