@@ -1,0 +1,310 @@
+[
+ {
+  "id": "1b77067a-27f7-55a0-8d93-5abcb207d035",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.395791"
+ },
+ {
+  "id": "1777002e-2c69-5cb4-8993-5448ad9558f1",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.405007"
+ },
+ {
+  "id": "1576fd08-2ea3-583e-8b93-5782afce9493",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.584008"
+ },
+ {
+  "id": "1376f9e2-30dc-53c8-8593-4dd4baecbebd",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.590157"
+ },
+ {
+  "id": "0c61f807-2876-5169-acbc-156503119a94",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.592946"
+ },
+ {
+  "id": "0e61fb2d-2aaf-5cf3-aebc-189f054ad636",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.777274"
+ },
+ {
+  "id": "0861f1bb-2403-5a55-b0bc-1bd9fe9f2350",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.781669"
+ },
+ {
+  "id": "0461eb6f-315b-5f91-a4bc-087d0bf6891c",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:26.970997"
+ },
+ {
+  "id": "785a5346-9902-568c-a0be-3ec0baffafb1",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:27.161303"
+ },
+ {
+  "id": "805c9e75-051c-549b-a0c1-49f75c3d1816",
+  "type": "cloze",
+  "combo": "dative+singular",
+  "pattern": "\"correctAnswer\": \"dem\"",
+  "created": "2026-07-19 04:57:27.346273"
+ },
+ {
+  "id": "187701c1-ad86-5a79-8a93-55e52c78bb20",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.39785"
+ },
+ {
+  "id": "1a7704e7-ab4d-5eef-9093-5f9333246e06",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.399725"
+ },
+ {
+  "id": "1c77080d-a914-5365-8e93-5c5930eb3264",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.3998"
+ },
+ {
+  "id": "1676fe9b-afbf-5603-8c93-591f2eb1f6c2",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.587048"
+ },
+ {
+  "id": "1476fb75-b1f9-518d-8693-4f7139d020ec",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.591177"
+ },
+ {
+  "id": "0b61f674-a759-53a4-abbc-13c8842e3865",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.773006"
+ },
+ {
+  "id": "0d61f99a-a992-5f2e-adbc-170286677407",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.780512"
+ },
+ {
+  "id": "0761f028-a2e7-5c90-afbc-1a3c7fbbc121",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.782796"
+ },
+ {
+  "id": "0961f34e-a520-581a-b1bc-1d7681f4fcc3",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.96661"
+ },
+ {
+  "id": "0361e9dc-b03e-51cc-a3bc-06e08d1326ed",
+  "type": "cloze",
+  "combo": "genitive+plural",
+  "pattern": "\"correctAnswer\": \"deren\"",
+  "created": "2026-07-19 04:57:26.971413"
+ },
+ {
+  "id": "70996727-bbb7-5fb1-92dd-4b8d6d744a04",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.16004"
+ },
+ {
+  "id": "6e996401-b97e-5427-98dd-553b6b3b0e62",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.160712"
+ },
+ {
+  "id": "72996a4d-bdf0-5b3b-94dd-4ec76fad85a6",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.348188"
+ },
+ {
+  "id": "64995443-ae5f-5a75-9edd-5ee971e6c148",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.350251"
+ },
+ {
+  "id": "da7149e8-b275-5c88-9a0a-97844088b071",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.358061"
+ },
+ {
+  "id": "de715034-b6e8-539c-960a-911044fb27b5",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.540035"
+ },
+ {
+  "id": "e071535a-b921-5f26-980a-944a47346357",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.725041"
+ },
+ {
+  "id": "4e78bc49-d7a2-5529-a612-2f85a3bdbf50",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.920566"
+ },
+ {
+  "id": "5078bf6f-d569-599f-ac12-3933aa697236",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.930709"
+ },
+ {
+  "id": "5278c295-d32f-5e15-aa12-35f9a8303694",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:33.110608"
+ },
+ {
+  "id": "5478c5bb-e2c0-5edb-a012-25d7aedbe97a",
+  "type": "translation",
+  "combo": "dative+singular",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:33.111387"
+ },
+ {
+  "id": "6d99626e-3861-5662-97dd-539eec57ac33",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.161255"
+ },
+ {
+  "id": "6b995f48-3628-5ad8-95dd-5064ea1e7091",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.162623"
+ },
+ {
+  "id": "6f996594-3a9a-51ec-91dd-49f0ee90e7d5",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.167778"
+ },
+ {
+  "id": "719968ba-3cd3-5d76-93dd-4d2af0ca2377",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.34911"
+ },
+ {
+  "id": "639952b0-2d43-5cb0-9ddd-5d4cf3035f19",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.351288"
+ },
+ {
+  "id": "db714b7b-3392-5a4d-9b0a-9921bf6c12a0",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.536225"
+ },
+ {
+  "id": "dd714ea1-35cb-55d7-9d0a-9c5bc1a54e42",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.539051"
+ },
+ {
+  "id": "df7151c7-3804-5161-970a-92adc3de89e4",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.549728"
+ },
+ {
+  "id": "e17154ed-3a3d-5ceb-990a-95e7c617c586",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.729573"
+ },
+ {
+  "id": "d3713ee3-2aad-5c25-a30a-a609c8510128",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.739754"
+ },
+ {
+  "id": "4b78b790-58be-52ee-a712-3122271398c3",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.913708"
+ },
+ {
+  "id": "4d78bab6-5685-5764-a512-2de824da5d21",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:32.922667"
+ },
+ {
+  "id": "4f78bddc-544c-5bda-ab12-37962b861007",
+  "type": "translation",
+  "combo": "genitive+plural",
+  "pattern": "(no filter, oldest-first)",
+  "created": "2026-07-18 04:24:33.103315"
+ }
+]
