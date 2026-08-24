@@ -1,0 +1,1253 @@
+[
+ {
+  "point": "de-a1-articles-nominative",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "predicate-nominative-sein-werden-bleiben",
+  "limit": 2,
+  "variantBefore": 12,
+  "quota": 10
+ },
+ {
+  "point": "de-a1-articles-nominative",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "predicate-nominative-sein-werden-bleiben",
+  "limit": 3,
+  "variantBefore": 13,
+  "quota": 10
+ },
+ {
+  "point": "de-a1-plural-formation",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "plural-er-umlaut",
+  "limit": 4,
+  "variantBefore": 8,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-plural-formation",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "plural-e",
+  "limit": 2,
+  "variantBefore": 6,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-present-irregular",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "stem-change-e-to-i",
+  "limit": 1,
+  "variantBefore": 5,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-present-irregular",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "stem-change-e-to-ie",
+  "limit": 2,
+  "variantBefore": 6,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-present-irregular",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "wissen-present",
+  "limit": 1,
+  "variantBefore": 5,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-questions",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "w-question-verb-second",
+  "limit": 10,
+  "variantBefore": 17,
+  "quota": 6.67
+ },
+ {
+  "point": "de-a1-questions",
+  "cefr": "A1",
+  "type": "sentence_construction",
+  "variant": "doch-answer-negative-question",
+  "limit": 3,
+  "variantBefore": 10,
+  "quota": 6.67
+ },
+ {
+  "point": "de-a1-questions",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "yes-no-question-verb-first",
+  "limit": 2,
+  "variantBefore": 9,
+  "quota": 6.67
+ },
+ {
+  "point": "de-a1-temporal-prepositions",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "am-days-parts-of-day",
+  "limit": 6,
+  "variantBefore": 10,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-v2-word-order",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "v2-fronted-adverb",
+  "limit": 14,
+  "variantBefore": 19,
+  "quota": 5
+ },
+ {
+  "point": "de-a1-v2-word-order",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "v2-fronted-adverb",
+  "limit": 15,
+  "variantBefore": 20,
+  "quota": 5
+ },
+ {
+  "point": "de-a1-zero-article",
+  "cefr": "A1",
+  "type": "cloze",
+  "variant": "zero-article-profession-nationality-sein-werden",
+  "limit": 4,
+  "variantBefore": 8,
+  "quota": 4
+ },
+ {
+  "point": "de-a1-zero-article",
+  "cefr": "A1",
+  "type": "translation",
+  "variant": "zero-article-profession-nationality-sein-werden",
+  "limit": 13,
+  "variantBefore": 17,
+  "quota": 4
+ },
+ {
+  "point": "de-a2-dative-accusative-objects",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "dat-before-acc-noun-noun",
+  "limit": 20,
+  "variantBefore": 28,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-destination-prepositions",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "an-edges-water",
+  "limit": 9,
+  "variantBefore": 14,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-destination-prepositions",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "zu-people-institutions",
+  "limit": 6,
+  "variantBefore": 11,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-destination-prepositions",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "an-edges-water",
+  "limit": 7,
+  "variantBefore": 12,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-destination-prepositions",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "zu-people-institutions",
+  "limit": 2,
+  "variantBefore": 7,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-destination-prepositions",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "in-enterable-places-countries",
+  "limit": 1,
+  "variantBefore": 6,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-indirect-questions",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "ob-yes-no",
+  "limit": 7,
+  "variantBefore": 22,
+  "quota": 15
+ },
+ {
+  "point": "de-a2-konjunktiv-ii-polite",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "koennte-request",
+  "limit": 1,
+  "variantBefore": 9,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-konjunktiv-ii-polite",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "sollte-advice",
+  "limit": 1,
+  "variantBefore": 9,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-konjunktiv-ii-polite",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "koennte-request",
+  "limit": 6,
+  "variantBefore": 14,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-lassen",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "causative-have-done",
+  "limit": 5,
+  "variantBefore": 15,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-lassen",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "permissive-let-someone",
+  "limit": 15,
+  "variantBefore": 25,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-measure-expressions",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "masc-neut-measure-singular",
+  "limit": 7,
+  "variantBefore": 12,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-measure-expressions",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "fem-measure-plural",
+  "limit": 6,
+  "variantBefore": 11,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-measure-expressions",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "masc-neut-measure-singular",
+  "limit": 13,
+  "variantBefore": 18,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-measure-expressions",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "fem-measure-plural",
+  "limit": 1,
+  "variantBefore": 6,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-nicht-sondern",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "sondern-corrective",
+  "limit": 8,
+  "variantBefore": 16,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-nicht-sondern",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "sondern-corrective",
+  "limit": 20,
+  "variantBefore": 28,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-past-participle-formation",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "strong-past-participle-ge-en-ablaut",
+  "limit": 4,
+  "variantBefore": 10,
+  "quota": 6
+ },
+ {
+  "point": "de-a2-past-participle-formation",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "weak-past-participle-ge-t",
+  "limit": 2,
+  "variantBefore": 8,
+  "quota": 6
+ },
+ {
+  "point": "de-a2-past-participle-formation",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "weak-past-participle-ge-t",
+  "limit": 10,
+  "variantBefore": 16,
+  "quota": 6
+ },
+ {
+  "point": "de-a2-perfekt-with-haben",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "haben-perfekt-transitive",
+  "limit": 13,
+  "variantBefore": 28,
+  "quota": 15
+ },
+ {
+  "point": "de-a2-perfekt-with-haben",
+  "cefr": "A2",
+  "type": "sentence_construction",
+  "variant": "haben-perfekt-transitive",
+  "limit": 10,
+  "variantBefore": 25,
+  "quota": 15
+ },
+ {
+  "point": "de-a2-perfekt-with-haben",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "haben-perfekt-transitive",
+  "limit": 11,
+  "variantBefore": 26,
+  "quota": 15
+ },
+ {
+  "point": "de-a2-seit-present",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "seit-present-ongoing",
+  "limit": 6,
+  "variantBefore": 12,
+  "quota": 6
+ },
+ {
+  "point": "de-a2-seit-present",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "seit-present-ongoing",
+  "limit": 6,
+  "variantBefore": 12,
+  "quota": 6
+ },
+ {
+  "point": "de-a2-verb-preposition-complements",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "dar-backreference-things",
+  "limit": 10,
+  "variantBefore": 18,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-verb-preposition-complements",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "wor-question-things",
+  "limit": 4,
+  "variantBefore": 12,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-verb-preposition-complements",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "wor-question-things",
+  "limit": 10,
+  "variantBefore": 18,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-weil-deshalb",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "weil-verb-final",
+  "limit": 8,
+  "variantBefore": 18,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-weil-deshalb",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "deshalb-inversion",
+  "limit": 1,
+  "variantBefore": 11,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-weil-deshalb",
+  "cefr": "A2",
+  "type": "sentence_construction",
+  "variant": "deshalb-inversion",
+  "limit": 2,
+  "variantBefore": 12,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-weil-deshalb",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "deshalb-inversion",
+  "limit": 9,
+  "variantBefore": 19,
+  "quota": 10
+ },
+ {
+  "point": "de-a2-wenn-als",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "als-single-past-event",
+  "limit": 9,
+  "variantBefore": 17,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-wenn-als",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "als-single-past-event",
+  "limit": 18,
+  "variantBefore": 26,
+  "quota": 7.5
+ },
+ {
+  "point": "de-a2-wissen-kennen",
+  "cefr": "A2",
+  "type": "cloze",
+  "variant": "kennen-with-noun-phrase",
+  "limit": 4,
+  "variantBefore": 9,
+  "quota": 5
+ },
+ {
+  "point": "de-a2-wissen-kennen",
+  "cefr": "A2",
+  "type": "translation",
+  "variant": "kennen-with-noun-phrase",
+  "limit": 3,
+  "variantBefore": 8,
+  "quota": 5
+ },
+ {
+  "point": "de-b1-articles-use",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "definite-article-abstract-mass-noun",
+  "limit": 17,
+  "variantBefore": 27,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-articles-use",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "definite-article-abstract-mass-noun",
+  "limit": 13,
+  "variantBefore": 23,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-dass-clause-perfekt",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "dass-perfekt-haben",
+  "limit": 22,
+  "variantBefore": 47,
+  "quota": 25
+ },
+ {
+  "point": "de-b1-dass-clause-perfekt",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "dass-perfekt-haben",
+  "limit": 18,
+  "variantBefore": 43,
+  "quota": 25
+ },
+ {
+  "point": "de-b1-dative-reflexive-body",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "dative-reflexive-body-part",
+  "limit": 9,
+  "variantBefore": 14,
+  "quota": 5
+ },
+ {
+  "point": "de-b1-dative-reflexive-body",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "dative-reflexive-body-part",
+  "limit": 5,
+  "variantBefore": 10,
+  "quota": 5
+ },
+ {
+  "point": "de-b1-es-expressions",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "es-tut-mir-leid-fixed",
+  "limit": 22,
+  "variantBefore": 32,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-es-expressions",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "es-tut-mir-leid-fixed",
+  "limit": 12,
+  "variantBefore": 22,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-futur-i",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "werden-infinitive-future",
+  "limit": 27,
+  "variantBefore": 44,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-futur-i",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "werden-infinitive-future",
+  "limit": 27,
+  "variantBefore": 44,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-genitive",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "genitive-article-noun-ending",
+  "limit": 22,
+  "variantBefore": 32,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-genitive",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "genitive-article-noun-ending",
+  "limit": 16,
+  "variantBefore": 26,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-genitive",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "genitive-adjective-en-ending",
+  "limit": 9,
+  "variantBefore": 19,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-hin-her",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "hin-her-compounds",
+  "limit": 14,
+  "variantBefore": 27,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b1-hin-her",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "separable-prefix",
+  "limit": 8,
+  "variantBefore": 21,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b1-hin-her",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "hin-her-compounds",
+  "limit": 4,
+  "variantBefore": 17,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b1-konjunktiv-ii-past",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "wenn-clause-konjunktiv-ii-past",
+  "limit": 7,
+  "variantBefore": 24,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-konjunktiv-ii-past",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "wenn-clause-konjunktiv-ii-past",
+  "limit": 27,
+  "variantBefore": 44,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-plusquamperfekt-nachdem",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "nachdem-plusquamperfekt-praeteritum",
+  "limit": 25,
+  "variantBefore": 42,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-plusquamperfekt-nachdem",
+  "cefr": "B1",
+  "type": "sentence_construction",
+  "variant": "nachdem-plusquamperfekt-praeteritum",
+  "limit": 22,
+  "variantBefore": 39,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-plusquamperfekt-nachdem",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "nachdem-plusquamperfekt-praeteritum",
+  "limit": 30,
+  "variantBefore": 47,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b1-progressive-equivalents",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "dabei-sein-zu-infinitive",
+  "limit": 2,
+  "variantBefore": 7,
+  "quota": 5
+ },
+ {
+  "point": "de-b1-progressive-equivalents",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "gerade-present",
+  "limit": 6,
+  "variantBefore": 11,
+  "quota": 5
+ },
+ {
+  "point": "de-b1-schon-noch-erst",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "noch-nicht-not-yet",
+  "limit": 3,
+  "variantBefore": 7,
+  "quota": 4
+ },
+ {
+  "point": "de-b1-schon-noch-erst",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "noch-nicht-not-yet",
+  "limit": 2,
+  "variantBefore": 6,
+  "quota": 4
+ },
+ {
+  "point": "de-b1-statt-ohne-zu",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "statt-ohne-zu-infinitive",
+  "limit": 24,
+  "variantBefore": 49,
+  "quota": 25
+ },
+ {
+  "point": "de-b1-statt-ohne-zu",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "statt-ohne-zu-infinitive",
+  "limit": 21,
+  "variantBefore": 46,
+  "quota": 25
+ },
+ {
+  "point": "de-b1-two-part-conjunctions",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "nicht-nur-sondern-auch",
+  "limit": 18,
+  "variantBefore": 27,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-two-part-conjunctions",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "je-desto-umso",
+  "limit": 4,
+  "variantBefore": 13,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-um-zu-damit",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "damit-modal-outcome",
+  "limit": 8,
+  "variantBefore": 18,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-um-zu-damit",
+  "cefr": "B1",
+  "type": "sentence_construction",
+  "variant": "damit-modal-outcome",
+  "limit": 1,
+  "variantBefore": 11,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-um-zu-damit",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "damit-modal-outcome",
+  "limit": 18,
+  "variantBefore": 28,
+  "quota": 10
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "zu-inside-separable-verb",
+  "limit": 14,
+  "variantBefore": 23,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "zu-infinitive-after-verb",
+  "limit": 5,
+  "variantBefore": 14,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "zu-infinitive-after-adjective",
+  "limit": 1,
+  "variantBefore": 10,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "zu-infinitive-after-verb",
+  "limit": 16,
+  "variantBefore": 25,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "zu-inside-separable-verb",
+  "limit": 4,
+  "variantBefore": 13,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b1-zu-infinitive",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "zu-infinitive-after-adjective",
+  "limit": 1,
+  "variantBefore": 10,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-adversative-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "waehrend-adversative-clause",
+  "limit": 24,
+  "variantBefore": 37,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-adversative-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "waehrend-adversative-clause",
+  "limit": 25,
+  "variantBefore": 38,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-causal-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "wegen-aufgrund-nominal",
+  "limit": 24,
+  "variantBefore": 37,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-causal-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "wegen-aufgrund-nominal",
+  "limit": 36,
+  "variantBefore": 49,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-concessive-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "trotzdem-main-clause-inversion",
+  "limit": 18,
+  "variantBefore": 28,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-concessive-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "trotz-genitive-nominal",
+  "limit": 1,
+  "variantBefore": 11,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-concessive-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "obwohl-subordinate-clause",
+  "limit": 35,
+  "variantBefore": 45,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-conditional-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "bei-nominal-condition",
+  "limit": 26,
+  "variantBefore": 35,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-conditional-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "verb-first-conditional",
+  "limit": 20,
+  "variantBefore": 29,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-conditional-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "bei-nominal-condition",
+  "limit": 9,
+  "variantBefore": 18,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-consecutive-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "so-adjective-dass",
+  "limit": 31,
+  "variantBefore": 44,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-consecutive-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "so-adjective-dass",
+  "limit": 36,
+  "variantBefore": 49,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-dass-equivalents",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "zu-infinitive-same-subject",
+  "limit": 5,
+  "variantBefore": 22,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b2-fixed-prepositions",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "fixed-prep-adjective-phrase",
+  "limit": 24,
+  "variantBefore": 41,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b2-fixed-prepositions",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "fixed-prep-adjective-phrase",
+  "limit": 27,
+  "variantBefore": 44,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b2-konjunktiv-i",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "konjunktiv-ii-fallback",
+  "limit": 13,
+  "variantBefore": 26,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-konjunktiv-i",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "konjunktiv-i-declarative",
+  "limit": 8,
+  "variantBefore": 21,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-konjunktiv-i",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "konjunktiv-i-declarative",
+  "limit": 11,
+  "variantBefore": 24,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-konjunktiv-i",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "konjunktiv-ii-fallback",
+  "limit": 7,
+  "variantBefore": 20,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-konjunktiv-ii",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "unreal-present-condition-wenn",
+  "limit": 7,
+  "variantBefore": 20,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-konjunktiv-ii",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "unreal-present-condition-wenn",
+  "limit": 25,
+  "variantBefore": 38,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-mittelfeld-word-order",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "acc-before-dat-two-pronouns",
+  "limit": 10,
+  "variantBefore": 23,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-mittelfeld-word-order",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "nicht-placement",
+  "limit": 4,
+  "variantBefore": 17,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-modal-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "indem-clause",
+  "limit": 21,
+  "variantBefore": 34,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-modal-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "indem-clause",
+  "limit": 33,
+  "variantBefore": 46,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-modal-particles-advanced",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "halt-eben-resigned-acceptance",
+  "limit": 2,
+  "variantBefore": 6,
+  "quota": 4
+ },
+ {
+  "point": "de-b2-modal-perfect-word-order",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "subordinate-clause-auxiliary-fronting",
+  "limit": 23,
+  "variantBefore": 40,
+  "quota": 16.67
+ },
+ {
+  "point": "de-b2-nominalization",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "nominalized-infinitive",
+  "limit": 31,
+  "variantBefore": 44,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-nominalization",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "nominalized-infinitive",
+  "limit": 20,
+  "variantBefore": 33,
+  "quota": 12.5
+ },
+ {
+  "point": "de-b2-passive-alternatives",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "sich-lassen-infinitive",
+  "limit": 14,
+  "variantBefore": 22,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-passive-alternatives",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "sein-zu-infinitive",
+  "limit": 10,
+  "variantBefore": 18,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-passive-alternatives",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "sich-lassen-infinitive",
+  "limit": 34,
+  "variantBefore": 42,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-relatives-advanced",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "was-after-whole-clause",
+  "limit": 21,
+  "variantBefore": 30,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-relatives-advanced",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "was-after-indefinite",
+  "limit": 1,
+  "variantBefore": 10,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-relatives-advanced",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "was-after-whole-clause",
+  "limit": 11,
+  "variantBefore": 20,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-relatives-advanced",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "wer-generalizing",
+  "limit": 7,
+  "variantBefore": 16,
+  "quota": 8.33
+ },
+ {
+  "point": "de-b2-subjective-modals",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "muss-epistemic-present",
+  "limit": 38,
+  "variantBefore": 48,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-temporal-connectors",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "temporal-prep-phrase-vor-nach-seit-bis-zu-dative",
+  "limit": 24,
+  "variantBefore": 34,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-temporal-connectors",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "temporal-prep-phrase-vor-nach-seit-bis-zu-dative",
+  "limit": 39,
+  "variantBefore": 49,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-verb-prefixes",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "variable-prefix-inseparable-figurative",
+  "limit": 12,
+  "variantBefore": 20,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-verb-prefixes",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "variable-prefix-separable-literal",
+  "limit": 9,
+  "variantBefore": 17,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-verb-prefixes",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "variable-prefix-inseparable-figurative",
+  "limit": 9,
+  "variantBefore": 17,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-verb-prefixes",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "variable-prefix-separable-literal",
+  "limit": 2,
+  "variantBefore": 10,
+  "quota": 7.14
+ },
+ {
+  "point": "de-b2-word-formation",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "adjective-suffix-lich-ig-isch-bar-los-voll-frei",
+  "limit": 8,
+  "variantBefore": 18,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-word-formation",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "fugen-s-compound-linking",
+  "limit": 4,
+  "variantBefore": 14,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-word-formation",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "adverbial-suffix-weise",
+  "limit": 9,
+  "variantBefore": 19,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-word-formation",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "fugen-s-compound-linking",
+  "limit": 2,
+  "variantBefore": 12,
+  "quota": 10
+ },
+ {
+  "point": "de-b2-zustandspassiv",
+  "cefr": "B2",
+  "type": "cloze",
+  "variant": "zustandspassiv-present",
+  "limit": 16,
+  "variantBefore": 41,
+  "quota": 25
+ },
+ {
+  "point": "de-b2-zustandspassiv",
+  "cefr": "B2",
+  "type": "translation",
+  "variant": "zustandspassiv-present",
+  "limit": 23,
+  "variantBefore": 48,
+  "quota": 25
+ }
+]
