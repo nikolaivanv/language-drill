@@ -208,6 +208,14 @@ For a generation/validation bug that needs a prompt update **and** a
 re-pass over the existing exercise pool, follow
 [`docs/runbooks/prompt-update-and-revalidate.md`](docs/runbooks/prompt-update-and-revalidate.md).
 
+For the different problem where every row is individually valid but the pool is
+collectively narrow — one construction, one axis combination, or one scene —
+follow [`docs/runbooks/pool-diversity-sweep.md`](docs/runbooks/pool-diversity-sweep.md).
+It covers the audit → triage → author → deploy → label → demote → verify
+sequence, the three distinct defect classes (and which tool can see which), and
+the rejection taxonomy that keeps roughly a quarter of audit findings from being
+acted on wrongly.
+
 ---
 
 ## Pre-Push Checks
