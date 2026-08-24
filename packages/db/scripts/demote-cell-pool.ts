@@ -15,6 +15,27 @@
  * `content_json` (cast to text) contains it, for surgically demoting only
  * the affected subset of a cell rather than every approved row in it.
  *
+ * `--ids-file <path>` names the rows outright — one exercise id per line, `#`
+ * comments allowed, same format as `revalidate:cloze` (shared implementation in
+ * ./lib/ids-file.ts). Use it when the subset is defined by something the other
+ * filters cannot see. The motivating case (2026-08-24): a demotion driven by
+ * `coverage_tags` is not expressible at all here, because `--content-ilike`
+ * reads `content_json` while `case`/`number` live in a separate column. The
+ * `de-b1-relative-pronouns` zip-residue demotion had to be steered through
+ * `correctAnswer` spellings instead, which worked only because that cell
+ * happened to have a clean lexical handle — `referenceTranslation` on the
+ * translation half did not, since an unanchored `deren` also matches `anderen`.
+ *
+ * Three properties make it safe to point at a captured worklist:
+ *   - ids narrow ON TOP of the cell filters, never instead of them, so a stale
+ *     or mis-built file cannot reach rows outside the cell you named;
+ *   - it is mutually exclusive with `--limit` and `--content-ilike`, which
+ *     would otherwise silently demote some other subset than the file lists;
+ *   - any id that does not match an approved row in the cell ABORTS the run,
+ *     naming the offenders. Demoting fewer rows than the worklist names is the
+ *     exact failure this flag exists to prevent, and every cause is worth
+ *     stopping for (already demoted, wrong cell, stale capture).
+ *
  * It never DELETEs — `user_exercise_history` and `playlists` reference
  * `exercises.id` without cascade, so demotion (`review_status = 'rejected'`)
  * preserves the learner's practice history and mastery linkage while
@@ -27,6 +48,7 @@
  *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --reason quality
  *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --content-ilike üçüncü --reason quality
  *   pnpm demote:pool -- --language TR --cefr A1 --type cloze --grammar-point tr-a1-numbers-ordinals --reason quality --apply
+ *   pnpm demote:pool -- --language DE --cefr B1 --type cloze --grammar-point de-b1-relative-pronouns --ids-file docs/analysis/worklist.txt --reason pool-hygiene
  *
  * Required env: DATABASE_URL.
  */
@@ -37,6 +59,7 @@ import type { Db } from '../src/client';
 import { createDb } from '../src/client';
 import { exercises } from '../src/schema';
 import { DEMOTION_REASONS, NON_EVIDENCE_DEMOTION_REASONS, type DemotionReason } from '../src/lib/evidence';
+import { parseIdsFile, readIdsFile } from './lib/ids-file';
 
 // ---------------------------------------------------------------------------
 // Args
@@ -52,6 +75,12 @@ export type DemoteArgs = {
   reason: DemotionReason;
   /** Cap the number of rows demoted (oldest first). null = no cap. */
   limit: number | null;
+  /**
+   * Path to a worklist of exercise ids, one per line. Held as a PATH, not as
+   * parsed ids, so `parseDemoteArgs` stays pure and unit-testable without a
+   * filesystem; `main()` resolves and reads it.
+   */
+  idsFile: string | null;
 };
 
 export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
@@ -95,15 +124,45 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
     limit = parsed;
   }
 
+  let idsFile: string | null = null;
+  if (argv.includes('--ids-file')) {
+    // Same presence check as --limit above, for the same reason: `--ids-file`
+    // as the final token would otherwise resolve to null and silently demote
+    // the whole cell instead of the named rows.
+    idsFile = get('--ids-file');
+    if (idsFile === null) {
+      throw new Error('--ids-file requires a value (e.g. --ids-file worklist.txt) — given with no argument');
+    }
+  }
+
+  const contentIlike = get('--content-ilike');
+
+  // Both of these also narrow the selection, and an operator passing one
+  // alongside --ids-file almost certainly believes it is doing something it is
+  // not. Refuse rather than silently letting one win.
+  if (idsFile !== null && limit !== null) {
+    throw new Error(
+      '--ids-file cannot be combined with --limit: the id list IS the selection, ' +
+        'so a cap could only demote an arbitrary subset of the rows the file names.',
+    );
+  }
+  if (idsFile !== null && contentIlike !== null) {
+    throw new Error(
+      '--ids-file cannot be combined with --content-ilike: both narrow the selection. ' +
+        'Filter the worklist when you build it instead.',
+    );
+  }
+
   return {
     language: language.toUpperCase(),
     cefr: cefr.toUpperCase(),
     type,
     grammarPoint,
-    contentIlike: get('--content-ilike'),
+    contentIlike,
     apply: argv.includes('--apply'),
     reason: reason as DemotionReason,
     limit,
+    idsFile,
   };
 }
 
@@ -114,7 +173,30 @@ export function parseDemoteArgs(argv: readonly string[]): DemoteArgs {
 export type SelectRowsArgs = Pick<
   DemoteArgs,
   'language' | 'cefr' | 'type' | 'grammarPoint' | 'contentIlike' | 'limit'
->;
+> & {
+  /** Resolved worklist ids from `--ids-file`, or null. */
+  ids: readonly string[] | null;
+};
+
+/**
+ * The requested ids that no selected row carries.
+ *
+ * `demote:pool` is a destructive write on a set the operator captured ahead of
+ * time, so demoting fewer rows than the file names must be loud. Causes are all
+ * things worth stopping for: the row was already demoted (a re-run), it is in a
+ * different cell than the one named, or the capture is stale.
+ *
+ * Case-insensitive: `parseIdsFile` lowercases what it reads, but ids coming
+ * back from Postgres need not match that casing, and a false "missing" would
+ * block a correct run.
+ */
+export function findUnmatchedIds(
+  requested: readonly string[],
+  rows: readonly { id: string }[],
+): string[] {
+  const found = new Set(rows.map((r) => r.id.toLowerCase()));
+  return requested.filter((id) => !found.has(id.toLowerCase()));
+}
 
 /**
  * Selects the approved rows matching a cell (+ optional content filter),
@@ -139,12 +221,20 @@ export async function selectRowsToDemote(
   if (args.contentIlike) {
     filters.push(sql`${exercises.contentJson}::text ILIKE ${'%' + args.contentIlike + '%'}`);
   }
+  if (args.ids) {
+    // ON TOP of the cell filters, never instead of them: the operator still
+    // declares which cell they are demoting from, so a stale or mis-built
+    // worklist cannot reach rows outside it.
+    filters.push(inArray(exercises.id, [...args.ids]));
+  }
 
   const baseQuery = db
     .select({ id: exercises.id, contentJson: exercises.contentJson })
     .from(exercises)
     .where(and(...filters));
 
+  // No ORDER BY / LIMIT with an ids file — the list IS the selection, not a
+  // slice of one, and parseDemoteArgs already refuses --ids-file with --limit.
   return args.limit !== null
     ? await baseQuery.orderBy(asc(exercises.createdAt)).limit(args.limit)
     : await baseQuery;
@@ -165,10 +255,31 @@ async function main(): Promise<void> {
 
   const db = createDb(databaseUrl);
 
-  const rows = await selectRowsToDemote(db, args);
+  const ids = args.idsFile ? parseIdsFile(readIdsFile(args.idsFile)) : null;
+
+  const rows = await selectRowsToDemote(db, { ...args, ids });
+
+  if (ids) {
+    const missing = findUnmatchedIds(ids, rows);
+    if (missing.length > 0) {
+      console.error(
+        `[demote-pool] ${missing.length} of ${ids.length} ids in '${args.idsFile}' do not match an ` +
+          `approved row in ${args.language}/${args.cefr}/${args.type}/${args.grammarPoint}:`,
+      );
+      for (const id of missing.slice(0, 10)) console.error(`  ${id}`);
+      if (missing.length > 10) console.error(`  …and ${missing.length - 10} more`);
+      throw new Error(
+        'Refusing to proceed: demoting fewer rows than the worklist names is the failure this ' +
+          'flag exists to prevent. Each missing id is already demoted (a re-run), in a different ' +
+          'cell, or from a stale capture. Re-derive the worklist, or trim it to what is still ' +
+          'approved, so the file says exactly what will happen.',
+      );
+    }
+  }
 
   const scope = `${args.language}/${args.cefr}/${args.type}/${args.grammarPoint}` +
     (args.contentIlike ? ` (content ILIKE '%${args.contentIlike}%')` : '') +
+    (ids ? ` (ids-file ${args.idsFile}, ${ids.length} ids, all matched)` : '') +
     (args.limit !== null ? ` (limit ${args.limit}, oldest first)` : '');
 
   console.log(
