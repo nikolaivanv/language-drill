@@ -1,0 +1,730 @@
+[
+ {
+  "id": "481241ff-d147-56c5-adf2-a579695d0828",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-22 04:27:14.556433"
+ },
+ {
+  "id": "aab16f0f-c5ab-5665-ac67-df0911719b88",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-22 04:27:14.941808"
+ },
+ {
+  "id": "46123ed9-d7f3-5963-abf2-a23f7008bb0e",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-22 04:27:14.560851"
+ },
+ {
+  "id": "45123d46-56d6-5b9e-aaf2-a0a2f12558df",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-22 04:27:14.561276"
+ },
+ {
+  "id": "44123bb3-d5b9-5dd9-a9f2-9f056dcf7f6c",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-22 04:27:14.564263"
+ },
+ {
+  "id": "4b1246b8-5d82-5e3c-a0f2-9080e6072eb5",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-22 04:27:14.749191"
+ },
+ {
+  "id": "a6b168c3-ca1d-5d79-a867-d89515e412cc",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-22 04:27:14.919831"
+ },
+ {
+  "id": "a7b16a56-4b3a-5b3e-a967-da329939ec3f",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-22 04:27:14.921931"
+ },
+ {
+  "id": "a8b16be9-cc56-5903-aa67-dbcf181d4e6e",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-22 04:27:14.935354"
+ },
+ {
+  "id": "a9b16d7c-448e-58a0-ab67-dd6c928e3959",
+  "point": "de-a1-modal-verbs-present",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-22 04:27:14.935846"
+ },
+ {
+  "id": "3229deaa-c076-563c-8e65-84c061a6dec1",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-21 04:30:11.038835"
+ },
+ {
+  "id": "89e7213f-fe12-5e5d-b5cf-0f314686dea0",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-21 04:30:11.419332"
+ },
+ {
+  "id": "88e71fac-7cf5-5098-b4cf-0d94c7a37c71",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 11,
+  "created": "2026-07-21 04:30:11.419823"
+ },
+ {
+  "id": "86e71c86-83a1-5336-b2cf-0a5ace4f2f57",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 12,
+  "created": "2026-07-21 04:30:11.42225"
+ },
+ {
+  "id": "3029db84-c2af-51c6-9065-87fa63e01a63",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-21 04:30:11.039361"
+ },
+ {
+  "id": "2c29d538-be3d-5ab2-9465-8e6e685291a7",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-21 04:30:11.041449"
+ },
+ {
+  "id": "3329e03d-4193-5401-8f65-865de08a40f0",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-21 04:30:11.044996"
+ },
+ {
+  "id": "2d29d6cb-3f59-5877-9565-900be735f3d6",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-21 04:30:11.052761"
+ },
+ {
+  "id": "2e29d85e-bc04-5f28-9265-8b3466195605",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-21 04:30:11.229686"
+ },
+ {
+  "id": "2829ceec-b9ca-539e-9865-94e26cc508eb",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-21 04:30:11.230074"
+ },
+ {
+  "id": "2f29d9f1-3d20-5ced-9365-8cd1e4fcb834",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-21 04:30:11.230344"
+ },
+ {
+  "id": "8be72465-004b-59e7-b7cf-126b48c01a42",
+  "point": "de-a1-present-regular",
+  "cefr": "A1",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-21 04:30:11.239267"
+ },
+ {
+  "id": "8de7c46b-2697-5c4d-a319-2c215d9cf358",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-20 04:26:26.896442"
+ },
+ {
+  "id": "bfd7de3d-4e0c-5bfb-b599-e2c7a0c6df7e",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-20 04:26:27.464389"
+ },
+ {
+  "id": "b0d7c6a0-bd5f-5d70-be99-f14c1252dbe1",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 11,
+  "created": "2026-07-20 04:26:27.469172"
+ },
+ {
+  "id": "2adf4273-edaa-5fc3-84a1-7f9f80a614ea",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 12,
+  "created": "2026-07-20 04:26:27.651651"
+ },
+ {
+  "id": "2edf48bf-e937-58af-88a1-861385188c2e",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 13,
+  "created": "2026-07-20 04:26:27.666245"
+ },
+ {
+  "id": "2fdf4a52-65e1-5f60-85a1-813c03fbee5d",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 14,
+  "created": "2026-07-20 04:26:27.843735"
+ },
+ {
+  "id": "32df4f0b-f68f-5deb-bca1-72b777c12662",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 15,
+  "created": "2026-07-20 04:26:27.850278"
+ },
+ {
+  "id": "8fe7c791-28d0-57d7-a519-2f5b5fd62efa",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-20 04:26:26.896837"
+ },
+ {
+  "id": "8ee7c5fe-a7b4-5a12-a419-2dbee0f2cccb",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-20 04:26:26.899321"
+ },
+ {
+  "id": "91e7cab7-2b09-5361-9f19-25ad620f6a9c",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-20 04:26:26.904769"
+ },
+ {
+  "id": "93e7cddd-2d43-5eeb-a119-28e76448a63e",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-20 04:26:27.086544"
+ },
+ {
+  "id": "92e7cc4a-ac26-5126-a019-274ae565440f",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-20 04:26:27.088567"
+ },
+ {
+  "id": "85e7b7d3-1db2-5e25-ab19-390954b804d0",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-20 04:26:27.090776"
+ },
+ {
+  "id": "bad7d65e-c87d-5722-b899-e79e1d71060b",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-20 04:26:27.276732"
+ },
+ {
+  "id": "bdd7db17-4bd3-5071-b399-df8d9e8da3dc",
+  "point": "de-a2-dass-clauses",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-20 04:26:27.461605"
+ },
+ {
+  "id": "80d8e65b-656c-57bb-ab35-832727bffa62",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-20 04:16:00.436155"
+ },
+ {
+  "id": "4072ba71-f4d2-5cf7-8c54-7c1be337a6f2",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-20 04:16:00.817092"
+ },
+ {
+  "id": "3d72b5b8-717c-53a8-8954-7744621b0921",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 11,
+  "created": "2026-07-20 04:16:00.819123"
+ },
+ {
+  "id": "4372bf2a-7828-5646-8754-740a68c6bc07",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 12,
+  "created": "2026-07-20 04:16:00.821683"
+ },
+ {
+  "id": "4272bd97-f70b-5881-8654-726de570e294",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 13,
+  "created": "2026-07-20 04:16:01.007457"
+ },
+ {
+  "id": "3872add9-ebed-5ecf-9454-8903ec1c957a",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 14,
+  "created": "2026-07-20 04:16:01.009696"
+ },
+ {
+  "id": "4675027a-cd6c-58cc-be4c-e0e07dc95c71",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 15,
+  "created": "2026-07-20 04:16:01.013071"
+ },
+ {
+  "id": "83d8eb14-dfdd-52e2-ae35-87fead4f0f77",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-20 04:16:00.436692"
+ },
+ {
+  "id": "82d8e981-6332-5c31-a935-7fed2586bec0",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-20 04:16:00.438925"
+ },
+ {
+  "id": "81d8e7ee-e216-5e6c-a835-7e50a6a35c91",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-20 04:16:00.440548"
+ },
+ {
+  "id": "7fd8e4c8-e44f-59f6-aa35-818aa8dc9833",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-20 04:16:00.440629"
+ },
+ {
+  "id": "85d8ee3a-dda3-5758-ac35-84c4ab15d3d5",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-20 04:16:00.628592"
+ },
+ {
+  "id": "84d8eca7-60f9-50a7-af35-899b2c3271a6",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-20 04:16:00.629114"
+ },
+ {
+  "id": "86d8efcd-5ec0-551d-ad35-866129f93604",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-20 04:16:00.630211"
+ },
+ {
+  "id": "77d8d830-db6a-5bce-b235-8e72b1c186bb",
+  "point": "de-a2-passive-present",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-20 04:16:00.630543"
+ },
+ {
+  "id": "e42a84c3-7800-55fd-b323-8751f2c46dd8",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-20 04:20:39.851753"
+ },
+ {
+  "id": "2ff3ddc1-a8e6-5149-b356-cc755fc85bc8",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-20 04:20:40.249691"
+ },
+ {
+  "id": "30f3df54-2590-57fa-b856-d486e790ac7f",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 11,
+  "created": "2026-07-20 04:20:40.306877"
+ },
+ {
+  "id": "33f3e40d-a473-5a35-b756-d2e9643ad30c",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 12,
+  "created": "2026-07-20 04:20:40.439915"
+ },
+ {
+  "id": "24f3cc70-32e7-5d36-ac56-c12ada3946b3",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 13,
+  "created": "2026-07-20 04:20:40.481477"
+ },
+ {
+  "id": "9bec3900-f56a-5628-a74e-65f4fc934ce9",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 14,
+  "created": "2026-07-20 04:20:40.482924"
+ },
+ {
+  "id": "e32a8330-f6e3-5838-b223-85b473e10ba9",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-20 04:20:39.852723"
+ },
+ {
+  "id": "e62a87e9-7a39-5187-b523-8a8bf4fda97a",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-20 04:20:39.91042"
+ },
+ {
+  "id": "e92a8ca2-fd8f-5ad6-b023-827a7a8cbe8f",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-20 04:20:39.911761"
+ },
+ {
+  "id": "ea2a8e35-7eac-589b-b123-8417f97020be",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-20 04:20:40.058921"
+ },
+ {
+  "id": "e72a897c-fb56-5f4c-ae23-7f40785382ed",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-20 04:20:40.060768"
+ },
+ {
+  "id": "ed2a92ee-f038-559a-bc23-95d66d3558c3",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-20 04:20:40.10093"
+ },
+ {
+  "id": "2df3da9b-ab1f-5cd3-b556-cfaf6201976a",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-20 04:20:40.117271"
+ },
+ {
+  "id": "2cf3d908-2a02-5f0e-b456-ce12e31e353b",
+  "point": "de-a2-praeteritum-modals",
+  "cefr": "A2",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-20 04:20:40.249"
+ },
+ {
+  "id": "50e39dd4-4a6e-56fa-bd6a-0f96a1cdb21f",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 1,
+  "created": "2026-07-18 04:31:26.903499"
+ },
+ {
+  "id": "cc592f87-95c3-51d9-8018-3d45acbf835c",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 10,
+  "created": "2026-07-18 04:31:27.284945"
+ },
+ {
+  "id": "cb592df4-14a7-5414-bf18-3ba82ddc212d",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 11,
+  "created": "2026-07-18 04:31:27.285291"
+ },
+ {
+  "id": "ce5932ad-97fc-5d63-8218-407faef8befe",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 12,
+  "created": "2026-07-18 04:31:27.287593"
+ },
+ {
+  "id": "cd59311a-16e0-5f9e-8118-3ee230155ccf",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 13,
+  "created": "2026-07-18 04:31:27.288816"
+ },
+ {
+  "id": "c859293b-9151-5ac5-8418-43b9a84d0c18",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 14,
+  "created": "2026-07-18 04:31:27.290283"
+ },
+ {
+  "id": "ca592c61-938a-564f-8618-46f3aa8647ba",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 15,
+  "created": "2026-07-18 04:31:27.476936"
+ },
+ {
+  "id": "c9592ace-126d-588a-8518-45562ba2e58b",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 16,
+  "created": "2026-07-18 04:31:27.478171"
+ },
+ {
+  "id": "c359215c-1d8c-523c-b718-2ec024f732a5",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 17,
+  "created": "2026-07-18 04:31:27.549276"
+ },
+ {
+  "id": "3a518dec-0416-5b72-ba1b-3ece6b594b5f",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 18,
+  "created": "2026-07-18 04:31:27.666558"
+ },
+ {
+  "id": "3b518f7f-8533-5937-bb1b-406bea3cad8e",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 19,
+  "created": "2026-07-18 04:31:27.669568"
+ },
+ {
+  "id": "53e3a28d-c951-5935-bc6a-0df91e77d8ac",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 2,
+  "created": "2026-07-18 04:31:26.903934"
+ },
+ {
+  "id": "3c519112-01dd-5fe8-b81b-3b9469200fbd",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 20,
+  "created": "2026-07-18 04:31:27.670916"
+ },
+ {
+  "id": "3d5192a5-82fa-5dad-b91b-3d31e80371ec",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 21,
+  "created": "2026-07-18 04:31:27.741336"
+ },
+ {
+  "id": "37518933-89a6-504b-b71b-39f7e5ca364a",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 22,
+  "created": "2026-07-18 04:31:27.858544"
+ },
+ {
+  "id": "38518ac6-0650-56fc-b41b-352064ad9879",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 23,
+  "created": "2026-07-18 04:31:27.860557"
+ },
+ {
+  "id": "39518c59-876c-54c1-b51b-36bde390faa8",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 24,
+  "created": "2026-07-18 04:31:27.933262"
+ },
+ {
+  "id": "42519a84-fb32-5d4a-821b-4bb662745cd7",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 25,
+  "created": "2026-07-18 04:31:28.045426"
+ },
+ {
+  "id": "52e3a0fa-4835-5b70-bb6a-0c5c9f94767d",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 3,
+  "created": "2026-07-18 04:31:26.906525"
+ },
+ {
+  "id": "4ee39aae-4ca7-5284-b76a-05e89b21ff39",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 4,
+  "created": "2026-07-18 04:31:26.907713"
+ },
+ {
+  "id": "51e39f67-cb8b-54bf-be6a-113320b1144e",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 5,
+  "created": "2026-07-18 04:31:26.910139"
+ },
+ {
+  "id": "4fe39c41-cdc4-5049-b86a-07851a056168",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 6,
+  "created": "2026-07-18 04:31:27.094065"
+ },
+ {
+  "id": "4ae39462-511a-5998-b369-ff7496af87f5",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 7,
+  "created": "2026-07-18 04:31:27.097219"
+ },
+ {
+  "id": "4de3991b-cffd-5bd3-ba6a-0abf1c3e9d0a",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 8,
+  "created": "2026-07-18 04:31:27.097553"
+ },
+ {
+  "id": "4be395f5-d236-575d-b46a-01111592ea24",
+  "point": "de-b1-subordinate-conjunctions",
+  "cefr": "B1",
+  "seeded": false,
+  "pos": 9,
+  "created": "2026-07-18 04:31:27.1003"
+ }
+]
