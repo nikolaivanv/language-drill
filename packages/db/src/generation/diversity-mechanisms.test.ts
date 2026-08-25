@@ -59,6 +59,48 @@ describe('resolveCellMechanisms — seed source', () => {
     ]);
   });
 
+  // `appliesTo` scoping (prod 2026-08-25): the panel must show the cell what it
+  // will actually be seeded from, or an operator reading it would chase a
+  // variant the cloze cell is never asked for.
+  it('hides a variant scoped out of the cell type', () => {
+    const gp: GrammarPoint = {
+      ...basePoint,
+      constructionVariants: [
+        { id: 'standard', directive: 'Standard.' },
+        {
+          id: 'hubiera-result',
+          directive: 'Hubiera result.',
+          appliesTo: [ExerciseType.TRANSLATION],
+        },
+      ],
+    };
+    const cloze = resolveCellMechanisms(cellOf(gp, ExerciseType.CLOZE));
+    if (cloze.seed.kind !== 'construction-variants') throw new Error('narrowing');
+    expect(cloze.seed.variants.map((v) => v.id)).toEqual(['standard']);
+
+    const translation = resolveCellMechanisms(cellOf(gp, ExerciseType.TRANSLATION));
+    if (translation.seed.kind !== 'construction-variants') throw new Error('narrowing');
+    expect(translation.seed.variants.map((v) => v.id)).toEqual([
+      'standard',
+      'hubiera-result',
+    ]);
+  });
+
+  // With every variant scoped out there is no variant pool to seed from, so the
+  // cell must fall back to the frequency band rather than route to a seeder
+  // that would receive an empty list and produce no seeds at all.
+  it('falls back to the frequency band when every variant is scoped out', () => {
+    const gp: GrammarPoint = {
+      ...basePoint,
+      constructionVariants: [
+        { id: 'a', directive: 'A.', appliesTo: [ExerciseType.TRANSLATION] },
+        { id: 'b', directive: 'B.', appliesTo: [ExerciseType.TRANSLATION] },
+      ],
+    };
+    const m = resolveCellMechanisms(cellOf(gp, ExerciseType.CLOZE));
+    expect(m.seed.kind).toBe('frequency-band');
+  });
+
   it('defaults an omitted variant share to 1', () => {
     const gp: GrammarPoint = {
       ...basePoint,

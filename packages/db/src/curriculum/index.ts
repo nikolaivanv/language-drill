@@ -2,6 +2,7 @@ import {
   COVERAGE_AXIS_VALUES,
   Language,
   MIN_PER_VARIANT,
+  variantSeededTypeSet,
   type LearningLanguage,
 } from '@language-drill/shared';
 
@@ -343,6 +344,25 @@ export function assertCurriculumInvariants(
           throw new Error(
             `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' share must be > 0`,
           );
+        }
+        // `appliesTo` scopes a variant to the exercise types it is realizable
+        // in. Both checks catch an edit that LOOKS like a scoping decision but
+        // silently does nothing (or everything): an empty list is a deletion
+        // written confusingly, and a type that never seeds from the variant
+        // pool is ignored outright by `variantsForType`'s callers.
+        if (variant.appliesTo !== undefined) {
+          if (variant.appliesTo.length === 0) {
+            throw new Error(
+              `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' has an empty appliesTo — omit the field to apply everywhere, or drop the variant`,
+            );
+          }
+          for (const type of variant.appliesTo) {
+            if (!variantSeededTypeSet().has(type)) {
+              throw new Error(
+                `Curriculum invariant violated: '${entry.key}' constructionVariant '${variant.id}' has appliesTo '${type}', which does not seed from constructionVariants (expected one of ${[...variantSeededTypeSet()].join(', ')})`,
+              );
+            }
+          }
         }
       }
       // targetOverride, when present alongside constructionVariants, must be

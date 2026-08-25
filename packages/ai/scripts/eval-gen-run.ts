@@ -34,6 +34,7 @@ import {
   ExerciseType,
   Language,
   pickVariantSeeds,
+  variantsForType,
 } from "@language-drill/shared";
 import type { GrammarPoint } from "@language-drill/shared";
 import {
@@ -427,12 +428,16 @@ export function renderSystemPrompt(
  */
 export function seedWordsForArm(
   grammarPoint: GrammarPoint,
+  exerciseType: ExerciseType,
   draftsPerCell: number,
   seedConstructionVariants: boolean,
 ): string[] | undefined {
   if (!seedConstructionVariants) return undefined;
-  const variants = grammarPoint.constructionVariants;
-  if (!variants || variants.length === 0) return undefined;
+  // Scoped to the arm's exercise type, exactly as `buildSeedWords` scopes the
+  // production seeder. An A/B that requested a variant production can never
+  // request would measure approval on drafts the real pipeline never generates.
+  const variants = variantsForType(grammarPoint, exerciseType);
+  if (variants.length === 0) return undefined;
   return pickVariantSeeds({
     variants,
     coverage: new Map(),
@@ -519,6 +524,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
   }: GenCellArmExecutorParams): Promise<ArmResult> => {
     const variantSeeds = seedWordsForArm(
       grammarPoint,
+      cell.exerciseType,
       draftsPerCell,
       seedConstructionVariants,
     );

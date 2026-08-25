@@ -11,7 +11,7 @@
  * `um…zu` / `damit` contrast, and no CoverageAxis could have expressed it.
  */
 
-import { ExerciseType, MIN_PER_VARIANT } from '@language-drill/shared';
+import { ExerciseType, MIN_PER_VARIANT, variantsForType } from '@language-drill/shared';
 import type { CoverageTags, CoverageAxis, GrammarPoint } from '@language-drill/shared';
 
 /** One approved exercise row, as the CLI loads it. `content` is the raw
@@ -288,9 +288,15 @@ export function computeVariantSkewFromCounts(
   gp: GrammarPoint,
   countsById: Record<string, number>,
   unrecognizedSeedCount: number,
+  exerciseType: ExerciseType,
 ): VariantSkew | null {
-  const variants = gp.constructionVariants;
-  if (!variants || variants.length === 0) return null;
+  // Scoped to the cell's type: a variant excluded from it via `appliesTo` can
+  // never be realized here, so counting it would both split the quota
+  // denominator across an impossible bucket and report a deliberate exclusion
+  // as an under-min shortfall. `exerciseType` is required, not optional, so
+  // typecheck names every caller that has to make this decision.
+  const variants = variantsForType(gp, exerciseType);
+  if (variants.length === 0) return null;
 
   const declaredRows = variants.reduce(
     (sum, v) => sum + (countsById[v.id] ?? 0),
@@ -324,9 +330,10 @@ export function computeVariantSkewFromCounts(
 export function computeVariantSkew(
   gp: GrammarPoint,
   rows: readonly AuditRow[],
+  exerciseType: ExerciseType,
 ): VariantSkew | null {
-  const variants = gp.constructionVariants;
-  if (!variants || variants.length === 0) return null;
+  const variants = variantsForType(gp, exerciseType);
+  if (variants.length === 0) return null;
 
   const declared = new Set(variants.map((v) => v.id));
   const countsById: Record<string, number> = {};
@@ -339,7 +346,7 @@ export function computeVariantSkew(
       unrecognizedSeedCount += 1;
     }
   }
-  return computeVariantSkewFromCounts(gp, countsById, unrecognizedSeedCount);
+  return computeVariantSkewFromCounts(gp, countsById, unrecognizedSeedCount, exerciseType);
 }
 
 /**

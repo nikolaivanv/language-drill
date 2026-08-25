@@ -163,3 +163,85 @@ describe('resolveConstructionVariant', () => {
     expect(resolveConstructionVariant(POINT, ExerciseType.CLOZE, 'Hearsay')).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// variantsForType — per-variant exercise-type scoping (`appliesTo`)
+// ---------------------------------------------------------------------------
+
+import { variantsForType } from './construction-variant-seed';
+
+/**
+ * The prod defect this scoping exists for (measured 2026-08-25): a variant
+ * whose target form has a free, equally-correct alternant in the same slot is
+ * unrealizable as a CLOZE — nothing in a blank can force it, so the validator
+ * flags every draft `ambiguous`. `es-b2-complex-conditionals` ran 2/29 approved
+ * in cloze while the same variant approved 27/27 in translation.
+ */
+const SCOPED_VARIANTS = [
+  { id: 'past-counterfactual-standard', directive: 'standard' },
+  {
+    id: 'past-counterfactual-hubiera-result',
+    directive: 'hubiera result',
+    appliesTo: [ExerciseType.TRANSLATION],
+  },
+];
+
+const SCOPED_POINT = {
+  ...POINT,
+  constructionVariants: SCOPED_VARIANTS,
+} as unknown as GrammarPoint;
+
+describe('variantsForType', () => {
+  it('drops a variant whose appliesTo excludes the exercise type', () => {
+    expect(variantsForType(SCOPED_POINT, ExerciseType.CLOZE).map((v) => v.id)).toEqual([
+      'past-counterfactual-standard',
+    ]);
+  });
+
+  it('keeps a variant whose appliesTo includes the exercise type', () => {
+    expect(variantsForType(SCOPED_POINT, ExerciseType.TRANSLATION).map((v) => v.id)).toEqual([
+      'past-counterfactual-standard',
+      'past-counterfactual-hubiera-result',
+    ]);
+  });
+
+  it('keeps an unscoped variant on every variant-seeded type', () => {
+    for (const type of [
+      ExerciseType.CLOZE,
+      ExerciseType.TRANSLATION,
+      ExerciseType.SENTENCE_CONSTRUCTION,
+    ]) {
+      expect(variantsForType(POINT, type).map((v) => v.id)).toEqual(
+        VARIANTS.map((v) => v.id),
+      );
+    }
+  });
+
+  it('returns an empty list for a point that declares no variants', () => {
+    expect(variantsForType(POINT_NO_VARIANTS, ExerciseType.CLOZE)).toEqual([]);
+  });
+});
+
+describe('resolveConstructionVariant with appliesTo', () => {
+  // Without this the validator would be handed a "requested sub-construction"
+  // directive for a variant the generator was never allowed to be asked for.
+  it('does not resolve a variant scoped out of the exercise type', () => {
+    expect(
+      resolveConstructionVariant(
+        SCOPED_POINT,
+        ExerciseType.CLOZE,
+        'past-counterfactual-hubiera-result',
+      ),
+    ).toBeUndefined();
+  });
+
+  it('still resolves that variant on the type it is scoped to', () => {
+    expect(
+      resolveConstructionVariant(
+        SCOPED_POINT,
+        ExerciseType.TRANSLATION,
+        'past-counterfactual-hubiera-result',
+      )?.id,
+    ).toBe('past-counterfactual-hubiera-result');
+  });
+});

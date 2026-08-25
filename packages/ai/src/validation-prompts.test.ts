@@ -1154,6 +1154,39 @@ describe("buildValidationUserPrompt — construction-variant directive", () => {
     );
   });
 
+  // `appliesTo` (prod 2026-08-25). A variant scoped out of this cell's type can
+  // never legitimately be the REQUESTED one here, so the directive block must
+  // disappear entirely — the judge must not be told to treat an unrequestable
+  // sub-construction as on-point.
+  it("renders NOTHING extra for a variant scoped out of the spec's exercise type", () => {
+    const scopedPoint = {
+      ...variantPoint,
+      constructionVariants: variantPoint.constructionVariants!.map((v) =>
+        v.id === variantId ? { ...v, appliesTo: [ExerciseType.TRANSLATION] } : v,
+      ),
+    };
+    const scopedSpec: GenerationSpec = { ...variantSpec, grammarPoint: scopedPoint };
+    expect(buildValidationUserPrompt(variantDraft, scopedSpec, variantId)).toBe(
+      buildValidationUserPrompt(variantDraft, scopedSpec),
+    );
+  });
+
+  // The REALIZED-variant list stays complete on purpose: it is descriptive
+  // only, and a cloze draft that drifts into the excluded construction is
+  // exactly what we want reported rather than silently unlabelled.
+  it("still offers the scoped-out id as a realized-variant label", () => {
+    const scopedPoint = {
+      ...variantPoint,
+      constructionVariants: variantPoint.constructionVariants!.map((v) =>
+        v.id === variantId ? { ...v, appliesTo: [ExerciseType.TRANSLATION] } : v,
+      ),
+    };
+    const otherId = variantPoint.constructionVariants!.find((v) => v.id !== variantId)!.id;
+    const scopedSpec: GenerationSpec = { ...variantSpec, grammarPoint: scopedPoint };
+    const prompt = buildValidationUserPrompt(variantDraft, scopedSpec, otherId);
+    expect(prompt).toContain(variantId);
+  });
+
   it("renders NOTHING extra on a point that declares no variants", () => {
     // `baseSpec`'s point (es-b1-present-subjunctive) has no constructionVariants.
     expect(buildValidationUserPrompt(variantDraft, baseSpec, "some-seed")).toBe(

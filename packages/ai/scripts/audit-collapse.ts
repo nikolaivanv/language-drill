@@ -325,7 +325,7 @@ export function analyzeCell(cell: AuditCell, opts: AnalyzeOptions): CellFinding 
     monotony !== null && monotony.total >= opts.minRows && monotony.share >= opts.monotonyThreshold;
 
   const specShortfall = computeSpecShortfall(cell.grammarPoint, cell.rows, cell.target);
-  const variantSkew = computeVariantSkew(cell.grammarPoint, cell.rows);
+  const variantSkew = computeVariantSkew(cell.grammarPoint, cell.rows, cell.exerciseType);
 
   const preempted = declaredButUnrealized(specShortfall, variantSkew);
 

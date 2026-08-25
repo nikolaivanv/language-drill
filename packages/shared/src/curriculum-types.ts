@@ -9,7 +9,7 @@
  * that file now re-exports from this module for back-compat.
  */
 
-import type { CefrLevel } from './index';
+import type { CefrLevel, ExerciseType } from './index';
 import type { LearningLanguage } from './onboarding';
 import type { CoverageSpec } from './coverage';
 
@@ -71,6 +71,30 @@ export type ConstructionVariant = Readonly<{
   /** Relative weight, default 1. The prototype keeps a plurality without
    *  owning the pool: share 3 against three share-1 variants targets 50%. */
   share?: number;
+  /**
+   * Exercise types this variant may be requested on. Omitted (the default) =
+   * every variant-seeded type. Mirrors `CoverageSpec.appliesTo`.
+   *
+   * Exists because a variant can be unrealizable in one type while being clean
+   * in another. A cloze blank can only be auto-approved when exactly one form
+   * fits it; a sub-construction whose target form has a FREE, equally-correct
+   * alternant in the same slot therefore fails `ambiguous` on every draft no
+   * matter how the sentence is written. Measured on prod 2026-08-25:
+   * `es-b2-complex-conditionals` / `past-counterfactual-hubiera-result` took
+   * 29 cloze drafts for 2 approvals (the other 27 flagged `ambiguous`, each
+   * naming `habría + participle` as the unforceable competitor) while the SAME
+   * variant approved 27/27 as a translation, where the English source cues it.
+   *
+   * Scoping such a variant out of cloze is not a coverage retreat: the cloze
+   * cell keeps drilling the variants a blank CAN elicit, its target shrinks to
+   * match (`resolveCellTargetFor`), and the audit stops reporting the excluded
+   * variant as declared-but-unrealized there.
+   *
+   * Every consumer must read the list through `variantsForType`
+   * (`construction-variant-seed.ts`) rather than `constructionVariants`
+   * directly — there is exactly one copy of this rule on purpose.
+   */
+  appliesTo?: readonly ExerciseType[];
 }>;
 
 export type GrammarPoint = Readonly<{

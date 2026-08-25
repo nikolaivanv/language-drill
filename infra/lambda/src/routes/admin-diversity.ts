@@ -229,7 +229,7 @@ adminDiversity.get('/admin/diversity', async (c) => {
         else unrecognized += n;
       }
       const skew = computeVariantSkewFromCounts(
-        cell.grammarPoint, declaredCounts, unrecognized,
+        cell.grammarPoint, declaredCounts, unrecognized, cell.exerciseType,
       );
       const byId = new Map(skew?.perVariant.map((v) => [v.id, v]) ?? []);
       return {

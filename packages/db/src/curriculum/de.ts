@@ -1,4 +1,4 @@
-import { CefrLevel, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
@@ -255,7 +255,20 @@ const { A1, A2, B1, B2 } = CefrLevel;
 //
 // Bump clears target-reached / low-yield suppression so the touched cells
 // re-run under the rotation. At-target cells additionally need demote:pool.
-export const CURRICULUM_VERSION_DE = '2026-08-23';
+//
+// 2026-08-25: de-b2-conditional-connectors/es-sei-denn-unless gains
+// `appliesTo: [TRANSLATION]`. `außer wenn` carries the same meaning in the
+// same slot, so a cloze blank cannot force `es sei denn` — the 2026-08-25 prod
+// run approved 2 of 8 cloze drafts (the rejections naming `außer wenn` as the
+// unlisted equal answer) against 7 of 8 translations. The cloze cell keeps its
+// other conditional connectors. Bump clears suppression so it re-runs on the
+// narrowed rotation.
+//
+// NOT scoped, deliberately: de-b1-futur-i/present-tense-scheduled-future
+// approved 2/11 in cloze and 1/17 in translation. It fails in BOTH types, so
+// the defect is the variant, not its exercise-type fit, and `appliesTo` would
+// only hide half of it. Tracked separately.
+export const CURRICULUM_VERSION_DE = '2026-08-25';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3622,6 +3635,11 @@ const deCurriculum: readonly GrammarPoint[] = [
         id: 'es-sei-denn-unless',
         directive:
           'es sei denn(, dass …) for the exception that cancels the statement — "unless" (Ich komme um zwei, es sei denn, ich werde aufgehalten)',
+        // Translation only. `außer wenn` means the same thing and fits the same
+        // slot, so a cloze blank cannot force `es sei denn`: prod 2026-08-25
+        // approved 2 of 8 cloze drafts against 7 of 8 translations, the
+        // rejections naming `außer wenn` as the unlisted equal answer.
+        appliesTo: [ExerciseType.TRANSLATION],
       },
       {
         id: 'sonst-otherwise',

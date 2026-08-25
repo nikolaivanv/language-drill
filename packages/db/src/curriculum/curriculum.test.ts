@@ -2,6 +2,7 @@ import {
   ExerciseType,
   Language,
   resolveTheoryCategory,
+  variantsForType,
   type LearningLanguage,
 } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
@@ -517,6 +518,35 @@ describe('self-revealing elicitation — flagged entries', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// The four variants scoped out of cloze on 2026-08-25. These pin the actual
+// prod fix, not the mechanism: each was measured unrealizable as a cloze (a
+// free alternant a blank cannot exclude, or a frame that ends up in the stem)
+// while approving cleanly as a translation. A future edit that drops the
+// `appliesTo` — or renames the variant — puts the cell straight back to
+// spending most of its nightly slots on drafts the validator must flag.
+// See the CURRICULUM_VERSION changelogs in es.ts / de.ts for the measurements.
+// ---------------------------------------------------------------------------
+describe('cloze-unrealizable construction variants stay translation-only', () => {
+  it.each([
+    ['es-b2-complex-conditionals', 'past-counterfactual-hubiera-result'],
+    ['es-b2-clitic-advanced', 'ello-after-preposition'],
+    ['es-b2-perception-verbs', 'perception-verb-que-clause'],
+    ['de-b2-conditional-connectors', 'es-sei-denn-unless'],
+  ])('%s / %s', (key, variantId) => {
+    const gp = getGrammarPoint(key);
+    if (!gp) throw new Error(`curriculum is missing '${key}'`);
+    const clozeIds = variantsForType(gp, ExerciseType.CLOZE).map((v) => v.id);
+    const translationIds = variantsForType(gp, ExerciseType.TRANSLATION).map((v) => v.id);
+
+    expect(clozeIds).not.toContain(variantId);
+    expect(translationIds).toContain(variantId);
+    // The cloze cell must keep something to rotate over, or it silently falls
+    // back to frequency seeding and loses its construction control entirely.
+    expect(clozeIds.length).toBeGreaterThan(0);
+  });
+});
+
 describe('constructionVariants invariants', () => {
   const base = {
     key: 'es-b1-test-point',
@@ -536,6 +566,56 @@ describe('constructionVariants invariants', () => {
         { ...base, constructionVariants: [{ id: 'only-one', directive: 'x' }] },
       ] as never),
     ).toThrow(/at least 2 constructionVariants/);
+  });
+
+  // `appliesTo` (prod 2026-08-25). An empty list scopes the variant to nowhere,
+  // which is just a deletion written confusingly — and it would silently shrink
+  // the rotation for every type.
+  it('rejects an empty appliesTo', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'a', directive: 'x' },
+            { id: 'b', directive: 'y', appliesTo: [] },
+          ],
+        },
+      ] as never),
+    ).toThrow(/empty appliesTo/i);
+  });
+
+  // Only cloze/translation/sentence_construction seed from the variant pool
+  // (`seedKindFor`). Naming any other type reads as a deliberate scoping
+  // decision but has no effect whatsoever — the author must be told.
+  it('rejects an appliesTo naming a type that does not seed from variants', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'a', directive: 'x' },
+            { id: 'b', directive: 'y', appliesTo: ['conjugation'] },
+          ],
+        },
+      ] as never),
+    ).toThrow(/appliesTo.*conjugation/i);
+  });
+
+  // Scoped to the appliesTo message: this lone-entry fixture always trips the
+  // unrelated ES-A1 coverage floor, same as the conjugationSeedWords case above.
+  it('accepts an appliesTo naming a variant-seeded type', () => {
+    expect(() =>
+      assertCurriculumInvariants([
+        {
+          ...base,
+          constructionVariants: [
+            { id: 'a', directive: 'x' },
+            { id: 'b', directive: 'y', appliesTo: ['translation'] },
+          ],
+        },
+      ] as never),
+    ).not.toThrow(/appliesTo/);
   });
 
   it('rejects duplicate variant ids', () => {
