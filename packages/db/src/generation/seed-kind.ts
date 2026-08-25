@@ -1,4 +1,4 @@
-import { ExerciseType } from '@language-drill/shared';
+import { ExerciseType, variantsForType } from '@language-drill/shared';
 
 import type { Cell } from './cells';
 
@@ -45,8 +45,12 @@ export function seedKindFor(
       // with no single scorable target, and one mandated construction per
       // draft is exactly the "force a single construction" cure.
       cell.exerciseType === ExerciseType.SENTENCE_CONSTRUCTION) &&
-    cell.grammarPoint.constructionVariants &&
-    cell.grammarPoint.constructionVariants.length > 0
+    // `variantsForType`, not the raw list: a variant scoped out of this type
+    // via `appliesTo` cannot be requested here, and a point whose variants are
+    // ALL scoped out of this type has no variant pool to seed from — it must
+    // fall through to the frequency band below rather than route to a seeder
+    // that would be handed an empty list and return no seeds at all.
+    variantsForType(cell.grammarPoint, cell.exerciseType).length > 0
   ) {
     // Multi-construction point: the SUB-CONSTRUCTION is the diversity axis, not
     // the content word. A frequency seed gets absorbed into the complement

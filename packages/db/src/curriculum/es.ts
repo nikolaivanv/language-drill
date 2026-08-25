@@ -1,4 +1,4 @@
-import { CefrLevel, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
 
 import type { GrammarPoint } from './types';
 
@@ -254,8 +254,43 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * A bump would buy nothing here and would re-release the whole ES low-yield
  * backlog for a second night (14 cells, 134 requested, 29 approved on the
  * first). See docs/analysis/generation-run-2026-08-18.md.
+ *
+ * `2026-08-25`: three ES construction variants gain `appliesTo:
+ * [TRANSLATION]`, scoping them out of cloze —
+ * `es-b2-complex-conditionals/past-counterfactual-hubiera-result`,
+ * `es-b2-clitic-advanced/ello-after-preposition`, and
+ * `es-b2-perception-verbs/perception-verb-que-clause`. All three are clean as
+ * translations and structurally unrealizable as a cloze, measured on the
+ * 2026-08-25 prod run: 2/29, 0/10 and 0/10 approved in cloze against 27/30,
+ * 4/8 and 5/11 in translation. The first two lose to a FREE alternant that a
+ * blank cannot exclude (`habría + participle` in the result clause; `esto`/
+ * `eso` in the prepositional slot), so every draft flags `ambiguous` however
+ * the sentence is written. The third fails differently: a cloze puts the
+ * `vi que ___` frame in the stem and blanks the embedded verb, testing
+ * imperfect-vs-preterite rather than the perception-verb construction.
+ * Bump clears target-reached / low-yield suppression so the three cloze cells
+ * re-run on the narrowed rotation. Their TARGETS are unchanged: 5 variants x
+ * MIN_PER_VARIANT is 20, well under the B2 base of 50, so the variant floor
+ * was never the binding constraint here (`resolveCellTargetFor` now counts
+ * only applicable variants, which matters for a point with >12 of them, not
+ * for these). What changes is that every draft slot now goes to a variant the
+ * cell can actually approve.
+ *
+ * Known consequence, accepted: es-b2-complex-conditionals has
+ * `targetOverride: 75` and only ONE variant left in cloze, so that cell will
+ * fill 75 rows of `past-counterfactual-standard`. That is a real monotony risk
+ * and `audit:collapse` should flag it as a concentration; the alternative —
+ * leaving a variant in that cannot be approved — kept the cell permanently
+ * short instead. Re-sizing a per-type target needs `targetOverride` to become
+ * type-aware, which is deliberately not in this change.
+ *
+ * NOT scoped, deliberately: `es-b2-subjunctive-negated-opinion/
+ * creo-que-indicative-affirmative` approved 0/9 in cloze AND 0/5 in
+ * translation. Failing in both types means the variant itself is wrong, not
+ * its exercise-type fit, so `appliesTo` is the wrong instrument — it needs a
+ * directive rework or removal, tracked separately.
  */
-export const CURRICULUM_VERSION_ES = '2026-08-19';
+export const CURRICULUM_VERSION_ES = '2026-08-25';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -5224,6 +5259,14 @@ const esCurriculum: readonly GrammarPoint[] = [
         directive:
           'si + pluperfect subjunctive with hubiera + participle in the RESULT clause instead of habría — the -ra form only, never hubiese there (Si lo hubiera sabido, hubiera venido antes)',
         share: 2,
+        // Translation only. `habría + participle` is equally correct in the
+        // result clause of any past counterfactual, so a cloze blank there can
+        // never force the hubiera form — prod 2026-08-25 ran 29 cloze drafts
+        // for 2 approvals, the other 27 flagged `ambiguous` naming habría as
+        // the competitor, while the same variant took 27/30 as a translation
+        // (where the English source cues it). The cloze cell keeps drilling
+        // `past-counterfactual-standard`.
+        appliesTo: [ExerciseType.TRANSLATION],
       },
     ],
     coverageSpec: {
@@ -5998,6 +6041,11 @@ const esCurriculum: readonly GrammarPoint[] = [
         id: 'ello-after-preposition',
         directive:
           'neuter ello as the complement of a preposition, referring to a whole idea (No hablemos de ello; Por ello decidí quedarme)',
+        // Translation only. `esto`/`eso` fill the same prepositional slot and
+        // are the commoner spoken choice, so no cloze context forces `ello`:
+        // prod 2026-08-25 approved 0 of 10 cloze drafts against 4 of 8
+        // translations. Every rejection named esto/eso as the free alternant.
+        appliesTo: [ExerciseType.TRANSLATION],
       },
       {
         id: 'le-with-specific-verbs-inanimate-subject',
@@ -6170,6 +6218,13 @@ const esCurriculum: readonly GrammarPoint[] = [
         directive:
           'ver/oír que + a finite clause, the neutral alternative to the infinitive and gerund patterns (Vi que entraba en el banco; Oyó que alguien llamaba a la puerta)',
         share: 2,
+        // Translation only, for a different reason than the free-alternant
+        // cases: a cloze puts the `vi que ___` frame in the STEM and blanks the
+        // embedded verb, so the blank tests imperfect-vs-preterite and never
+        // the perception-verb construction at all. Prod 2026-08-25 approved 0
+        // of 10 cloze drafts, the validator noting each time that the frame was
+        // given and the item tested aspect; 5 of 11 translations approved.
+        appliesTo: [ExerciseType.TRANSLATION],
       },
       {
         id: 'le-dative-infinitive-own-object',

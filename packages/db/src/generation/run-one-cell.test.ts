@@ -460,6 +460,43 @@ describe('seedKindFor — construction variants', () => {
     ).toBe('construction-variants');
   });
 
+  // `appliesTo` (prod 2026-08-25). A point can declare variants while none of
+  // them is realizable in this type; the cell then has no variant pool and must
+  // fall through to the frequency band, not route to a seeder with an empty list.
+  it('leaves a cloze cell on the frequency band when every variant is scoped out', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: {
+          kind: 'grammar',
+          constructionVariants: variants.map((v) => ({
+            ...v,
+            appliesTo: [ExerciseType.TRANSLATION],
+          })),
+        },
+      } as never),
+    ).toBe('frequency');
+  });
+
+  it('still routes to construction-variants when at least one variant applies', () => {
+    expect(
+      seedKindFor({
+        language: 'ES',
+        cefrLevel: 'B1',
+        exerciseType: ExerciseType.CLOZE,
+        grammarPoint: {
+          kind: 'grammar',
+          constructionVariants: [
+            variants[0],
+            { ...variants[1], appliesTo: [ExerciseType.TRANSLATION] },
+          ],
+        },
+      } as never),
+    ).toBe('construction-variants');
+  });
+
   it('leaves a cloze cell without variants on the frequency band', () => {
     expect(
       seedKindFor({
@@ -1510,6 +1547,37 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       const adversityCount = chosen.filter((s) => s === 'adversity').length;
       expect(presentationalCount).toBeGreaterThan(adversityCount);
       expect(presentationalCount + adversityCount).toBe(3);
+    });
+
+    // `appliesTo` (prod 2026-08-25). The seeder must never request a variant
+    // the cell's type is scoped out of, however starved that variant looks:
+    // 'presentational' has 0 approved rows here and would otherwise win every
+    // slot, which is exactly how an unrealizable variant burned 27 of 29
+    // es-b2-complex-conditionals cloze drafts.
+    it('never seeds a variant scoped out of the cell exercise type', async () => {
+      const base = constructionVariantCell();
+      const scoped: Cell = {
+        ...base,
+        grammarPoint: {
+          ...base.grammarPoint,
+          constructionVariants: CV_VARIANTS.map((v) =>
+            v.id === 'presentational'
+              ? { ...v, appliesTo: [ExerciseType.TRANSLATION] }
+              : v,
+          ),
+        },
+      };
+      const seeds = await buildSeedWords(seedDb, scoped, 4, 'seed-cv', new Set());
+      const chosen = (seeds ?? []).filter((s): s is string => typeof s === 'string');
+      expect(chosen).toHaveLength(4);
+      // The scoped-out variant is skipped despite being the most starved (0
+      // approved) — it would otherwise have won every slot.
+      expect(chosen).not.toContain('presentational');
+      // Every slot goes to an applicable variant, still deficit-ranked among
+      // them: 'adversity' (1 approved) is starved against 'hearsay' (5), so it
+      // takes the batch. The point is the exclusion, not the split.
+      expect(chosen.every((s) => s === 'adversity' || s === 'hearsay')).toBe(true);
+      expect(chosen).toContain('adversity');
     });
 
     it('never joins the priorSeeds exclude set — a construction-variants cell ignores its exclude arg entirely', async () => {

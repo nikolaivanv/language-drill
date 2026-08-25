@@ -37,13 +37,26 @@ import type { ConstructionVariant, GrammarPoint } from './curriculum-types';
  * relies on for `TOOL_NAME_BY_TYPE`.
  */
 let variantSeededTypes: ReadonlySet<ExerciseType> | undefined;
-function isVariantSeededType(exerciseType: ExerciseType): boolean {
+
+/**
+ * The variant-seeded exercise types, as a set. A FUNCTION, not a constant, for
+ * the TDZ reason above — callers must not hoist the result to module scope.
+ *
+ * Exported so `assertCurriculumInvariants` can reject an `appliesTo` naming a
+ * type that never seeds from the variant pool (where the scoping would read as
+ * deliberate but do nothing) without restating the list and drifting from it.
+ */
+export function variantSeededTypeSet(): ReadonlySet<ExerciseType> {
   variantSeededTypes ??= new Set([
     ExerciseType.CLOZE,
     ExerciseType.TRANSLATION,
     ExerciseType.SENTENCE_CONSTRUCTION,
   ]);
-  return variantSeededTypes.has(exerciseType);
+  return variantSeededTypes;
+}
+
+function isVariantSeededType(exerciseType: ExerciseType): boolean {
+  return variantSeededTypeSet().has(exerciseType);
 }
 
 /**
@@ -67,7 +80,37 @@ export function resolveConstructionVariant(
 ): ConstructionVariant | undefined {
   if (!seedWord) return undefined;
   if (!isVariantSeededType(exerciseType)) return undefined;
-  return grammarPoint.constructionVariants?.find((v) => v.id === seedWord);
+  return variantsForType(grammarPoint, exerciseType).find((v) => v.id === seedWord);
+}
+
+/**
+ * The point's construction variants that may be requested on `exerciseType` —
+ * the ONLY sanctioned way to read `constructionVariants`.
+ *
+ * A variant with no `appliesTo` applies everywhere (the overwhelming majority);
+ * one with `appliesTo` applies only to the listed types. See the field's doc on
+ * `ConstructionVariant` for why a variant can be clean in translation and
+ * unrealizable in cloze.
+ *
+ * Reading `grammarPoint.constructionVariants` directly anywhere else
+ * re-introduces the drift this module exists to prevent: the seeder would stop
+ * requesting an excluded variant while the target arithmetic, the validator
+ * directive, and the collapse audit all still expected it — the cell would then
+ * sit permanently under a target it cannot reach, and the audit would report a
+ * deliberate exclusion as an unrealized declaration.
+ *
+ * Returns a plain array (possibly empty) so every caller can treat the
+ * no-variants and all-excluded cases identically.
+ */
+export function variantsForType(
+  grammarPoint: GrammarPoint,
+  exerciseType: ExerciseType,
+): readonly ConstructionVariant[] {
+  const declared = grammarPoint.constructionVariants;
+  if (!declared || declared.length === 0) return [];
+  return declared.filter(
+    (v) => v.appliesTo === undefined || v.appliesTo.includes(exerciseType),
+  );
 }
 
 /**

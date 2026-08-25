@@ -282,6 +282,46 @@ describe('computeVariantSkew', () => {
     expect(result.perVariant.find((v) => v.id === 'adversity')!.quota).toBe(2);
   });
 
+  // `appliesTo` (prod 2026-08-25). Without scoping, a variant deliberately
+  // excluded from cloze reads as 0-count/under-min in every cloze cell — the
+  // audit would report a deliberate exclusion as an unrealized declaration,
+  // and the quota denominator would be split across a variant that can never
+  // appear, understating every remaining variant's quota.
+  it('ignores a variant scoped out of the cell exercise type', () => {
+    const scoped = point({
+      constructionVariants: [
+        { id: 'standard', directive: 'S' },
+        {
+          id: 'hubiera-result',
+          directive: 'H',
+          appliesTo: [ExerciseType.TRANSLATION],
+        },
+      ],
+    });
+    const rows = seeded('standard', 10);
+    const result = computeVariantSkew(scoped, rows, ExerciseType.CLOZE)!;
+    expect(result.perVariant.map((v) => v.id)).toEqual(['standard']);
+    expect(result.underMin).toEqual([]);
+    // The whole declared pool is 'standard', so its quota is all 10 rows.
+    expect(result.perVariant[0].quota).toBe(10);
+  });
+
+  it('keeps that variant on the exercise type it is scoped to', () => {
+    const scoped = point({
+      constructionVariants: [
+        { id: 'standard', directive: 'S' },
+        {
+          id: 'hubiera-result',
+          directive: 'H',
+          appliesTo: [ExerciseType.TRANSLATION],
+        },
+      ],
+    });
+    const result = computeVariantSkew(scoped, seeded('standard', 10), ExerciseType.TRANSLATION)!;
+    expect(result.perVariant.map((v) => v.id)).toEqual(['standard', 'hubiera-result']);
+    expect(result.underMin).toEqual(['hubiera-result']);
+  });
+
   it('reports over-quota and under-MIN_PER_VARIANT ids', () => {
     const rows = [
       ...seeded('hearsay', 12),
@@ -495,6 +535,26 @@ describe('computeVariantSkewFromCounts', () => {
       { id: 'adversity', count: 10, share: 1, quota: 10 },
     ]);
     expect(skew?.overQuota).toEqual([]);
+  });
+
+  it('ignores a variant scoped out of the exercise type', () => {
+    const scoped = {
+      ...point(),
+      constructionVariants: [
+        { id: 'hearsay', directive: 'H.', share: 3 },
+        { id: 'adversity', directive: 'A.', appliesTo: [ExerciseType.TRANSLATION] },
+      ],
+    };
+    const skew = computeVariantSkewFromCounts(
+      scoped as GrammarPoint,
+      { hearsay: 30 },
+      0,
+      ExerciseType.CLOZE,
+    );
+    expect(skew?.perVariant).toEqual([
+      { id: 'hearsay', count: 30, share: 3, quota: 30 },
+    ]);
+    expect(skew?.underMin).toEqual([]);
   });
 
   it('carries unrecognizedSeedCount through as the unlabelled denominator', () => {

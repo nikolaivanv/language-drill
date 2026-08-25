@@ -33,6 +33,7 @@ import {
 import {
   ExerciseType,
   pickVariantSeeds,
+  variantsForType,
   type CoverageAxis,
   type CoverageOutcome,
   type CoverageSpec,
@@ -631,7 +632,11 @@ export async function buildSeedWords(
     // variant after a single use would stall the cell after one batch.
     const coverage = await loadVariantCoverage(db, cell);
     return pickVariantSeeds({
-      variants: cell.grammarPoint.constructionVariants ?? [],
+      // `variantsForType`, not the raw list: a variant scoped out of this type
+      // via `appliesTo` must never be requested here however starved it looks —
+      // deficit ranking would otherwise hand every slot to the one variant the
+      // cell can never realize.
+      variants: variantsForType(cell.grammarPoint, cell.exerciseType),
       coverage,
       count,
     });

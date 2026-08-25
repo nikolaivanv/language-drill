@@ -1117,23 +1117,60 @@ describe("eval-gen construction-variant seeding", () => {
   };
 
   it("seeds a variant per ordinal when the arm has seeding enabled", () => {
-    const seeds = seedWordsForArm(variantGrammarPoint, 5, true);
+    const seeds = seedWordsForArm(variantGrammarPoint, ExerciseType.CLOZE, 5, true);
     expect(seeds).toHaveLength(5);
     expect(new Set(seeds)).toEqual(new Set(["hearsay", "adversity"]));
   });
 
   it("seeds nothing when the arm has seeding disabled (baseline arm)", () => {
-    expect(seedWordsForArm(variantGrammarPoint, 5, false)).toBeUndefined();
+    expect(
+      seedWordsForArm(variantGrammarPoint, ExerciseType.CLOZE, 5, false),
+    ).toBeUndefined();
   });
 
   it("seeds nothing for a point without variants", () => {
     expect(
       seedWordsForArm(
         { ...variantGrammarPoint, constructionVariants: undefined },
+        ExerciseType.CLOZE,
         5,
         true,
       ),
     ).toBeUndefined();
+  });
+
+  // `appliesTo` (prod 2026-08-25): the A/B must seed exactly what production
+  // would seed for this cell type, or its approval delta describes drafts the
+  // real pipeline never generates.
+  it("skips a variant scoped out of the arm's exercise type", () => {
+    const scoped = {
+      ...variantGrammarPoint,
+      constructionVariants: [
+        { id: "hearsay", directive: "hearsay — dicen que" },
+        {
+          id: "adversity",
+          directive: "adversity — me robaron",
+          appliesTo: [ExerciseType.TRANSLATION],
+        },
+      ],
+    };
+    expect(new Set(seedWordsForArm(scoped, ExerciseType.CLOZE, 5, true))).toEqual(
+      new Set(["hearsay"]),
+    );
+    expect(
+      new Set(seedWordsForArm(scoped, ExerciseType.TRANSLATION, 5, true)),
+    ).toEqual(new Set(["hearsay", "adversity"]));
+  });
+
+  it("seeds nothing when every variant is scoped out of the arm's type", () => {
+    const scoped = {
+      ...variantGrammarPoint,
+      constructionVariants: variantGrammarPoint.constructionVariants.map((v) => ({
+        ...v,
+        appliesTo: [ExerciseType.TRANSLATION],
+      })),
+    };
+    expect(seedWordsForArm(scoped, ExerciseType.CLOZE, 5, true)).toBeUndefined();
   });
 
   it("counts realized variants per arm", () => {

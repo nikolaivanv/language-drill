@@ -15,6 +15,7 @@ import {
   ExerciseType,
   coverageAxesFor,
   resolveCellTargetFor,
+  variantsForType,
   type CoverageAxis,
 } from '@language-drill/shared';
 
@@ -102,7 +103,7 @@ function resolveSeed(cell: Cell): DeclaredSeed {
     case 'construction-variants':
       return {
         kind: 'construction-variants',
-        variants: (gp.constructionVariants ?? []).map((v) => ({
+        variants: variantsForType(gp, cell.exerciseType).map((v) => ({
           id: v.id,
           directive: v.directive,
           share: v.share ?? 1,

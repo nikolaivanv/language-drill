@@ -644,6 +644,14 @@ function renderConstructionVariantDirective(
   );
   if (!variant) return "";
 
+  // Deliberately the RAW list, not `variantsForType`. The requested-variant
+  // block above is already scoped — `resolveConstructionVariant` returns
+  // undefined for a variant excluded from this exercise type, so this function
+  // has already returned "" in that case. What follows is the DESCRIPTIVE
+  // "which one did you actually see" list, and a draft that drifts into a
+  // construction this type was scoped out of is precisely the thing worth
+  // hearing about; narrowing the list would leave such a draft unlabelled and
+  // hide the drift.
   const declaredIds = (spec.grammarPoint.constructionVariants ?? [])
     .map((v) => `\`${v.id}\``)
     .join(", ");

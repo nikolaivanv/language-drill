@@ -28,7 +28,7 @@
 
 import type { ExerciseType } from './index';
 import type { CurriculumCefrLevel, GrammarPoint } from './curriculum-types';
-import { MIN_PER_VARIANT } from './construction-variant-seed';
+import { MIN_PER_VARIANT, variantsForType } from './construction-variant-seed';
 
 /** Global fallback for any `(type, level)` the table below leaves unset. */
 export const TARGET_PER_CELL = 50;
@@ -121,8 +121,11 @@ export type CellTargetInput = {
  * 1.5× multiplier with exact floor arithmetic.
  */
 export function resolveCellTargetFor(cell: CellTargetInput): number {
-  const variants = cell.grammarPoint.constructionVariants;
-  const variantFloor = variants ? variants.length * MIN_PER_VARIANT : 0;
+  // Only the variants this cell's type may actually be asked for. A variant
+  // scoped out via `appliesTo` can never be realized here, so counting it would
+  // hold the cell permanently below a target it cannot reach.
+  const variants = variantsForType(cell.grammarPoint, cell.exerciseType);
+  const variantFloor = variants.length * MIN_PER_VARIANT;
 
   const override = cell.grammarPoint.targetOverride;
   if (override !== undefined) return override;

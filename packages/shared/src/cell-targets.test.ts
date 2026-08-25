@@ -80,6 +80,34 @@ describe('resolveCellTargetFor', () => {
     ).toBe(24);
   });
 
+  // A variant scoped out of a type must not raise that type's target: the cell
+  // can never realize it, so counting it leaves the cell permanently short and
+  // re-enqueued every night. Prod 2026-08-25 shape.
+  it('counts only the variants that apply to the cell type', () => {
+    const point = gp({
+      constructionVariants: [
+        { id: 'a', directive: 'A' },
+        { id: 'b', directive: 'B' },
+        { id: 'c', directive: 'C' },
+        { id: 'd', directive: 'D' },
+        { id: 'e', directive: 'E' },
+        { id: 'f', directive: 'F', appliesTo: [ExerciseType.TRANSLATION] },
+      ],
+    });
+    // cloze sees 5 applicable variants: max(base 20, 5*4=20) === 20
+    expect(
+      resolveCellTargetFor({ exerciseType: ExerciseType.CLOZE, cefrLevel: 'A1', grammarPoint: point }),
+    ).toBe(20);
+    // translation sees all 6: max(base 20, 6*4=24) === 24
+    expect(
+      resolveCellTargetFor({
+        exerciseType: ExerciseType.TRANSLATION,
+        cefrLevel: 'A1',
+        grammarPoint: point,
+      }),
+    ).toBe(24);
+  });
+
   it('keeps the vocab_recall low cap at every level', () => {
     expect(CELL_TARGET_DEFAULTS[ExerciseType.VOCAB_RECALL].B2).toBe(10);
   });
