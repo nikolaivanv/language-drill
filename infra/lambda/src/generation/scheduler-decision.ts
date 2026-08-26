@@ -102,6 +102,38 @@ export type RecentJob = {
   finishedAt: Date;
 };
 
+/**
+ * Days after which a cell's suppression lapses on its own and the cell gets one
+ * fresh attempt, regardless of whether its grammar point changed.
+ *
+ * Since #703 suppression clears only on a CURRICULUM edit. That is the right
+ * primary trigger, but it cannot see the other things that fix a stuck cell —
+ * a generation or validation prompt change, a model swap, a widened seed pool,
+ * an `acceptableAnswers` policy fix. Before #703 the constant per-language
+ * version churn re-released everything nightly and covered those by accident;
+ * now nothing would, and a cell suppressed over a long-fixed defect could sit
+ * out indefinitely waiting for someone to notice.
+ *
+ * 30 days trades a bounded retry cost against that: with ~143 cells suppressed
+ * on prod it works out to roughly five retried cells a night. Override with
+ * `SCHEDULER_SUPPRESSION_LAPSE_DAYS`.
+ */
+export const SUPPRESSION_LAPSE_DAYS = 30;
+
+const MS_PER_DAY = 86_400_000;
+
+/**
+ * Options for `decideEnqueue`'s time-dependent behaviour. Grouped into one bag
+ * rather than added as positional parameters — the function already takes six,
+ * and both of these are injected only so the decision stays pure and testable.
+ */
+export type DecideEnqueueOptions = {
+  /** Injected clock. Defaults to now. */
+  now?: Date;
+  /** Defaults to `SUPPRESSION_LAPSE_DAYS`. */
+  suppressionLapseDays?: number;
+};
+
 export type EnqueueDecision =
   | { kind: 'enqueue'; need: number }
   | { kind: 'skip-target-reached' }
@@ -183,6 +215,7 @@ export function decideEnqueue(
   recentJob: RecentJob | null,
   curriculumVersionOnDisk: string | undefined,
   targetSeeded = false,
+  options: DecideEnqueueOptions = {},
 ): EnqueueDecision {
   // 1. Round-1 narrowing (Req 4.5). C1 / C2 curriculum entries are skipped
   //    silently — the consumer Lambda's guard (Req 2.7) is defense-in-depth
@@ -240,6 +273,18 @@ export function decideEnqueue(
   //    repo does this; see the 2026-08-18 note in es.ts) previously could not
   //    reach a suppressed cell at all, and now does.
   if (!curriculumUnchangedForCell(recentJob, cell, curriculumVersionOnDisk)) {
+    return { kind: 'enqueue', need };
+  }
+
+  // 4b. Staleness lapse. Suppression is evidence-based, and evidence ages out:
+  //     the run that justified it may predate a prompt, model or seed-pool fix
+  //     that the point's fingerprint cannot see. Placed after the target-reached
+  //     check (step 2) so it only ever re-opens a cell that is still SHORT —
+  //     never a finished one — and before the suppression branches so it clears
+  //     low-yield and saturated-dedup alike.
+  const lapseDays = options.suppressionLapseDays ?? SUPPRESSION_LAPSE_DAYS;
+  const ageMs = (options.now ?? new Date()).getTime() - recentJob.finishedAt.getTime();
+  if (ageMs >= lapseDays * MS_PER_DAY) {
     return { kind: 'enqueue', need };
   }
 
