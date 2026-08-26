@@ -1,0 +1,1 @@
+ALTER TABLE "generation_jobs" ADD COLUMN "grammar_point_fingerprint" text;

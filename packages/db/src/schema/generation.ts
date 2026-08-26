@@ -41,6 +41,23 @@ export const generationJobs = pgTable(
      */
     curriculumVersion: text('curriculum_version'),
     /**
+     * `grammarPointFingerprint()` of the cell's grammar point as it stood when
+     * this job opened. The scheduler compares it to the on-disk point to decide
+     * whether `skip-low-yield` / `skip-saturated-dedup` suppression still
+     * applies (`decideEnqueue` step 4).
+     *
+     * Replaces `curriculumVersion` for that decision. The version constant is
+     * per-LANGUAGE while the suppression it clears is per-CELL, so editing one
+     * point re-released every cell in that language — and since curricula here
+     * change most days, neither suppression fired at all in production.
+     * `curriculumVersion` is still written and still read by the coverage
+     * controller's give-up gate and by ad-hoc analysis, so it is not removed.
+     *
+     * NULL on rows written before this column existed; `decideEnqueue` falls
+     * back to the version test for those, releasing such a cell at most once.
+     */
+    grammarPointFingerprint: text('grammar_point_fingerprint'),
+    /**
      * Frequency map of validator rejection reasons for the drafts this cell
      * discarded — `{ reason: count }`, e.g. `{ 'context spoils answer': 2,
      * 'low quality score (<0.5)': 5 }`. Aggregates `RoutingDecision.flaggedReasons`
