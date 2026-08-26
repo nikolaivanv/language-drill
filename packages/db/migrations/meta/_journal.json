@@ -288,6 +288,13 @@
       "when": 1787739136707,
       "tag": "0040_fair_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1787742147987,
+      "tag": "0041_curly_puppet_master",
+      "breakpoints": true
     }
   ]
 }

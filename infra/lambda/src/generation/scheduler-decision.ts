@@ -33,7 +33,10 @@
  */
 
 import { ROUND_1_CEFR_LEVELS, type Cell } from '@language-drill/db';
-import { grammarPointFingerprint } from '@language-drill/shared';
+import {
+  grammarPointFingerprint,
+  SUPPRESSION_LAPSE_DAYS,
+} from '@language-drill/shared';
 import type { CoverageOutcome } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
@@ -103,22 +106,12 @@ export type RecentJob = {
 };
 
 /**
- * Days after which a cell's suppression lapses on its own and the cell gets one
- * fresh attempt, regardless of whether its grammar point changed.
- *
- * Since #703 suppression clears only on a CURRICULUM edit. That is the right
- * primary trigger, but it cannot see the other things that fix a stuck cell —
- * a generation or validation prompt change, a model swap, a widened seed pool,
- * an `acceptableAnswers` policy fix. Before #703 the constant per-language
- * version churn re-released everything nightly and covered those by accident;
- * now nothing would, and a cell suppressed over a long-fixed defect could sit
- * out indefinitely waiting for someone to notice.
- *
- * 30 days trades a bounded retry cost against that: with ~143 cells suppressed
- * on prod it works out to roughly five retried cells a night. Override with
- * `SCHEDULER_SUPPRESSION_LAPSE_DAYS`.
+ * Re-exported from `@language-drill/shared`, where it must live so the variant
+ * seeder in `packages/db` can apply the same window (`db` cannot depend on
+ * `lambda`). See the definition for why give-up needs a time-based safety valve
+ * at all. Override per-environment with `SCHEDULER_SUPPRESSION_LAPSE_DAYS`.
  */
-export const SUPPRESSION_LAPSE_DAYS = 30;
+export { SUPPRESSION_LAPSE_DAYS };
 
 const MS_PER_DAY = 86_400_000;
 

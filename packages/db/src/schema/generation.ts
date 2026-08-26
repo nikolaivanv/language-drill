@@ -1,6 +1,6 @@
 import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import type { CoverageOutcome } from '@language-drill/shared';
+import type { CoverageOutcome, VariantOutcome } from '@language-drill/shared';
 
 export const generationJobs = pgTable(
   'generation_jobs',
@@ -86,6 +86,22 @@ export const generationJobs = pgTable(
      * existing JSONB column → no migration.
      */
     coverageOutcome: jsonb('coverage_outcome').$type<CoverageOutcome>(),
+    /**
+     * Per-construction-variant outcome for this batch: `{ variantId: {
+     * requested, approved } }`, the `constructionVariants` twin of
+     * `coverageOutcome`. `requested` counts ordinals seeded with that variant;
+     * `approved` counts how many produced an approved row.
+     *
+     * Read back by the NEXT batch for this cell (`run-one-cell`, not the
+     * scheduler — variant seeds are picked at generation time) so
+     * `pickVariantSeeds` can stop seeding a variant that proved unproductive.
+     * Without it, deficit ranking adversely selects: it always targets the
+     * least-covered variant, which is least-covered precisely because the
+     * validator keeps rejecting it.
+     *
+     * NULL on legacy rows and on cells that do not seed from variants.
+     */
+    variantOutcome: jsonb('variant_outcome').$type<VariantOutcome>(),
   },
   (table) => ({
     cellIdx: index('generation_jobs_cell_idx').on(table.cellKey, table.startedAt.desc()),
