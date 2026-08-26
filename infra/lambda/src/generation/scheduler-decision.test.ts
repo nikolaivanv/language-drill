@@ -19,6 +19,7 @@ import {
   PREDICTIVE_SATURATION_MARGIN_FRACTION,
   SATURATED_DEDUP_APPROVED_FRACTION,
   SATURATED_DEDUP_REQ_FRACTION,
+  SUPPRESSION_LAPSE_DAYS,
   TARGET_PER_CELL,
   type RecentJob,
 } from './scheduler-decision';
@@ -76,7 +77,12 @@ function makeRecentJob(overrides: Partial<RecentJob> = {}): RecentJob {
     // since that job ran" — the case where suppression must survive.
     grammarPointFingerprint: grammarPointFingerprint(grammarPoint),
     coverageOutcome: null,
-    finishedAt: new Date('2026-05-22T00:00:00Z'),
+    // RELATIVE, not a fixed date: since the 2026-08-26 staleness lapse, a
+    // fixture pinned to an absolute day silently ages past the lapse window and
+    // every suppression case starts returning `enqueue` instead. These cases
+    // all mean "a job that ran recently"; the lapse itself is tested with an
+    // injected clock below.
+    finishedAt: new Date(Date.now() - 86_400_000),
     ...overrides,
   };
 }
@@ -647,5 +653,86 @@ describe('decideEnqueue — low-yield accounts for the request size', () => {
       CURRENT_VERSION,
     );
     expect(decision).toEqual({ kind: 'enqueue', need: 5 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Staleness lapse (2026-08-26). Since #703 suppression clears only on a
+// CURRICULUM edit, so a cell suppressed over a defect that was later fixed
+// somewhere the fingerprint cannot see — a generation/validation prompt, the
+// model, the seed pool — would stay suppressed until someone happened to edit
+// its point. The lapse is the safety valve: give-up expires on its own.
+// ---------------------------------------------------------------------------
+
+describe('decideEnqueue — suppression lapses with age', () => {
+  const JOB_FINISHED = new Date('2026-06-01T04:00:00Z');
+  const stuck = () =>
+    makeRecentJob({ approvedCount: 0, requestedCount: 50, finishedAt: JOB_FINISHED });
+
+  it('keeps suppression while the evidence is fresh', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false,
+      { now: new Date('2026-06-20T04:00:00Z'), suppressionLapseDays: 30 },
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('clears suppression once the evidence is older than the lapse', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false,
+      { now: new Date('2026-07-05T04:00:00Z'), suppressionLapseDays: 30 },
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+
+  it('lapses saturated-dedup suppression too, not just low-yield', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 1, requestedCount: 14, dedupGivenUpCount: 11,
+        finishedAt: JOB_FINISHED,
+      }),
+      CURRENT_VERSION, false,
+      { now: new Date('2026-07-05T04:00:00Z'), suppressionLapseDays: 30 },
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+
+  it('is exactly at the boundary inclusive: exactly N days old lapses', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false,
+      { now: new Date('2026-07-01T04:00:00Z'), suppressionLapseDays: 30 },
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+
+  // A cell already at target must stay skipped regardless of age — the lapse
+  // exists to retry STUCK cells, not to re-open finished ones.
+  it('never re-opens a cell that reached its target', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, TARGET_PER_CELL, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false,
+      { now: new Date('2027-01-01T04:00:00Z'), suppressionLapseDays: 30 },
+    );
+    expect(decision).toEqual({ kind: 'skip-target-reached' });
+  });
+
+  it('defaults to the exported lapse constant when none is supplied', () => {
+    const justInside = new Date(
+      JOB_FINISHED.getTime() + (SUPPRESSION_LAPSE_DAYS - 1) * 86_400_000,
+    );
+    expect(
+      decideEnqueue(ROUND_1_CELL, 20, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false, {
+        now: justInside,
+      }),
+    ).toEqual({ kind: 'skip-low-yield' });
+
+    const justOutside = new Date(
+      JOB_FINISHED.getTime() + (SUPPRESSION_LAPSE_DAYS + 1) * 86_400_000,
+    );
+    expect(
+      decideEnqueue(ROUND_1_CELL, 20, TARGET_PER_CELL, stuck(), CURRENT_VERSION, false, {
+        now: justOutside,
+      }),
+    ).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
   });
 });

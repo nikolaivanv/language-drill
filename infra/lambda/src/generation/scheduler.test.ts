@@ -143,6 +143,13 @@ import { parseGenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
 import { TARGET_PER_CELL } from './scheduler-decision';
 
+// A job that finished RECENTLY. Relative, not a fixed date: since the
+// 2026-08-26 staleness lapse a job pinned to an absolute day eventually ages
+// past the lapse window, at which point every suppression scenario below
+// silently starts asserting against `enqueue`. Cases that care about age
+// inject their own clock.
+const recentlyFinished = () => new Date(Date.now() - 86_400_000);
+
 // ---------------------------------------------------------------------------
 // Lifecycle
 // ---------------------------------------------------------------------------
@@ -545,7 +552,7 @@ describe('scheduler handler', () => {
           requested_count: 50,
           dedup_given_up_count: 25,
           curriculum_version: currentVersion,
-          finished_at: new Date('2026-05-22T00:00:00Z'),
+          finished_at: recentlyFinished(),
         },
       ],
     });
@@ -594,7 +601,7 @@ describe('scheduler handler', () => {
           // Any value different from `CURRICULUM_VERSION_BY_LANGUAGE[...]`
           // triggers the R6.4 suppression-cleared branch in decideEnqueue.
           curriculum_version: '2026-04-01',
-          finished_at: new Date('2026-05-22T00:00:00Z'),
+          finished_at: recentlyFinished(),
         },
       ],
     });
@@ -821,7 +828,7 @@ describe('scheduler handler', () => {
           curriculum_version: onDiskVersion,
           // 2pl asked 5× (>= GIVE_UP_MIN_ATTEMPTS=2), 0 approved → give-up.
           coverage_outcome: { person: { '2pl': { requested: 5, approved: 0 } } },
-          finished_at: new Date('2026-06-12T00:00:00Z'),
+          finished_at: recentlyFinished(),
         },
       ],
     });
@@ -894,7 +901,7 @@ describe('scheduler handler', () => {
           curriculum_version: '1999-01-01',
           grammar_point_fingerprint: 'aaaaaaaabbbbbbbbccccccccdddddddd',
           coverage_outcome: { person: { '2pl': { requested: 5, approved: 0 } } },
-          finished_at: new Date('2026-06-12T00:00:00Z'),
+          finished_at: recentlyFinished(),
         },
       ],
     });
@@ -955,7 +962,7 @@ describe('scheduler handler', () => {
           curriculum_version: '1999-01-01',
           grammar_point_fingerprint: grammarPointFingerprint(subject.grammarPoint),
           coverage_outcome: { person: { '2pl': { requested: 5, approved: 0 } } },
-          finished_at: new Date('2026-06-12T00:00:00Z'),
+          finished_at: recentlyFinished(),
         },
       ],
     });

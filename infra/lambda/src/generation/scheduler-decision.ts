@@ -33,7 +33,10 @@
  */
 
 import { ROUND_1_CEFR_LEVELS, type Cell } from '@language-drill/db';
-import { grammarPointFingerprint } from '@language-drill/shared';
+import {
+  grammarPointFingerprint,
+  SUPPRESSION_LAPSE_DAYS,
+} from '@language-drill/shared';
 import type { CoverageOutcome } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
@@ -100,6 +103,28 @@ export type RecentJob = {
    *  for per-(axis,value) give-up, not by `decideEnqueue`. */
   coverageOutcome: CoverageOutcome | null;
   finishedAt: Date;
+};
+
+/**
+ * Re-exported from `@language-drill/shared`, where it must live so the variant
+ * seeder in `packages/db` can apply the same window (`db` cannot depend on
+ * `lambda`). See the definition for why give-up needs a time-based safety valve
+ * at all. Override per-environment with `SCHEDULER_SUPPRESSION_LAPSE_DAYS`.
+ */
+export { SUPPRESSION_LAPSE_DAYS };
+
+const MS_PER_DAY = 86_400_000;
+
+/**
+ * Options for `decideEnqueue`'s time-dependent behaviour. Grouped into one bag
+ * rather than added as positional parameters — the function already takes six,
+ * and both of these are injected only so the decision stays pure and testable.
+ */
+export type DecideEnqueueOptions = {
+  /** Injected clock. Defaults to now. */
+  now?: Date;
+  /** Defaults to `SUPPRESSION_LAPSE_DAYS`. */
+  suppressionLapseDays?: number;
 };
 
 export type EnqueueDecision =
@@ -183,6 +208,7 @@ export function decideEnqueue(
   recentJob: RecentJob | null,
   curriculumVersionOnDisk: string | undefined,
   targetSeeded = false,
+  options: DecideEnqueueOptions = {},
 ): EnqueueDecision {
   // 1. Round-1 narrowing (Req 4.5). C1 / C2 curriculum entries are skipped
   //    silently — the consumer Lambda's guard (Req 2.7) is defense-in-depth
@@ -240,6 +266,18 @@ export function decideEnqueue(
   //    repo does this; see the 2026-08-18 note in es.ts) previously could not
   //    reach a suppressed cell at all, and now does.
   if (!curriculumUnchangedForCell(recentJob, cell, curriculumVersionOnDisk)) {
+    return { kind: 'enqueue', need };
+  }
+
+  // 4b. Staleness lapse. Suppression is evidence-based, and evidence ages out:
+  //     the run that justified it may predate a prompt, model or seed-pool fix
+  //     that the point's fingerprint cannot see. Placed after the target-reached
+  //     check (step 2) so it only ever re-opens a cell that is still SHORT —
+  //     never a finished one — and before the suppression branches so it clears
+  //     low-yield and saturated-dedup alike.
+  const lapseDays = options.suppressionLapseDays ?? SUPPRESSION_LAPSE_DAYS;
+  const ageMs = (options.now ?? new Date()).getTime() - recentJob.finishedAt.getTime();
+  if (ageMs >= lapseDays * MS_PER_DAY) {
     return { kind: 'enqueue', need };
   }
 

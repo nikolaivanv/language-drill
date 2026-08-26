@@ -63,8 +63,15 @@ import {
   runOneCell,
   seedKindFor,
   tallyCoverageOutcome,
+  tallyVariantOutcome,
 } from './run-one-cell';
 import type { CoverageSpec, CoverageTarget, CoverageTags } from '@language-drill/shared';
+import {
+  deterministicUuid,
+  grammarPointFingerprint,
+  SUPPRESSION_LAPSE_DAYS,
+  VARIANT_GIVE_UP_MIN_ATTEMPTS,
+} from '@language-drill/shared';
 import { runGeneratorPool } from './generator-pool';
 import { runValidatorPool } from './validator-pool';
 import { runOutcomePool } from './outcome-pool';
@@ -1554,6 +1561,67 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
     // 'presentational' has 0 approved rows here and would otherwise win every
     // slot, which is exactly how an unrealizable variant burned 27 of 29
     // es-b2-complex-conditionals cloze drafts.
+    // End-to-end proof of the give-up gate: a job row is what carries the
+    // evidence, so this exercises the real query, the fingerprint check and the
+    // lapse window rather than the pure picker.
+    async function withRecentJob(
+      variantOutcome: Record<string, { requested: number; approved: number }> | null,
+      overrides: { fingerprint?: string | null; finishedAt?: Date } = {},
+    ): Promise<void> {
+      const cell = constructionVariantCell();
+      await seedDb.delete(generationJobs).where(eq(generationJobs.cellKey, cell.cellKey));
+      await seedDb.insert(generationJobs).values({
+        id: deterministicUuid(`giveup|${cell.cellKey}`),
+        cellKey: cell.cellKey,
+        requestedCount: 10,
+        status: 'succeeded',
+        trigger: 'cli',
+        finishedAt: overrides.finishedAt ?? new Date(),
+        grammarPointFingerprint:
+          overrides.fingerprint === undefined
+            ? grammarPointFingerprint(cell.grammarPoint)
+            : overrides.fingerprint,
+        variantOutcome,
+      });
+    }
+
+    afterEach(async () => {
+      if (seedDb) {
+        await seedDb
+          .delete(generationJobs)
+          .where(eq(generationJobs.cellKey, constructionVariantCell().cellKey));
+      }
+    });
+
+    it('stops seeding a variant the previous batch proved unproductive', async () => {
+      await withRecentJob({
+        presentational: { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS, approved: 0 },
+      });
+      const seeds = await buildSeedWords(seedDb, constructionVariantCell(), 4, 'seed-cv', new Set());
+      // 'presentational' has 0 approved rows so deficit ranking would hand it
+      // every slot — that is exactly the adverse selection give-up removes.
+      expect(seeds).not.toContain('presentational');
+      expect(seeds).toHaveLength(4);
+    });
+
+    it('ignores give-up evidence recorded against a different version of the point', async () => {
+      await withRecentJob(
+        { presentational: { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS, approved: 0 } },
+        { fingerprint: 'ffffffffffffffffffffffffffffffff' },
+      );
+      const seeds = await buildSeedWords(seedDb, constructionVariantCell(), 4, 'seed-cv', new Set());
+      expect(seeds).toContain('presentational');
+    });
+
+    it('lets give-up lapse once the evidence is older than the window', async () => {
+      await withRecentJob(
+        { presentational: { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS, approved: 0 } },
+        { finishedAt: new Date(Date.now() - (SUPPRESSION_LAPSE_DAYS + 1) * 86_400_000) },
+      );
+      const seeds = await buildSeedWords(seedDb, constructionVariantCell(), 4, 'seed-cv', new Set());
+      expect(seeds).toContain('presentational');
+    });
+
     it('never seeds a variant scoped out of the cell exercise type', async () => {
       const base = constructionVariantCell();
       const scoped: Cell = {
@@ -2184,5 +2252,44 @@ describe('seedKindFor — construction variants on sentence_construction', () =>
         grammarPoint: { kind: 'grammar', constructionVariants: variants },
       } as never),
     ).toBe('construction-variants');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// tallyVariantOutcome — the constructionVariants twin of tallyCoverageOutcome
+// ---------------------------------------------------------------------------
+
+describe('tallyVariantOutcome', () => {
+  it('counts requested per seeded ordinal and approved among them', () => {
+    const out = tallyVariantOutcome(
+      'construction-variants',
+      ['a', 'a', 'b', 'b', 'b'],
+      new Set([0, 3]),
+    );
+    expect(out).toEqual({
+      a: { requested: 2, approved: 1 },
+      b: { requested: 3, approved: 1 },
+    });
+  });
+
+  it('records a variant that produced nothing — the whole point of the tally', () => {
+    const out = tallyVariantOutcome('construction-variants', ['a', 'a', 'a'], new Set());
+    expect(out).toEqual({ a: { requested: 3, approved: 0 } });
+  });
+
+  // On any other seed kind `seedWords` holds frequency lemmas / verb lemmas,
+  // so tallying them would invent variant ids that match nothing.
+  it('returns null for a non-variant seed kind', () => {
+    expect(tallyVariantOutcome('frequency', ['perro', 'gato'], new Set([0]))).toBeNull();
+  });
+
+  it('returns null when there are no seed words', () => {
+    expect(tallyVariantOutcome('construction-variants', undefined, new Set())).toBeNull();
+    expect(tallyVariantOutcome('construction-variants', [], new Set())).toBeNull();
+  });
+
+  it('ignores null seed slots', () => {
+    const out = tallyVariantOutcome('construction-variants', ['a', null, 'a'], new Set([2]));
+    expect(out).toEqual({ a: { requested: 2, approved: 1 } });
   });
 });

@@ -127,6 +127,77 @@ export function variantsForType(
  */
 export const MIN_PER_VARIANT = 4;
 
+/**
+ * Drafts a variant must have been asked for, with zero approvals, before the
+ * seeder stops asking. Higher than the coverage-axis `GIVE_UP_MIN_ATTEMPTS`
+ * of 2: a coverage bucket is targeted once or twice a batch, whereas a variant
+ * routinely takes 10+ ordinals, so 2 misses is noise and would let one bad
+ * batch retire a good construction for the whole lapse window.
+ *
+ * Five is enough to be sure while still catching every case measured on the
+ * 2026-08-26 prod run — `falls-open-condition` 0/7, `derived-noun-verbal-
+ * paraphrase` 0/8, `present-tense-scheduled-future` 0/14.
+ */
+export const VARIANT_GIVE_UP_MIN_ATTEMPTS = 5;
+
+/**
+ * Days after which generation give-up expires on its own and the subject gets
+ * one fresh attempt — both the cell-level `skip-low-yield` /
+ * `skip-saturated-dedup` suppression and per-variant seeding give-up.
+ *
+ * Give-up otherwise clears only when the grammar point changes, which cannot
+ * see the other things that fix a stuck cell: a generation or validation prompt
+ * change, a model swap, a widened seed pool, an `acceptableAnswers` policy fix.
+ * The lapse is the safety valve so nothing depends on a human noticing.
+ *
+ * Lives in shared (not `@language-drill/lambda`, where `decideEnqueue` reads
+ * it) because `packages/db`'s variant seeder applies the same window and `db`
+ * cannot depend on `lambda` — the same reason `MIN_PER_VARIANT` lives here.
+ */
+export const SUPPRESSION_LAPSE_DAYS = 30;
+
+/**
+ * Per-variant generation outcome for one batch: `{ variantId: { requested,
+ * approved } }`. `requested` counts ordinals SEEDED with that variant;
+ * `approved` counts how many of those produced an approved row. Mirrors
+ * `CoverageOutcome`, persisted on `generation_jobs.variant_outcome`.
+ */
+export type VariantOutcome = Record<
+  string,
+  { requested: number; approved: number }
+>;
+
+/**
+ * Variant ids to stop seeding, read off the previous batch's outcome.
+ *
+ * WHY. `pickVariantSeeds` ranks by deficit, so it always targets the
+ * least-covered variant — and a variant is least-covered precisely BECAUSE the
+ * validator keeps rejecting it. That is adverse selection: every night the
+ * seeder doubles down on whatever is hardest to approve, and a cell can never
+ * finish. Measured on prod when the 2026-08-25 `appliesTo` scoping removed the
+ * worst variant of four cells: the drafts simply moved to the next-worst, which
+ * then failed too (`falls-open-condition` 0/7, `perception-verb-infinitive`
+ * 1/11). Give-up is the general form of that fix; `appliesTo` handles one
+ * variant at a time.
+ *
+ * Strict `approved === 0`, matching the coverage-axis rule: a variant that can
+ * produce at all, however poorly, still teaches its construction, and a
+ * ratio-based rule would retire the headline pattern of a point over a bad
+ * week.
+ */
+export function variantsGivenUp(
+  outcome: VariantOutcome | null | undefined,
+): ReadonlySet<string> {
+  const out = new Set<string>();
+  if (!outcome) return out;
+  for (const [id, o] of Object.entries(outcome)) {
+    if (o.requested >= VARIANT_GIVE_UP_MIN_ATTEMPTS && o.approved === 0) {
+      out.add(id);
+    }
+  }
+  return out;
+}
+
 export type PickVariantSeedsOptions = {
   /** The point's declared variants, in curriculum order (ties break on it). */
   variants: readonly ConstructionVariant[];
@@ -135,6 +206,13 @@ export type PickVariantSeedsOptions = {
   coverage: ReadonlyMap<string, number>;
   /** Number of draft ordinals to assign. */
   count: number;
+  /**
+   * Variant ids the previous batch proved unproductive (`variantsGivenUp`).
+   * Excluded from ranking entirely — NOT merely down-weighted, because deficit
+   * ranking would otherwise keep handing them every slot. Ignored wholesale if
+   * it would leave nothing to seed from; see `pickVariantSeeds`.
+   */
+  givenUp?: ReadonlySet<string>;
 };
 
 /**
@@ -150,8 +228,19 @@ export type PickVariantSeedsOptions = {
  * the loop looks for `best` — there is always a variant left to seed.
  */
 export function pickVariantSeeds(opts: PickVariantSeedsOptions): string[] {
-  const { variants, coverage, count } = opts;
-  if (count <= 0 || variants.length === 0) return [];
+  const { coverage, count, givenUp } = opts;
+  if (count <= 0 || opts.variants.length === 0) return [];
+
+  // Give-up narrows the pool, but never empties it: an unseeded slot falls back
+  // to free generation, which is the frame collapse this picker exists to
+  // remove. If every variant has been given up the cell has a bigger problem
+  // than seeding — `skip-low-yield` is the mechanism that should catch it — so
+  // seed from the full list and let the cell-level suppression do its job.
+  const eligible =
+    givenUp && givenUp.size > 0
+      ? opts.variants.filter((v) => !givenUp.has(v.id))
+      : opts.variants;
+  const variants = eligible.length > 0 ? eligible : opts.variants;
 
   const totalShare = variants.reduce((sum, v) => sum + (v.share ?? 1), 0);
   // Only declared variants count toward the pool size — a legacy frequency-word

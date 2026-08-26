@@ -49,7 +49,11 @@ import { selectCellsWithinCaps } from './cell-selection';
 import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
-import { curriculumUnchangedForCell, decideEnqueue } from './scheduler-decision';
+import {
+  curriculumUnchangedForCell,
+  decideEnqueue,
+  SUPPRESSION_LAPSE_DAYS,
+} from './scheduler-decision';
 import { decideTopicTargets } from './topic-decision';
 import { loadVocabTargetCoveragePerUmbrella } from './vocab-target-coverage';
 
@@ -155,6 +159,18 @@ function resolveFinishingThreshold(): number {
 }
 
 /** Resolve the finishing-reserve slot count from the environment (same guard). */
+/**
+ * Days before a cell's low-yield / saturated-dedup suppression lapses and it
+ * gets one fresh attempt. Overridable via `SCHEDULER_SUPPRESSION_LAPSE_DAYS`
+ * (positive int); same fat-finger guard as the other knobs.
+ */
+function resolveSuppressionLapseDays(): number {
+  const raw = process.env['SCHEDULER_SUPPRESSION_LAPSE_DAYS'];
+  if (raw === undefined) return SUPPRESSION_LAPSE_DAYS;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : SUPPRESSION_LAPSE_DAYS;
+}
+
 function resolveFinishingReserveSlots(): number {
   const raw = process.env['SCHEDULER_FINISHING_RESERVE_SLOTS'];
   if (raw === undefined) return DEFAULT_FINISHING_RESERVE_SLOTS;
@@ -287,6 +303,10 @@ async function loadApprovedTopicCountsPerCell(
 
 export async function handler(): Promise<void> {
   const startedAt = Date.now();
+  // One clock for the whole tick, so every cell's suppression age is measured
+  // against the same instant rather than drifting across a long run.
+  const tickStartedAt = new Date(startedAt);
+  const suppressionLapseDays = resolveSuppressionLapseDays();
   const queueUrl = requireEnv('GENERATION_QUEUE_URL');
   // UTC ISO-8601 YYYY-MM-DD (Req 4.4) — drives the deterministic jobId so
   // same-day re-fires collapse on the audit-row idempotency check.
@@ -404,6 +424,7 @@ export async function handler(): Promise<void> {
       recentJob,
       curriculumVersionOnDisk,
       usingTargets,
+      { now: tickStartedAt, suppressionLapseDays },
     );
     switch (decision.kind) {
       case 'enqueue':

@@ -245,3 +245,87 @@ describe('resolveConstructionVariant with appliesTo', () => {
     ).toBe('past-counterfactual-hubiera-result');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Per-variant give-up (2026-08-26)
+// ---------------------------------------------------------------------------
+
+import { VARIANT_GIVE_UP_MIN_ATTEMPTS, variantsGivenUp } from './construction-variant-seed';
+
+describe('pickVariantSeeds — give-up', () => {
+  // The adverse-selection property this exists to break: deficit ranking always
+  // targets the LEAST-covered variant, and a variant is least-covered precisely
+  // BECAUSE the validator keeps rejecting it. Measured on prod 2026-08-26,
+  // de-b2-conditional-connectors/falls-open-condition took 0/7 the night after
+  // the variant ahead of it was scoped out, and 0/13 across two nights.
+  it('never seeds a given-up variant, however starved it looks', () => {
+    const out = pickVariantSeeds({
+      variants: VARIANTS,
+      coverage: new Map([['hearsay', 40], ['adversity', 30], ['doorbell', 30]]),
+      count: 8,
+      givenUp: new Set(['uno-generic']),
+    });
+    expect(out).toHaveLength(8);
+    expect(out).not.toContain('uno-generic');
+  });
+
+  it('still deficit-ranks among the variants that remain', () => {
+    const out = pickVariantSeeds({
+      variants: VARIANTS,
+      coverage: new Map([['hearsay', 40], ['doorbell', 2]]),
+      count: 6,
+      givenUp: new Set(['uno-generic']),
+    });
+    expect(out).not.toContain('uno-generic');
+    expect(out).not.toContain('hearsay');
+  });
+
+  // The non-null guarantee outranks give-up: an unseeded slot falls back to
+  // free generation, which is the frame collapse the picker exists to remove.
+  it('ignores give-up entirely when it would empty the pool', () => {
+    const out = pickVariantSeeds({
+      variants: VARIANTS,
+      coverage: new Map(),
+      count: 4,
+      givenUp: new Set(VARIANTS.map((v) => v.id)),
+    });
+    expect(out).toHaveLength(4);
+    expect(out.every((s) => typeof s === 'string' && s.length > 0)).toBe(true);
+  });
+
+  it('is a no-op when no variant is given up', () => {
+    const opts = { variants: VARIANTS, coverage: new Map([['hearsay', 5]]), count: 5 };
+    expect(pickVariantSeeds({ ...opts, givenUp: new Set() })).toEqual(
+      pickVariantSeeds(opts),
+    );
+  });
+});
+
+describe('variantsGivenUp', () => {
+  it('gives up a variant with enough attempts and zero approvals', () => {
+    const given = variantsGivenUp({
+      'falls-open-condition': { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS, approved: 0 },
+    });
+    expect([...given]).toEqual(['falls-open-condition']);
+  });
+
+  it('does not give up on too few attempts — one bad batch must not kill a variant', () => {
+    const given = variantsGivenUp({
+      a: { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS - 1, approved: 0 },
+    });
+    expect([...given]).toEqual([]);
+  });
+
+  // Strict zero, matching the coverage-axis precedent: a variant that CAN
+  // produce, however poorly, still teaches the construction. Giving up on a
+  // ratio would drop `perception-verb-infinitive` (1 of 11 on 2026-08-26),
+  // and with it the point's headline pattern.
+  it('does not give up on a variant that approved even one draft', () => {
+    const given = variantsGivenUp({ a: { requested: 30, approved: 1 } });
+    expect([...given]).toEqual([]);
+  });
+
+  it('returns an empty set for a null outcome', () => {
+    expect([...variantsGivenUp(null)]).toEqual([]);
+  });
+});

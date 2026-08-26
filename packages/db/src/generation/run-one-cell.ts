@@ -33,9 +33,12 @@ import {
 import {
   ExerciseType,
   grammarPointFingerprint,
+  SUPPRESSION_LAPSE_DAYS,
+  variantsGivenUp,
   pickVariantSeeds,
   variantsForType,
   type CoverageAxis,
+  type VariantOutcome,
   type CoverageOutcome,
   type CoverageSpec,
   type CoverageTarget,
@@ -43,7 +46,7 @@ import {
   type LearningLanguage,
   normalizeWord,
 } from '@language-drill/shared';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 
 import type { Db } from '../client';
 import {
@@ -608,6 +611,45 @@ export { seedKindFor };
  * `vocab_target` rows instead. The `exclude` set (live-pool seeds) is
  * supplied by the caller via `fetchPriorSeeds`/`fetchPriorConjugationSeeds`.
  */
+/**
+ * Variant ids the previous batch for this cell proved unproductive.
+ *
+ * Reads the most recent SUCCEEDED job's `variantOutcome`, but only trusts it
+ * while two things hold — the same two gates the cell-level suppression uses
+ * (`decideEnqueue`), for the same reasons:
+ *
+ *  - the point is byte-identical to what that batch generated against
+ *    (`grammarPointFingerprint`), so editing a variant's directive retries it;
+ *  - the batch is younger than `SUPPRESSION_LAPSE_DAYS`, so a variant retired
+ *    over a defect since fixed in a prompt, the model, or the seed pool comes
+ *    back on its own rather than waiting for someone to notice.
+ *
+ * Returns an empty set on any doubt (no job, no fingerprint, stale, lapsed) —
+ * give-up is an optimisation, and the failure mode of skipping it is one
+ * ordinary batch, whereas the failure mode of applying it wrongly is a
+ * construction silently dropped from the pool.
+ */
+async function loadVariantGiveUp(db: Db, cell: Cell): Promise<ReadonlySet<string>> {
+  const empty: ReadonlySet<string> = new Set();
+  const rows = await db
+    .select({
+      variantOutcome: generationJobs.variantOutcome,
+      fingerprint: generationJobs.grammarPointFingerprint,
+      finishedAt: generationJobs.finishedAt,
+    })
+    .from(generationJobs)
+    .where(and(eq(generationJobs.cellKey, cell.cellKey), eq(generationJobs.status, 'succeeded')))
+    .orderBy(desc(generationJobs.startedAt))
+    .limit(1);
+
+  const recent = rows[0];
+  if (!recent?.variantOutcome || !recent.fingerprint || !recent.finishedAt) return empty;
+  if (recent.fingerprint !== grammarPointFingerprint(cell.grammarPoint)) return empty;
+  const ageMs = Date.now() - new Date(recent.finishedAt).getTime();
+  if (ageMs >= SUPPRESSION_LAPSE_DAYS * 86_400_000) return empty;
+  return variantsGivenUp(recent.variantOutcome);
+}
+
 export async function buildSeedWords(
   db: Db,
   cell: Cell,
@@ -632,6 +674,10 @@ export async function buildSeedWords(
     // is deliberately unused: it is a one-shot exclude set, and excluding a
     // variant after a single use would stall the cell after one batch.
     const coverage = await loadVariantCoverage(db, cell);
+    // Give-up breaks the adverse selection in deficit ranking: without it the
+    // picker always targets the least-covered variant, and a variant is
+    // least-covered precisely BECAUSE the validator keeps rejecting it.
+    const givenUp = await loadVariantGiveUp(db, cell);
     return pickVariantSeeds({
       // `variantsForType`, not the raw list: a variant scoped out of this type
       // via `appliesTo` must never be requested here however starved it looks —
@@ -640,6 +686,7 @@ export async function buildSeedWords(
       variants: variantsForType(cell.grammarPoint, cell.exerciseType),
       coverage,
       count,
+      givenUp,
     });
   }
 
@@ -759,6 +806,33 @@ export function tallyCoverageOutcome(
   return Object.keys(acc).length > 0 ? acc : null;
 }
 
+/**
+ * Per-variant tally for one batch — the `constructionVariants` twin of
+ * `tallyCoverageOutcome`. `requested` counts ordinals SEEDED with each variant;
+ * `approved` counts how many of those ended up approved.
+ *
+ * Guarded on the seed kind: on any other kind `seedWords` holds frequency or
+ * verb lemmas, and tallying those would invent "variant ids" matching nothing
+ * in the curriculum — which the next batch would then read as give-up evidence.
+ */
+export function tallyVariantOutcome(
+  seedKind: ReturnType<typeof seedKindFor>,
+  seedWords: readonly (string | null)[] | undefined,
+  approvedOrdinals: ReadonlySet<number>,
+): VariantOutcome | null {
+  if (seedKind !== 'construction-variants') return null;
+  if (!seedWords || seedWords.length === 0) return null;
+  const acc: VariantOutcome = {};
+  for (let ordinal = 0; ordinal < seedWords.length; ordinal++) {
+    const id = seedWords[ordinal];
+    if (!id) continue;
+    const bucket = (acc[id] ??= { requested: 0, approved: 0 });
+    bucket.requested += 1;
+    if (approvedOrdinals.has(ordinal)) bucket.approved += 1;
+  }
+  return Object.keys(acc).length > 0 ? acc : null;
+}
+
 // ---------------------------------------------------------------------------
 // runOneCell
 // ---------------------------------------------------------------------------
@@ -844,6 +918,11 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // ordinal, then build the outcome once at the end via `tallyCoverageOutcome`.
   const coverageTargets = args.coverageTargets;
   const approvedRealized: (CoverageTags | undefined)[] = [];
+  // Ordinals that ended approved, for `tallyVariantOutcome`. Kept separately
+  // from `approvedRealized` (which is gated on `coverageTargets` and carries no
+  // ordinal) because variant seeding and coverage targeting are independent
+  // mechanisms — a cell can have one without the other.
+  const approvedOrdinals = new Set<number>();
   const creditApproved = (realized: CoverageTags | undefined): void => {
     if (!coverageTargets) return;
     approvedRealized.push(realized);
@@ -853,6 +932,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // Built inside the try so any failure in the priors query routes through
   // failClosed (audit row already exists in 'running' state at this point).
   let spec: GenerationSpec;
+  // Hoisted out of the try so the success path can tally per-variant yield
+  // from it after the ordinal loop closes.
+  let seedWordsUsed: readonly (string | null)[] | undefined;
 
   try {
     if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
@@ -907,6 +989,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       priorSeeds,
       args.coverageTargets,
     );
+    seedWordsUsed = seedWords;
 
     spec = {
       language: cell.language,
@@ -1015,6 +1098,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
         case 'inserted-approved':
           approvedCount += 1;
           insertedCount += 1;
+          approvedOrdinals.add(ordinal);
           creditApproved(outcome.realizedCoverage);
           if (
             cell.exerciseType === ExerciseType.DICTATION &&
@@ -1052,6 +1136,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           insertedCount += 1;
           if (outcome.terminalReviewStatus === 'auto-approved') {
             approvedCount += 1;
+            approvedOrdinals.add(ordinal);
             creditApproved(outcome.realizedCoverage);
           } else {
             flaggedCount += 1;
@@ -1118,6 +1203,10 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       rejectionReasonCounts:
         Object.keys(rejectionReasonCounts).length > 0 ? rejectionReasonCounts : null,
       coverageOutcome,
+      // Per-variant yield for this batch. The NEXT batch for this cell reads it
+      // to stop seeding a variant that produced nothing — see
+      // `loadVariantGiveUp`. NULL on cells that do not seed from variants.
+      variantOutcome: tallyVariantOutcome(seedKindFor(cell), seedWordsUsed, approvedOrdinals),
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
