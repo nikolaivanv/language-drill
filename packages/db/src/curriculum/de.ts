@@ -287,7 +287,40 @@ const { A1, A2, B1, B2 } = CefrLevel;
 //
 // The 3 already-approved rows stay: they passed validation on their own merits
 // and re-running the cell tops it up around them. Bump clears suppression.
-export const CURRICULUM_VERSION_DE = '2026-08-26';
+//
+// 2026-08-26 (second entry): de-b1-futur-i DROPS its person `coverageSpec` and
+// moves the requirement into the two werden variants' directives. The axis was
+// declared for werden's irregular 2sg/3sg and the `*ich werde fahre` trap, but
+// a coverageSpec governs the whole cell while only two of three variants
+// contain werden — on `present-tense-scheduled-future` ordinals the floor was
+// pinning the person of an ordinary A1 present verb. The two mechanisms emit
+// independent MUST clauses into one draft prompt and nothing arbitrates
+// (scheduler assigns coverage targets, run-one-cell assigns variant seeds,
+// neither reads the other), and `CoverageSpec.appliesTo` cannot express the
+// fix because it scopes by exercise TYPE while this mismatch is per VARIANT.
+//
+// Same remedy, same reasoning as the de-a2-lassen removal above: an axis floor
+// unresolvable against one variant, two seeders that never consult each other,
+// and the axis's work moved into the directives it actually describes. As
+// there, the collision does not produce garbage — the drafts degrade TOWARD
+// the variant, because the person directive ends in an escape hatch and the
+// variant directive does not, so the axis quietly goes unrealised.
+//
+// HONEST SCOPE: mostly a design fix, not a repair of measured damage. Every
+// flagged `present-tense-scheduled-future` draft was rejected for Futur I
+// ambiguity or for not testing Futur I at all — NONE mentioned person. The one
+// consistent trace is that its four approved rows sit at 1pl and 1sg with no
+// 2sg/3sg, which is what "the axis quietly loses" looks like, but n=4 is not
+// evidence on its own. The tension does get worse under the directive
+// tightened earlier today, since a timetable frame is naturally 3sg, which is
+// why it is worth closing now rather than waiting for it to show up as flags.
+//
+// Target is unchanged: max(base 50, axis floors 18, variant floor 12) was
+// already 50. 45 of 409 points declare both mechanisms unscoped; most are
+// benign because person/number/polarity are orthogonal to their constructions.
+// The defect is an axis meaningful for only SOME of a point's variants, which
+// needs a per-point judgement rather than a blanket sweep.
+export const CURRICULUM_VERSION_DE = '2026-08-27';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2242,14 +2275,21 @@ const deCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'de-b1-futur-i',
-    coverageSpec: {
-      axes: [
-        // werden is irregular exactly at 2sg/3sg (wirst/wird) and the
-        // *ich werde fahre double-conjugation trap must be tested across
-        // persons; unpinned drafts collapse to ich werde / er wird.
-        { name: 'person', floors: { '1sg': 4, '2sg': 5, '3sg': 5, '1pl': 4 } },
-      ],
-    },
+    // No `coverageSpec`. The person axis this point used to declare existed for
+    // werden's morphology — irregular exactly at 2sg/3sg (wirst/wird), plus the
+    // `*ich werde fahre` double-conjugation trap — but a coverageSpec applies to
+    // the whole CELL while only two of the three constructionVariants contain
+    // werden at all. `present-tense-scheduled-future` has no werden to inflect,
+    // so on those ordinals the person floor was pinning the morphology of an
+    // ordinary A1 present-tense verb, which is not what this point teaches.
+    //
+    // The two mechanisms cannot negotiate: the scheduler assigns coverage
+    // targets per ordinal, `run-one-cell` assigns variant seeds per ordinal, and
+    // neither reads the other. `CoverageSpec.appliesTo` cannot express the fix
+    // either — it scopes by exercise TYPE, and the mismatch here is per VARIANT
+    // inside one type. So the person requirement moves into the directives of
+    // the two variants it actually describes, which is the same remedy #631
+    // applied to es-b1-imperative-negative-pronouns.
     kind: 'grammar',
     name: 'Futur I',
     description:
@@ -2265,7 +2305,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'werden-infinitive-future',
         directive:
-          'werden + infinitive for a prediction, promise or resolution (Ich werde dich nie vergessen)',
+          'werden + infinitive for a prediction, promise or resolution (Ich werde dich nie vergessen). VARY THE SUBJECT across ich / du / er-sie-es / wir rather than defaulting to ich or er: werden is irregular exactly at du (wirst) and er (wird), and only the finite werden carries the person — the second verb stays an INFINITIVE at the end (*ich werde fahre is the classic error this point exists to catch).',
       },
       {
         id: 'present-tense-scheduled-future',
@@ -2275,7 +2315,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'werden-wohl-assumption',
         directive:
-          'werden + wohl expressing a present-time ASSUMPTION rather than the future (Er wird wohl noch im Büro sein)',
+          'werden + wohl expressing a present-time ASSUMPTION rather than the future (Er wird wohl noch im Büro sein). VARY THE SUBJECT across ich / du / er-sie-es / wir rather than defaulting to er, so the irregular du (wirst) and er (wird) forms both appear.',
       },
     ],
     examplesNegative: ['*Ich werde fahre morgen nach Köln.', '*Morgen ich werde nach Köln fahren.'],
