@@ -267,8 +267,27 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // NOT scoped, deliberately: de-b1-futur-i/present-tense-scheduled-future
 // approved 2/11 in cloze and 1/17 in translation. It fails in BOTH types, so
 // the defect is the variant, not its exercise-type fit, and `appliesTo` would
-// only hide half of it. Tracked separately.
-export const CURRICULUM_VERSION_DE = '2026-08-25';
+// only hide half of it. RESOLVED 2026-08-26, below.
+//
+// 2026-08-26: de-b1-futur-i/present-tense-scheduled-future gets a much
+// stricter directive. The variant asks for the present tense as a future, on a
+// point whose headline construction is Futur I — so unless the sentence FORCES
+// the present, `werden + infinitive` is an equally correct answer and the item
+// is unanswerable. That is what the drafts did: a bare time adverb ("Morgen
+// ___ ich das Album"), where the validator correctly objected that "werde
+// kaufen" is just as right and is not in acceptableAnswers. 3 of 28 approved.
+//
+// The directive now requires the sentence to name the thing that fixes the
+// event — a timetable, departure, appointment, opening time — or carry an
+// explicit cue ("laut Fahrplan", "planmäßig"), the remedy the validator itself
+// proposed. In those frames Futur I is stilted rather than merely less common,
+// so the blank has one natural answer. Unlike the ES case below this variant
+// is worth keeping: present-for-scheduled-future is a real and frequently
+// mistaught property of German, and the point's description teaches it.
+//
+// The 3 already-approved rows stay: they passed validation on their own merits
+// and re-running the cell tops it up around them. Bump clears suppression.
+export const CURRICULUM_VERSION_DE = '2026-08-26';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -2251,7 +2270,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'present-tense-scheduled-future',
         directive:
-          'the PRESENT tense plus a time adverb for a scheduled future event — the neutral German choice where English forces a future (Morgen fahre ich nach Köln; Nächste Woche fängt der Kurs an)',
+          'the PRESENT tense for a future event that is FIXED BY A SCHEDULE, TIMETABLE OR BOOKING — not merely a plan or intention. The sentence MUST name the thing that fixes it (a timetable, a departure/arrival, an appointment, an opening time, a programme) or carry an explicit cue such as "laut Fahrplan" / "laut Stundenplan" / "planmäßig", so that werden + infinitive would sound stilted rather than merely less common (Der Zug fährt um 7:14 ab; Laut Stundenplan beginnt der Kurs nächste Woche; Die Ausstellung öffnet am Montag). A bare time adverb on an ordinary intention is NOT enough — "Morgen kaufe ich das Album" leaves "werde ich kaufen" equally correct, which makes the item unanswerable.',
       },
       {
         id: 'werden-wohl-assumption',

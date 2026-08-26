@@ -288,9 +288,30 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * creo-que-indicative-affirmative` approved 0/9 in cloze AND 0/5 in
  * translation. Failing in both types means the variant itself is wrong, not
  * its exercise-type fit, so `appliesTo` is the wrong instrument — it needs a
- * directive rework or removal, tracked separately.
+ * directive rework or removal. RESOLVED 2026-08-26, below: removed.
+ *
+ * `2026-08-26`: es-b2-subjunctive-negated-opinion DROPS the
+ * `creo-que-indicative-affirmative` variant. It asked for the affirmative
+ * control half of the contrast — `creo que` + indicative, with no negation
+ * anywhere — and every one of its 14 drafts was flagged. The validator's
+ * reason was the same each time and it is right: a learner who has never met
+ * this grammar point answers such an item correctly by default, so it
+ * diagnoses nothing. The affirmative is a useful FOIL inside a minimal pair,
+ * which a one-item exercise cannot present.
+ *
+ * The point's other indicative variant, `no-dudar-que-indicative`, stays and
+ * is untouched — it approves 5/5 and 4/4. The difference is the whole lesson:
+ * `no dudar que` is NEGATED, so the learner must know the exception to keep
+ * the indicative; `creo que` is not negated, so there is nothing to know. The
+ * distinction that matters is negation, not mood.
+ *
+ * The description still names `creo que + indicative` as the contrast, which
+ * remains correct — the generator simply no longer drills it alone. Four
+ * variants remain, above the >= 2 rotation invariant. No demote:pool needed:
+ * all 14 rows were flagged, so nothing entered the approved pool. Bump clears
+ * suppression so the cell re-runs on the narrowed rotation.
  */
-export const CURRICULUM_VERSION_ES = '2026-08-25';
+export const CURRICULUM_VERSION_ES = '2026-08-26';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -5631,12 +5652,6 @@ const esCurriculum: readonly GrammarPoint[] = [
         directive:
           'no creo que + present subjunctive (No creo que Marta tenga razón; No creemos que sea buena idea)',
         share: 3,
-      },
-      {
-        id: 'creo-que-indicative-affirmative',
-        directive:
-          'the AFFIRMATIVE half of the same contrast: creo/pienso/me parece que + INDICATIVE, where no mood flip applies (Creo que Marta tiene razón; Me parece que ya han llegado)',
-        share: 2,
       },
       {
         id: 'no-es-cierto-verdad-que-subjunctive',
