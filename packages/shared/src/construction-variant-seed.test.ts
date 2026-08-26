@@ -316,16 +316,106 @@ describe('variantsGivenUp', () => {
     expect([...given]).toEqual([]);
   });
 
-  // Strict zero, matching the coverage-axis precedent: a variant that CAN
-  // produce, however poorly, still teaches the construction. Giving up on a
-  // ratio would drop `perception-verb-infinitive` (1 of 11 on 2026-08-26),
-  // and with it the point's headline pattern.
-  it('does not give up on a variant that approved even one draft', () => {
-    const given = variantsGivenUp({ a: { requested: 30, approved: 1 } });
+  // Until 2026-08-26 ANY nonzero approval protected a variant outright, on the
+  // reasoning that a variant which can produce still teaches its construction.
+  // That left the merely-poor ones running forever, so a rated rule now applies
+  // ABOVE a higher attempt bar. What survives from the old guarantee is the
+  // part that mattered: a variant is never retired on a small sample, however
+  // bad the sample looks.
+  it('does not give up on a nonzero rate until there is enough evidence', () => {
+    const given = variantsGivenUp({
+      a: { requested: VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS - 1, approved: 1 },
+    });
     expect([...given]).toEqual([]);
+  });
+
+  it('gives up on a sustained poor rate once the evidence is there', () => {
+    expect([...variantsGivenUp({ a: { requested: 30, approved: 1 } })]).toEqual(['a']);
   });
 
   it('returns an empty set for a null outcome', () => {
     expect([...variantsGivenUp(null)]).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Accumulated evidence + ratio give-up
+// ---------------------------------------------------------------------------
+
+import {
+  mergeVariantOutcomes,
+  VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS,
+  VARIANT_GIVE_UP_MIN_RATE,
+} from './construction-variant-seed';
+
+describe('mergeVariantOutcomes', () => {
+  it('sums requested and approved per variant', () => {
+    const merged = mergeVariantOutcomes(
+      { a: { requested: 3, approved: 1 }, b: { requested: 2, approved: 0 } },
+      { a: { requested: 4, approved: 2 }, c: { requested: 1, approved: 1 } },
+    );
+    expect(merged).toEqual({
+      a: { requested: 7, approved: 3 },
+      b: { requested: 2, approved: 0 },
+      c: { requested: 1, approved: 1 },
+    });
+  });
+
+  it('treats a null carry-forward as an empty base', () => {
+    expect(mergeVariantOutcomes(null, { a: { requested: 1, approved: 1 } })).toEqual({
+      a: { requested: 1, approved: 1 },
+    });
+  });
+
+  it('returns null when there is nothing at all to record', () => {
+    expect(mergeVariantOutcomes(null, null)).toBeNull();
+  });
+
+  it('does not mutate either input', () => {
+    const prev = { a: { requested: 1, approved: 1 } };
+    const next = { a: { requested: 1, approved: 0 } };
+    mergeVariantOutcomes(prev, next);
+    expect(prev).toEqual({ a: { requested: 1, approved: 1 } });
+    expect(next).toEqual({ a: { requested: 1, approved: 0 } });
+  });
+});
+
+describe('variantsGivenUp — poor-yield rule', () => {
+  // Why accumulation is load-bearing: measured on the 2026-08-26 prod run, a
+  // ratio rule over a SINGLE batch caught 1 variant out of 386, because a
+  // variant seldom draws 10+ ordinals in one night once a pool starts filling.
+  // Over two nights of accumulated evidence the same rule catches the real
+  // cases — perception-verb-infinitive at 1/17, digindan-dolayi-formal at 1/12.
+  it('gives up on a variant with enough attempts and a rate below the floor', () => {
+    const given = variantsGivenUp({
+      'perception-verb-infinitive': {
+        requested: VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS,
+        approved: 1,
+      },
+    });
+    expect([...given]).toEqual(['perception-verb-infinitive']);
+  });
+
+  it('keeps a variant whose rate clears the floor', () => {
+    const requested = VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS;
+    const approved = Math.ceil(requested * VARIANT_GIVE_UP_MIN_RATE) + 1;
+    expect([...variantsGivenUp({ a: { requested, approved } })]).toEqual([]);
+  });
+
+  // The rated rule needs MORE evidence than the zero rule, because a nonzero
+  // rate is a noisier signal than a flat zero.
+  it('needs more attempts than the zero rule before judging a rate', () => {
+    expect(VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS).toBeGreaterThan(VARIANT_GIVE_UP_MIN_ATTEMPTS);
+    expect([
+      ...variantsGivenUp({
+        a: { requested: VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS - 1, approved: 1 },
+      }),
+    ]).toEqual([]);
+  });
+
+  it('still applies the zero rule at the lower attempt count', () => {
+    expect([
+      ...variantsGivenUp({ a: { requested: VARIANT_GIVE_UP_MIN_ATTEMPTS, approved: 0 } }),
+    ]).toEqual(['a']);
   });
 });

@@ -168,6 +168,54 @@ export type VariantOutcome = Record<
 >;
 
 /**
+ * Attempts required before a NONZERO approval rate is judged, and the rate a
+ * variant must clear.
+ *
+ * Higher bar than the zero rule because a nonzero rate is a noisier signal
+ * than a flat zero — a variant at 2/12 may be badly framed or may just have
+ * had a bad fortnight. 12 attempts at under 20% is roughly "two full nights of
+ * a variant's share, almost all rejected".
+ *
+ * These only bite because outcomes ACCUMULATE (`mergeVariantOutcomes`).
+ * Measured on the 2026-08-26 prod run, a ratio rule over a single batch caught
+ * 1 variant-batch out of 386: a variant seldom draws 10+ ordinals in one night
+ * once a pool starts filling. Over accumulated evidence the same rule reaches
+ * the real cases (perception-verb-infinitive 1/17, digindan-dolayi-formal
+ * 1/12, explicativa-comma-relative 1/14).
+ */
+export const VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS = 12;
+export const VARIANT_GIVE_UP_MIN_RATE = 0.2;
+
+/**
+ * Fold this batch's per-variant tally into the evidence carried forward.
+ *
+ * Give-up needs evidence across batches, not one batch (see
+ * `VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS`). The caller supplies `carried` only
+ * while the point is unchanged and the evidence is inside the lapse window, so
+ * accumulation resets exactly when give-up itself resets — edit a variant's
+ * directive and its history is discarded along with its suppression, which is
+ * what stops a fixed variant from being judged on its broken past.
+ *
+ * Pure; neither argument is mutated.
+ */
+export function mergeVariantOutcomes(
+  carried: VariantOutcome | null | undefined,
+  batch: VariantOutcome | null | undefined,
+): VariantOutcome | null {
+  if (!carried && !batch) return null;
+  const out: VariantOutcome = {};
+  for (const source of [carried, batch]) {
+    if (!source) continue;
+    for (const [id, o] of Object.entries(source)) {
+      const bucket = (out[id] ??= { requested: 0, approved: 0 });
+      bucket.requested += o.requested;
+      bucket.approved += o.approved;
+    }
+  }
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+/**
  * Variant ids to stop seeding, read off the previous batch's outcome.
  *
  * WHY. `pickVariantSeeds` ranks by deficit, so it always targets the
@@ -191,7 +239,18 @@ export function variantsGivenUp(
   const out = new Set<string>();
   if (!outcome) return out;
   for (const [id, o] of Object.entries(outcome)) {
+    // Two rules, deliberately asymmetric. Zero approvals is a clean signal and
+    // needs little evidence; a poor-but-nonzero rate is noisy and needs more,
+    // because a variant that CAN produce still teaches its construction and
+    // retiring it wrongly costs the point a pattern it is supposed to drill.
     if (o.requested >= VARIANT_GIVE_UP_MIN_ATTEMPTS && o.approved === 0) {
+      out.add(id);
+      continue;
+    }
+    if (
+      o.requested >= VARIANT_GIVE_UP_MIN_RATED_ATTEMPTS &&
+      o.approved / o.requested < VARIANT_GIVE_UP_MIN_RATE
+    ) {
       out.add(id);
     }
   }
