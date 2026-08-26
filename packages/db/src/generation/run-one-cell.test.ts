@@ -62,12 +62,15 @@ import {
   loadVariantCoverage,
   runOneCell,
   seedKindFor,
+  loadCarriedVariantOutcome,
   tallyCoverageOutcome,
   tallyVariantOutcome,
 } from './run-one-cell';
 import type { CoverageSpec, CoverageTarget, CoverageTags } from '@language-drill/shared';
 import {
   deterministicUuid,
+  mergeVariantOutcomes,
+  variantsGivenUp,
   grammarPointFingerprint,
   SUPPRESSION_LAPSE_DAYS,
   VARIANT_GIVE_UP_MIN_ATTEMPTS,
@@ -1602,6 +1605,31 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
       // every slot — that is exactly the adverse selection give-up removes.
       expect(seeds).not.toContain('presentational');
       expect(seeds).toHaveLength(4);
+    });
+
+    // Accumulation is what makes the rated rule usable: a variant seldom draws
+    // 12 ordinals in one night, so per-batch evidence never reaches the bar.
+    it('carries evidence forward across batches so a poor rate can accumulate', async () => {
+      const cell = constructionVariantCell();
+      // Two nights that individually clear no threshold: 6 attempts, 1 approval.
+      await withRecentJob({ presentational: { requested: 6, approved: 1 } });
+      const carried = await loadCarriedVariantOutcome(seedDb, cell);
+      expect(carried).toEqual({ presentational: { requested: 6, approved: 1 } });
+
+      const merged = mergeVariantOutcomes(carried, {
+        presentational: { requested: 6, approved: 0 },
+      });
+      // 12 attempts at 1/12 = 8% clears the rated bar that 6 attempts could not.
+      expect(merged).toEqual({ presentational: { requested: 12, approved: 1 } });
+      expect([...variantsGivenUp(merged)]).toContain('presentational');
+    });
+
+    it('discards carried evidence when the point changed', async () => {
+      await withRecentJob(
+        { presentational: { requested: 20, approved: 1 } },
+        { fingerprint: 'ffffffffffffffffffffffffffffffff' },
+      );
+      expect(await loadCarriedVariantOutcome(seedDb, constructionVariantCell())).toBeNull();
     });
 
     it('ignores give-up evidence recorded against a different version of the point', async () => {

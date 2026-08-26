@@ -33,6 +33,7 @@ import {
 import {
   ExerciseType,
   grammarPointFingerprint,
+  mergeVariantOutcomes,
   SUPPRESSION_LAPSE_DAYS,
   variantsGivenUp,
   pickVariantSeeds,
@@ -630,7 +631,27 @@ export { seedKindFor };
  * construction silently dropped from the pool.
  */
 async function loadVariantGiveUp(db: Db, cell: Cell): Promise<ReadonlySet<string>> {
-  const empty: ReadonlySet<string> = new Set();
+  return variantsGivenUp(await loadCarriedVariantOutcome(db, cell));
+}
+
+/**
+ * The accumulated per-variant evidence this cell may still be judged on, or
+ * `null` when it must start clean.
+ *
+ * Same two gates as `decideEnqueue`'s suppression, for the same reasons: the
+ * point must be byte-identical to what that batch ran against, and the batch
+ * must be inside the lapse window. Because the merge at job close uses this
+ * same value as its base, accumulation resets exactly when give-up resets —
+ * edit a variant's directive and its history is discarded along with its
+ * suppression, so a fixed variant is never judged on its broken past. That is
+ * what makes the rated rule safe: `de-b1-futur-i/present-tense-scheduled-future`
+ * sits at 4/49 today, and the directive rewrite that fixes it also wipes the
+ * record that would otherwise retire it on sight.
+ */
+export async function loadCarriedVariantOutcome(
+  db: Db,
+  cell: Cell,
+): Promise<VariantOutcome | null> {
   const rows = await db
     .select({
       variantOutcome: generationJobs.variantOutcome,
@@ -643,11 +664,11 @@ async function loadVariantGiveUp(db: Db, cell: Cell): Promise<ReadonlySet<string
     .limit(1);
 
   const recent = rows[0];
-  if (!recent?.variantOutcome || !recent.fingerprint || !recent.finishedAt) return empty;
-  if (recent.fingerprint !== grammarPointFingerprint(cell.grammarPoint)) return empty;
+  if (!recent?.variantOutcome || !recent.fingerprint || !recent.finishedAt) return null;
+  if (recent.fingerprint !== grammarPointFingerprint(cell.grammarPoint)) return null;
   const ageMs = Date.now() - new Date(recent.finishedAt).getTime();
-  if (ageMs >= SUPPRESSION_LAPSE_DAYS * 86_400_000) return empty;
-  return variantsGivenUp(recent.variantOutcome);
+  if (ageMs >= SUPPRESSION_LAPSE_DAYS * 86_400_000) return null;
+  return recent.variantOutcome;
 }
 
 export async function buildSeedWords(
@@ -1184,6 +1205,19 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     combinedUsage.cacheCreationInputTokens +
     combinedUsage.cacheReadInputTokens;
 
+  // Read BEFORE the UPDATE below flips this job to 'succeeded' — the loader
+  // selects the most recent succeeded job, so afterwards it would find this one
+  // and fold the batch into itself.
+  //
+  // Only for cells that actually seed from variants: every other cell has no
+  // evidence to carry and would pay a query per run for a value that is always
+  // null. `tallyVariantOutcome` is guarded on the same kind, so the merge below
+  // has nothing to fold for them either.
+  const carriedVariantOutcome =
+    seedKindFor(cell) === 'construction-variants'
+      ? await loadCarriedVariantOutcome(db, cell)
+      : null;
+
   // Close the audit row as 'succeeded'. Counts reflect Phase 3 outcomes.
   // `dedupGivenUpCount` is persisted alongside `rejectedCount` (which already
   // includes it per the CLI's breakdown contract) so the admin approval-rate
@@ -1206,7 +1240,15 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       // Per-variant yield for this batch. The NEXT batch for this cell reads it
       // to stop seeding a variant that produced nothing — see
       // `loadVariantGiveUp`. NULL on cells that do not seed from variants.
-      variantOutcome: tallyVariantOutcome(seedKindFor(cell), seedWordsUsed, approvedOrdinals),
+      // ACCUMULATED, not replaced: a variant seldom draws enough ordinals in one
+      // night for a rate to mean anything, so the rated give-up rule would be
+      // inert on per-batch evidence (measured: 1 catch in 386 variant-batches).
+      // Read before this UPDATE lands, and only while the point is unchanged and
+      // inside the lapse window, so the history resets exactly when give-up does.
+      variantOutcome: mergeVariantOutcomes(
+        carriedVariantOutcome,
+        tallyVariantOutcome(seedKindFor(cell), seedWordsUsed, approvedOrdinals),
+      ),
       inputTokensUsed: totalInputTokens,
       outputTokensUsed: combinedUsage.outputTokens,
       costUsdEstimate: costUsd.toFixed(4),
