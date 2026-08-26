@@ -8,6 +8,7 @@ const recentJob: RecentJob = {
   requestedCount: 20,
   dedupGivenUpCount: 1,
   curriculumVersion: '2026-06-23',
+  grammarPointFingerprint: null,
   coverageOutcome: null,
   finishedAt: new Date('2026-06-20T04:00:00Z'),
 };

@@ -8,7 +8,7 @@
  * cross-reference during review.
  */
 
-import { CefrLevel, ExerciseType, Language } from '@language-drill/shared';
+import { CefrLevel, ExerciseType, Language, grammarPointFingerprint } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
 import type { Cell } from '@language-drill/db';
@@ -72,6 +72,9 @@ function makeRecentJob(overrides: Partial<RecentJob> = {}): RecentJob {
     requestedCount: 50,
     dedupGivenUpCount: 0,
     curriculumVersion: CURRENT_VERSION,
+    // Matches ROUND_1_CELL's point by default, i.e. "the point has not changed
+    // since that job ran" — the case where suppression must survive.
+    grammarPointFingerprint: grammarPointFingerprint(grammarPoint),
     coverageOutcome: null,
     finishedAt: new Date('2026-05-22T00:00:00Z'),
     ...overrides,
@@ -162,7 +165,15 @@ describe('decideEnqueue — table-driven cases', () => {
       makeRecentJob({
         approvedCount: 2,
         requestedCount: 50,
+        // A real curriculum edit moves BOTH: the point's content changes and
+        // the language constant is bumped in the same commit. Since 2026-08-26
+        // it is the POINT that clears suppression — see the per-point gate
+        // describe below for the language-bump-alone case.
         curriculumVersion: STALE_VERSION,
+        grammarPointFingerprint: grammarPointFingerprint({
+          ...grammarPoint,
+          description: 'edited by the curriculum change under test',
+        } as never),
       }),
       CURRENT_VERSION,
     );
@@ -238,7 +249,15 @@ describe('decideEnqueue — table-driven cases', () => {
         approvedCount: 2,
         requestedCount: 10,
         dedupGivenUpCount: 6,
+        // A real curriculum edit moves BOTH: the point's content changes and
+        // the language constant is bumped in the same commit. Since 2026-08-26
+        // it is the POINT that clears suppression — see the per-point gate
+        // describe below for the language-bump-alone case.
         curriculumVersion: STALE_VERSION,
+        grammarPointFingerprint: grammarPointFingerprint({
+          ...grammarPoint,
+          description: 'edited by the curriculum change under test',
+        } as never),
       }),
       CURRENT_VERSION,
     );
@@ -265,8 +284,10 @@ describe('decideEnqueue — table-driven cases', () => {
   });
 
   it('case 9: recentJob.curriculumVersion === null → suppression cleared (treat as mismatch)', () => {
-    // Legacy row written before the column existed — NULL should be treated
-    // as "older than any known version" so the cell becomes schedulable.
+    // Legacy row written before the columns existed — NULL should be treated
+    // as "older than any known version" so the cell becomes schedulable. Both
+    // columns are NULL on such a row: they are written together when a job
+    // opens, so a fingerprint can never be present where the version is not.
     const decision = decideEnqueue(
       ROUND_1_CELL,
       15,
@@ -275,6 +296,7 @@ describe('decideEnqueue — table-driven cases', () => {
         approvedCount: 2,
         requestedCount: 50,
         curriculumVersion: null,
+        grammarPointFingerprint: null,
       }),
       CURRENT_VERSION,
     );
@@ -325,9 +347,12 @@ describe('decideEnqueue — table-driven cases', () => {
       }),
       CURRENT_VERSION,
     );
-    // approvedCount=0 < LOW_YIELD_THRESHOLD=3 → low-yield fires (since
-    // saturated-dedup is guarded out and curriculum matches).
-    expect(decision).toEqual({ kind: 'skip-low-yield' });
+    // `enqueue` is what proves the guard held: neither suppression fired.
+    // (Before 2026-08-26 this landed on `skip-low-yield`, because the low-yield
+    // test ignored requestedCount; now a 0-draft request yields a threshold of
+    // 0 and cannot suppress either. Both outcomes prove the same thing about
+    // saturated-dedup, which is what this case exists to pin.)
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL });
   });
 
   it('case 12 (variant): approvedInPool=0 with no recent job → enqueue full TARGET', () => {
@@ -438,8 +463,187 @@ describe('decideEnqueue — predictive saturation', () => {
         approvedCount: 20,
         requestedCount: 50,
         dedupGivenUpCount: 25,
+        // A real curriculum edit moves BOTH: the point's content changes and
+        // the language constant is bumped in the same commit. Since 2026-08-26
+        // it is the POINT that clears suppression — see the per-point gate
+        // describe below for the language-bump-alone case.
+        curriculumVersion: STALE_VERSION,
+        grammarPointFingerprint: grammarPointFingerprint({
+          ...grammarPoint,
+          description: 'edited by the curriculum change under test',
+        } as never),
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 5 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-point suppression gate (2026-08-26). The version test was per-LANGUAGE
+// while the suppression it clears is per-CELL, so one edit anywhere in a
+// language re-released every cell in it — and since this repo edits curricula
+// most days, `skip-low-yield` and `skip-saturated-dedup` never actually fired
+// in prod. See grammar-point-fingerprint.ts for the measured evidence.
+// ---------------------------------------------------------------------------
+
+describe('decideEnqueue — per-point suppression gate', () => {
+  // THE FIX. Yesterday this returned `enqueue` and the cell ran again.
+  it('keeps low-yield suppression when the language version moved but this point did not', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 2,
+        requestedCount: 50,
         curriculumVersion: STALE_VERSION,
       }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  // The prod case: de:a2:conjugation:de-a2-praeteritum-modals, which met the
+  // saturated-dedup thresholds on every run since 2026-08-15 and was
+  // re-enqueued nightly anyway because DE's version kept moving.
+  it('keeps saturated-dedup suppression when only the language version moved', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 1,
+        requestedCount: 14,
+        dedupGivenUpCount: 11,
+        curriculumVersion: STALE_VERSION,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-saturated-dedup' });
+  });
+
+  // A real edit to THIS point still forces the fresh attempt R6.4 promises.
+  it('clears suppression when the point itself changed', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 2,
+        requestedCount: 50,
+        grammarPointFingerprint: grammarPointFingerprint({
+          ...grammarPoint,
+          description: 'rewritten',
+        } as never),
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+
+  // Strictly better than the version test: this repo deliberately makes some
+  // curriculum edits WITHOUT a version bump (see the 2026-08-18 note in es.ts).
+  // Those edits previously could not reach a suppressed cell at all.
+  it('clears suppression for a point edit that did NOT bump the language version', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 2,
+        requestedCount: 50,
+        curriculumVersion: CURRENT_VERSION,
+        grammarPointFingerprint: grammarPointFingerprint({
+          ...grammarPoint,
+          name: 'Renamed point',
+        } as never),
+      }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+
+  // Legacy rows written before the column existed fall back to the old test,
+  // so they are released exactly once and then carry a fingerprint forever.
+  it('falls back to the version test for a legacy row with no fingerprint', () => {
+    const stale = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 2, requestedCount: 50,
+        curriculumVersion: STALE_VERSION, grammarPointFingerprint: null,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(stale).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+
+    const current = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL,
+      makeRecentJob({
+        approvedCount: 2, requestedCount: 50,
+        curriculumVersion: CURRENT_VERSION, grammarPointFingerprint: null,
+      }),
+      CURRENT_VERSION,
+    );
+    expect(current).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  // Unchanged safe default: never permanently disable a cell on missing metadata.
+  it('still enqueues when the on-disk version constant is missing', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
+      undefined,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: TARGET_PER_CELL - 20 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Low-yield vs. a small request (2026-08-26). `approvedCount < 3` took no
+// account of how many drafts were ASKED for, so a cell topped up with 1-2
+// drafts was branded stuck no matter how well it did. Latent while the
+// per-language version test re-released everything nightly; load-bearing the
+// moment suppression actually applies. Measured on prod: of 330 cells the old
+// rule called low-yield, 231 were asked for fewer than 3 drafts and 187 of
+// those approved EVERY draft they were given.
+// ---------------------------------------------------------------------------
+
+describe('decideEnqueue — low-yield accounts for the request size', () => {
+  it.each([
+    [1, 1],
+    [2, 2],
+  ])('does not call a cell low-yield when it approved all %i of %i requested', (approved, requested) => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 45, TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: approved, requestedCount: requested }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 5 });
+  });
+
+  it('still calls a cell low-yield when it approved none of a small request', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 45, TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 0, requestedCount: 1 }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('still calls a cell low-yield when it approved 2 of a full request', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 20, TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('never calls a cell low-yield on a zero-request job (tells us nothing)', () => {
+    const decision = decideEnqueue(
+      ROUND_1_CELL, 45, TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 0, requestedCount: 0 }),
       CURRENT_VERSION,
     );
     expect(decision).toEqual({ kind: 'enqueue', need: 5 });

@@ -32,6 +32,7 @@ import {
 } from '@language-drill/ai';
 import {
   ExerciseType,
+  grammarPointFingerprint,
   pickVariantSeeds,
   variantsForType,
   type CoverageAxis,
@@ -793,11 +794,15 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     });
   }
 
-  // Open the audit row in 'running' state. `curriculumVersion` records the
-  // on-disk `CURRICULUM_VERSION_<LANG>` constant for the cell's language so
-  // the scheduler can detect a curriculum edit on the next tick and clear
-  // any low-yield / saturated-dedup suppression that was based on a stale
-  // curriculum revision. `Cell.language` is a `LearningLanguage` by
+  // Open the audit row in 'running' state. `grammarPointFingerprint` records
+  // the exact content of the point this batch generated against, so the
+  // scheduler can tell on the next tick whether THIS cell's curriculum changed
+  // and clear any low-yield / saturated-dedup suppression accordingly.
+  // `curriculumVersion` records the on-disk `CURRICULUM_VERSION_<LANG>`
+  // constant: still the coverage controller's give-up gate, still useful for
+  // analysis, and the fallback for rows predating the fingerprint column — but
+  // no longer what gates suppression, because it is per-language while the
+  // suppression is per-cell. `Cell.language` is a `LearningLanguage` by
   // construction (cells only exist for ES/DE/TR curricula), so the lookup
   // is total.
   await db.insert(generationJobs).values({
@@ -807,6 +812,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     status: 'running',
     trigger,
     curriculumVersion: CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage],
+    grammarPointFingerprint: grammarPointFingerprint(cell.grammarPoint),
   });
 
   // Phase 3 accumulators. `combinedUsage` starts at the generator batch's

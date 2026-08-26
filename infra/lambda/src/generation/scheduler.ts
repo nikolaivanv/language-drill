@@ -49,7 +49,7 @@ import { selectCellsWithinCaps } from './cell-selection';
 import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
-import { decideEnqueue } from './scheduler-decision';
+import { curriculumUnchangedForCell, decideEnqueue } from './scheduler-decision';
 import { decideTopicTargets } from './topic-decision';
 import { loadVocabTargetCoveragePerUmbrella } from './vocab-target-coverage';
 
@@ -534,10 +534,14 @@ export async function handler(): Promise<void> {
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
       CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
-    // Give-up clears on a curriculum bump: only feed the recent outcome when its
-    // version still matches on-disk (same gate as decideEnqueue's suppression).
+    // Give-up clears when THIS cell's point changes — the same predicate
+    // decideEnqueue's suppression uses, shared so the two gates cannot drift.
+    // Previously this compared the per-LANGUAGE version constant, so editing
+    // any other point in the language silently re-opened every given-up
+    // (axis, value) bucket in it.
     const recentOutcome =
-      recentJob && recentJob.curriculumVersion === curriculumVersionOnDisk
+      recentJob &&
+      curriculumUnchangedForCell(recentJob, cell, curriculumVersionOnDisk)
         ? (recentJob.coverageOutcome ?? null)
         : null;
 

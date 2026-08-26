@@ -137,7 +137,7 @@ import {
   enumerateCurriculumCells,
   type Cell,
 } from '@language-drill/db';
-import { TOPIC_DOMAINS, type LearningLanguage } from '@language-drill/shared';
+import { TOPIC_DOMAINS, grammarPointFingerprint, type LearningLanguage } from '@language-drill/shared';
 import { handler } from './scheduler';
 import { parseGenerationJobMessage } from './job-message';
 import { resolveCellTarget } from './cell-targets';
@@ -888,8 +888,11 @@ describe('scheduler handler', () => {
           approved_count: 0,
           requested_count: 30,
           dedup_given_up_count: 0,
-          // STALE: any value other than the on-disk constant clears the give-up.
+          // A real curriculum edit moves BOTH the language constant and the
+          // point's own content. Since 2026-08-26 it is the POINT that clears
+          // give-up — the language-bump-alone case is the test below.
           curriculum_version: '1999-01-01',
+          grammar_point_fingerprint: 'aaaaaaaabbbbbbbbccccccccdddddddd',
           coverage_outcome: { person: { '2pl': { requested: 5, approved: 0 } } },
           finished_at: new Date('2026-06-12T00:00:00Z'),
         },
@@ -928,6 +931,63 @@ describe('scheduler handler', () => {
     expect(subjectMsg!.spec.coverageTargets).toHaveLength(subjectMsg!.spec.count);
     const personValues = subjectMsg!.spec.coverageTargets!.map((t) => t.person);
     expect(personValues).toContain('2pl');
+  });
+
+  // 2026-08-26: the give-up gate used the per-LANGUAGE version constant, so an
+  // edit to any other point in the language silently re-opened every
+  // given-up bucket. Gate on the point's own fingerprint instead.
+  it('Phase 2: a language-version bump alone does NOT clear the person-bucket give-up', async () => {
+    const subject = firstCoverageSpecClozeCell();
+    const subjectKeys = new Set([subject.cellKey]);
+    mockGroupBy.mockResolvedValueOnce(rowsToFillAllCellsExcept(subjectKeys, 0));
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        {
+          cell_key: subject.cellKey,
+          // >= LOW_YIELD_THRESHOLD so the cell is NOT also suppressed as
+          // low-yield — this test is about the coverage give-up gate alone,
+          // and a suppressed cell would emit no message to inspect.
+          approved_count: 10,
+          requested_count: 30,
+          dedup_given_up_count: 0,
+          // Stale language constant, but the POINT is byte-identical to disk.
+          curriculum_version: '1999-01-01',
+          grammar_point_fingerprint: grammarPointFingerprint(subject.grammarPoint),
+          coverage_outcome: { person: { '2pl': { requested: 5, approved: 0 } } },
+          finished_at: new Date('2026-06-12T00:00:00Z'),
+        },
+      ],
+    });
+    mockExecute.mockResolvedValueOnce({
+      rows: ['1sg', '2sg', '3sg', '1pl', '3pl'].map((value) => ({
+        language: subject.language,
+        difficulty: subject.cefrLevel,
+        type: subject.exerciseType,
+        grammar_point_key: subject.grammarPoint.key,
+        axis: 'person',
+        value,
+        n: 10,
+      })),
+    });
+
+    await handler();
+
+    const messages = capturedBatches()
+      .flatMap(decodeBatch)
+      .map((m) => parseGenerationJobMessage(m));
+    const subjectMsg = messages.find(
+      (m) =>
+        m.spec.grammarPointKey === subject.grammarPoint.key &&
+        m.spec.cefrLevel === subject.cefrLevel &&
+        m.spec.language === subject.language &&
+        m.spec.exerciseType === subject.exerciseType,
+    );
+    expect(subjectMsg).toBeDefined();
+
+    // Give-up survives → the zero-yield 2pl bucket is NOT targeted again.
+    const personValues = (subjectMsg!.spec.coverageTargets ?? []).map((t) => t.person);
+    expect(personValues).not.toContain('2pl');
   });
 });
 

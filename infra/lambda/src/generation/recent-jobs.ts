@@ -28,7 +28,7 @@ export async function loadMostRecentSucceededJobPerCell(
   const result = await db.execute(sql`
     SELECT DISTINCT ON (cell_key)
            cell_key, approved_count, requested_count, dedup_given_up_count,
-           curriculum_version, coverage_outcome, finished_at
+           curriculum_version, grammar_point_fingerprint, coverage_outcome, finished_at
     FROM generation_jobs
     WHERE status = 'succeeded'
     ORDER BY cell_key, started_at DESC
@@ -40,6 +40,7 @@ export async function loadMostRecentSucceededJobPerCell(
     requested_count: number;
     dedup_given_up_count: number;
     curriculum_version: string | null;
+    grammar_point_fingerprint: string | null;
     coverage_outcome: CoverageOutcome | null;
     finished_at: Date | string;
   };
@@ -52,6 +53,10 @@ export async function loadMostRecentSucceededJobPerCell(
       requestedCount: row.requested_count,
       dedupGivenUpCount: row.dedup_given_up_count,
       curriculumVersion: row.curriculum_version,
+      // `?? null` so a row from before the column existed — or any caller
+      // that omits it — takes the legacy fallback path in `decideEnqueue`
+      // rather than reading as "a fingerprint that differs from everything".
+      grammarPointFingerprint: row.grammar_point_fingerprint ?? null,
       coverageOutcome: row.coverage_outcome,
       finishedAt:
         row.finished_at instanceof Date

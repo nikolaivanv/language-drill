@@ -281,6 +281,13 @@
       "when": 1786212235042,
       "tag": "0039_wise_the_renegades",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1787739136707,
+      "tag": "0040_fair_randall_flagg",
+      "breakpoints": true
     }
   ]
 }

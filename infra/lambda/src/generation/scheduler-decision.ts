@@ -33,6 +33,7 @@
  */
 
 import { ROUND_1_CEFR_LEVELS, type Cell } from '@language-drill/db';
+import { grammarPointFingerprint } from '@language-drill/shared';
 import type { CoverageOutcome } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
@@ -88,6 +89,12 @@ export type RecentJob = {
   dedupGivenUpCount: number;
   /** `text` column on `generation_jobs`; NULL on legacy rows pre-migration. */
   curriculumVersion: string | null;
+  /**
+   * `grammarPointFingerprint` of the point as it stood when this job ran.
+   * NULL on rows written before the column existed — those fall back to the
+   * old per-language version test exactly once, then carry a fingerprint.
+   */
+  grammarPointFingerprint: string | null;
   /** The most recent job's per-axis coverage outcome (NULL on legacy rows /
    *  cells with no coverageSpec). Read by the scheduler's coverage controller
    *  for per-(axis,value) give-up, not by `decideEnqueue`. */
@@ -101,6 +108,40 @@ export type EnqueueDecision =
   | { kind: 'skip-low-yield' }
   | { kind: 'skip-saturated-dedup' }
   | { kind: 'skip-c2' };
+
+/**
+ * Has this cell's curriculum stayed put since `recentJob` ran?
+ *
+ * The one definition of "the curriculum changed for THIS cell", shared by
+ * `decideEnqueue`'s suppression gate and the scheduler's per-(axis,value)
+ * coverage give-up gate. Two copies of this rule drifting apart would be the
+ * same class of bug it was written to fix: one gate honouring a give-up while
+ * the other silently re-opened it.
+ *
+ * Compares the point's own content fingerprint, NOT the per-language
+ * `CURRICULUM_VERSION_<LANG>` constant — see `decideEnqueue` step 4 and
+ * `grammar-point-fingerprint.ts` for why the language-wide test disabled both
+ * suppressions in production.
+ *
+ * Legacy rows (fingerprint NULL, written before the column existed) fall back
+ * to the version test, so they clear at most once and the job that results
+ * records a fingerprint.
+ */
+export function curriculumUnchangedForCell(
+  recentJob: Pick<RecentJob, 'curriculumVersion' | 'grammarPointFingerprint'>,
+  cell: Cell,
+  curriculumVersionOnDisk: string | undefined,
+): boolean {
+  // Missing constant is a metadata problem, not a content one: never let it
+  // hold a cell suppressed.
+  if (curriculumVersionOnDisk === undefined) return false;
+  if (recentJob.grammarPointFingerprint === null) {
+    return recentJob.curriculumVersion === curriculumVersionOnDisk;
+  }
+  return (
+    recentJob.grammarPointFingerprint === grammarPointFingerprint(cell.grammarPoint)
+  );
+}
 
 // ---------------------------------------------------------------------------
 // decideEnqueue
@@ -176,13 +217,29 @@ export function decideEnqueue(
   //          before the column existed) → treat NULL as "older than any
   //          known version".
   //
-  //    All three reduce to: if the on-disk version differs from the recorded
-  //    one (`undefined !== string` is `true`; `null !== string` is `true`),
-  //    suppression clears.
+  //    Sub-case (b) is still decided on the version constant, because a
+  //    missing constant is a metadata problem rather than a content one.
   if (curriculumVersionOnDisk === undefined) {
     return { kind: 'enqueue', need };
   }
-  if (recentJob.curriculumVersion !== curriculumVersionOnDisk) {
+
+  //    (a) is decided PER POINT, not per language (2026-08-26). The version
+  //    constant covers a whole language while the suppression it clears covers
+  //    one cell, so editing any single point re-released every cell in that
+  //    language — and since curricula here are edited most days, neither
+  //    `skip-low-yield` nor `skip-saturated-dedup` ever fired in production
+  //    (both the 2026-08-25 and 2026-08-26 runs logged 0 of each while
+  //    `de-a2-praeteritum-modals` burned ~$0.96/night producing 47 drafts for
+  //    14 requested, 11 of them dedup collisions, on every run since 08-15).
+  //
+  //    Comparing the point's own content fingerprint keeps R6.4's promise
+  //    exactly where it was aimed — a curriculum fix always reaches the cells
+  //    it targets — while letting every other cell keep the give-up state it
+  //    earned. It is also STRICTLY more sensitive than the version test in the
+  //    other direction: an edit made deliberately without a version bump (the
+  //    repo does this; see the 2026-08-18 note in es.ts) previously could not
+  //    reach a suppressed cell at all, and now does.
+  if (!curriculumUnchangedForCell(recentJob, cell, curriculumVersionOnDisk)) {
     return { kind: 'enqueue', need };
   }
 
@@ -230,7 +287,22 @@ export function decideEnqueue(
   //    otherwise), so the exemption only keeps a genuinely-uncovered cell live.
   //    Saturated-dedup (steps 5-6) still applies — a cell that truly can't
   //    generate new distinct words is still suppressed.
-  if (!targetSeeded && recentJob.approvedCount < LOW_YIELD_THRESHOLD) {
+  //
+  //    Measured against the REQUEST, not a bare constant: a cell topped up
+  //    with 1-2 drafts can never approve 3, so a flat `approvedCount < 3`
+  //    branded it stuck however well it did. On prod, of the 330 cells that
+  //    test called low-yield, 231 had been asked for fewer than 3 drafts and
+  //    187 of those approved EVERY draft they were given. That was harmless
+  //    only because the per-language version test re-released everything
+  //    nightly; the moment suppression actually applies (the per-point gate in
+  //    step 4) it would strand ~187 healthy cells under target for good.
+  //    `requestedCount === 0` yields a threshold of 0, so such a job — which
+  //    tells us nothing about yield — never suppresses.
+  const lowYieldThreshold = Math.min(
+    LOW_YIELD_THRESHOLD,
+    recentJob.requestedCount,
+  );
+  if (!targetSeeded && recentJob.approvedCount < lowYieldThreshold) {
     return { kind: 'skip-low-yield' };
   }
 

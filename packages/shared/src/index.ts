@@ -635,3 +635,4 @@ export {
   resolveCellTargetFor,
 } from './cell-targets';
 export type { CellTargetInput } from './cell-targets';
+export { grammarPointFingerprint } from "./grammar-point-fingerprint";
