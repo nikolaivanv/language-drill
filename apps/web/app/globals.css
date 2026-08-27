@@ -1275,12 +1275,6 @@ button:hover .lk-arr {
   to { opacity: 1; }
 }
 
-.gloss {
-  position: relative;
-  border-bottom: 1px dotted var(--color-ink-mute);
-  cursor: help;
-}
-
 .gloss-tooltip {
   position: absolute;
   bottom: calc(100% + 4px);
@@ -1299,17 +1293,10 @@ button:hover .lk-arr {
   transition: opacity 120ms ease-out;
 }
 
-.gloss:hover > .gloss-tooltip,
-.gloss:focus-within > .gloss-tooltip,
-.gloss:focus > .gloss-tooltip {
-  opacity: 1;
-}
-
-/* Hover/focus tooltip trigger that reuses .gloss-tooltip styling WITHOUT the
-   .gloss dotted underline — for badges/pills that explain themselves on hover
-   (e.g. the curriculum-map "⚠ N×" recurring-slip badge). The trigger sits
-   inside the row button, so it isn't separately focusable; keyboard/touch users
-   get the same wording in the point-detail sheet. */
+/* Hover/focus tooltip trigger for badges/pills that explain themselves on
+   hover (e.g. the curriculum-map "⚠ N×" recurring-slip badge). The trigger
+   sits inside the row button, so it isn't separately focusable; keyboard/touch
+   users get the same wording in the point-detail sheet. */
 .tip-trigger {
   position: relative;
   cursor: help;
