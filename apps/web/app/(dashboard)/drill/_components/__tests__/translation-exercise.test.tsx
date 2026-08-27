@@ -85,9 +85,8 @@ describe('TranslationExercise', () => {
 
     it('renders the source text as the hero line', () => {
       const { container } = renderTranslation();
-      // GlossedText splits on whitespace and emits a mix of plain text and
-      // <span class="gloss"> elements; check the visible aggregate text on
-      // the source paragraph, now promoted to the hero display scale.
+      // Check the visible aggregate text on the source paragraph, which is
+      // promoted to the hero display scale.
       const sourceParagraph = container.querySelector('p.t-display-m');
       expect(sourceParagraph).not.toBeNull();
       expect(sourceParagraph?.textContent).toContain('I can');
@@ -107,15 +106,6 @@ describe('TranslationExercise', () => {
       renderTranslation();
       expect(screen.getByText('goal')).toBeInTheDocument();
       expect(screen.getByText(/translate the meaning/i)).toBeInTheDocument();
-    });
-
-    it('renders the source token "barely" inside a .gloss span (gloss path active for fixture)', () => {
-      const { container } = renderTranslation();
-      const glossSpans = container.querySelectorAll('span.gloss');
-      const lemmas = Array.from(glossSpans).map((s) => s.textContent ?? '');
-      // "barely" and "afford" both have entries in gloss-en; both should be
-      // wrapped. The hint test below depends on at least "barely" being present.
-      expect(lemmas.some((t) => t.includes('barely'))).toBe(true);
     });
   });
 

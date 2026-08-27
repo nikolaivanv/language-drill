@@ -19,7 +19,6 @@ import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
-import { GlossedText } from './glossed-text';
 import type { SubmissionMeta, SubmissionState } from './types';
 
 export type { SubmissionMeta, SubmissionState } from './types';
@@ -145,9 +144,7 @@ export function TranslationExercise({
       </span>
 
       {/* level 2 (hero) — the source sentence */}
-      <p className="t-display-m">
-        <GlossedText text={content.sourceText} />
-      </p>
+      <p className="t-display-m">{content.sourceText}</p>
 
       {/* level 3 — goal gloss, clearly secondary */}
       <p className="t-body text-ink-soft">
