@@ -57,7 +57,8 @@
   },
   "pnpm": {
     "overrides": {
-      "@types/node": "^22.0.0"
+      "@types/node": "^22.0.0",
+      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
     }
   }
 }
