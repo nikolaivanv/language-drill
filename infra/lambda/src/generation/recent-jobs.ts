@@ -14,10 +14,11 @@ import { type RecentJob } from './scheduler-decision';
 /**
  * Read the most recent succeeded `generation_jobs` row for each `cell_key`.
  *
- * `DISTINCT ON` collapses retries (same cell, multiple succeeded jobs across
- * days) to the one with the latest `started_at`. The `generation_jobs_cell_idx`
- * index `(cell_key, started_at desc)` makes this a single bounded scan even
- * with thousands of historical rows.
+ * A `row_number()` window collapses retries (same cell, multiple succeeded
+ * jobs across days) to the one with the latest `started_at`, and in the same
+ * pass derives each cell's trailing zero-approval streak. The
+ * `generation_jobs_cell_idx` index `(cell_key, started_at desc)` supplies the
+ * ordering.
  *
  * Returned map is keyed by `cell_key`; cells with no succeeded job are
  * absent (the caller treats `undefined` lookups as `null`).
@@ -25,13 +26,38 @@ import { type RecentJob } from './scheduler-decision';
 export async function loadMostRecentSucceededJobPerCell(
   db: Db,
 ): Promise<Map<string, RecentJob>> {
+  // `consecutive_zero_approved_runs` = how many succeeded runs this cell has
+  // ended with `approved_count = 0`, counting back from the latest. Computed
+  // as (rank of the most recent nonzero run - 1), falling back to the cell's
+  // total run count when it has NEVER approved anything. `decideEnqueue` uses
+  // it to tell a stuck coverage tail from a converging one.
+  //
+  // This replaces the old `DISTINCT ON` with a window pass over the same
+  // rows. `generation_jobs` holds ~4k succeeded rows across ~774 cells, so
+  // the extra sort is immaterial, and it keeps the whole thing one round trip.
   const result = await db.execute(sql`
-    SELECT DISTINCT ON (cell_key)
-           cell_key, approved_count, requested_count, dedup_given_up_count,
-           curriculum_version, grammar_point_fingerprint, coverage_outcome, finished_at
-    FROM generation_jobs
-    WHERE status = 'succeeded'
-    ORDER BY cell_key, started_at DESC
+    WITH j AS (
+      SELECT cell_key, approved_count, requested_count, dedup_given_up_count,
+             curriculum_version, grammar_point_fingerprint, coverage_outcome,
+             finished_at,
+             row_number() OVER (PARTITION BY cell_key ORDER BY started_at DESC) AS rn
+      FROM generation_jobs
+      WHERE status = 'succeeded'
+    ),
+    first_nonzero AS (
+      SELECT cell_key, min(rn) AS rn FROM j WHERE approved_count > 0 GROUP BY cell_key
+    ),
+    totals AS (
+      SELECT cell_key, count(*) AS n FROM j GROUP BY cell_key
+    )
+    SELECT j.cell_key, j.approved_count, j.requested_count, j.dedup_given_up_count,
+           j.curriculum_version, j.grammar_point_fingerprint, j.coverage_outcome,
+           j.finished_at,
+           COALESCE(fz.rn - 1, t.n) AS consecutive_zero_approved_runs
+    FROM j
+    LEFT JOIN first_nonzero fz ON fz.cell_key = j.cell_key
+    JOIN totals t ON t.cell_key = j.cell_key
+    WHERE j.rn = 1
   `);
 
   type Row = {
@@ -43,6 +69,7 @@ export async function loadMostRecentSucceededJobPerCell(
     grammar_point_fingerprint: string | null;
     coverage_outcome: CoverageOutcome | null;
     finished_at: Date | string;
+    consecutive_zero_approved_runs: number | string | null;
   };
 
   const rows = result.rows as unknown as Row[];
@@ -62,6 +89,10 @@ export async function loadMostRecentSucceededJobPerCell(
         row.finished_at instanceof Date
           ? row.finished_at
           : new Date(row.finished_at),
+      // pg returns COUNT/arithmetic as a string via node-postgres; Number()
+      // it here so `decideEnqueue`'s `<` comparison is numeric and not a
+      // string compare that would make '10' < 3 read as true.
+      consecutiveZeroApprovedRuns: Number(row.consecutive_zero_approved_runs ?? 0),
     });
   }
   return map;

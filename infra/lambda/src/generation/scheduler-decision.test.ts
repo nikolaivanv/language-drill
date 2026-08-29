@@ -16,6 +16,7 @@ import type { Cell } from '@language-drill/db';
 import {
   decideEnqueue,
   LOW_YIELD_THRESHOLD,
+  TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD,
   PREDICTIVE_SATURATION_MARGIN_FRACTION,
   SATURATED_DEDUP_APPROVED_FRACTION,
   SATURATED_DEDUP_REQ_FRACTION,
@@ -206,6 +207,69 @@ describe('decideEnqueue — table-driven cases', () => {
       28,
       30,
       makeRecentJob({ approvedCount: 1, requestedCount: 5 }),
+      CURRENT_VERSION,
+      true,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 2 });
+  });
+
+  it('DOES skip low-yield for a target-seeded cell stuck at zero for three runs', () => {
+    // The exemption's rationale is that a converging tail approves fewer than
+    // LOW_YIELD_THRESHOLD *by construction* — approving 1 of 1 is converging.
+    // A cell that approves NOTHING run after run is stuck, not converging, and
+    // an unconditional exemption could not tell the two apart: it re-requested
+    // the same unproduceable target nightly forever, since saturated-dedup
+    // only catches the dedup flavour of stuck (usually it is not dedup).
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      28,
+      30,
+      makeRecentJob({
+        approvedCount: 0,
+        requestedCount: 1,
+        consecutiveZeroApprovedRuns: TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD,
+      }),
+      CURRENT_VERSION,
+      true,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('does NOT skip a target-seeded cell on a single unlucky zero run', () => {
+    // Measured on prod 2026-08-29: tr-b2-vocab-work-professional ran
+    // 3/6 4/6 3/6 4/6 3/6 0/6 — productive every night but the last. These
+    // cells are small (1-8 drafts), so one zero night is noise, and
+    // suppressing on it would strand a healthy cell for the whole 30-day
+    // lapse. Evidence has to accumulate, exactly as it does for construction
+    // variants.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      28,
+      30,
+      makeRecentJob({
+        approvedCount: 0,
+        requestedCount: 6,
+        consecutiveZeroApprovedRuns: 1,
+      }),
+      CURRENT_VERSION,
+      true,
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 2 });
+  });
+
+  it('does NOT skip a target-seeded cell whose last job requested nothing', () => {
+    // requestedCount 0 tells us nothing about yield, so it must not suppress
+    // however long the zero streak is — the threshold is 0 there, which is
+    // why this needs no separate branch.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      28,
+      30,
+      makeRecentJob({
+        approvedCount: 0,
+        requestedCount: 0,
+        consecutiveZeroApprovedRuns: 10,
+      }),
       CURRENT_VERSION,
       true,
     );

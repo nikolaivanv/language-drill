@@ -57,6 +57,26 @@ export { TARGET_PER_CELL } from '@language-drill/shared';
 export const LOW_YIELD_THRESHOLD = 3;
 
 /**
+ * Consecutive zero-approval runs before a target-seeded (vocab) cell loses its
+ * low-yield exemption (2026-08-29).
+ *
+ * The exemption exists because a coverage-converging tail approves fewer than
+ * `LOW_YIELD_THRESHOLD` *by construction*. But it was unconditional, so a cell
+ * approving ZERO looked identical to one approving 1 of 1, and a cell whose
+ * last uncovered target simply cannot be produced re-requested it every night
+ * forever. Saturated-dedup is not the backstop it was assumed to be: it only
+ * fires when the failure is dedup, and usually it is not.
+ *
+ * Three runs, not one. These cells are small — 1 to 8 drafts — so a single
+ * zero night is noise: on the 2026-08-29 run
+ * `tr-b2-vocab-work-professional` had gone 3/6 4/6 3/6 4/6 3/6 0/6, and a
+ * one-run bar would have stranded a healthy cell for the whole
+ * `SUPPRESSION_LAPSE_DAYS` window. Evidence accumulates here for the same
+ * reason it does for construction variants.
+ */
+export const TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD = 3;
+
+/**
  * R6.1 — a job is `saturated-dedup` when `dedupGivenUpCount` is at least
  * `ceil(SATURATED_DEDUP_REQ_FRACTION * requestedCount)` AND `approvedCount`
  * is below `ceil(SATURATED_DEDUP_APPROVED_FRACTION * requestedCount)`. Both
@@ -103,6 +123,18 @@ export type RecentJob = {
    *  for per-(axis,value) give-up, not by `decideEnqueue`. */
   coverageOutcome: CoverageOutcome | null;
   finishedAt: Date;
+  /**
+   * How many succeeded runs this cell has ended with `approvedCount === 0`,
+   * counting back from this one (0 when this job approved something). Read
+   * only for target-seeded cells, to tell a stuck coverage tail from a
+   * converging one — see `TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD`.
+   *
+   * Optional so callers that predate it (and the admin pool-status endpoint,
+   * which does not need it) keep compiling; absent reads as 0, i.e. "no
+   * evidence of a streak", which preserves the old always-exempt behaviour
+   * rather than suppressing on missing data.
+   */
+  consecutiveZeroApprovedRuns?: number;
 };
 
 /**
@@ -340,7 +372,17 @@ export function decideEnqueue(
     LOW_YIELD_THRESHOLD,
     recentJob.requestedCount,
   );
-  if (!targetSeeded && recentJob.approvedCount < lowYieldThreshold) {
+  //    The target-seeded exemption holds only while the cell is PROGRESSING
+  //    (2026-08-29): a tail that approves 1 of 1 is converging, one that has
+  //    approved nothing for `TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD` runs
+  //    running is stuck. A missing streak count reads as 0 — no evidence —
+  //    so the exemption still applies, never the other way round.
+  //    `requestedCount === 0` needs no branch of its own: the threshold is 0
+  //    there, so such a job never suppresses however long the streak.
+  const zeroRuns = recentJob.consecutiveZeroApprovedRuns ?? 0;
+  const exemptWhileProgressing =
+    targetSeeded && zeroRuns < TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD;
+  if (!exemptWhileProgressing && recentJob.approvedCount < lowYieldThreshold) {
     return { kind: 'skip-low-yield' };
   }
 
