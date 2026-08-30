@@ -36,16 +36,31 @@ import {
 import {
   COVERAGE_AXIS_VALUES,
   ExerciseType,
+  grammarPointFingerprint,
   isTopicDomain,
   TOPIC_DOMAINS,
   type CoverageAxis,
   type LearningLanguage,
 } from '@language-drill/shared';
+import {
+  GENERATION_PROMPT_VERSION,
+  VALIDATION_PROMPT_VERSION,
+} from '@language-drill/ai';
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { inArray, sql } from 'drizzle-orm';
 
 import type { GenerationJobMessage } from './job-message';
 import { selectCellsWithinCaps } from './cell-selection';
+import {
+  computeApprovalPriors,
+  expectedYield,
+  promptEvidenceCutoff,
+  shrunkApprovalRate,
+} from './cell-score';
+import {
+  evidenceKey,
+  loadScopedApprovalEvidence,
+} from './approval-evidence';
 import { resolveCellTarget } from './cell-targets';
 import { decideCoverageTargets } from './coverage-decision';
 import { loadMostRecentSucceededJobPerCell } from './recent-jobs';
@@ -111,6 +126,13 @@ const DEFAULT_FINISHING_NEED_THRESHOLD = 5;
  * `SCHEDULER_FINISHING_RESERVE_SLOTS`.
  */
 const DEFAULT_FINISHING_RESERVE_SLOTS = 8;
+
+/**
+ * How many of the worst-scoring deferred cells the summary names. Expected-
+ * yield ranking sinks chronically unproductive cells by design, so this is
+ * the visibility that keeps that from being silent starvation.
+ */
+const STARVED_CELLS_LOGGED = 10;
 
 /**
  * Resolve the run-level cell cap from the environment, falling back to
@@ -362,6 +384,23 @@ export async function handler(): Promise<void> {
   //    version-mismatch-clears-suppression). Uses `generation_jobs_cell_idx`.
   const recentJobByCell = await loadMostRecentSucceededJobPerCell(db);
 
+  // 4a. Approval evidence for expected-yield ranking, scoped two ways so a
+  //     fix is never buried by the evidence it invalidated: to runs at or
+  //     after the current prompt versions' date, and (via the map key) to the
+  //     point fingerprint they ran under. See `approval-evidence.ts`.
+  const evidenceCutoff = promptEvidenceCutoff([
+    GENERATION_PROMPT_VERSION,
+    VALIDATION_PROMPT_VERSION,
+  ]);
+  const approvalEvidence = await loadScopedApprovalEvidence(db, evidenceCutoff);
+  const approvalPriors = computeApprovalPriors(
+    [...approvalEvidence.entries()].map(([key, row]) => ({
+      cellKey: key.slice(0, key.lastIndexOf('|')),
+      approved: row.approved,
+      produced: row.produced,
+    })),
+  );
+
   // 4b. Phase 2 coverage controller: approved-pool coverage distribution per
   //     cell (all axes via LATERAL unnest). Feeds `decideCoverageTargets` for
   //     cells that have a `coverageSpec`.
@@ -380,7 +419,12 @@ export async function handler(): Promise<void> {
   // 5. Decide per cell. `decideEnqueue` is pure — see scheduler-decision.ts
   //    for the precedence rules. Aggregate counters per skip reason so the
   //    final summary log surfaces the imbalance.
-  const undersized: Array<{ cell: Cell; need: number }> = [];
+  const undersized: Array<{
+    cell: Cell;
+    need: number;
+    score: number;
+    pHat: number;
+  }> = [];
   const suppressed = {
     targetReached: 0,
     lowYield: 0,
@@ -427,9 +471,26 @@ export async function handler(): Promise<void> {
       { now: tickStartedAt, suppressionLapseDays },
     );
     switch (decision.kind) {
-      case 'enqueue':
-        undersized.push({ cell, need: decision.need });
+      case 'enqueue': {
+        // Rank on expected rows, not raw deficit. Evidence recorded under a
+        // different point fingerprint does not match this key, so an edited
+        // point falls back to its prior — that IS the reset.
+        const evidence = approvalEvidence.get(
+          evidenceKey(cell.cellKey, grammarPointFingerprint(cell.grammarPoint)),
+        );
+        const pHat = shrunkApprovalRate({
+          approved: evidence?.approved ?? 0,
+          produced: evidence?.produced ?? 0,
+          prior: approvalPriors.forCell(cell.cellKey),
+        });
+        undersized.push({
+          cell,
+          need: decision.need,
+          pHat,
+          score: expectedYield(decision.need, pHat),
+        });
         break;
+      }
       case 'skip-c2':
         suppressed.c2 += 1;
         // C2/C1 cells are filtered silently — no per-cell log line (would
@@ -493,9 +554,36 @@ export async function handler(): Promise<void> {
       enqueuedThisRun: selectedCells.length,
       enqueuedByLanguage,
       deferredCount,
+      evidenceCutoff: evidenceCutoff.toISOString().slice(0, 10),
       message:
         'run-level + per-language cap applied — deferring cells to a later run',
     });
+
+    // Expected-yield ranking deliberately sinks chronically unproductive
+    // cells rather than aging them back in — the 30-day suppression lapse
+    // already re-admits them. Surfacing the worst-scoring deferred cells
+    // turns that from silent starvation into a triage worklist: a cell that
+    // appears here night after night wants a curriculum or prompt fix, not
+    // another batch of drafts.
+    const selectedKeys = new Set(selectedCells.map((c) => c.cell.cellKey));
+    const starved = undersized
+      .filter((c) => !selectedKeys.has(c.cell.cellKey))
+      .sort((a, b) => a.score - b.score)
+      .slice(0, STARVED_CELLS_LOGGED)
+      .map((c) => ({
+        cellKey: c.cell.cellKey,
+        need: c.need,
+        pHat: Number(c.pHat.toFixed(3)),
+        score: Number(c.score.toFixed(2)),
+      }));
+    if (starved.length > 0) {
+      log({
+        level: 'info',
+        starved,
+        message:
+          'lowest expected-yield deferred cells — recurring entries need a fix, not more drafts',
+      });
+    }
   }
 
   // 6. Empty-curriculum-slice fast path (Req 4.9): nothing to enqueue →

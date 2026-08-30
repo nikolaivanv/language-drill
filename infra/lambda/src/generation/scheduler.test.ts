@@ -673,9 +673,19 @@ describe('scheduler handler', () => {
       rowsToFillAllCellsExcept(subjectKeys, 0),
     );
 
-    // 1st execute = recent succeeded jobs (none → no coverage_outcome, no
-    // suppression). 2nd execute = approved-pool coverage distribution (unnested
-    // axis rows): the pool is heavily skewed toward 3sg, with 2pl starved (absent).
+    // NOTE: `mockExecute` results are consumed POSITIONALLY in handler order.
+    // The handler's execute sequence is:
+    //   1. recent succeeded jobs per cell
+    //   2. scoped approval evidence (expected-yield ranking)
+    //   3. approved-pool coverage distribution
+    // Adding a query to the handler shifts every later result — that is how
+    // this fixture broke when ranking was added. Keep the empty rows below
+    // aligned with that list.
+    // 1st = recent succeeded jobs (none → no coverage_outcome, no suppression).
+    // 2nd = approval evidence (none → every cell ranks on its prior).
+    // 3rd = approved-pool coverage distribution (unnested axis rows): the pool
+    // is heavily skewed toward 3sg, with 2pl starved (absent).
+    mockExecute.mockResolvedValueOnce({ rows: [] });
     mockExecute.mockResolvedValueOnce({ rows: [] });
     mockExecute.mockResolvedValueOnce({
       rows: [
@@ -832,7 +842,9 @@ describe('scheduler handler', () => {
         },
       ],
     });
-    // 2nd execute = approved-pool coverage distribution (unnested axis rows).
+    // 2nd execute = approval evidence (none → ranking falls back to priors).
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+    // 3rd execute = approved-pool coverage distribution (unnested axis rows).
     // 2pl is the most-starved (absent ⇒ 0), so absent suppression water-fill
     // WOULD pick it; the others sit above it. This makes suppression the *only*
     // reason 2pl is missing.

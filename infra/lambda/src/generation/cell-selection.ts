@@ -27,14 +27,30 @@
  *     by need — so a night where only one language has work still fills to the
  *     global cap. No wasted capacity; fairness is enforced only under contention.
  *
- * Deterministic: cells sort by `need` descending, `cellKey` ascending as the
- * tie-break. No clock, no randomness.
+ * Deterministic: cells sort by expected-yield `score` descending (falling back
+ * to `need` when unscored), `cellKey` ascending as the tie-break. No clock, no
+ * randomness.
  */
 
 /** The minimal shape the selector needs from a scheduler cell. */
 export interface CellNeed {
   cell: { language: string; cellKey: string };
   need: number;
+  /**
+   * Expected approved rows from running this cell (`need × p̂`, see
+   * `cell-score.ts`). Ranks the main backlog in place of raw `need`, because
+   * deficit ranking adversely selects: on prod the least productive cells are
+   * also the neediest, so they monopolised the top of the backlog nightly.
+   *
+   * Optional — absent falls back to `need`, which is exactly the old
+   * behaviour, so callers that do not score (and the selector's own
+   * need-only tests) are unaffected.
+   *
+   * NOT used by the finishing reserve, which stays on raw `need`: that phase
+   * exists to CLOSE cells, and a cell one row from done must win its slot
+   * however few rows it yields.
+   */
+  score?: number;
 }
 
 export interface CellSelectionResult<T extends CellNeed> {
@@ -46,9 +62,14 @@ export interface CellSelectionResult<T extends CellNeed> {
   enqueuedByLanguage: Record<string, number>;
 }
 
-/** need desc, then cellKey asc — the deterministic ordering for the backlog. */
-function byNeedDesc(a: CellNeed, b: CellNeed): number {
-  return b.need - a.need || a.cell.cellKey.localeCompare(b.cell.cellKey);
+/** Ranking value: expected yield when scored, else raw need (legacy behaviour). */
+function scoreOf(item: CellNeed): number {
+  return item.score ?? item.need;
+}
+
+/** score desc, then cellKey asc — the deterministic ordering for the backlog. */
+function byScoreDesc(a: CellNeed, b: CellNeed): number {
+  return scoreOf(b) - scoreOf(a) || a.cell.cellKey.localeCompare(b.cell.cellKey);
 }
 
 /** need asc, then cellKey asc — closest-to-done first, for the finishing reserve. */
@@ -85,19 +106,19 @@ function fairShareSelect<T extends CellNeed>(
   const reserved: T[] = [];
   const leftover: T[] = [];
   for (const group of byLanguage.values()) {
-    group.sort(byNeedDesc);
+    group.sort(byScoreDesc);
     reserved.push(...group.slice(0, perLangCap));
     leftover.push(...group.slice(perLangCap));
   }
 
   if (reserved.length >= globalCap) {
-    reserved.sort(byNeedDesc);
+    reserved.sort(byScoreDesc);
     return reserved.slice(0, globalCap);
   }
-  leftover.sort(byNeedDesc);
+  leftover.sort(byScoreDesc);
   return reserved
     .concat(leftover.slice(0, globalCap - reserved.length))
-    .sort(byNeedDesc);
+    .sort(byScoreDesc);
 }
 
 /**
@@ -153,11 +174,11 @@ export function selectCellsWithinCaps<T extends CellNeed>(
   const residual = mainBudget - mainSelected.length;
   const extraFinishers =
     residual > 0
-      ? finishers.slice(reserveCount).sort(byNeedDesc).slice(0, residual)
+      ? finishers.slice(reserveCount).sort(byScoreDesc).slice(0, residual)
       : [];
 
   const selected = [...reservedFinishers, ...mainSelected, ...extraFinishers].sort(
-    byNeedDesc,
+    byScoreDesc,
   );
 
   return {

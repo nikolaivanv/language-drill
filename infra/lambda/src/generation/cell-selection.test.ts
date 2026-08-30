@@ -220,3 +220,69 @@ describe('selectCellsWithinCaps', () => {
     expect(r.selected).toHaveLength(65);
   });
 });
+
+describe('selectCellsWithinCaps — expected-yield ranking', () => {
+  it('ranks the main backlog by score, not raw need', () => {
+    // The adverse-selection fix. Raw deficit ranking would take de:hopeless
+    // first (need 40); its score says it will yield ~4 rows against
+    // de:productive's ~17.
+    const { selected } = selectCellsWithinCaps(
+      [
+        { cell: { language: 'DE', cellKey: 'de:hopeless' }, need: 40, score: 4 },
+        { cell: { language: 'DE', cellKey: 'de:productive' }, need: 20, score: 17 },
+      ],
+      1,
+      50,
+      0,
+      0,
+    );
+    expect(selected.map((s) => s.cell.cellKey)).toEqual(['de:productive']);
+  });
+
+  it('falls back to need ordering when no score is supplied', () => {
+    // Keeps the selector usable (and its existing tests honest) for callers
+    // that do not compute a score.
+    const { selected } = selectCellsWithinCaps(
+      [
+        { cell: { language: 'DE', cellKey: 'de:small' }, need: 10 },
+        { cell: { language: 'DE', cellKey: 'de:big' }, need: 50 },
+      ],
+      1,
+      50,
+      0,
+      0,
+    );
+    expect(selected.map((s) => s.cell.cellKey)).toEqual(['de:big']);
+  });
+
+  it('leaves the finishing reserve on raw need, closest-to-done first', () => {
+    // The reserve exists to CLOSE cells, not to maximise rows. Scoring it
+    // would break that: de:almost is one row from done and must win the
+    // reserve slot even though its score is tiny.
+    const { selected } = selectCellsWithinCaps(
+      [
+        { cell: { language: 'DE', cellKey: 'de:almost' }, need: 1, score: 0.2 },
+        { cell: { language: 'DE', cellKey: 'de:further' }, need: 4, score: 3.9 },
+      ],
+      1,
+      50,
+      5,
+      1,
+    );
+    expect(selected.map((s) => s.cell.cellKey)).toEqual(['de:almost']);
+  });
+
+  it('breaks score ties on cellKey so selection stays deterministic', () => {
+    const { selected } = selectCellsWithinCaps(
+      [
+        { cell: { language: 'DE', cellKey: 'de:b' }, need: 10, score: 5 },
+        { cell: { language: 'DE', cellKey: 'de:a' }, need: 10, score: 5 },
+      ],
+      1,
+      50,
+      0,
+      0,
+    );
+    expect(selected.map((s) => s.cell.cellKey)).toEqual(['de:a']);
+  });
+});
