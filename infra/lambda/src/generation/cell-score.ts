@@ -147,3 +147,74 @@ export function promptEvidenceCutoff(versions: readonly string[]): Date {
   }
   return new Date(latest);
 }
+
+/** A deferred cell as the starvation report sees it. */
+export type StarvationCandidate = {
+  cell: { language: string; cellKey: string };
+  need: number;
+  pHat: number;
+  score: number;
+  /** Drafts observed under the current evidence scope. 0 ⇒ `pHat` is a prior. */
+  scopedDrafts: number;
+};
+
+export type StarvedCellReport = {
+  cellKey: string;
+  need: number;
+  pHat: number;
+  score: number;
+  scopedDrafts: number;
+};
+
+export type SelectStarvedOptions = {
+  /**
+   * Cells at or below this `need` are excluded. Pass the scheduler's
+   * finishing-need threshold: those cells are handled by the finishing
+   * reserve and are queued, not starved.
+   */
+  needFloor: number;
+  limit: number;
+};
+
+/**
+ * The worst-prospect deferred cells, for the run summary.
+ *
+ * Ranked by **approval rate**, not by `score`. Sorting the report by absolute
+ * `need × p̂` was wrong and shipped that way on 2026-08-30: a `need=1` cell
+ * cannot score above 1.0 however healthy it is, so low-need cells filled the
+ * list structurally. On the 2026-08-31 run all ten entries were `vocab_recall`
+ * cells one row from done (29 approved rows against 28 targets) that had
+ * simply lost the 8-slot finishing-reserve lottery — the report named cells
+ * that needed nothing while the genuinely stuck ones stayed invisible.
+ *
+ * Rate alone is not enough either: those same cells sat at the TR vocab prior
+ * of 0.13, the lowest rate in the run, so a pure rate sort would have kept
+ * them at the top. The `needFloor` is what removes them — a cell the
+ * finishing reserve is already competing for is queued, not starved.
+ *
+ * Ties break on `need` descending because cells with no scoped evidence all
+ * share their group prior, making ties the common case rather than an edge
+ * case; among equally unpromising cells, the one holding the most unmet need
+ * is the more useful report. `cellKey` keeps it deterministic.
+ */
+export function selectStarvedCells(
+  deferred: readonly StarvationCandidate[],
+  { needFloor, limit }: SelectStarvedOptions,
+): StarvedCellReport[] {
+  return deferred
+    .filter((c) => c.need > needFloor)
+    .sort(
+      (a, b) =>
+        a.pHat - b.pHat ||
+        b.need - a.need ||
+        a.cell.cellKey.localeCompare(b.cell.cellKey),
+    )
+    .slice(0, limit)
+    .map((c) => ({
+      cellKey: c.cell.cellKey,
+      need: c.need,
+      pHat: Number(c.pHat.toFixed(3)),
+      score: Number(c.score.toFixed(2)),
+      scopedDrafts: c.scopedDrafts,
+    }));
+}

@@ -55,6 +55,7 @@ import {
   computeApprovalPriors,
   expectedYield,
   promptEvidenceCutoff,
+  selectStarvedCells,
   shrunkApprovalRate,
 } from './cell-score';
 import {
@@ -424,6 +425,8 @@ export async function handler(): Promise<void> {
     need: number;
     score: number;
     pHat: number;
+    /** Drafts behind `pHat`; 0 means it is a bare prior, not a measurement. */
+    scopedDrafts: number;
   }> = [];
   const suppressed = {
     targetReached: 0,
@@ -488,6 +491,7 @@ export async function handler(): Promise<void> {
           need: decision.need,
           pHat,
           score: expectedYield(decision.need, pHat),
+          scopedDrafts: evidence?.produced ?? 0,
         });
         break;
       }
@@ -561,21 +565,19 @@ export async function handler(): Promise<void> {
 
     // Expected-yield ranking deliberately sinks chronically unproductive
     // cells rather than aging them back in — the 30-day suppression lapse
-    // already re-admits them. Surfacing the worst-scoring deferred cells
+    // already re-admits them. Surfacing the worst-prospect deferred cells
     // turns that from silent starvation into a triage worklist: a cell that
     // appears here night after night wants a curriculum or prompt fix, not
     // another batch of drafts.
+    //
+    // Ranked by approval RATE above the finishing-need floor — see
+    // `selectStarvedCells` for why sorting this report by `score` named
+    // near-complete cells instead.
     const selectedKeys = new Set(selectedCells.map((c) => c.cell.cellKey));
-    const starved = undersized
-      .filter((c) => !selectedKeys.has(c.cell.cellKey))
-      .sort((a, b) => a.score - b.score)
-      .slice(0, STARVED_CELLS_LOGGED)
-      .map((c) => ({
-        cellKey: c.cell.cellKey,
-        need: c.need,
-        pHat: Number(c.pHat.toFixed(3)),
-        score: Number(c.score.toFixed(2)),
-      }));
+    const starved = selectStarvedCells(
+      undersized.filter((c) => !selectedKeys.has(c.cell.cellKey)),
+      { needFloor: finishingThreshold, limit: STARVED_CELLS_LOGGED },
+    );
     if (starved.length > 0) {
       log({
         level: 'info',
