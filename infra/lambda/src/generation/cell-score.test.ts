@@ -13,6 +13,7 @@ import {
   computeApprovalPriors,
   expectedYield,
   promptEvidenceCutoff,
+  selectStarvedCells,
   shrunkApprovalRate,
 } from './cell-score';
 
@@ -115,5 +116,78 @@ describe('promptEvidenceCutoff', () => {
   it('returns the epoch when nothing parses, keeping all evidence', () => {
     expect(promptEvidenceCutoff(['nonsense']).getTime()).toBe(0);
     expect(promptEvidenceCutoff([]).getTime()).toBe(0);
+  });
+});
+
+describe('selectStarvedCells', () => {
+  const cell = (cellKey: string, need: number, pHat: number, scopedDrafts = 0) => ({
+    cell: { language: cellKey.slice(0, 2).toUpperCase(), cellKey },
+    need,
+    pHat,
+    score: need * pHat,
+    scopedDrafts,
+  });
+
+  it('excludes near-complete cells the finishing reserve already handles', () => {
+    // The 2026-08-31 defect: sorted by absolute score, all ten entries were
+    // need=1 vocab cells sitting at 29 rows against 28 targets. They had not
+    // been starved — they lost the 8-slot finishing-reserve lottery. A need=1
+    // cell can never score above 1.0 however healthy, so low-need cells
+    // structurally filled the list.
+    const starved = selectStarvedCells(
+      [cell('tr:a1:vocab_recall:done', 1, 0.13), cell('de:b2:cloze:stuck', 20, 0.2)],
+      { needFloor: 5, limit: 10 },
+    );
+    expect(starved.map((c) => c.cellKey)).toEqual(['de:b2:cloze:stuck']);
+  });
+
+  it('ranks by approval rate, not by score', () => {
+    // score would put the big-need cell last; the rate is what says "this one
+    // needs a fix rather than more drafts".
+    const starved = selectStarvedCells(
+      [cell('de:b2:cloze:big', 40, 0.5), cell('de:b2:cloze:hopeless', 10, 0.05)],
+      { needFloor: 5, limit: 10 },
+    );
+    expect(starved.map((c) => c.cellKey)).toEqual([
+      'de:b2:cloze:hopeless',
+      'de:b2:cloze:big',
+    ]);
+  });
+
+  it('breaks equal rates on need, biggest first', () => {
+    // Cells with no scoped evidence all share their group prior, so ties are
+    // the common case, not an edge case. Among equally unpromising cells the
+    // one holding the most unmet need is the more useful report.
+    const starved = selectStarvedCells(
+      [cell('de:b2:cloze:small', 6, 0.13), cell('de:b2:cloze:large', 30, 0.13)],
+      { needFloor: 5, limit: 10 },
+    );
+    expect(starved.map((c) => c.cellKey)).toEqual([
+      'de:b2:cloze:large',
+      'de:b2:cloze:small',
+    ]);
+  });
+
+  it('reports scoped draft volume so a prior can be told from a measurement', () => {
+    // pHat 0.13 on 0 drafts is "never measured"; on 200 drafts it is a verdict.
+    // Without this the reader cannot tell which they are looking at.
+    const starved = selectStarvedCells([cell('de:b2:cloze:x', 20, 0.13, 200)], {
+      needFloor: 5,
+      limit: 10,
+    });
+    expect(starved[0]).toMatchObject({ scopedDrafts: 200, pHat: 0.13, need: 20 });
+  });
+
+  it('honours the limit', () => {
+    const many = Array.from({ length: 25 }, (_, i) =>
+      cell(`de:b2:cloze:c${String(i).padStart(2, '0')}`, 10, i / 100),
+    );
+    expect(selectStarvedCells(many, { needFloor: 5, limit: 10 })).toHaveLength(10);
+  });
+
+  it('returns nothing when every deferred cell is a finisher', () => {
+    expect(
+      selectStarvedCells([cell('de:b2:cloze:a', 3, 0.1)], { needFloor: 5, limit: 10 }),
+    ).toEqual([]);
   });
 });
