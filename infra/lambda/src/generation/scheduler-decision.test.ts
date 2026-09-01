@@ -15,6 +15,7 @@ import type { Cell } from '@language-drill/db';
 
 import {
   decideEnqueue,
+  LOW_YIELD_MIN_RATE,
   LOW_YIELD_THRESHOLD,
   TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD,
   PREDICTIVE_SATURATION_MARGIN_FRACTION,
@@ -160,6 +161,91 @@ describe('decideEnqueue — table-driven cases', () => {
       TARGET_PER_CELL,
       makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
       CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('does NOT call a healthy cell low-yield after one tiny under-performing run', () => {
+    // The 2026-09-01 defect. `lowYieldThreshold = min(3, requestedCount)`, so
+    // at requested <= 3 the bar EQUALS the request and the rule demands 100%
+    // approval. Once the backlog emptied and drafts/cell fell to 1.4, that
+    // parked 143 healthy cells: de-a2-dative-accusative-objects last ran 2/3
+    // — a 72% cell over 29 drafts, one row from target — suppressed because
+    // 2 < 3. A poor run is only evidence of a stuck cell if the accumulated
+    // rate agrees.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      29,
+      30,
+      makeRecentJob({ approvedCount: 2, requestedCount: 3 }),
+      CURRENT_VERSION,
+      false,
+      { shrunkApprovalRate: 0.72 },
+    );
+    expect(decision).toEqual({ kind: 'enqueue', need: 1 });
+  });
+
+  it('still calls a genuinely unproductive cell low-yield', () => {
+    // de-a2-praeteritum-modals: 0 approved of 49 scoped drafts.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      17,
+      30,
+      makeRecentJob({ approvedCount: 0, requestedCount: 13 }),
+      CURRENT_VERSION,
+      false,
+      { shrunkApprovalRate: 0.031 },
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('suppresses at the rate floor exactly', () => {
+    const below = decideEnqueue(
+      ROUND_1_CELL, 20, 30,
+      makeRecentJob({ approvedCount: 0, requestedCount: 10 }),
+      CURRENT_VERSION, false,
+      { shrunkApprovalRate: LOW_YIELD_MIN_RATE - 0.001 },
+    );
+    const atFloor = decideEnqueue(
+      ROUND_1_CELL, 20, 30,
+      makeRecentJob({ approvedCount: 0, requestedCount: 10 }),
+      CURRENT_VERSION, false,
+      { shrunkApprovalRate: LOW_YIELD_MIN_RATE },
+    );
+    expect(below).toEqual({ kind: 'skip-low-yield' });
+    expect(atFloor).toEqual({ kind: 'enqueue', need: 10 });
+  });
+
+  it('keeps the old behaviour when no rate is supplied', () => {
+    // Callers that do not score (and every pre-existing test) must be
+    // unaffected — an absent rate reads as "no reason to doubt the run".
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      20,
+      TARGET_PER_CELL,
+      makeRecentJob({ approvedCount: 2, requestedCount: 50 }),
+      CURRENT_VERSION,
+    );
+    expect(decision).toEqual({ kind: 'skip-low-yield' });
+  });
+
+  it('retires a stuck target-seeded cell on its streak even when the rate looks fine', () => {
+    // #712 must survive this change. de-a1-vocab-city-transport has thin
+    // evidence, so its pHat sits near the DE vocab prior (>0.3) even though it
+    // has approved nothing for five runs. Gating the vocab path on the rate
+    // would have un-retired it.
+    const decision = decideEnqueue(
+      ROUND_1_CELL,
+      28,
+      30,
+      makeRecentJob({
+        approvedCount: 0,
+        requestedCount: 1,
+        consecutiveZeroApprovedRuns: TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD,
+      }),
+      CURRENT_VERSION,
+      true,
+      { shrunkApprovalRate: 0.35 },
     );
     expect(decision).toEqual({ kind: 'skip-low-yield' });
   });
