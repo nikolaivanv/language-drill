@@ -77,6 +77,30 @@ export const LOW_YIELD_THRESHOLD = 3;
 export const TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD = 3;
 
 /**
+ * Accumulated approval rate below which a poor run is believed (2026-09-01).
+ *
+ * `lowYieldThreshold` is `min(LOW_YIELD_THRESHOLD, requestedCount)`, so at
+ * `requested <= 3` the bar EQUALS the request and the rule demands **100%
+ * approval**. That was harmless while cells were asked for 10+ drafts. It
+ * stopped being harmless when the backlog emptied: drafts/cell fell
+ * 10.6 → 1.4 between 08-27 and 09-01, putting nearly every cell in the <=3
+ * regime, and `lowYield` climbed 0 → 13 → 41 → 101 → 165 → 210 — not because
+ * cells got worse but because the test got trivial to trip.
+ *
+ * Measured on prod: of 158 suppressed cells still under target, cloze ran at
+ * 49.5% and translation at 51.1% real approval — 143 of 158 were healthy.
+ * `de-a2-dative-accusative-objects` last ran 2/3 (72% over 29 drafts, one row
+ * from target) and was parked for up to the 30-day lapse.
+ *
+ * So a single poor run is only evidence of a stuck cell when the accumulated
+ * rate agrees. 0.2 matches `VARIANT_GIVE_UP_MIN_RATE` — the same "this really
+ * cannot produce" bar the variant give-up uses. Simulated over prod it keeps
+ * exactly the 4 genuinely dead cells (all conjugation, pHat 0.000–0.090) and
+ * releases every healthy one.
+ */
+export const LOW_YIELD_MIN_RATE = 0.2;
+
+/**
  * R6.1 — a job is `saturated-dedup` when `dedupGivenUpCount` is at least
  * `ceil(SATURATED_DEDUP_REQ_FRACTION * requestedCount)` AND `approvedCount`
  * is below `ceil(SATURATED_DEDUP_APPROVED_FRACTION * requestedCount)`. Both
@@ -155,6 +179,13 @@ const MS_PER_DAY = 86_400_000;
 export type DecideEnqueueOptions = {
   /** Injected clock. Defaults to now. */
   now?: Date;
+  /**
+   * The cell's shrunk approval rate (`cell-score.ts`). Gates the low-yield
+   * branch: see `LOW_YIELD_MIN_RATE`. UNDEFINED preserves the pre-2026-09-01
+   * behaviour — a poor run suppresses on its own — so callers that do not
+   * score are unaffected.
+   */
+  shrunkApprovalRate?: number;
   /** Defaults to `SUPPRESSION_LAPSE_DAYS`. */
   suppressionLapseDays?: number;
 };
@@ -380,10 +411,25 @@ export function decideEnqueue(
   //    `requestedCount === 0` needs no branch of its own: the threshold is 0
   //    there, so such a job never suppresses however long the streak.
   const zeroRuns = recentJob.consecutiveZeroApprovedRuns ?? 0;
-  const exemptWhileProgressing =
-    targetSeeded && zeroRuns < TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD;
-  if (!exemptWhileProgressing && recentJob.approvedCount < lowYieldThreshold) {
-    return { kind: 'skip-low-yield' };
+  if (recentJob.approvedCount < lowYieldThreshold) {
+    if (targetSeeded) {
+      // Target-seeded cells are judged on their zero STREAK, not on the rate.
+      // Their evidence is thin by construction (1-2 drafts a night), so a
+      // shrunk rate stays near the group prior even after five zero runs —
+      // gating this path on the rate would un-retire exactly the cells the
+      // 2026-08-29 floor was added to retire.
+      if (zeroRuns >= TARGET_SEEDED_ZERO_RUNS_BEFORE_LOW_YIELD) {
+        return { kind: 'skip-low-yield' };
+      }
+    } else if (
+      options.shrunkApprovalRate === undefined ||
+      options.shrunkApprovalRate < LOW_YIELD_MIN_RATE
+    ) {
+      // A poor run is believed only when the accumulated rate agrees. At
+      // `requested <= 3` the threshold equals the request, so without this the
+      // branch demands 100% approval — see `LOW_YIELD_MIN_RATE`.
+      return { kind: 'skip-low-yield' };
+    }
   }
 
   // 8. Default: enqueue.

@@ -464,6 +464,20 @@ export async function handler(): Promise<void> {
     const recentJob = recentJobByCell.get(cell.cellKey) ?? null;
     const curriculumVersionOnDisk =
       CURRICULUM_VERSION_BY_LANGUAGE[cell.language as LearningLanguage];
+    // Scored BEFORE the decision, not after: `decideEnqueue` gates its
+    // low-yield branch on this rate (a poor run at requested<=3 is not
+    // evidence on its own), and the enqueue branch reuses it for ranking.
+    // Evidence recorded under a different point fingerprint does not match
+    // this key, so an edited point falls back to its prior — that IS the
+    // reset.
+    const evidence = approvalEvidence.get(
+      evidenceKey(cell.cellKey, grammarPointFingerprint(cell.grammarPoint)),
+    );
+    const pHat = shrunkApprovalRate({
+      approved: evidence?.approved ?? 0,
+      produced: evidence?.produced ?? 0,
+      prior: approvalPriors.forCell(cell.cellKey),
+    });
     const decision = decideEnqueue(
       cell,
       approvedInPool,
@@ -471,21 +485,15 @@ export async function handler(): Promise<void> {
       recentJob,
       curriculumVersionOnDisk,
       usingTargets,
-      { now: tickStartedAt, suppressionLapseDays },
+      {
+        now: tickStartedAt,
+        suppressionLapseDays,
+        shrunkApprovalRate: pHat,
+      },
     );
     switch (decision.kind) {
       case 'enqueue': {
-        // Rank on expected rows, not raw deficit. Evidence recorded under a
-        // different point fingerprint does not match this key, so an edited
-        // point falls back to its prior — that IS the reset.
-        const evidence = approvalEvidence.get(
-          evidenceKey(cell.cellKey, grammarPointFingerprint(cell.grammarPoint)),
-        );
-        const pHat = shrunkApprovalRate({
-          approved: evidence?.approved ?? 0,
-          produced: evidence?.produced ?? 0,
-          prior: approvalPriors.forCell(cell.cellKey),
-        });
+        // Rank on expected rows, not raw deficit — `pHat` computed above.
         undersized.push({
           cell,
           need: decision.need,
