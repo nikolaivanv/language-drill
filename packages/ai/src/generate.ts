@@ -66,30 +66,94 @@ export const GENERATION_MAX_TOKENS = 1024;
 
 export const GENERATION_TEMPERATURE = 0.7;
 
+/** One synthesizable dictation voice: who speaks, how we label it, and the
+ *  Polly locale that voice actually speaks. */
+export type DictationVoice = {
+  voiceId: string;
+  /** Learner-visible accent label. Must describe the voice truthfully. */
+  accent: string;
+  /** Polly BCP-47 locale, e.g. "es-MX". Stored on the row and sent to Polly. */
+  languageCode: string;
+};
+
 /**
- * Polly neural voices used for synthesized dictation clips, keyed by language.
- * `voiceId`/`accent` are assigned by code (rotated by ordinal) — never by the
- * model — so a batch varies voice/accent deterministically. PR 2's audio-synth
- * Lambda reads `voiceId` from the stored content to call Polly.
+ * Every neural Polly voice we synthesize dictation with, keyed by language.
+ * `voiceId`/`accent` are assigned by code (rotated per draft) — never by the
+ * model — so a batch varies voice/accent deterministically. The audio-synth
+ * Lambda reads `voiceId` + `languageCode` from the stored content to call Polly.
+ *
+ * Neural-engine voices only. Polly also offers standard-engine voices
+ * (Conchita, Enrique, Miguel, Penelope, Hans, Marlene) and one generative-only
+ * German voice (Lennart); `synthesizeToS3` sends `Engine: 'neural'`, and a
+ * dictation drill is the last place to want the standard engine's articulation.
+ *
+ * Use `dictationVoicePoolFor` rather than reading this directly — Spanish is
+ * scoped by level.
  */
 export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
-  Record<Exclude<Language, Language.EN>, ReadonlyArray<{ voiceId: string; accent: string }>>
+  Record<Exclude<Language, Language.EN>, ReadonlyArray<DictationVoice>>
 > = Object.freeze({
   [Language.ES]: [
-    { voiceId: "Sergio", accent: "español peninsular · centro" },
-    { voiceId: "Lucia", accent: "español peninsular · centro" },
+    { voiceId: "Sergio", accent: "español peninsular · centro", languageCode: "es-ES" },
+    { voiceId: "Lucia", accent: "español peninsular · centro", languageCode: "es-ES" },
+    { voiceId: "Mia", accent: "español mexicano", languageCode: "es-MX" },
+    { voiceId: "Andres", accent: "español mexicano", languageCode: "es-MX" },
+    { voiceId: "Lupe", accent: "español estadounidense", languageCode: "es-US" },
+    { voiceId: "Pedro", accent: "español estadounidense", languageCode: "es-US" },
   ],
   // Both neural de-DE voices (2026-09-04, when the German dictation umbrellas
-  // were authored). An empty pool throws in parseGeneratedDictationDraft, so
-  // this had to land in the same change as `de-*-dictation`.
+  // were authored) plus the Austrian and Swiss Standard German voices. An empty
+  // pool throws in parseGeneratedDictationDraft.
   [Language.DE]: [
-    { voiceId: "Vicki", accent: "hochdeutsch · Standard" },
-    { voiceId: "Daniel", accent: "hochdeutsch · Standard" },
+    { voiceId: "Vicki", accent: "hochdeutsch · Standard", languageCode: "de-DE" },
+    { voiceId: "Daniel", accent: "hochdeutsch · Standard", languageCode: "de-DE" },
+    { voiceId: "Hannah", accent: "österreichisches Deutsch", languageCode: "de-AT" },
+    { voiceId: "Sabrina", accent: "Schweizer Hochdeutsch", languageCode: "de-CH" },
   ],
   // The only neural tr-TR Polly voice is Burcu (Filiz is standard-engine only),
   // so the TR pool is single-voice.
-  [Language.TR]: [{ voiceId: "Burcu", accent: "standart Türkçe · İstanbul" }],
+  [Language.TR]: [
+    { voiceId: "Burcu", accent: "standart Türkçe · İstanbul", languageCode: "tr-TR" },
+  ],
 });
+
+/**
+ * The voices a given cell may draw from.
+ *
+ * Spanish is scoped by level: es-MX and es-US voices use *seseo* (c/z before
+ * e/i sound like s), so "gracias" and "*grasias" are the same audio. A1/A2
+ * dictation is where the c/z/s spelling rule is still being established, so
+ * those levels stay peninsular and B1/B2 get the full six — the order DELE
+ * introduces regional variation in. (Spanish dictation already contains
+ * spellings the audio cannot settle — b/v is homophonous in *every* accent —
+ * but that one is unavoidable, whereas seseo is a choice.)
+ *
+ * German is not scoped: Austrian and Swiss Standard German add no spelling
+ * ambiguity, and Goethe A1/A2 listening already includes both.
+ */
+export function dictationVoicePoolFor(
+  language: Exclude<Language, Language.EN>,
+  cefrLevel: CefrLevel | `${CefrLevel}`,
+): ReadonlyArray<DictationVoice> {
+  const all = DICTATION_VOICE_POOL_BY_LANGUAGE[language] ?? [];
+  if (language !== Language.ES) return all;
+  const beginner = cefrLevel === "A1" || cefrLevel === "A2";
+  return beginner ? all.filter((v) => v.languageCode === "es-ES") : all;
+}
+
+/**
+ * Rotation index for a draft's voice. `ordinal` is the index WITHIN one batch
+ * (see `runGeneratorPool`), so `ordinal % pool.length` alone would hand every
+ * small top-up the same first voices and never reach the tail of a six-voice
+ * pool. Offsetting by the batch seed — unique per job on both the scheduled and
+ * admin paths — spreads the pool across batches while staying deterministic for
+ * a given (seed, ordinal), which is what makes a re-run reproducible.
+ */
+export function dictationVoiceIndex(batchSeed: string, ordinal: number, poolSize: number): number {
+  let h = 0;
+  for (let i = 0; i < batchSeed.length; i++) h = (h * 31 + batchSeed.charCodeAt(i)) >>> 0;
+  return (h + ordinal) % poolSize;
+}
 
 // ---------------------------------------------------------------------------
 // Tool-name map
@@ -1244,12 +1308,12 @@ export function parseGeneratedDictationDraft(
     );
   }
 
-  // Voice/accent assigned by code (rotated by ordinal), never by the model.
-  const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[spec.language];
-  if (!pool || pool.length === 0) {
+  // Voice/accent assigned by code (rotated per draft), never by the model.
+  const pool = dictationVoicePoolFor(spec.language, spec.cefrLevel);
+  if (pool.length === 0) {
     throw new Error(`${ctx}: no dictation voice pool configured for ${spec.language}`);
   }
-  const voice = pool[ordinal % pool.length];
+  const voice = pool[dictationVoiceIndex(spec.batchSeed, ordinal, pool.length)];
 
   return {
     type: ExerciseType.DICTATION,
@@ -1259,6 +1323,7 @@ export function parseGeneratedDictationDraft(
     sentences,
     accent: voice.accent,
     voiceId: voice.voiceId,
+    languageCode: voice.languageCode,
     ...(domain !== undefined ? { domain } : {}),
     ...(register !== undefined ? { register } : {}),
     tested,

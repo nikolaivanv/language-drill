@@ -199,6 +199,15 @@ export type DictationContent = {
   accent: string;
   /** Polly voice id used to synthesize the audio (e.g. "Sergio"). */
   voiceId: string;
+  /**
+   * Polly BCP-47 locale of `voiceId` (e.g. "es-MX"). Polly rejects a
+   * VoiceId/LanguageCode pair the voice does not speak, so the locale travels
+   * with the row rather than being derived from the exercise's language — that
+   * derivation is what held the pools to one locale per language before
+   * 2026-09-04. Optional: rows written before the field existed all used their
+   * language's home locale, and the synth Lambda falls back to it.
+   */
+  languageCode?: string;
   domain?: string;
   register?: string;
   /** "What this tests" chips shown on the brief card. */

@@ -179,7 +179,11 @@ export async function processRecord(
       );
     }
 
-    const languageCode = LANGUAGE_CODE_BY_LANGUAGE[row.language ?? ''];
+    // The row's own locale wins: a clip synthesized with a Mexican or Austrian
+    // voice must be sent to Polly with THAT voice's language code, or Polly
+    // rejects the pair. Rows written before `languageCode` existed all used
+    // their language's home locale, so the fallback is correct for every one.
+    const languageCode = content?.languageCode ?? LANGUAGE_CODE_BY_LANGUAGE[row.language ?? ''];
     if (!languageCode) {
       throw new Error(
         `no Polly language code for language '${row.language}' (exercise ${exerciseId})`,
