@@ -247,7 +247,13 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // requested against 47-57% for the sibling case values. Load-bearing, not
 // ceremonial: the bump also clears `skip-low-yield` suppression, without which a
 // corrected spec cannot re-run on any cell already suppressed.
-export const CURRICULUM_VERSION_TR = '2026-08-21';
+//
+// `2026-09-04`: B2 gains the three non-grammar tracks it never had —
+// tr-b2-dictation (targetOverride 30, matching A1/A2/B1), three B2
+// free-writing umbrellas (argument, formal complaint, review), and
+// tr-b2-paraphrase. Authored alongside the German dictation / free-writing /
+// paraphrase tracks; see CURRICULUM_VERSION_DE's 2026-09-04 note.
+export const CURRICULUM_VERSION_TR = '2026-09-04';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -5179,6 +5185,124 @@ const trCurriculum: readonly GrammarPoint[] = [
         'explaining why you missed a family gathering',
         'asking a landlord to fix a broken heater before winter',
         'describing the atmosphere of a crowded tea house',
+      ],
+    },
+  },
+  // ---------------------------------------------------------------------------
+  // B2 dictation / free-writing / paraphrase (2026-09-04). The 2026-07-17 B2
+  // cycle was grammar + vocab only, which left B2 as the one TR level with no
+  // dictation, free-writing or paraphrase cell — a learner finishing B1 lost
+  // three whole tracks on moving up.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-b2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B2)',
+    description:
+      'B2 Turkish clips (3–4 sentences, natural pace) with stacked participial and converb clauses; tests tracking across long pre-verbal modifiers and segmenting heavily suffixed words under faster delivery.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Toplantıda konuşulanları not almasaydım, projenin neden ertelendiğini şimdi hatırlayamazdım.',
+      'Geçen yıl açılan kütüphane, mahallede yaşayanların en çok kullandığı yer hâline geldi.',
+    ],
+    examplesNegative: ['*Tek bir kelimeden oluşan ya da B2 seviyesinin çok üstünde, ağır akademik bir metin.'],
+    commonErrors: [
+      'Losing the head noun after a long -DIK / -(y)AcAK participial modifier.',
+      'Mis-segmenting a stacked suffix chain (konuşulanları, hatırlayamazdım).',
+    ],
+    // Same reasoning as the A1/A2/B1 dictation bumps (2026-06-25): a dictation
+    // umbrella only feeds the dictation cell, so a point-wide override is safe.
+    targetOverride: 30,
+  },
+  {
+    key: 'tr-b2-fw-an-argument',
+    kind: 'free-writing',
+    name: 'Bir tartışma: iki taraf',
+    description:
+      'A neutral prompt to argue a case on a debated topic: state a position, concede one point to the other side, and close with the strongest reason for the position.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Asks the learner to state a position explicitly before arguing it.',
+      'Requires one concession to the opposing side (yine de, buna rağmen).',
+    ],
+    examplesNegative: ['*Summarise both sides without taking a position.'],
+    commonErrors: [
+      'Presenting both sides evenly and never committing to one.',
+      'Conceding nothing, so the argument reads one-sided.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b2-fw-a-formal-complaint',
+    kind: 'free-writing',
+    name: 'Resmî bir şikâyet',
+    description:
+      'A formal prompt to complain in writing to an institution: what happened, why it is a problem, and what the learner expects to be done about it.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Fixes an institutional addressee, so formal address and closing are required.',
+      'Requires a stated remedy, not only the complaint.',
+    ],
+    examplesNegative: ['*Complain to a friend about a bad experience.'],
+    commonErrors: [
+      'Slipping into informal address after a formal opening.',
+      'Describing the problem with no requested remedy.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'tr-b2-fw-a-review',
+    kind: 'free-writing',
+    name: 'Bir değerlendirme yazısı',
+    description:
+      'A neutral prompt to review something the learner has read, watched or used: what it is, one thing that works and one that does not, and who it is worth recommending to.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Asks for one strength and one weakness, each with a reason.',
+      'Requires a closing recommendation aimed at a specific reader.',
+    ],
+    examplesNegative: ['*Retell the plot from beginning to end.'],
+    commonErrors: [
+      'Summarising the content instead of evaluating it.',
+      'Recommending it to everyone, so the judgement carries no information.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b2-paraphrase',
+    kind: 'paraphrase',
+    name: 'Başka türlü söyle — paraphrase (B2)',
+    description:
+      'Rewrite a B2 Turkish sentence under one constraint: avoid a given word, shift register up or down, or simplify a nuanced point for a lay audience — preserving the full propositional content.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Source "İşsizlik önemli ölçüde arttı" → without «artmak»: "İşsizlik gözle görülür biçimde yükseldi."',
+      'Source "Bu sorunu bir an önce ele almalıyız" → simplify for a child: "Bunu yakında çözmemiz gerekiyor."',
+    ],
+    examplesNegative: ['*A rewrite that drops part of the original claim.'],
+    commonErrors: [
+      'Simplifying so much that a key nuance is lost.',
+      'Swapping in a near-synonym that shifts the meaning slightly.',
+    ],
+    paraphrase: {
+      seeds: [
+        'summarising a news report for a relative',
+        'explaining a workplace rule change to colleagues',
+        'writing a formal petition to a municipality',
+        'giving constructive feedback to a team member',
+        'defending an unpopular position in a discussion',
+        'explaining a rental-contract clause in plain language',
+        'presenting a project proposal to a manager',
+        'describing symptoms to a doctor',
+        'negotiating a pay rise',
+        'explaining to a customer why an order was delayed',
+        'writing a reference for a former colleague',
+        'proposing a compromise in a neighbourhood dispute',
       ],
     },
   },
