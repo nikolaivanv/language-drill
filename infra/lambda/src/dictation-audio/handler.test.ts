@@ -135,6 +135,42 @@ describe('processRecord', () => {
     ]);
   });
 
+  // Polly rejects a VoiceId/LanguageCode pair the voice does not speak, so a
+  // row synthesized with a Mexican or Austrian voice must carry its OWN
+  // locale. Deriving it from the row's language (ES -> es-ES) is what limited
+  // the pools to the home locale before 2026-09-04.
+  it("prefers the row's own languageCode over the language default", async () => {
+    const { db } = fakeDb([
+      dictationRow({
+        contentJson: {
+          referenceText: 'Hola mundo.',
+          voiceId: 'Mia',
+          languageCode: 'es-MX',
+        },
+      }),
+    ]);
+
+    await processRecord(recordWith(EXERCISE_ID), deps(db));
+
+    expect(synth).toHaveBeenCalledWith(
+      expect.objectContaining({ voiceId: 'Mia', languageCode: 'es-MX' }),
+    );
+  });
+
+  // Every row written before the field existed used its language's home
+  // locale, so the fallback is correct for all of them by construction.
+  it('falls back to the language default for a legacy row with no languageCode', async () => {
+    const { db } = fakeDb([
+      dictationRow({ language: 'DE', contentJson: { referenceText: 'Guten Tag.', voiceId: 'Vicki' } }),
+    ]);
+
+    await processRecord(recordWith(EXERCISE_ID), deps(db));
+
+    expect(synth).toHaveBeenCalledWith(
+      expect.objectContaining({ voiceId: 'Vicki', languageCode: 'de-DE' }),
+    );
+  });
+
   it('skips synthesis when audioS3Key is already set (idempotent redelivery)', async () => {
     const { db, updateCalls } = fakeDb([
       dictationRow({ audioS3Key: `dictation/${EXERCISE_ID}.mp3` }),

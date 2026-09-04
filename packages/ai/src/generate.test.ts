@@ -16,6 +16,7 @@ import {
   CLOZE_GENERATION_TOOL,
   DICTATION_GENERATION_TOOL,
   DICTATION_VOICE_POOL_BY_LANGUAGE,
+  dictationVoicePoolFor,
   GENERATION_MODEL,
   GENERATION_TEMPERATURE,
   GENERATION_TOOL_BY_TYPE,
@@ -1193,7 +1194,14 @@ describe("generateOneDraft — dictation branch", () => {
     expect(res.kind).toBe("draft");
     if (res.kind !== "draft") return;
     expect(res.draft.contentJson.type).toBe(ExerciseType.DICTATION);
-    expect(res.draft.contentJson).toMatchObject({ voiceId: "Sergio" });
+    // The specific voice is a (batchSeed, ordinal) hash detail; what the draft
+    // must carry is a voice from this cell's pool, with its own locale.
+    const content = res.draft.contentJson as { voiceId: string; languageCode?: string };
+    const voice = dictationVoicePoolFor(Language.ES, "B1").find(
+      (v) => v.voiceId === content.voiceId,
+    );
+    expect(voice).toBeDefined();
+    expect(content.languageCode).toBe(voice!.languageCode);
   });
 });
 
@@ -1285,9 +1293,77 @@ describe("dictation generation tool + voice pool", () => {
     expect(pool[0].voiceId).toBe("Burcu");
   });
 
-  it("has a German dictation voice pool (both neural de-DE voices)", () => {
-    const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[Language.DE];
-    expect(pool.map((v) => v.voiceId)).toEqual(["Vicki", "Daniel"]);
+  it("has a German dictation voice pool covering DE, AT and CH", () => {
+    const pool = dictationVoicePoolFor(Language.DE, "A1");
+    expect(pool.map((v) => v.voiceId)).toEqual([
+      "Vicki",
+      "Daniel",
+      "Hannah",
+      "Sabrina",
+    ]);
+    // German regional variation is available from A1: Austrian and Swiss
+    // Standard German introduce no spelling ambiguity, and Goethe A1/A2
+    // listening already includes both.
+    expect(dictationVoicePoolFor(Language.DE, "B2")).toEqual(
+      dictationVoicePoolFor(Language.DE, "A1"),
+    );
+  });
+
+  it("holds Spanish to es-ES at A1/A2 and opens up at B1/B2", () => {
+    // seseo: es-MX / es-US pronounce c/z before e/i as s, so "gracias" and
+    // "*grasias" are the same audio. A1/A2 dictation is where the c/z/s
+    // spelling rule is being established, so those levels stay peninsular;
+    // B1/B2 want the accent breadth (the order DELE introduces it in).
+    for (const level of ["A1", "A2"] as const) {
+      expect(dictationVoicePoolFor(Language.ES, level).map((v) => v.voiceId)).toEqual([
+        "Sergio",
+        "Lucia",
+      ]);
+    }
+    for (const level of ["B1", "B2"] as const) {
+      expect(dictationVoicePoolFor(Language.ES, level).map((v) => v.voiceId)).toEqual([
+        "Sergio",
+        "Lucia",
+        "Mia",
+        "Andres",
+        "Lupe",
+        "Pedro",
+      ]);
+    }
+  });
+
+  it("gives Turkish its single neural voice at every level", () => {
+    for (const level of ["A1", "A2", "B1", "B2"] as const) {
+      expect(dictationVoicePoolFor(Language.TR, level).map((v) => v.voiceId)).toEqual([
+        "Burcu",
+      ]);
+    }
+  });
+
+  // The synth Lambda sends VoiceId + LanguageCode together; Polly rejects the
+  // pair when the locale is not one the voice speaks. Before 2026-09-04 the
+  // locale was derived from the LANGUAGE (ES -> es-ES), which is why a
+  // Mexican voice could not be added without this becoming per-voice.
+  it("pins each voice to the locale it actually speaks", () => {
+    const expected: Record<string, string> = {
+      Lucia: "es-ES",
+      Sergio: "es-ES",
+      Mia: "es-MX",
+      Andres: "es-MX",
+      Lupe: "es-US",
+      Pedro: "es-US",
+      Vicki: "de-DE",
+      Daniel: "de-DE",
+      Hannah: "de-AT",
+      Sabrina: "de-CH",
+      Burcu: "tr-TR",
+    };
+    for (const language of [Language.ES, Language.DE, Language.TR]) {
+      for (const voice of dictationVoicePoolFor(language, "B2")) {
+        expect(voice.languageCode).toBe(expected[voice.voiceId]);
+        expect(voice.accent.length).toBeGreaterThan(0);
+      }
+    }
   });
 
   // An empty pool throws inside parseGeneratedDictationDraft, so a language
@@ -1295,15 +1371,18 @@ describe("dictation generation tool + voice pool", () => {
   // time rather than at build time. DE sat at `[]` from the pool's
   // introduction until German dictation umbrellas were authored (2026-09-04);
   // this table-driven check is what stops the next language repeating it.
-  it("configures a non-empty voice pool for every non-EN language", () => {
+  it("configures a non-empty voice pool for every non-EN language and level", () => {
     for (const language of [Language.ES, Language.DE, Language.TR]) {
-      const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[language];
-      expect(pool.length).toBeGreaterThan(0);
-      for (const voice of pool) {
-        expect(voice).toMatchObject({
-          voiceId: expect.any(String),
-          accent: expect.any(String),
-        });
+      for (const level of ["A1", "A2", "B1", "B2"] as const) {
+        const pool = dictationVoicePoolFor(language, level);
+        expect(pool.length).toBeGreaterThan(0);
+        for (const voice of pool) {
+          expect(voice).toMatchObject({
+            voiceId: expect.any(String),
+            accent: expect.any(String),
+            languageCode: expect.any(String),
+          });
+        }
       }
     }
   });
@@ -1350,8 +1429,14 @@ describe("parseGeneratedDictationDraft", () => {
     );
     expect(content.type).toBe(ExerciseType.DICTATION);
     expect(content.referenceText).toContain("el tiempo");
-    expect(content.voiceId).toBe("Sergio"); // ordinal 0 → first ES voice
-    expect(content.accent).toContain("peninsular");
+    // Which voice a given (batchSeed, ordinal) lands on is a hash detail; what
+    // must hold is that the voice comes from this cell's pool and that the
+    // accent + locale stored on the row describe THAT voice.
+    const pool = dictationVoicePoolFor(Language.ES, "B1");
+    const chosen = pool.find((v) => v.voiceId === content.voiceId);
+    expect(chosen).toBeDefined();
+    expect(content.accent).toBe(chosen!.accent);
+    expect(content.languageCode).toBe(chosen!.languageCode);
     expect(Array.isArray(content.waveform)).toBe(true);
     expect(content.waveform.length).toBeGreaterThan(0);
     expect(content.audioUrl).toBeUndefined(); // never set at generation time
@@ -1389,6 +1474,62 @@ describe("parseGeneratedDictationDraft", () => {
       0,
     );
     expect(content.voiceId).toBe("Burcu");
+  });
+
+  const draftFor = (spec: unknown, ordinal: number) =>
+    parseGeneratedDictationDraft(
+      {
+        title: "t",
+        referenceText: "No te preocupes, el tiempo lo cura todo.",
+        sentences: ["No te preocupes, el tiempo lo cura todo."],
+        tested: ["x"],
+        durationSec: 7,
+      },
+      spec as never,
+      ordinal,
+    );
+
+  // `ordinal` is the index WITHIN one batch (generator-pool.ts), so a plain
+  // `pool[ordinal % pool.length]` would hand every 3-draft top-up the same
+  // first three voices and never reach the rest of a six-voice pool. The
+  // rotation is offset by the batch seed so the pool is covered across jobs.
+  it("reaches every voice in the pool across batches", () => {
+    const seen = new Set<string>();
+    for (let batch = 0; batch < 40; batch++) {
+      for (let ordinal = 0; ordinal < 3; ordinal++) {
+        seen.add(draftFor({ ...dictSpec, batchSeed: `seed-${batch}` }, ordinal).voiceId);
+      }
+    }
+    expect([...seen].sort()).toEqual(
+      dictationVoicePoolFor(Language.ES, "B1")
+        .map((v) => v.voiceId)
+        .sort(),
+    );
+  });
+
+  it("is deterministic for a given batch seed and ordinal", () => {
+    const a = draftFor({ ...dictSpec, batchSeed: "stable-seed" }, 2);
+    const b = draftFor({ ...dictSpec, batchSeed: "stable-seed" }, 2);
+    expect(a.voiceId).toBe(b.voiceId);
+    expect(a.languageCode).toBe(b.languageCode);
+  });
+
+  it("varies the voice within one batch", () => {
+    const spec = { ...dictSpec, batchSeed: "within-batch" };
+    const voices = [0, 1, 2].map((ordinal) => draftFor(spec, ordinal).voiceId);
+    expect(new Set(voices).size).toBe(3);
+  });
+
+  it("never reaches a seseo voice at A1/A2, whatever the seed", () => {
+    for (const cefrLevel of ["A1", "A2"] as const) {
+      for (let batch = 0; batch < 40; batch++) {
+        const content = draftFor(
+          { ...dictSpec, cefrLevel, batchSeed: `seed-${batch}` },
+          batch % 3,
+        );
+        expect(content.languageCode).toBe("es-ES");
+      }
+    }
   });
 
   it("rejects a dictation draft whose sentences do not join to referenceText", () => {
