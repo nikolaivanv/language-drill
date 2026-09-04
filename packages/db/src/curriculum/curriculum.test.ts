@@ -897,6 +897,22 @@ describe('curriculum clozeUnsuitable flag — specific entries', () => {
     expect(getGrammarPoint('tr-a1-dictation')?.targetOverride).toBe(30);
     expect(getGrammarPoint('tr-a2-dictation')?.targetOverride).toBe(30);
     expect(getGrammarPoint('tr-b1-dictation')?.targetOverride).toBe(30);
+    expect(getGrammarPoint('tr-b2-dictation')?.targetOverride).toBe(30);
+  });
+
+  it('raises every DE dictation target to 30 via targetOverride (2026-09-04)', () => {
+    // Same reasoning as TR: the (type, level) table gives dictation 6/10/15/15,
+    // which is too shallow to carry a level's whole listening track. A
+    // dictation umbrella only feeds the dictation cell, so a point-wide
+    // override is safe.
+    for (const key of [
+      'de-a1-dictation',
+      'de-a2-dictation',
+      'de-b1-dictation',
+      'de-b2-dictation',
+    ]) {
+      expect(getGrammarPoint(key)?.targetOverride).toBe(30);
+    }
   });
 
   it('caps tr-b2-double-voice translation volume via targetOverride (2026-07-20a)', () => {
@@ -1073,7 +1089,7 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity and has 20 vocab umbrellas', () => {
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
@@ -1081,15 +1097,24 @@ describe('per-language counts', () => {
     expect(grammar.B2).toBeGreaterThanOrEqual(27);
     // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
     // each level keeps its original broad umbrella (housing / environment /
-    // academic-noun) as one of its themes. Dictation / free-writing /
-    // paraphrase umbrellas remain a follow-up (see the 2026-07-12 plan doc).
+    // academic-noun) as one of its themes.
     expect(vocab).toBe(20);
-    expect(dictation).toBe(0);
-    expect(freeWriting).toBe(0);
-    expect(paraphrase).toBe(0);
+    // de-a1 + de-a2 + de-b1 + de-b2 dictation (2026-09-04): the follow-up the
+    // 2026-07-12 plan doc deferred. German was the only language with zero
+    // dictation / free-writing / paraphrase cells, so a DE learner had no
+    // listening-adjacent drill, no extended writing prompt, and no
+    // register-rewrite drill at any level.
+    expect(dictation).toBe(4);
+    // 3 A1 + 3 A2 + 6 B1 + 6 B2 free-writing topic umbrellas, mirroring the ES
+    // density. A1/A2 reuse the universal ES beginner topics; B1/B2 are shaped
+    // by the Goethe Zertifikat B1/B2 writing parts (Forumsbeitrag,
+    // halbformelle E-Mail, Beschwerde, Stellungnahme).
+    expect(freeWriting).toBe(18);
+    // de-b1-paraphrase + de-b2-paraphrase.
+    expect(paraphrase).toBe(2);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 3 dictation umbrellas, 9 free-writing umbrellas, and 1 paraphrase umbrella', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 12 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -1106,12 +1131,14 @@ describe('per-language counts', () => {
     expect(grammar.B2).toBe(17);
     // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
     expect(vocab).toBe(20);
-    // tr-a1 + tr-a2 + tr-b1 dictation.
-    expect(dictation).toBe(3);
-    // 3 A1 + 3 A2 + 3 B1 free-writing topic umbrellas.
-    expect(freeWriting).toBe(9);
-    // tr-b1-paraphrase (Phase 2 contextual-paraphrase generation); the B2 cycle is grammar-only, so no tr-b2-paraphrase.
-    expect(paraphrase).toBe(1);
+    // tr-a1 + tr-a2 + tr-b1 + tr-b2 dictation (B2 added 2026-09-04).
+    expect(dictation).toBe(4);
+    // 3 free-writing topic umbrellas per level, B2 included (2026-09-04).
+    expect(freeWriting).toBe(12);
+    // tr-b1-paraphrase + tr-b2-paraphrase (2026-09-04): the 2026-07-17 B2
+    // cycle was grammar-only, which left B2 as the one TR level with no
+    // dictation, free-writing or paraphrase cell.
+    expect(paraphrase).toBe(2);
   });
 });
 
@@ -1127,13 +1154,38 @@ describe('free-writing topic umbrellas', () => {
     }
   });
 
-  it("has 3 free-writing topic umbrellas per TR A1, A2 and B1", () => {
+  it("has 3 free-writing topic umbrellas per TR level, B2 included", () => {
     const fw = trCurriculum.filter((e) => e.kind === "free-writing");
     expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
     expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
     expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(3);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
+    }
+  });
+
+  it("has 3 free-writing topic umbrellas per DE A1 and A2, and 6 per B1 and B2", () => {
+    const fw = deCurriculum.filter((e) => e.kind === "free-writing");
+    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+    for (const e of fw) {
+      expect(e.freeWriting?.register).toBeDefined();
+    }
+  });
+
+  // The formal register was the thinnest of the three before the DE tracks
+  // landed (4 entries across the whole curriculum). Goethe B1/B2 writing is
+  // half formal, so the DE B1/B2 set deliberately carries formal prompts.
+  it("gives DE B1 and B2 at least one formal-register prompt each", () => {
+    const fw = deCurriculum.filter((e) => e.kind === "free-writing");
+    for (const level of ["B1", "B2"] as const) {
+      const formal = fw.filter(
+        (e) => e.cefrLevel === level && e.freeWriting?.register === "formal",
+      );
+      expect(formal.length).toBeGreaterThanOrEqual(1);
     }
   });
 });

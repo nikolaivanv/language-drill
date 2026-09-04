@@ -79,9 +79,15 @@ export const DICTATION_VOICE_POOL_BY_LANGUAGE: Readonly<
     { voiceId: "Sergio", accent: "español peninsular · centro" },
     { voiceId: "Lucia", accent: "español peninsular · centro" },
   ],
+  // Both neural de-DE voices (2026-09-04, when the German dictation umbrellas
+  // were authored). An empty pool throws in parseGeneratedDictationDraft, so
+  // this had to land in the same change as `de-*-dictation`.
+  [Language.DE]: [
+    { voiceId: "Vicki", accent: "hochdeutsch · Standard" },
+    { voiceId: "Daniel", accent: "hochdeutsch · Standard" },
+  ],
   // The only neural tr-TR Polly voice is Burcu (Filiz is standard-engine only),
-  // so the TR pool is single-voice. DE added when German enters dictation scope.
-  [Language.DE]: [],
+  // so the TR pool is single-voice.
   [Language.TR]: [{ voiceId: "Burcu", accent: "standart Türkçe · İstanbul" }],
 });
 

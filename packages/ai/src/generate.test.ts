@@ -1284,6 +1284,29 @@ describe("dictation generation tool + voice pool", () => {
     expect(pool.length).toBeGreaterThan(0);
     expect(pool[0].voiceId).toBe("Burcu");
   });
+
+  it("has a German dictation voice pool (both neural de-DE voices)", () => {
+    const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[Language.DE];
+    expect(pool.map((v) => v.voiceId)).toEqual(["Vicki", "Daniel"]);
+  });
+
+  // An empty pool throws inside parseGeneratedDictationDraft, so a language
+  // whose dictation curriculum ships before its voices fails at generation
+  // time rather than at build time. DE sat at `[]` from the pool's
+  // introduction until German dictation umbrellas were authored (2026-09-04);
+  // this table-driven check is what stops the next language repeating it.
+  it("configures a non-empty voice pool for every non-EN language", () => {
+    for (const language of [Language.ES, Language.DE, Language.TR]) {
+      const pool = DICTATION_VOICE_POOL_BY_LANGUAGE[language];
+      expect(pool.length).toBeGreaterThan(0);
+      for (const voice of pool) {
+        expect(voice).toMatchObject({
+          voiceId: expect.any(String),
+          accent: expect.any(String),
+        });
+      }
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -1,7 +1,13 @@
 import { ExerciseType } from '@language-drill/shared';
 import { describe, expect, it } from 'vitest';
 
-import { ALL_CURRICULA, esCurriculum, trCurriculum, type GrammarPoint } from '../curriculum';
+import {
+  ALL_CURRICULA,
+  deCurriculum,
+  esCurriculum,
+  trCurriculum,
+  type GrammarPoint,
+} from '../curriculum';
 import { assertValidCellKey } from '../lib/cell-key';
 
 import { ROUND_1_CEFR_LEVELS, compatibleTypes, enumerateCurriculumCells } from './cells';
@@ -131,7 +137,28 @@ describe('enumerateCurriculumCells — kind:dictation umbrellas', () => {
       (c) => c.grammarPoint.kind === 'dictation',
     );
     const keys = cells.map((c) => c.grammarPoint.key).sort();
-    expect(keys).toEqual(['tr-a1-dictation', 'tr-a2-dictation', 'tr-b1-dictation']);
+    expect(keys).toEqual([
+      'tr-a1-dictation',
+      'tr-a2-dictation',
+      'tr-b1-dictation',
+      'tr-b2-dictation',
+    ]);
+    for (const cell of cells) {
+      expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
+    }
+  });
+
+  it('pairs the DE dictation umbrellas with DICTATION only', () => {
+    const cells = enumerateCurriculumCells(deCurriculum).filter(
+      (c) => c.grammarPoint.kind === 'dictation',
+    );
+    const keys = cells.map((c) => c.grammarPoint.key).sort();
+    expect(keys).toEqual([
+      'de-a1-dictation',
+      'de-a2-dictation',
+      'de-b1-dictation',
+      'de-b2-dictation',
+    ]);
     for (const cell of cells) {
       expect(cell.exerciseType).toBe(ExerciseType.DICTATION);
     }

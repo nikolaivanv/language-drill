@@ -320,7 +320,21 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // benign because person/number/polarity are orthogonal to their constructions.
 // The defect is an axis meaningful for only SOME of a point's variants, which
 // needs a per-point judgement rather than a blanket sweep.
-export const CURRICULUM_VERSION_DE = '2026-08-27';
+//
+// `2026-09-04`: the three missing tracks are authored — 4 dictation umbrellas
+// (A1–B2, targetOverride 30), 18 free-writing topic umbrellas (3/3/6/6,
+// mirroring the ES density) and 2 paraphrase umbrellas (B1, B2). German was
+// the only language in the pool with zero cells of these kinds, so a DE
+// learner had no listening-adjacent drill, no extended writing prompt and no
+// register-rewrite drill at any level; the 2026-07-12 plan doc deferred them
+// as a follow-up and `docs/analysis/de-gap-triage-2026-07-15.md` recorded the
+// ß/ss and letter-omission rules as dictation content rather than grammar
+// points. A1/A2 free-writing topics mirror the universal ES beginner set;
+// B1/B2 follow the Goethe Zertifikat writing parts, which is also what puts
+// four formal-register prompts into a curriculum that had four in total.
+// Dictation additionally required the DE Polly voice pool
+// (`DICTATION_VOICE_POOL_BY_LANGUAGE`, packages/ai), empty until now.
+export const CURRICULUM_VERSION_DE = '2026-09-04';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4604,6 +4618,460 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Mismatching article gender/case on culture nouns ("*der Ausstellung" as a nominative subject instead of "die Ausstellung").',
       'Confusing "die Kritik" (criticism/review) with "die Kunst" (art, the general field).',
     ],
+  },
+  // ---------------------------------------------------------------------------
+  // Dictation umbrellas — kind: 'dictation' (Phase 2 generation pipeline)
+  // German orthography carries traps no other language in the pool has: every
+  // noun is capitalised, ß/ss is decided by the *length of the preceding
+  // vowel* rather than by sound, and final consonants devoice (Rad/Rat). None
+  // of that is audible, which is exactly what makes it dictation material —
+  // `docs/analysis/de-gap-triage-2026-07-15.md` folds Hammer 21-4-1 / 21-4-2
+  // here rather than authoring them as grammar points.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-a1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A1)',
+    description:
+      'Short, slow A1 connected-speech clips (1–2 simple sentences) on everyday topics; tests basic word segmentation, noun capitalisation, and the umlauts a beginner hears but does not yet write.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Ich heiße Anna und wohne in Hamburg.',
+      'Heute ist Montag und ich habe um neun Uhr Deutschkurs.',
+    ],
+    examplesNegative: ['*Eine Liste einzelner Wörter ohne natürlichen Satz.'],
+    commonErrors: [
+      'Writing nouns in lower case (Deutschkurs / *deutschkurs) — nothing in the audio marks capitalisation.',
+      'Dropping the umlaut that carries the word (heiße / *heisse, schön / *schon).',
+    ],
+    targetOverride: 30,
+  },
+  {
+    key: 'de-a2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (A2)',
+    description:
+      'A2 connected-speech clips (2–3 sentences) that bring in the Perfekt and separable verbs on familiar topics; tests participle spelling and the prefix stranded at the clause end, at a moderate pace.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Gestern bin ich zum Markt gefahren und habe frisches Obst gekauft.',
+      'Am Wochenende räumen wir die Wohnung auf und rufen meine Eltern an.',
+    ],
+    examplesNegative: ['*Ein Text ohne Perfekt und ohne Verbindung zwischen den Sätzen.'],
+    commonErrors: [
+      'Splitting the participle prefix off as its own word (gekauft / *ge kauft).',
+      'Re-attaching a separated prefix to the verb instead of leaving it at the clause end (räumen … auf / *aufräumen wir die Wohnung).',
+    ],
+    targetOverride: 30,
+  },
+  {
+    key: 'de-b1-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B1)',
+    description:
+      'Natural B1 connected-speech clips (2–4 short sentences) on everyday domains; tests clause-boundary tracking across subordinate clauses, ß vs ss after long and short vowels, and das vs dass.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Mach dir keine Sorgen, ich glaube, dass sich das morgen von selbst klärt.',
+      'Wir treffen uns um acht am Marktplatz und gehen von dort zu Fuß ins Kino.',
+    ],
+    examplesNegative: ['*Ein Clip aus einem einzigen Wort oder eine zusammenhanglose Liste.'],
+    commonErrors: [
+      'Writing the conjunction dass as the article/pronoun das ("ich glaube, *das sich das klärt").',
+      'Choosing ß or ss by sound instead of by the length of the vowel before it (Fuß / *Fuss).',
+    ],
+    targetOverride: 30,
+  },
+  {
+    key: 'de-b2-dictation',
+    kind: 'dictation',
+    name: 'Dictation — connected speech (B2)',
+    description:
+      'Natural B2 connected-speech clips (3–5 sentences) with subordinate clauses, extended attributes and richer vocabulary; tests connected-speech tracking, compound spelling and final devoicing under faster delivery.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Obwohl er sich gründlich vorbereitet hatte, war er im Prüfungsraum zunächst wie blockiert und musste erst einmal tief durchatmen.',
+      'Man hat mir gesagt, dass wir, wenn wir vor neun ankommen, in der Nähe noch einen Parkplatz finden.',
+    ],
+    examplesNegative: ['*Ein zu langer Text oder Wortschatz weit über B2.'],
+    commonErrors: [
+      'Splitting a compound noun into separate words (der Prüfungsraum / *der Prüfungs Raum).',
+      'Spelling a devoiced final consonant the way it sounds (Rad / *Rat, seid / *seit).',
+    ],
+    targetOverride: 30,
+  },
+
+  // ---------------------------------------------------------------------------
+  // Free-writing topic umbrellas — kind: 'free-writing' (Phase 2 generation)
+  // One cell per (language, level, topic); register is author-declared, the
+  // word band is CEFR-derived (FREE_WRITING_LENGTH_BY_CEFR in packages/ai).
+  // A1/A2 mirror the ES beginner topics (universal at that level); B1/B2 follow
+  // the Goethe Zertifikat B1/B2 writing parts — forum post, semi-formal e-mail,
+  // complaint, Stellungnahme — so the formal register is actually exercised.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-a1-fw-my-family',
+    kind: 'free-writing',
+    name: 'Meine Familie',
+    description:
+      'An informal prompt to introduce your family: who they are and one detail about each person.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks the learner to name two family members and say one thing about each.',
+      'Requires a closing sentence about who they see most often.',
+    ],
+    examplesNegative: ['*Write about family in general.'],
+    commonErrors: ['Unscoped prompt with no concrete checklist.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a1-fw-my-home',
+    kind: 'free-writing',
+    name: 'Meine Wohnung',
+    description:
+      'A neutral prompt to describe where you live: the rooms and one favourite spot.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks the learner to name two rooms and describe what is in each.',
+      'Requires a closing sentence about their favourite room and why.',
+    ],
+    examplesNegative: ['*Describe a flat.'],
+    commonErrors: ['Listing rooms with no connected description.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-a1-fw-a-day',
+    kind: 'free-writing',
+    name: 'Ein Tag in meiner Woche',
+    description:
+      'A neutral prompt to describe one ordinary day of the week from morning to night.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks for at least three activities in the order they happen.',
+      'Requires a closing sentence about what time the day ends.',
+    ],
+    examplesNegative: ['*Describe your life.'],
+    commonErrors: ['Prompt with no time frame, so the learner writes a general routine.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-a2-fw-last-vacation',
+    kind: 'free-writing',
+    name: 'Mein letzter Urlaub',
+    description:
+      'An informal prompt to tell a friend about your last holiday: where you went, what you did, and one thing that went wrong.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Asks where and with whom, then two things they did there.',
+      'Requires one sentence about something that did not go to plan.',
+    ],
+    examplesNegative: ['*Write about holidays.'],
+    commonErrors: ['Prompt that invites the present tense instead of a past narration.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a2-fw-best-friend',
+    kind: 'free-writing',
+    name: 'Mein bester Freund, meine beste Freundin',
+    description:
+      'An informal prompt to describe a close friend: how you met, what they are like, and what you do together.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Asks how they met and two character traits.',
+      'Requires a closing sentence about a shared activity.',
+    ],
+    examplesNegative: ['*Write about friendship.'],
+    commonErrors: ['Prompt with no personal anchor, so the answer becomes an essay on friendship.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a2-fw-my-neighborhood',
+    kind: 'free-writing',
+    name: 'Mein Viertel',
+    description:
+      'A neutral prompt to describe the neighbourhood you live in: what is nearby, what you like, and what is missing.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Asks for two places nearby and what each is used for.',
+      'Requires one sentence about something the neighbourhood lacks.',
+    ],
+    examplesNegative: ['*Describe a city.'],
+    commonErrors: ['Prompt that produces a list of shops with no evaluation.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b1-fw-forum-post',
+    kind: 'free-writing',
+    name: 'Forumsbeitrag: eine Meinung',
+    description:
+      'A neutral prompt in the Goethe B1 forum-post shape: react to a statement in an online forum with your own position, one reason, and one example from your life.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Quotes a short forum statement and asks the learner to agree or disagree explicitly.',
+      'Requires one reason and one personal example supporting the position.',
+    ],
+    examplesNegative: ['*Discuss a topic.'],
+    commonErrors: ['Prompt with no statement to react to, so there is no position to take.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b1-fw-email-invitation',
+    kind: 'free-writing',
+    name: 'Einladung per E-Mail',
+    description:
+      'An informal prompt in the Goethe B1 private-e-mail shape: invite a friend to something, give the practical details, and suggest an alternative date.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for the occasion plus time and place in the body of the e-mail.',
+      'Requires an alternative date in case the friend cannot come.',
+    ],
+    examplesNegative: ['*Write an e-mail.'],
+    commonErrors: ['Prompt without an addressee, so the register cannot be judged.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-b1-fw-email-cancellation',
+    kind: 'free-writing',
+    name: 'Absage an die Kursleitung',
+    description:
+      'A formal prompt in the Goethe B1 semi-formal e-mail shape: tell a course teacher you cannot attend, give the reason, and ask what you should do about the missed session.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Names the addressee as the course teacher, so Sie-address and a formal greeting are required.',
+      'Requires a reason plus one concrete question about catching up.',
+    ],
+    examplesNegative: ['*Write to your teacher.'],
+    commonErrors: ['Prompt that does not fix the addressee, letting the learner default to du.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b1-fw-complaint',
+    kind: 'free-writing',
+    name: 'Beschwerde über eine Bestellung',
+    description:
+      'A formal prompt to complain in writing about a faulty order: what you ordered, what is wrong, and what you expect the company to do, with a deadline.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for the order details and the specific defect.',
+      'Requires a stated remedy and a date by which the learner expects an answer.',
+    ],
+    examplesNegative: ['*Complain about something.'],
+    commonErrors: ['Prompt that invites venting instead of a stated remedy.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b1-fw-past-experience',
+    kind: 'free-writing',
+    name: 'Ein Erlebnis, das ich nicht vergesse',
+    description:
+      'A neutral prompt to narrate one memorable experience: what happened, how it felt at the time, and why it stayed with you.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for the events in order, anchored to a specific occasion.',
+      'Requires a closing sentence on why the memory lasted.',
+    ],
+    examplesNegative: ['*Write about your past.'],
+    commonErrors: ['Prompt with no single occasion, so the answer becomes a summary of several years.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b1-fw-future-plan',
+    kind: 'free-writing',
+    name: 'Meine Pläne für das nächste Jahr',
+    description:
+      'A neutral prompt to set out a plan for the coming year: what you intend to do, the first concrete step, and what could get in the way.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for one goal and the first step towards it.',
+      'Requires one obstacle and how the learner would handle it.',
+    ],
+    examplesNegative: ['*Write about the future.'],
+    commonErrors: ['Prompt that produces a wish list with no steps or obstacles.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b2-fw-remote-work',
+    kind: 'free-writing',
+    name: 'Homeoffice',
+    description:
+      'A neutral prompt to weigh working from home against working on site: one clear advantage, one clear drawback, and the arrangement the learner would choose.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks for one advantage and one drawback, each with a reason.',
+      'Requires a closing recommendation the learner commits to.',
+    ],
+    examplesNegative: ['*Write about work.'],
+    commonErrors: ['Prompt that allows a balanced summary with no position taken.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b2-fw-environment',
+    kind: 'free-writing',
+    name: 'Umwelt im Alltag',
+    description:
+      'A neutral prompt on everyday environmental choices: one habit the learner has changed, what made it difficult, and what would help more people do the same.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks for one concrete habit rather than general concern.',
+      'Requires a proposal aimed at other people, not only the learner.',
+    ],
+    examplesNegative: ['*Write about the environment.'],
+    commonErrors: ['Prompt that invites slogans instead of a concrete change.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b2-fw-social-media',
+    kind: 'free-writing',
+    name: 'Soziale Medien',
+    description:
+      'A neutral prompt on the role of social media: how the learner uses it, one effect they have noticed on themselves, and one rule they would give a younger user.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks for the learner’s own usage before any general claim.',
+      'Requires one concrete rule addressed to a younger user.',
+    ],
+    examplesNegative: ['*Discuss social media.'],
+    commonErrors: ['Prompt that produces generic praise or blame with no personal observation.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b2-fw-work-life-balance',
+    kind: 'free-writing',
+    name: 'Arbeit und Freizeit',
+    description:
+      'An informal prompt to a friend about balancing work and free time: how the learner’s week is divided, what they would change, and one piece of advice they would give.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks how the week is actually divided before any advice.',
+      'Requires one piece of advice addressed to the friend.',
+    ],
+    examplesNegative: ['*Write about work-life balance.'],
+    commonErrors: ['Prompt that drifts into a formal essay despite the informal addressee.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-b2-fw-formal-request',
+    kind: 'free-writing',
+    name: 'Formelle Anfrage',
+    description:
+      'A formal prompt to write to an institution: state the request, give the background that justifies it, and name the documents or answer the learner needs, with a polite closing.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Fixes an institutional addressee, so Sie-address and a formal closing are required.',
+      'Requires the request in the first paragraph and the justification after it.',
+    ],
+    examplesNegative: ['*Write a formal letter.'],
+    commonErrors: ['Prompt that buries the request, so the answer never states what is wanted.'],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b2-fw-opinion-statement',
+    kind: 'free-writing',
+    name: 'Stellungnahme zu einem Zeitungsartikel',
+    description:
+      'A formal prompt in the Goethe B2 Stellungnahme shape: respond to a claim from a newspaper article, concede one point to the other side, and argue your own position with two reasons.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Quotes a claim and asks the learner to state their position on it explicitly.',
+      'Requires one concession to the opposing view before the learner’s two reasons.',
+    ],
+    examplesNegative: ['*Give your opinion.'],
+    commonErrors: ['Prompt with no concession requirement, so the answer becomes one-sided.'],
+    freeWriting: { register: 'formal' },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Paraphrase umbrellas — kind: 'paraphrase' (Phase 2 contextual-paraphrase)
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-b1-paraphrase',
+    kind: 'paraphrase',
+    name: 'Paraphrase — say it another way (B1)',
+    description:
+      'Rewrite a B1 sentence under one constraint: avoid a given word, shift register, or simplify for an audience — preserving meaning while reaching for synonyms and alternative structures.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Source "Ich mag Filme sehr" → without «mögen»: "Filme gefallen mir ausgesprochen gut."',
+      'Source "Gibst du mir das Salz?" → formal register: "Könnten Sie mir bitte das Salz reichen?"',
+    ],
+    examplesNegative: ['*A rewrite that changes the meaning of the source.'],
+    commonErrors: [
+      'Using a banned word in a different inflected form.',
+      'Changing register but also changing what is said.',
+    ],
+    paraphrase: {
+      seeds: [
+        'a complaint to the landlord about the heating',
+        'describing a childhood memory',
+        'asking a colleague for a deadline extension',
+        'giving a tourist directions to the main station',
+        'declining a party invitation politely',
+        'explaining to your boss why you are late',
+        'recommending a bakery to a neighbour',
+        'apologising for a mistake at work',
+        'describing your morning routine',
+        'returning a faulty item to a shop',
+        'inviting a friend to a birthday party',
+        'summarising a film you saw at the cinema',
+      ],
+    },
+  },
+  {
+    key: 'de-b2-paraphrase',
+    kind: 'paraphrase',
+    name: 'Paraphrase — say it another way (B2)',
+    description:
+      'Rewrite a B2 sentence under one constraint: avoid a given word, shift register up or down, or simplify a nuanced point for a lay audience — preserving the full propositional content.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Source "Die Arbeitslosigkeit ist deutlich gestiegen" → without «steigen»: "Die Arbeitslosigkeit hat spürbar zugenommen."',
+      'Source "Wir müssen dieses Problem schnellstmöglich angehen" → simplify for a child: "Wir müssen das bald in Ordnung bringen."',
+    ],
+    examplesNegative: ['*A rewrite that drops part of the original claim.'],
+    commonErrors: [
+      'Simplifying so much that a key nuance is lost.',
+      'Swapping in a near-synonym that shifts the meaning slightly.',
+    ],
+    paraphrase: {
+      seeds: [
+        'summarising a newspaper article for a friend',
+        'explaining a change in company policy to staff',
+        'writing a formal complaint to a public authority',
+        'giving constructive feedback to a colleague',
+        'defending an unpopular opinion in a debate',
+        'explaining a rental-contract clause in plain language',
+        'pitching a project idea to a manager',
+        'describing symptoms to a doctor',
+        'negotiating a pay rise',
+        'explaining to a client why a deadline was missed',
+        'writing a reference for a former employee',
+        'proposing a compromise in a neighbourhood dispute',
+      ],
+    },
   },
 ];
 
