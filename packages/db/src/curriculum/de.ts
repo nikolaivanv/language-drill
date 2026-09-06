@@ -334,7 +334,15 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // four formal-register prompts into a curriculum that had four in total.
 // Dictation additionally required the DE Polly voice pool
 // (`DICTATION_VOICE_POOL_BY_LANGUAGE`, packages/ai), empty until now.
-export const CURRICULUM_VERSION_DE = '2026-09-04';
+//
+// `2026-09-06`: the three A1 free-writing umbrellas are re-scoped after their
+// first generation night flagged 5 of 9 drafts `level-mismatch`. The A1/A2
+// topics were mirrored from `es.ts`, which imported checklist items that are
+// A1 in Spanish but A2 in German: "and why" forces weil/denn (verb-final
+// subordination) where Spanish gets away with `porque` + indicative, and a
+// three-activity day drifts into the Perfekt. `de-a1-fw-my-home` had produced
+// zero approved rows. Nothing else changed; B1/B2 free-writing generated clean.
+export const CURRICULUM_VERSION_DE = '2026-09-06';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4722,11 +4730,17 @@ const deCurriculum: readonly GrammarPoint[] = [
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Asks the learner to name two family members and say one thing about each.',
-      'Requires a closing sentence about who they see most often.',
+      'Asks the learner to name two family members and say one simple thing about each.',
+      'Requires a closing sentence naming who they see most often.',
     ],
     examplesNegative: ['*Write about family in general.'],
-    commonErrors: ['Unscoped prompt with no concrete checklist.'],
+    commonErrors: [
+      'Unscoped prompt with no concrete checklist.',
+      // 2026-09-06: one draft was flagged level-mismatch for stacking a
+      // sentence per family member plus a closing sentence. Keep the required
+      // elements answerable inside the A1 word band (30-60).
+      'So many required elements that an A1 learner cannot cover them in 30-60 words.',
+    ],
     freeWriting: { register: 'informal' },
   },
   {
@@ -4734,15 +4748,27 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'free-writing',
     name: 'Meine Wohnung',
     description:
-      'A neutral prompt to describe where you live: the rooms and one favourite spot.',
+      'A neutral prompt to describe where you live: the rooms and one favourite spot, in the present tense and in simple main clauses.',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
       'Asks the learner to name two rooms and describe what is in each.',
-      'Requires a closing sentence about their favourite room and why.',
+      'Requires a closing sentence naming their favourite room.',
     ],
-    examplesNegative: ['*Describe a flat.'],
-    commonErrors: ['Listing rooms with no connected description.'],
+    examplesNegative: [
+      '*Describe a flat.',
+      '*Say which room is your favourite and explain why (a reason clause needs weil/denn, which is A2).',
+    ],
+    commonErrors: [
+      'Listing rooms with no connected description.',
+      // 2026-09-06: this cell generated 0 approved / 2 flagged on its first
+      // night. The old checklist asked for a favourite room "and why", which
+      // in German forces weil/denn — verb-final subordination, solidly A2 —
+      // and the validator flagged every draft level-mismatch. The same
+      // checklist is A1-safe in Spanish (porque + indicative), which is how it
+      // got here: the A1/A2 topics were mirrored from es.ts.
+      'Prompt that requires a reason clause, forcing weil/denn above A1.',
+    ],
     freeWriting: { register: 'neutral' },
   },
   {
@@ -4750,15 +4776,25 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'free-writing',
     name: 'Ein Tag in meiner Woche',
     description:
-      'A neutral prompt to describe one ordinary day of the week from morning to night.',
+      'A neutral prompt to describe one ordinary weekday from morning to night, in the present tense.',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
-      'Asks for at least three activities in the order they happen.',
+      'Asks for two or three activities in the order they happen.',
       'Requires a closing sentence about what time the day ends.',
     ],
-    examplesNegative: ['*Describe your life.'],
-    commonErrors: ['Prompt with no time frame, so the learner writes a general routine.'],
+    examplesNegative: [
+      '*Describe your life.',
+      '*Tell us about a day last week (a past narration needs the Perfekt, which is A2).',
+    ],
+    commonErrors: [
+      'Prompt with no time frame, so the learner writes a general routine.',
+      // 2026-09-06: drafts drifted into a past-tense narration ("Der Moment,
+      // als der Wecker klingelte") and were flagged level-mismatch — the
+      // Perfekt is A2. A third activity plus a clock-time close also pushed
+      // the task past the A1 word band (30-60, freeWritingLengthFor).
+      'Prompt set in the past, or with so many required elements that it cannot be answered inside the A1 word band.',
+    ],
     freeWriting: { register: 'neutral' },
   },
   {

@@ -46,6 +46,18 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-09-06): pause the nightly exercise pre-generation cron.
+  // The pool is at target where it matters (all four ES/DE/TR levels sit at
+  // 96-99% of per-cell targets) and marginal ROI has fallen: the 2026-09-05
+  // run bought 59 approved rows from 91 pre-existing cells at $0.184 each,
+  // against $0.022 for the newly-authored tracks in the same run.
+  // This drops only the exercise-refill EventBridge rule; the weekly
+  // theory-generation cron, the nightly mastery rebuild and the email cron
+  // all stay on `enableScheduledJobs`. On-demand generation (POST
+  // /admin/generate) is unaffected, so an individual cell can still be
+  // topped up. Revert (delete this line and comment) in a follow-up PR to
+  // resume.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
