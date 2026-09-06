@@ -1646,6 +1646,70 @@ describe("parseGeneratedFreeWritingDraft", () => {
     );
   });
 
+  // Verbatim shape from the Langfuse `generate` trace for
+  // de:a1:free_writing:de-a1-fw-my-family (2026-09-06, claude-sonnet-4-6): the
+  // model returned the array as a JSON-ENCODED STRING rather than an array.
+  // Every draft shaped like this was discarded after being paid for - ~44% of
+  // all free-writing drafts. The German typographic quotes in `detail` are
+  // kept because they are the suspected trigger: the model appears to dodge
+  // nested-quote escaping by stringifying the whole value.
+  const STRINGIFIED_REQUIRED_ELEMENTS = JSON.stringify([
+    {
+      id: "two_members",
+      label: "Nenn zwei Familienmitglieder beim Namen.",
+      detail: 'z. B. „Meine Schwester Lisa …" oder „Mein Vater …"',
+    },
+    {
+      id: "one_detail_each",
+      label: "Sag eine einfache Sache über jede Person.",
+      detail: "z. B. was sie gern isst, wie sie ist, oder was sie macht.",
+    },
+  ]);
+
+  it("accepts requiredElements delivered as a JSON-encoded string", () => {
+    const content = parseGeneratedFreeWritingDraft(
+      { ...validInput, requiredElements: STRINGIFIED_REQUIRED_ELEMENTS },
+      spec,
+    );
+    expect(content.requiredElements).toHaveLength(2);
+    expect(content.requiredElements[0].id).toBe("two_members");
+    expect(content.requiredElements[1].label).toBe("Sag eine einfache Sache über jede Person.");
+    expect(content.requiredElements[0].detail).toContain("Meine Schwester Lisa");
+  });
+
+  it("still rejects a string that does not parse as JSON", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft(
+        { ...validInput, requiredElements: "two members, one detail each" },
+        spec,
+      ),
+    ).toThrow(/requiredElements/);
+  });
+
+  it("still rejects a JSON string that is not an array", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft(
+        { ...validInput, requiredElements: JSON.stringify({ id: "x", label: "y" }) },
+        spec,
+      ),
+    ).toThrow(/requiredElements/);
+  });
+
+  it("still rejects a JSON string holding an empty array", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft({ ...validInput, requiredElements: "[]" }, spec),
+    ).toThrow(/requiredElements/);
+  });
+
+  it("still applies per-element validation to a parsed string", () => {
+    expect(() =>
+      parseGeneratedFreeWritingDraft(
+        { ...validInput, requiredElements: JSON.stringify([{ id: "x" }]) },
+        spec,
+      ),
+    ).toThrow(/label/);
+  });
+
   it("rejects an empty requiredElements list", () => {
     expect(() =>
       parseGeneratedFreeWritingDraft({ ...validInput, requiredElements: [] }, spec),
