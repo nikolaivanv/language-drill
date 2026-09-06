@@ -1347,9 +1347,32 @@ function parseRequiredElements(
   raw: Record<string, unknown>,
   ctx: string,
 ): FreeWritingRequiredElement[] {
-  const v = raw["requiredElements"];
+  let v = raw["requiredElements"];
+  // Tool-use sometimes delivers this as a JSON-ENCODED STRING rather than an
+  // array — observed in prod on 2026-09-06 (claude-sonnet-4-6), where drafts
+  // whose `detail` carried German typographic quotes („ ") arrived as
+  // `"[{\"id\": …}]"`. The model appears to dodge nested-quote escaping by
+  // stringifying the whole value. Every such draft was discarded after being
+  // paid for — ~44% of all free-writing drafts — so parse it here rather than
+  // throw away a response that is correct apart from one layer of encoding.
+  // A string that does not parse, or parses to something other than a
+  // non-empty array, still falls through to the check below.
+  if (typeof v === "string") {
+    try {
+      v = JSON.parse(v) as unknown;
+    } catch {
+      // leave `v` as the string; the array check below rejects it
+    }
+  }
   if (!Array.isArray(v) || v.length === 0) {
-    throw new Error(`${ctx}: invalid requiredElements: must be a non-empty array`);
+    // Name what actually arrived: the old message said only "must be a
+    // non-empty array", which reads as an empty array when the real value was
+    // a string, and that misreading survived into `generation_jobs.error_message`.
+    throw new Error(
+      `${ctx}: invalid requiredElements: must be a non-empty array (got ${
+        Array.isArray(v) ? "an empty array" : typeof v
+      })`,
+    );
   }
   return v.map((el, i): FreeWritingRequiredElement => {
     if (!isObject(el)) {
