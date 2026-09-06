@@ -12,10 +12,12 @@ import {
 import { getGrammarPoint } from "@language-drill/db";
 
 import { createClaudeClient } from "./index.js";
+import { FREE_WRITING_GENERATION_SYSTEM_PROMPT } from "./free-writing-generation-prompts.js";
 import {
   CLOZE_GENERATION_TOOL,
   DICTATION_GENERATION_TOOL,
   DICTATION_VOICE_POOL_BY_LANGUAGE,
+  FREE_WRITING_GENERATION_TOOL,
   dictationVoicePoolFor,
   GENERATION_MODEL,
   GENERATION_TEMPERATURE,
@@ -1613,6 +1615,35 @@ describe("parseGeneratedFreeWritingDraft", () => {
     expect(content.requiredElements).toHaveLength(2);
     expect(content.requiredElements[1].detail).toBe("una a favor, una en contra");
     expect(content.topicHint).toBe("trabajo");
+  });
+
+  // The parser rejecting `[]` is the SYMPTOM side. Until 2026-09-06 the tool
+  // schema left `requiredElements` unbounded, so an empty array was
+  // schema-valid, the API accepted it, and the draft was thrown away as
+  // malformed after it had been paid for — ~44% of all free-writing drafts
+  // (46 of them in the 2026-09-05 nightly alone, which was that run's entire
+  // free-writing shortfall). Bounding the array puts the constraint at the API
+  // boundary where it can shape the response instead of failing it.
+  it("bounds requiredElements in the tool schema so an empty array is not valid input", () => {
+    const props = FREE_WRITING_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      { minItems?: number; maxItems?: number }
+    >;
+    expect(props.requiredElements.minItems).toBe(2);
+    expect(props.requiredElements.maxItems).toBe(4);
+  });
+
+  // The prompt states the same range in prose. If the two drift, the model is
+  // told one thing and validated against another.
+  it("states the same range in the free-writing system prompt", () => {
+    const props = FREE_WRITING_GENERATION_TOOL.input_schema.properties as Record<
+      string,
+      { minItems?: number; maxItems?: number }
+    >;
+    const { minItems, maxItems } = props.requiredElements;
+    expect(FREE_WRITING_GENERATION_SYSTEM_PROMPT).toContain(
+      `Required elements (${minItems}\u2013${maxItems})`,
+    );
   });
 
   it("rejects an empty requiredElements list", () => {

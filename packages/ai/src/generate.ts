@@ -599,6 +599,16 @@ export const FREE_WRITING_GENERATION_TOOL: Anthropic.Tool = {
       requiredElements: {
         type: "array",
         description: "2–4 concrete, checkable things the answer must contain.",
+        // Bounded at the API boundary (2026-09-06). Unbounded, an empty array
+        // was schema-valid: the model returned `[]`, the API accepted it, and
+        // `parseGeneratedFreeWritingDraft` then discarded the paid-for draft as
+        // malformed. That was ~44% of all free-writing drafts — 46 of them in
+        // the 2026-09-05 nightly alone, exactly that run's free-writing
+        // shortfall, invisible in `generation_jobs` because malformed drafts
+        // only show up as `produced_count < requested_count`. Keep these bounds
+        // in step with the "(2–4)" the system prompt states in prose.
+        minItems: 2,
+        maxItems: 4,
         items: {
           type: "object",
           properties: {
