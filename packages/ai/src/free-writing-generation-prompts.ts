@@ -26,7 +26,7 @@ import type { GenerationPromptInputs } from "./generation-prompts.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-06-17";
+export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-09-07";
 
 /**
  * Cap on how many already-used titles appear in the system prompt's avoid-list.
@@ -160,7 +160,7 @@ export const FREE_WRITING_GENERATION_SYSTEM_PROMPT = `You are an expert author o
 
 - **Distinct, specific title — never the bare topic name.** The \`title\` MUST be a specific angle on the topic, not a restatement of the topic name above. A batch of prompts on one topic must have clearly different titles and tasks, so the learner sees variety rather than near-duplicates.
 - **Self-contained, scorable task.** The \`task\` MUST tell the learner exactly what to write so a competent {{cefrLevel}} learner knows when they are done. It MUST stay on the topic above and be answerable in {{minWords}}–{{maxWords}} words at the {{register}} register. NOT a vague "write about X".
-- **Required elements (2–4).** Provide a short checklist (\`requiredElements\`) of 2–4 concrete, observable things the answer must contain (e.g. "state your opinion in the first sentence", "give two reasons", "use at least one concessive connector"). Each must be realistic at {{cefrLevel}} and genuinely checkable — not impossibly many, not trivially one, not self-contradictory. Write each \`label\` in {{language}}; an optional \`detail\` may add a one-line hint.
+- **Required elements (2–4).** Provide a short checklist (\`requiredElements\`) of 2–4 concrete, observable things the answer must contain — for example: state your opinion in the first sentence; give two reasons; use at least one concessive connector. Each must be realistic at {{cefrLevel}} and genuinely checkable — not impossibly many, not trivially one, not self-contradictory. Write each \`label\` in {{language}}; an optional \`detail\` may add a one-line hint. Write \`label\` and \`detail\` as plain sentences with no quotation marks of any kind (not \" \u2019 \u201e \u201c \u00ab \u00bb): quoting inside these fields breaks the JSON encoding of the whole \`requiredElements\` value, and the draft is thrown away. To show a sample phrase, name it without quoting it, or use a colon.
 - **Do not write the answer.** The prompt frames the task; it MUST NOT contain a model paragraph or hand the learner sentences to copy.
 - **Vocabulary band.** Keep the wording of the prompt itself at or below CEFR {{cefrLevel}} everyday {{language}}.
 - **Safe, neutral framing.** Avoid weapons, substances, violence, and culturally sensitive or stereotyping angles.

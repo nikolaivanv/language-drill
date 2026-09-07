@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CefrLevel, ExerciseType, Language, type GrammarPoint } from "@language-drill/shared";
 import {
   FREE_WRITING_GENERATION_PROMPT_VERSION,
+  FREE_WRITING_GENERATION_SYSTEM_PROMPT,
   FREE_WRITING_LENGTH_BY_CEFR,
   CONCRETE_FREE_WRITING_ANGLES,
   FULL_FREE_WRITING_ANGLES,
@@ -34,6 +35,36 @@ const INPUTS: GenerationPromptInputs = {
 describe("free-writing generation prompt", () => {
   it("pins a dated version tag", () => {
     expect(FREE_WRITING_GENERATION_PROMPT_VERSION).toMatch(/^free-writing-generate@\d{4}-\d{2}-\d{2}$/);
+  });
+
+  // 2026-09-07. The model was returning `requiredElements` as an ESCAPED
+  // STRING instead of a JSON array whenever a label/detail carried quotation
+  // marks — it dodges nested-quote escaping by stringifying the whole value,
+  // and the string it produces is not even valid JSON, so the draft is
+  // discarded after being paid for (~44% of all free-writing drafts). The
+  // prompt's own examples were quoted, which seeded the habit. Two guards:
+  // state the rule, and keep the examples themselves quote-free.
+  it("forbids quotation marks inside label and detail", () => {
+    expect(FREE_WRITING_GENERATION_SYSTEM_PROMPT).toMatch(/no quotation marks/i);
+  });
+
+  it("uses no quotation marks in its own requiredElements guidance", () => {
+    const bullet = FREE_WRITING_GENERATION_SYSTEM_PROMPT.split("\n").find((l) =>
+      l.includes("Required elements"),
+    );
+    expect(bullet).toBeDefined();
+    // Everything up to the rule itself must be quote-free; the rule may name
+    // the characters it bans.
+    const [beforeRule, afterRule] = bullet!.split(/no quotation marks/i);
+    for (const quote of ['"', "'", "\u201e", "\u201c", "\u00ab", "\u00bb"]) {
+      expect(beforeRule).not.toContain(quote);
+    }
+    // The banned characters must reach the model as characters, not as the
+    // literal escape sequences that produce them in the source template.
+    expect(afterRule).not.toContain("\\u201e");
+    for (const quote of ['"', "\u201e", "\u201c", "\u00ab", "\u00bb"]) {
+      expect(afterRule).toContain(quote);
+    }
   });
 
   it("derives the word band from the CEFR level", () => {
