@@ -23,7 +23,7 @@
     "@language-drill/email": "workspace:*",
     "@language-drill/shared": "workspace:*",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.0",
+    "hono": "^4.13.7",
     "svix": "^1.99.1",
     "ts-fsrs": "^5.4.1",
     "zod": "^3.25.76"
@@ -33,6 +33,6 @@
     "@types/aws-lambda": "^8.10.162",
     "tsx": "^4.23.5",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
