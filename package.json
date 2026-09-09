@@ -58,7 +58,9 @@
   "pnpm": {
     "overrides": {
       "@types/node": "^22.0.0",
-      "@esbuild-kit/core-utils>esbuild": "^0.25.12"
+      "@esbuild-kit/core-utils>esbuild": "^0.25.12",
+      "sharp": "^0.35.4",
+      "js-yaml": "^4.3.2"
     }
   }
 }
