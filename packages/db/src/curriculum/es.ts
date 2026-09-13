@@ -336,8 +336,18 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * before this is deployed AND nightly generation is un-paused (#718 paused it
  * 2026-09-06) — freed slots with no generator running just leave the pool
  * short.
+ *
+ * `2026-09-13a`: es-b1-nominalizers `article-de-nominalizer` directive
+ * rewritten. It quoted `la de mi hermana` as an example while 39% of that
+ * variant's approved prod rows already named the sister as owner; it now
+ * carries no family-member example and forbids both a family-member owner and
+ * reuse of its own examples. See the block comment on the point. Directive
+ * text only — variant ids, shares
+ * and targets are unchanged, so no relabel or allow-list entry. Both cells sit
+ * at target, so the new directive reaches only future refills; no demotion is
+ * part of this change (the existing rows are correct Spanish).
  */
-export const CURRICULUM_VERSION_ES = '2026-09-13';
+export const CURRICULUM_VERSION_ES = '2026-09-13a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -3940,11 +3950,23 @@ const esCurriculum: readonly GrammarPoint[] = [
     // prohibition (*el uno de) that a correct draft cannot realize, and its
     // directive asked for an error-correction format these exercise types do not
     // have. The spec is KEPT; all three variants are number-free.
+    //
+    // Measured 2026-09-13 on prod: 15 of the 38 approved article + de rows
+    // (39%) name `mi hermana` as the owner, and 11 more another person (`mi
+    // madre`, `mi amigo`). The
+    // frequency seed of that era was absorbed into the OMITTED noun (batería,
+    // academia → "my phone battery", "my school bag") while the de-phrase stayed
+    // free and collapsed onto "mine vs my sister's". Those rows predate the
+    // variants, but the directive below then quoted `la de mi hermana` as its
+    // own example, and a variant draft carries no seed at all. Each draft is a
+    // separate call (`buildGenerationUserPrompt` runs per ordinal), so "vary
+    // across drafts" would be inert — the directive instead forbids reusing its
+    // examples and a family-member owner within the single draft it steers.
     constructionVariants: [
       {
         id: 'article-de-nominalizer',
         directive:
-          'article + de standing in for an omitted noun, the article agreeing with that noun (Mi coche y el de Juan; Prefiero los de ayer; la de mi hermana)',
+          'article + de standing in for an omitted noun, the article agreeing with that noun — what follows de may be a named person, a place, a time, or a material or flavour (Mi coche es más rápido que el de Marta; La de la esquina está cerrada; Prefiero los de ayer; Quiero el de chocolate); invent your own de-phrase rather than reusing these, and do not make it a family member',
         share: 3,
       },
       {
