@@ -310,8 +310,34 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * variants remain, above the >= 2 rotation invariant. No demote:pool needed:
  * all 14 rows were flagged, so nothing entered the approved pool. Bump clears
  * suppression so the cell re-runs on the narrowed rotation.
+ *
+ * `2026-09-13`: es-b1-collective-agreement GAINS four constructionVariants.
+ * It had none, and its prod pool (100 approved rows) realized only the
+ * singular half of a two-halved point: the "collective + de + plural noun
+ * takes PLURAL agreement" construction its description and examplesPositive
+ * both name was at 0/100, while `todo el mundo` held 79/100 of the subject
+ * frames. See the block comment on the point for the measurement. The
+ * partitive variant is `appliesTo: [TRANSLATION]` — singular agreement is
+ * equally correct there, so it is a free alternant no cloze blank can
+ * exclude, the `past-counterfactual-hubiera-result` case above.
+ *
+ * Targets are unchanged: 4 variants x MIN_PER_VARIANT is 16 and 3 x 4 is 12,
+ * both far under the B1 cloze/translation base of 50, so the variant floor is
+ * not binding and no `admin.test.ts` cell-target allow-list entry is needed.
+ * Bump clears the target-reached suppression on two cells sitting at exactly
+ * 50/50 — without it neither cell is ever requested again and the fix ships
+ * inert. It also re-releases the ES low-yield backlog for one night, the
+ * accepted cost noted in the 2026-08-18 entry above.
+ *
+ * A demote + regenerate repass is still OWED (docs/runbooks/
+ * pool-diversity-sweep.md, phases 4-9) and is NOT part of this change:
+ * both cells are at target, so there is no headroom for the new variants to
+ * fill until old rows are demoted with `--reason pool-hygiene`. Do not demote
+ * before this is deployed AND nightly generation is un-paused (#718 paused it
+ * 2026-09-06) — freed slots with no generator running just leave the pool
+ * short.
  */
-export const CURRICULUM_VERSION_ES = '2026-08-26';
+export const CURRICULUM_VERSION_ES = '2026-09-13';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -5009,6 +5035,64 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-collective-agreement',
+    // Measured 2026-09-13 on prod (100 approved rows, 50 cloze + 50
+    // translation): the pool realizes ONE of the two constructions the
+    // description names. Every cloze `correctAnswer` is a 3rd-person SINGULAR
+    // verb and not one row in either cell contains `mayoría` / `mayor parte` /
+    // `la mitad de` / `un grupo de` — the "collective + de + plural noun takes
+    // plural agreement" half (`La mayoría de los vecinos creen`) is at 0/100.
+    // Worse than a gap: the pool actively trains "collective => singular" as an
+    // unconditional rule, which is exactly the wrong generalization.
+    //
+    // The subject frame had also collapsed lexically — `todo el mundo` in 31/50
+    // clozes and 48/50 translations. `audit:collapse` reported the translation
+    // cell on the answer-surface signal twice (2026-08-11 baseline and the
+    // 2026-08-14 post-repass run, `todo el` at 96%); it is not in
+    // collapse-dismissals.ts, so it was never adjudicated, just not acted on.
+    // Frequency seeding could not fix it: the lemma is absorbed into the
+    // complement (`academia`, `sindicato`) while the SUBJECT frame stays free —
+    // the collapse mode documented on `seedKindFor`.
+    //
+    // Variants own the frame, so the point loses frequency seeding. The split
+    // is structural, not lexical: a universal-quantifier subject, a lexical
+    // collective DP, predicate-adjective agreement (commonErrors #3, 0 rows
+    // today — every approved answer is a verb), and the missing partitive.
+    constructionVariants: [
+      {
+        id: 'lexical-collective-singular',
+        directive:
+          'a LEXICAL collective noun as subject taking a SINGULAR verb — vary which one across drafts (la gente, el público, la familia, el equipo, la clase, la policía, el gobierno, la empresa): La gente dice que el barrio ha cambiado mucho; La policía busca a los ladrones del banco',
+        share: 3,
+      },
+      {
+        id: 'todo-el-mundo-singular',
+        directive:
+          'the universal-quantifier subject todo el mundo taking a SINGULAR verb, where English forces a plural (Todo el mundo sabe la respuesta; Todo el mundo quiere vivir mejor)',
+        share: 2,
+      },
+      {
+        id: 'collective-predicate-adjective-singular',
+        directive:
+          'a singular collective subject whose PREDICATE ADJECTIVE or participle must also be singular — the agreement under test is on the adjective, not only on the verb (La gente está cansada de esperar; Toda la clase quedó sorprendida con la noticia)',
+        share: 1,
+      },
+      {
+        id: 'partitive-de-plural-agreement',
+        directive:
+          'collective + de + PLURAL noun taking PLURAL agreement, the opposite half of this point — la mayoría de los vecinos, un grupo de estudiantes, la mitad de los socios, la mayoría de nosotros (La mayoría de los vecinos creen que es buena idea; Un grupo de turistas esperaban en la puerta)',
+        share: 2,
+        // Translation only. Plural is the usual agreement here but the SINGULAR
+        // is equally correct (RAE DPD, concordancia ad sensum), so the two are
+        // free alternants in the same slot and no cloze blank can force the
+        // plural — the `past-counterfactual-hubiera-result` failure mode
+        // (2026-08-25: 2/29 approved in cloze, all 27 others flagged
+        // `ambiguous` naming the free competitor, vs 27/30 as a translation
+        // where the English source cues it). An English source sentence does
+        // cue this one. The cloze cell keeps the three singular variants, and
+        // its target is unchanged.
+        appliesTo: [ExerciseType.TRANSLATION],
+      },
+    ],
     kind: 'grammar',
     name: 'Number agreement with collective nouns',
     description:
