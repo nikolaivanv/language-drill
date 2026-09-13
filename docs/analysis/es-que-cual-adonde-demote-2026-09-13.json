@@ -1,0 +1,30 @@
+{
+  "purpose": "Rollback record for demoting every approved es-b1-que-vs-cual row generated for the dropped `adonde-direction` construction variant (prod, 2026-09-13). demote:pool writes no rollback artifact, so the prior state is recorded here.",
+  "why": "Butt & Benjamin §28.9: adónde is OPTIONAL with verbs of motion (¿adónde/dónde van ustedes?); only dónde works without motion. The variant directive said 'not dónde', so its clozes offered Dónde as a distractor that is also correct, and two translations used English 'going to' future ('Where are you going to buy…?') where no motion is involved and dónde is the natural answer.",
+  "database": "prod — Neon project twilight-smoke-01114337, branch br-green-waterfall-ancrvpr5",
+  "priorState": { "review_status": "auto-approved", "demotion_reason": null },
+  "rows": [
+    { "id": "e33d5b88-b641-58ac-80d9-8e3081d93905", "type": "cloze", "created_at": "2026-08-25T04:50:31.279Z", "attempts": 0, "reason": "quality", "defect": "options offer Dónde, also correct with fuiste" },
+    { "id": "7d5d424c-70e5-56e0-89f6-87fcc8cbf9c9", "type": "cloze", "created_at": "2026-08-28T04:21:59.625Z", "attempts": 0, "reason": "quality", "defect": "options offer Dónde, also correct with vas" },
+    { "id": "2936537e-8fd7-50c8-aa73-9a146168e2d5", "type": "cloze", "created_at": "2026-09-05T04:19:31.460Z", "attempts": 0, "reason": "quality", "defect": "options offer Dónde, also correct with vas" },
+    { "id": "4c1dc4e0-ee6a-55a2-ba14-f71e2ed66677", "type": "cloze", "created_at": "2026-09-06T04:16:08.837Z", "attempts": 0, "reason": "quality", "defect": "options offer Dónde; stem also drops the reflexive (¿Adónde mudasteis → os mudasteis)" },
+    { "id": "624ff119-e6f4-5a55-af7c-9d5950005ed4", "type": "translation", "created_at": "2026-08-25T04:44:36.471Z", "attempts": 1, "reason": "quality", "defect": "'going to buy' is future, not motion; dónde is the natural answer and was penalized" },
+    { "id": "81b01182-5a1d-5692-a58f-7f3ed811fe93", "type": "translation", "created_at": "2026-09-02T04:03:16.298Z", "attempts": 0, "reason": "quality", "defect": "'going to buy' is future, not motion" },
+    { "id": "7b5d3f26-7791-597e-87f6-84c2cf77acaf", "type": "cloze", "created_at": "2026-08-28T04:21:59.815Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "7a5d3d93-f674-5bb9-86f6-83254c21d33c", "type": "cloze", "created_at": "2026-08-28T04:21:59.816Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "a4fb4605-0abf-5791-a61e-a42dcad02940", "type": "cloze", "created_at": "2026-09-02T04:32:31.338Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "e1f29295-b621-5de7-86e8-37eb4a1babea", "type": "translation", "created_at": "2026-08-28T04:14:46.792Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "febfd699-1988-5433-9d90-a0afb29ef606", "type": "translation", "created_at": "2026-09-02T04:03:04.256Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "fcbfd373-174f-58a9-9b90-9d75b065ba64", "type": "translation", "created_at": "2026-09-02T04:03:04.259Z", "attempts": 0, "reason": "pool-hygiene", "defect": null },
+    { "id": "ffbfd82c-91c0-53d0-9e90-a24c2d0fe0f1", "type": "translation", "created_at": "2026-09-02T04:03:04.456Z", "attempts": 0, "reason": "pool-hygiene", "defect": null }
+  ],
+  "theoryPage": {
+    "id": "a8a22b34-db6e-5844-a2c8-14d80b821b15",
+    "prior": { "review_status": "auto-approved", "generation_source": "claude-realtime", "quality_score": 0.95, "generated_at": "2026-07-06T18:50:45.467Z" },
+    "change": "content_json hand-edited in place: adds cuál + ser + noun phrase (datum questions), removes 'qué before ser/estar' from the formation table, corrects the adónde rule to optional. Prior content_json is in es-que-cual-theory-prior-2026-09-13.json."
+  },
+  "rollback": [
+    "UPDATE exercises SET review_status = 'auto-approved', demotion_reason = NULL WHERE id IN ('e33d5b88-b641-58ac-80d9-8e3081d93905','7d5d424c-70e5-56e0-89f6-87fcc8cbf9c9','2936537e-8fd7-50c8-aa73-9a146168e2d5','4c1dc4e0-ee6a-55a2-ba14-f71e2ed66677','624ff119-e6f4-5a55-af7c-9d5950005ed4','81b01182-5a1d-5692-a58f-7f3ed811fe93','7b5d3f26-7791-597e-87f6-84c2cf77acaf','7a5d3d93-f674-5bb9-86f6-83254c21d33c','a4fb4605-0abf-5791-a61e-a42dcad02940','e1f29295-b621-5de7-86e8-37eb4a1babea','febfd699-1988-5433-9d90-a0afb29ef606','fcbfd373-174f-58a9-9b90-9d75b065ba64','ffbfd82c-91c0-53d0-9e90-a24c2d0fe0f1');",
+    "Then run `pnpm backfill:mastery --apply` against prod (or wait for the 03:00 UTC nightly rebuild)."
+  ]
+}

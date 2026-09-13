@@ -336,8 +336,26 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * before this is deployed AND nightly generation is un-paused (#718 paused it
  * 2026-09-06) — freed slots with no generator running just leave the pool
  * short.
+ *
+ * `2026-09-13a`: es-b1-que-vs-cual DROPS the `adonde-direction` variant, and
+ * its description now states that dónde and adónde are both correct with a
+ * motion verb. B&B 28.9: adónde is optional there, so the variant had no wrong
+ * answer to test. A learner report exposed two defect shapes in its 13
+ * approved rows: clozes listing Dónde as a distractor next to a motion verb
+ * (two correct options), and translations built on English going-to futures
+ * ("Where are you going to buy your winter coat?") that involve no motion,
+ * where the evaluator — anchored on the `¿Adónde…?` reference — told the
+ * learner "Spanish requires adónde". The description is the evaluator's
+ * grounding (GrammarGuidance), so it now says so explicitly.
+ *
+ * All 13 rows are demoted on prod (6 `quality`, 7 `pool-hygiene`; ids and
+ * rollback in docs/analysis/es-que-cual-adonde-demote-2026-09-13.json). Five
+ * variants remain, above the >= 2 rotation invariant. Bump clears target-
+ * reached suppression so the two cells can refill the freed slots on the
+ * narrowed rotation; #724's same-day bump has not reached a generation run
+ * yet (generation is paused, #718), so this re-releases nothing extra.
  */
-export const CURRICULUM_VERSION_ES = '2026-09-13';
+export const CURRICULUM_VERSION_ES = '2026-09-13a';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4823,16 +4841,16 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Qué vs. cuál/cuáles',
     description:
-      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?) and, with ser + a noun phrase, asks for a specific datum where English uses "what" (¿Cuál es tu nombre?, not *¿Qué es tu nombre?); in standard European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative, and adónde asks where to.',
+      'Qué asks for a definition or category (¿Qué es la democracia?), while cuál/cuáles selects from a set (¿Cuál prefieres?) and, with ser + a noun phrase, asks for a specific datum where English uses "what" (¿Cuál es tu nombre?, not *¿Qué es tu nombre?); in European Spanish cuál is not used directly before a noun (¿qué libro…?, not *¿cuál libro…?); prepositions precede the interrogative. With a motion verb dónde and adónde are both correct.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
       '¿Qué es la democracia?',
       '¿Cuál de estos dos prefieres?',
       '¿Cuál es tu número de teléfono?',
+      '¿Cuál es la contraseña del wifi?',
       '¿Qué libro estás leyendo?',
       '¿Con quién vas al cine?',
-      '¿Adónde vamos este verano?',
     ],
     examplesNegative: ['*¿Cuál libro estás leyendo?', '*¿Qué es tu nombre?'],
     commonErrors: [
@@ -4843,10 +4861,19 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     // Butt & Benjamin 28.3.1 (cuál = 'which one of a set'), 28.3.3 (cuál is not
     // adjectival in European Spanish), 28.4.1b (qué before a noun), 28.2 +
-    // 28.5 (preposition fronted with the interrogative), 28.9 (adónde).
+    // 28.5 (preposition fronted with the interrogative), 28.3.2 (¿cuál es…? is
+    // the usual 'what is…?').
     // Uniform shares deliberately: this is a two-way contrast point, and
     // weighting either qué member to 3 would push cuál — the marked, harder
     // member the point is named for — down to ~14% of the pool.
+    //
+    // No `adonde-direction` variant (dropped 2026-09-13a). B&B 28.9: adónde is
+    // OPTIONAL with verbs of motion (¿adónde/dónde van ustedes?), so no item
+    // can make dónde wrong — its clozes offered Dónde as a "distractor" that is
+    // also correct, and its translations drifted onto English going-to FUTURES
+    // ("Where are you going to buy…?") where there is no motion at all and
+    // dónde is the only natural answer. The evaluator then anchored on the
+    // reference and told a learner "Spanish requires adónde".
     constructionVariants: [
       {
         id: 'que-definition-of-concept',
@@ -4872,11 +4899,6 @@ const esCurriculum: readonly GrammarPoint[] = [
         id: 'fronted-preposition',
         directive:
           'a preposition fronted with the interrogative, never stranded at the end (¿Con quién vas al cine?; ¿De qué habláis?)',
-      },
-      {
-        id: 'adonde-direction',
-        directive:
-          'adónde asking where TO, with a verb of motion (¿Adónde vamos este verano?) — not dónde, which asks where something is',
       },
     ],
   },
