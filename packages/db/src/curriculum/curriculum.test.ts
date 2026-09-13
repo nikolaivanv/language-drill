@@ -1527,6 +1527,17 @@ describe('es-b1-que-vs-cual covers cuál + ser + noun phrase', () => {
     expect(point?.examplesPositive).toContain('¿Cuál es tu número de teléfono?');
     expect(point?.commonErrors?.join(' ')).toMatch(/¿Qué es tu nombre\?/);
   });
+
+  // B&B 28.9: adónde is OPTIONAL with verbs of motion, so an `adonde-direction`
+  // variant has no wrong answer to test — its clozes listed a correct Dónde as
+  // a distractor and its translations drifted onto going-to futures with no
+  // motion. The description grounds the evaluator, which told a learner
+  // "Spanish requires adónde"; it must state that both forms are correct.
+  it('does not drill adónde as if dónde were wrong', () => {
+    expect(point?.constructionVariants?.map((v) => v.id)).not.toContain('adonde-direction');
+    expect(point?.description).toMatch(/dónde and adónde are both correct/);
+    expect(point?.examplesPositive?.some((e) => /adónde/i.test(e))).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
