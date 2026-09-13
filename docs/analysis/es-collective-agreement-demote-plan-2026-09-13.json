@@ -1,0 +1,20 @@
+[
+ {
+  "point": "es-b1-collective-agreement",
+  "cefr": "B1",
+  "type": "cloze",
+  "variant": "todo-el-mundo-singular",
+  "limit": 14,
+  "variantBefore": 31,
+  "quota": 17
+ },
+ {
+  "point": "es-b1-collective-agreement",
+  "cefr": "B1",
+  "type": "translation",
+  "variant": "todo-el-mundo-singular",
+  "limit": 35,
+  "variantBefore": 47,
+  "quota": 13
+ }
+]
