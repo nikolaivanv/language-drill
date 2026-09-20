@@ -19,6 +19,11 @@ type ApiError = Error & {
  *   - 503 GLOBAL_CAPACITY: the deliberate global soft-cap brake.
  *   - 404 TOPIC_NOT_FOUND: no theory page has been generated for this slug yet;
  *     `useTheoryTopic` deliberately renders this as the empty state, not a fault.
+ *   - AuthExpiredError: the session expired, so `createAuthenticatedFetch`
+ *     refused to send an unauthenticated request. The app answers this by
+ *     redirecting to sign-in and returning the user to where they were — a
+ *     handled state, not a fault. Reporting it would refill the inbox with the
+ *     very noise this skip removes (one expired session raised four alerts).
  *   - RedeemError: an invite that's already-used / expired / invalid. The
  *     post-signup redeem flow surfaces every outcome as a banner — a user
  *     pasting a stale code is normal, not a fault. `useRedeemInvite` throws a
@@ -40,6 +45,7 @@ export function reportApiError(error: unknown): void {
     if (status === 429) return;
     if (status === 503 && code === 'GLOBAL_CAPACITY') return;
     if (status === 404 && code === 'TOPIC_NOT_FOUND') return;
+    if (error.name === 'AuthExpiredError') return;
     if (error.name === 'RedeemError') return;
 
     Sentry.withScope((scope) => {

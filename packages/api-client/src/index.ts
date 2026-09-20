@@ -255,7 +255,12 @@ export {
   type UseSaveVocabularyCardOptions,
   type UseDeleteVocabularyCardOptions,
 } from './hooks/useVocabularyMutations';
-export { createAuthenticatedFetch, type AuthenticatedFetch } from './fetchClient';
+export {
+  createAuthenticatedFetch,
+  AuthExpiredError,
+  isAuthExpiredError,
+  type AuthenticatedFetch,
+} from './fetchClient';
 export { MeResponseSchema, type MeResponse } from './schemas/me';
 export {
   RedeemResponseSchema,
