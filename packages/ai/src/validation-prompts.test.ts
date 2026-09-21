@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -214,6 +214,34 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain(
       "does the draft's `instructions`, `context`, or `glossEn`",
     );
+  });
+
+  it("carries the lexeme-determinacy rule for verb-swallowing blanks (2026-09-21)", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+    expect(prompt).toContain("Lexeme-determinacy (cloze)");
+    // The two sanctioned cures, and the one that is NOT a cure. The learner
+    // flag that produced this rule was on a row that DID enumerate three
+    // alternates, so the open-class clause is the load-bearing half.
+    expect(prompt).toContain("Enumeration does NOT cure this one");
+    expect(prompt).toContain("OPEN class");
+    // A rival lexeme is only ruled out by a quotable span — without this the
+    // judge falls back on "the intended verb is more idiomatic" and passes it.
+    expect(prompt).toContain("QUOTE the span that forbids it");
+    // The parenthetical must not pre-encode the clitic whose placement is the
+    // very thing under test.
+    expect(prompt).toContain("(enviarlo)");
+    // Must NOT fire on points where the lexical choice IS the target.
+    expect(prompt).toContain("Do NOT apply this when the lexical choice IS the point");
+  });
+
+  it("tells the validator the MC options array never resolves ambiguity (2026-09-21)", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+    // Observed in the 2026-09-21 paired dry-run: the judge repeatedly talked
+    // itself out of an earned `ambiguous` flag with "if this is
+    // multiple-choice, the distractors pin the answer". They do not — options
+    // sit behind an opt-in "show answer options" control.
+    expect(prompt).toContain("does not resolve ambiguity");
+    expect(prompt).toContain("FREE PRODUCTION");
   });
 
   it("carries the neutral-gloss rule for lexical-choice points (2026-08-13)", async () => {
@@ -293,6 +321,17 @@ describe("buildValidationSystemPrompt", () => {
     // the guard that a neutral gloss is not `ambiguous` when the L2 sentence
     // forces the reading (~0.5KB). Ceiling raised to 15,000.
     //
+    //
+    // validate@2026-09-21 added the Lexeme-determinacy (cloze) sub-bullet to
+    // the `ambiguous` dimension — a blank that swallows the verb's LEXICAL
+    // STEM on a FORM point is ambiguous unless the stem entails the verb or a
+    // bare infinitive is given in parentheses, and enumeration does NOT cure
+    // it (the rival lexemes are an OPEN class, so any acceptableAnswers list
+    // is incomplete by construction) — plus a sub-bullet forbidding the judge
+    // from treating the MC `options` array as resolving ambiguity, since
+    // options are an opt-in scaffold and every cloze is judged as free
+    // production (~1.3KB, mirrors generate@2026-09-21). Ceiling raised to
+    // 18500 (~0.2KB headroom over the 18,283-byte body).
     // We assert on the TEMPLATE literal, not the rendered output, because:
     //   - The template is what Langfuse stores and what Anthropic's
     //     prompt-cache keys on byte-for-byte.
@@ -308,7 +347,7 @@ describe("buildValidationSystemPrompt", () => {
     // Raised to 17000 (~1.4KB headroom) rather than the minimum that passes, so
     // the next concurrent pair does not re-trip it. The ceiling exists to catch
     // unbounded prompt growth, not to be re-tuned on every merge.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(17000);
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(18500);
   });
 
   it("instructs cloze validation to fill candidateFillers before deciding ambiguous", () => {
@@ -336,7 +375,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
   });
 });
 
@@ -1021,7 +1060,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-08-18");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
   });
 });
 
