@@ -357,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-18");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-21");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -494,10 +494,24 @@ describe("buildGenerationSystemPrompt", () => {
     expect(t).toMatch(/do not distort natural English/);
   });
 
-  it("bumps the generation prompt version to 2026-08-18", () => {
+  it("carries the lexeme-determinacy rule for verb-swallowing blanks (2026-09-21)", () => {
+    const prompt = GENERATION_SYSTEM_PROMPT_TEMPLATE;
+    expect(prompt).toContain("Lexeme determinacy on blanks that swallow the verb");
+    // Cure (a): an entailing stem. Cure (b): a BARE infinitive in parens.
+    expect(prompt).toContain("CITATION (infinitive) form in parentheses");
+    expect(prompt).toContain("`(enviar)`, never `(enviarlo)`");
+    // Enumeration is explicitly excluded — the defect row that produced this
+    // rule shipped three alternates and still failed the learner.
+    expect(prompt).toContain("**Enumeration is NOT a cure here.**");
+    expect(prompt).toContain("OPEN class");
+    // Scoped off the points where picking the verb IS the exercise.
+    expect(prompt).toContain("does NOT apply when the lexical choice IS the grammar point");
+  });
+
+  it("bumps the generation prompt version to 2026-09-21", () => {
     // 2026-08-18: anti-bypass rule for translation sources on contrasts English
     // leaves optional. Template edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-08-18");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-21");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
