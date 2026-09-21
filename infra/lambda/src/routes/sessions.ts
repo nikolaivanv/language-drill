@@ -53,6 +53,19 @@ const TodayQuerySchema = z.object({
 
 const DEFAULT_PROFICIENCY_LEVEL = CefrLevel.B1;
 
+/**
+ * How far back GET /sessions/today will look for a session to offer as
+ * "continue". Sessions never expire server-side (`completed_at` simply stays
+ * NULL), so without a bound the resume pointer could surface something
+ * abandoned months ago, whose manifest no longer reflects the learner's level.
+ */
+export const RESUMABLE_WINDOW_DAYS = 14;
+
+/** Oldest `started_at` GET /sessions/today will still offer as a resume target. */
+export function resumableCutoff(now: Date): Date {
+  return new Date(now.getTime() - RESUMABLE_WINDOW_DAYS * 86_400_000);
+}
+
 /** Request body for POST /sessions (mirrors api-client CreateSessionRequest) */
 export const CreateSessionRequestSchema = z.object({
   language: z.nativeEnum(Language),
@@ -418,9 +431,10 @@ sessions.get('/sessions/today', async (c) => {
   const errorSince = new Date(Date.now() - 30 * 86_400_000);
 
   // -------------------------------------------------------------------------
-  // Query 1 (parallel): today's session + proficiency level + daily-minutes prefs + error counts
+  // Query 1 (parallel): today's session + proficiency level + daily-minutes
+  // prefs + error counts + the resumable-session pointer
   // -------------------------------------------------------------------------
-  const [todayRows, profileRows, prefsRows, errorRows] = await Promise.all([
+  const [todayRows, profileRows, prefsRows, errorRows, resumableRows] = await Promise.all([
     db
       .select({
         sessionId: practiceSessions.id,
@@ -473,7 +487,34 @@ sessions.get('/sessions/today', async (c) => {
       .groupBy(
         sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
       ),
+    // Latest session this learner could continue. Deliberately NOT bounded to
+    // today: `todayRows` above still decides Path A vs Path B, so a stale
+    // session can never hydrate today's rail — this row only answers "is there
+    // something to continue?". That keeps an abandoned session reachable after
+    // the day it was started, which is otherwise unrecoverable: /progress only
+    // ever emits fresh-start links, so a topic drill you close has no way back.
+    db
+      .select({ sessionId: practiceSessions.id })
+      .from(practiceSessions)
+      .where(
+        and(
+          eq(practiceSessions.userId, userId),
+          eq(practiceSessions.language, language),
+          isNull(practiceSessions.completedAt),
+          gte(practiceSessions.startedAt, resumableCutoff(new Date())),
+          // Engagement guard, mirroring Path A's: a started-but-untouched
+          // session has a stale manifest, so resuming it is strictly worse than
+          // starting fresh. Written as raw SQL so the correlated reference stays
+          // table-qualified inside the subquery.
+          sql`EXISTS (SELECT 1 FROM user_exercise_history ueh WHERE ueh.session_id = practice_sessions.id)`,
+        ),
+      )
+      .orderBy(desc(practiceSessions.startedAt))
+      .limit(1),
   ]);
+
+  // One resolved pointer for every return site below.
+  const resumableSessionId = resumableRows[0]?.sessionId ?? null;
 
   const proficiencyLevel = isCefrLevel(profileRows[0]?.proficiencyLevel)
     ? profileRows[0].proficiencyLevel
@@ -639,7 +680,7 @@ sessions.get('/sessions/today', async (c) => {
         items: items.map((it) => toWireItem(it, rankCtx)),
         summary,
         code: null,
-        resumeSessionId: session.completedAt === null ? session.sessionId : null,
+        resumeSessionId: resumableSessionId,
         freeWriting,
       });
     }
@@ -671,7 +712,7 @@ sessions.get('/sessions/today', async (c) => {
       items: [],
       summary: null,
       code: 'INSUFFICIENT_POOL' as const,
-      resumeSessionId: null,
+      resumeSessionId: resumableSessionId,
       freeWriting,
     });
   }
@@ -686,7 +727,7 @@ sessions.get('/sessions/today', async (c) => {
     items: items.map((it) => toWireItem(it, rankCtx)),
     summary: null,
     code: null,
-    resumeSessionId: null,
+    resumeSessionId: resumableSessionId,
     freeWriting,
   });
 });

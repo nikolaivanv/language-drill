@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
-import { CreateSessionRequestSchema, levelsAtOrBelow, resolveSessionDifficulty } from './sessions';
+import {
+  CreateSessionRequestSchema,
+  levelsAtOrBelow,
+  resolveSessionDifficulty,
+  resumableCutoff,
+} from './sessions';
 import { CefrLevel, Language } from '@language-drill/shared';
 import { isFreeWritingDay, FREE_WRITING_CADENCE_DAYS } from '../lib/today-plan';
 
@@ -139,6 +144,7 @@ vi.mock('@language-drill/db', () => ({
     userId: 'user_id',
     language: 'language',
     startedAt: 'started_at',
+    completedAt: 'completed_at',
   },
   getGrammarPoint: (key: string) => mockGetGrammarPoint(key),
   // rank-context.ts (used by POST /sessions via buildRankContext) imports
@@ -196,6 +202,22 @@ vi.mock('../lib/debrief/skill-movements.js', () => ({
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyJson = Record<string, any>;
 
+// Reconstructs the static-text skeleton of a drizzle SQL expression (the
+// literal fragments, with interpolated params omitted). Used to assert that a
+// builder query's WHERE carries a raw `sql` guard — the mocked column objects
+// are plain strings, so operator-built predicates contribute no static text and
+// only raw fragments are observable here.
+function collectSqlStaticText(expr: unknown): string {
+  if (!expr || typeof expr !== 'object') return '';
+  const e = expr as Record<string, unknown>;
+  let text = '';
+  if ('value' in e && Array.isArray(e.value)) text += (e.value as string[]).join('');
+  if ('queryChunks' in e && Array.isArray(e.queryChunks)) {
+    for (const chunk of e.queryChunks) text += collectSqlStaticText(chunk);
+  }
+  return text;
+}
+
 // ---------------------------------------------------------------------------
 // levelsAtOrBelow — unit test (at-or-below CEFR ordering, Task 4)
 // ---------------------------------------------------------------------------
@@ -251,6 +273,26 @@ describe('resolveSessionDifficulty', () => {
       cefrLevel: CefrLevel.A2,
     }));
     expect(resolveSessionDifficulty(CefrLevel.B1, 'es-a2-ser-vs-estar')).toBe(CefrLevel.A2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// resumableCutoff — unit test (oldest session GET /sessions/today will offer)
+// ---------------------------------------------------------------------------
+// Expected instants are hand-derived, not computed from the helper's own
+// constant: a mirror assertion would pass for any window length.
+describe('resumableCutoff', () => {
+  it('returns the instant two weeks before the given time', () => {
+    expect(resumableCutoff(new Date('2026-05-20T10:00:00Z')).toISOString()).toBe(
+      '2026-05-06T10:00:00.000Z',
+    );
+  });
+
+  it('crosses a short month backwards without drifting', () => {
+    // 2026-03-07 − 14d: back 7d to Feb 28, back 7 more to Feb 21.
+    expect(resumableCutoff(new Date('2026-03-07T00:30:00Z')).toISOString()).toBe(
+      '2026-02-21T00:30:00.000Z',
+    );
   });
 });
 
@@ -974,6 +1016,15 @@ describe('GET /sessions/today', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Backstop for the `.limit()` queries this route issues. The Once-queue is
+    // still consumed first, so tests that care about a specific row keep
+    // stubbing positionally; this only decides what an *unstubbed* limit query
+    // returns. It exists because the resumable-session lookup is a fourth
+    // `.limit()` query that most tests here have no opinion about — "no rows"
+    // is the honest answer for them, and far less noise than appending an
+    // empty fourth stub to every test in this describe. Scoped deliberately to
+    // this describe: elsewhere a missing stub should still fail loudly.
+    mockLimit.mockResolvedValue([]);
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(FROZEN_TODAY);
     const mod = await import('./sessions');
@@ -1420,11 +1471,13 @@ describe('GET /sessions/today', () => {
   // -------------------------------------------------------------------------
 
   it('includes a freeWriting block on the cadence day when a free-writing exercise exists', async () => {
-    // Path B (no today-session). mockLimit resolves: today → profile → prefs → fw-existence.
+    // Path B (no today-session). mockLimit resolves:
+    // today → profile → prefs → resumable-session → fw-existence.
     mockLimit
       .mockResolvedValueOnce([]) // today-session lookup
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }]) // proficiency
       .mockResolvedValueOnce([]) // prefs
+      .mockResolvedValueOnce([]) // resumable-session lookup: nothing to continue
       .mockResolvedValueOnce([{ id: 'fw-1' }]); // fw-existence: one approved row
 
     // errorRows (groupBy → mockSelectAwait call 1)
@@ -1541,7 +1594,10 @@ describe('GET /sessions/today', () => {
         },
       ])
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
-      .mockResolvedValueOnce([]); // prefs
+      .mockResolvedValueOnce([]) // prefs
+      // The resume pointer now comes from its own query rather than being
+      // derived from the today-session row, so it must be stubbed explicitly.
+      .mockResolvedValueOnce([{ sessionId: 'sess-1' }]);
 
     // errorRows (groupBy → mockSelectAwait call 1)
     mockSelectAwait.mockResolvedValueOnce([]);
@@ -1586,6 +1642,138 @@ describe('GET /sessions/today', () => {
     const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
     const body = (await res.json()) as AnyJson;
     expect(body.resumeSessionId).toBeNull();
+  });
+
+  // -------------------------------------------------------------------------
+  // resumeSessionId across days — an abandoned session outlives its own day
+  // -------------------------------------------------------------------------
+
+  it('surfaces an unfinished session from a previous day when no session exists today', async () => {
+    mockLimit
+      .mockResolvedValueOnce([]) // no today-session → Path B
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]) // prefs → default 8-item plan
+      .mockResolvedValueOnce([{ sessionId: 'sess-yesterday' }]); // resumable lookup
+
+    // errorRows (groupBy → mockSelectAwait call 1)
+    mockSelectAwait.mockResolvedValueOnce([]);
+    // mastery rows (sequential → mockSelectAwait call 2)
+    mockSelectAwait.mockResolvedValueOnce([]);
+
+    mockExecute.mockResolvedValueOnce({
+      rows: [
+        { id: 'c1', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c2', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'c3', type: 'cloze', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's1', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 's2', type: 'sentence_construction', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't1', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 't2', type: 'translation', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v1', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+        { id: 'v2', type: 'vocab_recall', topic_hint: null, difficulty: 'B1', grammar_point_key: null },
+      ],
+    });
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // Today's plan must still be composed fresh — yesterday's session must not
+    // hydrate today's rail (that is the regression a naive un-bounding causes).
+    expect(body.code).toBeNull();
+    expect(body.summary).toBeNull();
+    expect(body.items.every((it: AnyJson) => it.status === 'queued')).toBe(true);
+    // ...but the abandoned session is still offered as a resume target.
+    expect(body.resumeSessionId).toBe('sess-yesterday');
+  });
+
+  it('still offers the resume target when the pool is too thin to compose a plan', async () => {
+    mockLimit
+      .mockResolvedValueOnce([]) // no today-session
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([]) // prefs
+      .mockResolvedValueOnce([{ sessionId: 'sess-abandoned' }]);
+
+    mockSelectAwait.mockResolvedValueOnce([]); // errorRows
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+
+    mockExecute.mockResolvedValueOnce({ rows: [] }); // empty pool
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // An empty pool must not also cost the learner their way back into a
+    // session they already started: /home renders the continue CTA from this
+    // field even on the branch that has no plan to show.
+    expect(body.code).toBe('INSUFFICIENT_POOL');
+    expect(body.resumeSessionId).toBe('sess-abandoned');
+  });
+
+  it("hydrates today's session via Path A even when an older resumable session exists", async () => {
+    const startedAt = new Date(FROZEN_TODAY.getTime() + 9 * 3_600_000);
+
+    mockLimit
+      .mockResolvedValueOnce([
+        {
+          sessionId: 'sess-today',
+          exerciseIds: ['e1', 'e2'],
+          exerciseCount: 2,
+          correctCount: 0,
+          startedAt,
+          completedAt: null,
+        },
+      ])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([])
+      // Newest unfinished session is today's own — an older one exists but loses.
+      .mockResolvedValueOnce([{ sessionId: 'sess-today' }]);
+
+    mockSelectAwait.mockResolvedValueOnce([]); // errorRows
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+    mockSelectAwait.mockResolvedValueOnce([
+      { exerciseId: 'e1', type: 'cloze', topicHint: null, difficulty: 'B1', historyId: 'h1' },
+      { exerciseId: 'e2', type: 'translation', topicHint: null, difficulty: 'B1', historyId: null },
+    ]);
+
+    const res = await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+
+    // Path A hydration: the 2-item stored manifest carrying its real attempt
+    // state. A fresh Path B plan would instead be an 8-item V1_PLAN_SHAPE rail
+    // with every item queued. (Plan items carry no exercise id on the wire, so
+    // type + status is the observable signature of the stored manifest.)
+    expect(body.items).toHaveLength(2);
+    expect((body.items as AnyJson[]).map((it) => it.type)).toEqual(['cloze', 'translation']);
+    expect((body.items as AnyJson[])[0].status).toBe('done');
+    expect(mockExecute).not.toHaveBeenCalled();
+    expect(body.resumeSessionId).toBe('sess-today');
+  });
+
+  it('restricts the resumable lookup to sessions with at least one recorded attempt', async () => {
+    mockLimit
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+
+    mockSelectAwait.mockResolvedValueOnce([]); // errorRows
+    mockSelectAwait.mockResolvedValueOnce([]); // mastery
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+
+    await app.request('/sessions/today?language=ES', { method: 'GET' }, authEnv);
+
+    // A started-but-untouched session is resumable in name only: its manifest is
+    // stale and resuming it is strictly worse than starting fresh. The guard is
+    // a raw EXISTS over the attempt history, so it is observable in the WHERE.
+    const guards = mockWhere.mock.calls
+      .map((call) => collectSqlStaticText((call as unknown[])[0]))
+      .filter((text) => /exists/i.test(text));
+
+    expect(guards).toHaveLength(1);
+    expect(guards[0]).toContain('user_exercise_history');
+    expect(guards[0]).toContain('session_id');
   });
 
   // -------------------------------------------------------------------------
@@ -1850,7 +2038,9 @@ describe('GET /sessions/today', () => {
         },
       ])
       .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
-      .mockResolvedValueOnce([{ dailyGoal: 'medium' }]);
+      .mockResolvedValueOnce([{ dailyGoal: 'medium' }])
+      // Resume pointer: its own query, so stub it explicitly.
+      .mockResolvedValueOnce([{ sessionId: 'sess-engaged' }]);
 
     // errorRows (groupBy → mockSelectAwait call 1)
     mockSelectAwait.mockResolvedValueOnce([]);
@@ -3022,6 +3212,9 @@ describe('review_status filter — GET /sessions/today Path B', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Unstubbed `.limit()` queries yield no rows — this describe has no opinion
+    // about the resumable-session lookup (see the GET /sessions/today describe).
+    mockLimit.mockResolvedValue([]);
     // Freeze to a TR free-writing day so the ES requests below never trigger
     // the cadence-gated fw-existence query (unmocked here).
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -3044,7 +3237,8 @@ describe('review_status filter — GET /sessions/today Path B', () => {
       mockLimit
         .mockResolvedValueOnce([]) // no today-session
         .mockResolvedValueOnce([{ proficiencyLevel: 'B1' }])
-        .mockResolvedValueOnce([]); // prefs
+        .mockResolvedValueOnce([]) // prefs
+        .mockResolvedValueOnce([]); // resumable-session lookup
       // errorRows (groupBy → mockSelectAwait call 1)
       mockSelectAwait.mockResolvedValueOnce([]);
       // mastery rows (sequential → mockSelectAwait call 2)
@@ -3091,6 +3285,9 @@ describe('review_status non-filter — GET /sessions/today Path A', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Unstubbed `.limit()` queries yield no rows — this describe has no opinion
+    // about the resumable-session lookup (see the GET /sessions/today describe).
+    mockLimit.mockResolvedValue([]);
     // Freeze to a TR free-writing day so the ES request below never triggers
     // the cadence-gated fw-existence query (unmocked here).
     vi.useFakeTimers({ toFake: ['Date'] });
