@@ -1,0 +1,1401 @@
+{
+  "run": "es-b1-imperative-negative-pronouns cloze revalidate --apply",
+  "date": "2026-09-21",
+  "pr": 730,
+  "prompts": {
+    "generate": "generate@2026-09-21",
+    "validate": "validate@2026-09-21",
+    "langfuse_revert_targets": {
+      "prod": {
+        "generate": "v26",
+        "validate": "v14"
+      },
+      "dev": {
+        "generate": "v22",
+        "validate": "v14"
+      }
+    }
+  },
+  "db": {
+    "neon_branch": "br-green-waterfall-ancrvpr5 (production)"
+  },
+  "pre_state_counts": {
+    "auto-approved": 48,
+    "flagged": 36
+  },
+  "rollback": "UPDATE exercises SET review_status = r.review_status, quality_score = r.quality_score, flagged_reasons = r.flagged_reasons, demotion_reason = r.demotion_reason FROM (VALUES ...) AS r(id, review_status, quality_score, flagged_reasons, demotion_reason) WHERE exercises.id = r.id::uuid;  -- values from pre_state below",
+  "pre_state": [
+    {
+      "id": "133e36d3-b7f6-5daf-a824-12538f01f9a6",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "164d4616-01b6-56cc-9b14-25902139eff1",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "174d47a9-82d3-5491-9c14-272da01d5220",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "1b3e436b-c0db-5bd7-a024-056b97e6e82e",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "1c4d4f88-fb0a-542e-a514-35b22c581a1b",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "1d4d511b-7c27-51f3-a614-374fab3b7c4a",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity not fully resolved by acceptableAnswers: the blank admits many additional plausible negative imperatives beyond the three listed — e.g. 'no la mates', 'no la muevas', 'no la pongas al sol', 'no la toques', 'no la descuides', etc. The open-ended context ('Por favor, ___ durante el fin de semana') does not constrain the answer to a closed set, so the acceptableAnswers list cannot enumerate all defensible alternatives. This makes the item functionally ambiguous for automated scoring."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context is semantically very open: any reasonable plant-care instruction in the negative imperative with 'la' fits equally well. A tighter context (e.g. naming a specific action to negate, or providing a preceding clause that sets up exactly one expected verb) would close the ambiguity."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider reframing: e.g. 'Ya la regué esta mañana. Por favor, ___ otra vez.' — this would constrain the answer to 'no la riegues' and make the item unambiguous."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "matarno"
+    },
+    {
+      "id": "1e3e4824-4431-5526-9b23-fd5a14910ebb",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "1f4d5441-79ee-5669-a414-3415a90240a8",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "204d55d4-f698-5d1a-a914-3c2630ca915f",
+      "review_status": "auto-approved",
+      "quality_score": 0.9,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "214d5767-77b4-5adf-aa14-3dc3afadf38e",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "224d58fa-f45f-5190-a714-38ec2e9155bd",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "234d5a8d-757b-5f55-a814-3a89ad74b7ec",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous blank: the sentence 'Tienes que hablar con tu madre sobre el problema. ___ a nadie más' does not uniquely force 'No se lo cuentes'. Multiple negative imperatives with different clitic configurations are equally valid: 'No se lo digas' (decir), 'No se lo cuentes' (contar), 'No se lo menciones' (mencionar), 'No se lo expliques' (explicar), etc. The verb is entirely unconstrained by context, and no acceptableAnswers list is provided to enumerate the defensible alternates."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Additionally, the indirect object referent of 'se' is ambiguous — it could refer to 'tu madre' (don't tell her to anyone else) or be read differently — though this is a minor issue compared to the verb ambiguity."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The double-clitic form 'se lo' is well-targeted for the grammar point, but the open verb slot makes the exercise unscorably ambiguous without a closed set of acceptable answers or tighter contextual scaffolding (e.g. naming the verb in the preceding sentence)."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "cocaína"
+    },
+    {
+      "id": "2aa191f2-74ba-52dc-9db3-f4b0a9c5e299",
+      "review_status": "auto-approved",
+      "quality_score": 0.72,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "2ca19518-699c-592a-abb4-0b46a78ca6f7",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "2da196ab-eab9-56ef-acb4-0ce326700926",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise targets the affirmative-double-enclitic-accent sub-construction, but the grammar point is titled 'Negative imperative and clitic pronoun placement'. The spec explicitly covers this sub-construction, so grammarPointMatch is true — but the exercise does NOT test the negative imperative at all, which is the headline of the grammar point. A pool relying on this item will under-represent the negative imperative contrast that is the primary learning objective."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context (football/soccer scenario with 'tu compañero está solo en el área — ___ ahora mismo') is vivid and natural, but the dash-based punctuation and the parenthetical '(pasar, se, lo)' together make the task somewhat mechanical: the learner is handed all three morphemes and only needs to assemble them with the correct accent. The accent placement is the only real challenge, which is appropriate for the sub-construction but may feel thin as a standalone item."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The instructions say 'Fill in the blank with the correct imperative form of the verb in parentheses, including the pronouns already given.' This is clear, but 'including the pronouns already given' could be read as the pronouns being pre-placed in the sentence (they are not — they are in the parenthetical). Minor wording ambiguity in the instructions."
+        },
+        {
+          "code": "validator-note",
+          "detail": "No acceptableAnswers declared; the only plausible fill is Pásaselo (with tilde), so ambiguity is not an issue, but reviewers should confirm whether capitalisation variants (pásaselo mid-sentence) are handled by the platform."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "2ea1983e-6763-5da0-a9b4-080ca5536b55",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "2fa199d1-e87f-5b65-aab4-09a92436cd84",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "30a19b64-6e0f-503e-a7b4-04d2a31a2fb3",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: 'tráelo' (single enclitic, no indirect object pronoun) is also a plausible and grammatically correct fill. The sentence does not syntactically force the inclusion of 'me' — the indirect object is contextually implied but not obligatory. Since the requested sub-construction is 'affirmative-single-enclitic', 'tráelo' actually fits that sub-construction better than the double-enclitic 'tráemelo'. The correct answer 'tráemelo' is a double-enclitic form, which belongs to the 'affirmative-double-enclitic-accent' sub-construction, not the requested 'affirmative-single-enclitic'. Neither 'tráelo' nor 'tráeme' is listed in acceptableAnswers."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sub-construction mismatch: the generator was directed to realize 'affirmative-single-enclitic' (one pronoun), but the correct answer 'tráemelo' has two clitics attached (me + lo), realizing 'affirmative-double-enclitic-accent' instead."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To fix: either (a) rework the sentence so only one pronoun is needed (e.g. remove the indirect object cue so 'tráelo' is the sole correct answer), or (b) redirect to the 'affirmative-double-enclitic-accent' sub-construction and add 'tráelo' to acceptableAnswers or tighten the context to force 'me'."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "31a19cf7-ef2b-5e03-a8b4-066f21fd91e2",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Leísmo ambiguity: 'Llámale' (indirect-object leísmo for a person) is widely accepted in Spain and is not ruled out by the visible sentence. The exercise declares no acceptableAnswers, so this alternate is uncured. A reviewer should decide whether to add 'Llámale' to acceptableAnswers or reframe the sentence to force 'la' unambiguously (e.g. by making the referent non-personal or by adding a direct-object cue)."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sub-construction is affirmative-single-enclitic, which is within the grammar point's scope but does NOT test the negative imperative + proclitic placement that is the headline feature of es-b1-imperative-negative-pronouns. Pool may become over-concentrated on affirmative forms if many drafts use this sub-construction."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "32377b02-33ec-50f8-b3af-9104149a13dd",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The target grammar point is 'Negative imperative AND clitic pronoun placement'. The correct answer 'no camines' contains no clitic pronoun at all — it is a plain negative imperative with no pronoun to place. The exercise therefore tests only the negative imperative form (subjunctive vs. indicative), not the defining feature of the cell: proclitic pronoun placement on a negative imperative (e.g., 'no te vayas', 'no me lo digas'). A distractor 'no te camines' is present but is simply wrong, not a meaningful probe of pronoun placement. The exercise should be redesigned with a sentence that requires a clitic pronoun (reflexive or object) so that placement is genuinely tested."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractors do expose the common error of using the indicative after 'no' ('no camina') and the word-order error ('camina no'), which is positive, but without a pronoun in the correct answer the core grammar point is not engaged."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sentence context is natural and level-appropriate; the issue is purely in the grammar-point targeting."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "street"
+    },
+    {
+      "id": "32a19e8a-6bd5-54b4-a5b4-0198a0e0f411",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Register ambiguity: nothing in the visible sentence forces the tú register over usted. 'Guárdela' (usted imperative + enclitic 'la') is equally grammatical and natural in the same context. The sentence needs an explicit tú cue (e.g. a name, 'tú' subject, or informal vocabulary) to rule out the usted form. Since no acceptableAnswers are declared, this makes the item ambiguous."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sub-construction requested is affirmative-single-enclitic, which is on-point for the grammar point as configured. However, the grammar point's primary focus is on NEGATIVE imperative and clitic placement (proclisis vs. enclisis contrast). An affirmative imperative item alone does not expose the key learner errors around negative imperative formation (proclisis, subjunctive switch). The item is within scope but does not exercise the most pedagogically critical aspect of the point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The parenthetical cue '(guardarla)' already bundles the pronoun with the infinitive, which may reduce the cognitive challenge of deciding where to place the clitic — the learner mainly needs to conjugate the imperative and preserve the enclitic, rather than independently deciding on clitic placement."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "3637814e-2f79-59e4-b7af-97780742ae11",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Open-ended verb slot: the blank requires both a verb choice AND the correct negative imperative + clitic form. While four acceptable answers are listed (no lo cojas, no lo tomes, no lo cargues, no lo lleves), the sentence context plausibly admits additional verbs not enumerated — e.g. 'no lo cargues' (already listed), but also 'no lo abraces', 'no lo muevas', 'no lo despiertes', 'no lo saques', etc. The acceptableAnswers list is unlikely to be exhaustive, making the blank effectively open-ended and ambiguous beyond what the list covers."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise tests both verb selection and the grammar point simultaneously. A learner who knows the grammar rule but picks an unlisted verb (e.g. 'no lo abraces') would be marked wrong despite a correct negative imperative + clitic construction. This conflates lexical knowledge with the grammar target."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence is a compound imperative ('___ en brazos o no querrá dormir solo') where the blank is the first clause; the second clause provides strong contextual pressure toward 'coger/tomar/cargar' but does not uniquely constrain the verb, reinforcing the ambiguity concern."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Recommend restructuring so the verb is supplied and only the clitic placement and imperative form are tested (e.g. providing the infinitive in parentheses), which would cleanly isolate the grammar point."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "crío"
+    },
+    {
+      "id": "393e41cc-d7fc-5bd4-b6a2-c9489deb55c5",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: 'No te vayas' (negative imperative of irse, with clitic) and 'No salgas' (negative imperative of salir, no clitic) are listed as equally acceptable answers, but they are substantively different forms — one tests clitic pronoun placement with a reflexive/pronominal verb (the core grammar point), while the other is a plain negative imperative of a non-pronominal verb. Accepting both as equally correct means the exercise does not reliably test clitic pronoun placement, which is the declared grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context ('El sol es muy fuerte hoy') supports both 'No te vayas' and 'No salgas' equally well, so the blank does not disambiguate toward the clitic-pronoun form. A tighter context (e.g. referencing the person already preparing to leave, or using a reflexive-only verb) would force the clitic form."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'No vete' is a good foil for the common learner error of attaching the pronoun to the negative imperative, and 'No te vas' targets the error of using indicative instead of subjunctive — both are pedagogically sound distractors."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Minor: instructions say 'verb + pronoun' but the acceptable answer 'No salgas' has no pronoun — this is inconsistent with the stated task description and may confuse learners."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "protege"
+    },
+    {
+      "id": "403e4cd1-5fc4-5c37-b5a2-c7ab237a6ada",
+      "review_status": "flagged",
+      "quality_score": 0.5,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The correct answer 'no finjas' is a negative imperative in the present subjunctive, which is correct Spanish, but there is NO clitic pronoun in the answer or the sentence. The grammar point is 'Negative imperative AND clitic pronoun placement', requiring the exercise to test pronoun placement (e.g., proclisis: 'no te vayas', 'no se lo digas'). This exercise tests only the negative imperative verb form (subjunctive vs. indicative vs. infinitive), completely omitting the clitic pronoun component."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractors test subjunctive vs. indicative vs. infinitive selection, which is a valid negative imperative sub-skill, but the defining feature of this grammar-point cell — clitic pronoun placement — is entirely absent from the sentence and the answer."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence 'Si no entiendes algo, pregúntame, pero ___ que ya lo sabes todo' does contain 'lo' as a clitic, but it belongs to the subordinate clause 'lo sabes todo', not to the blank. The blank itself requires no pronoun manipulation by the learner."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "entiendo"
+    },
+    {
+      "id": "45cf3f8b-a109-569f-be59-5a3370ed2d2e",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity between 'No vayas' and 'No te vayas': both are grammatically correct negative imperatives of 'ir/irse' in this context. The sentence 'El cementerio está muy lejos. ___ en coche — es mejor ir a pie.' does not disambiguate between the non-reflexive 'ir' (No vayas) and the reflexive 'irse' (No te vayas). Both mean 'don't go by car' with only a subtle register/nuance difference that the sentence context does not resolve. Since 'No te vayas' is listed as a distractor option but not in acceptableAnswers, the exercise implicitly treats it as wrong — but it is a defensible correct answer. The acceptableAnswers list must include 'No te vayas' or the sentence must be reframed to force one reading."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point targets clitic pronoun placement, but the declared correct answer 'No vayas' has no clitic pronoun at all, which means the exercise does not actually test pronoun placement — it only tests the subjunctive form after 'no'. A better sentence would require a clitic (e.g. a reflexive or object pronoun) to fully exercise the target grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'No vete' (enclisis on negative imperative) is a well-chosen common learner error, and 'No vas' (indicative instead of subjunctive) is also a good distractor. However, the ambiguity issue with 'No te vayas' undermines the exercise as written."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "cementerio"
+    },
+    {
+      "id": "46796af0-c703-5de2-bda0-f26edadfbbff",
+      "review_status": "auto-approved",
+      "quality_score": 0.72,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "48796e16-c4c9-5258-bba0-ef34d8a6805d",
+      "review_status": "flagged",
+      "quality_score": 0.55,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous blank: both 'caliéntate' (reflexive) and 'calienta' (non-reflexive transitive/intransitive) are natural affirmative tú imperatives of 'calentar' in this context. The sentence does not grammatically force the reflexive pronoun — 'calienta bien durante al menos diez minutos' is equally idiomatic. Since the grammar point specifically targets enclitic pronoun attachment, the reflexive 'te' is essential to the exercise, but the sentence frame does not compel it. A tighter context (e.g. 'Antes del partido, ___ bien los músculos durante al menos diez minutos' still allows both; better: 'Antes del partido, ___ bien — el cuerpo frío se lesiona fácilmente' or explicitly cuing a reflexive action) would disambiguate."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The verb 'calentar' is ambiguous between reflexive ('calentarse' = to warm oneself up) and non-reflexive ('calentar' = to warm something up / to heat) uses, and the sentence does not force the reflexive reading. The acceptableAnswers list is empty, so the non-reflexive 'calienta' is an unlisted also-correct answer."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "49128883-7b95-5ab9-b0dc-1395dab15b5c",
+      "review_status": "flagged",
+      "quality_score": 0.55,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The correct answer 'quédate' is an AFFIRMATIVE imperative with enclitic pronoun, not a NEGATIVE imperative. The grammar point targets negative imperatives (no te quedes, no me lo digas) and the contrast with affirmative enclisis. This sentence tests only the affirmative imperative with enclisis — a related but distinct construction. The grammar point is not exercised here."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context (high fever, stay in bed) logically rules out a negative imperative, so the exercise cannot be repurposed to test the negative form without rewriting the sentence."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To target the declared grammar point, the sentence should require a negative imperative form (e.g. 'No ___ en la cama todo el día' with a verb where the negative imperative is the expected answer, or a sentence that contrasts affirmative and negative forms)."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "49796fa9-45e6-501d-bca0-f0d15789e28c",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous pronoun: 'Llámale' (leísmo, indirect object) is also-correct alongside 'Llámala' (direct object) for a personal referent like 'tu abuela', and neither is listed in acceptableAnswers. In Spain especially, leísmo with personal referents is standard. The draft should either add 'Llámale' to acceptableAnswers or rephrase the sentence to force a direct-object reading unambiguously (e.g. by making the referent non-personal or by adding context that rules out leísmo)."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "4a79713c-cb75-54f6-b9a0-ebfad66d44bb",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "4acf476a-2226-5464-b759-4ee8eb5e1819",
+      "review_status": "flagged",
+      "quality_score": 0.55,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: the blank accepts multiple negative imperative forms that are equally plausible in context. 'No permitas' (no permitas al gato acercarse) and 'No dejes' are near-synonymous and both fit perfectly; 'No dejes' is not the uniquely forced answer. Additionally, the pronoun-placement feature of the grammar point is not actually tested here — 'No dejes' contains no clitic pronoun attached to or placed before the verb, so the exercise does not expose the proclitic-vs-enclitic contrast that defines the grammar point. The sentence would need a clitic pronoun (e.g. 'No lo dejes acercarse' or 'No se lo permitas') to genuinely test clitic placement in the negative imperative."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Grammar-point targeting is weak: the correct answer 'No dejes' is a negative imperative but carries no clitic pronoun, so the defining feature of the grammar point (pronoun placement before the verb in negative imperatives) is not exercised. The exercise tests negative imperative formation in isolation, not clitic placement."
+        },
+        {
+          "code": "validator-note",
+          "detail": "No acceptableAnswers declared despite multiple plausible fills (No dejes / No permitas / No dejes que / No consientas)."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "paloma"
+    },
+    {
+      "id": "4b128ba9-7dce-5643-b2dc-16cfdcea96fe",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The target grammar point is 'Negative imperative and clitic pronoun placement', but the correct answer 'Llámala' is an AFFIRMATIVE imperative with enclitic pronoun. The sentence contains no negation and does not test the negative imperative form or proclitic placement. The exercise tests affirmative imperative + enclisis, which belongs to A2 scope, not the B1 negative imperative point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "ambiguous: 'Llámale' (leísmo) is an equally valid answer in many Spanish dialects and is not listed in acceptableAnswers. The draft declares no acceptable alternates, but 'le' as a direct object pronoun for a female referent is widely accepted in standard and peninsular Spanish."
+        },
+        {
+          "code": "validator-note",
+          "detail": "levelMatch note: While affirmative imperative with enclitic pronoun is A2-level content, it is within the learner's scope and not above B1. However, the exercise fails to target the declared B1 grammar point (negative imperative + proclisis)."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Suggested fix: Reframe the sentence to require a negative imperative with proclitic pronoun, e.g. 'Tu abuela está descansando. ___ ahora, por favor. (llamar)' → 'No la llames', which would directly test the target grammar point."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "4b7972cf-4c92-52bb-baa0-ed975550a6ea",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "4bdd49fe-21cf-5a3a-acf6-63d603248be3",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous blank: the correct answer is 'No lo' but the sentence is incomplete — the blank must be followed by the subjunctive verb form 'despiertes', yet the blank only asks for the pronoun cluster. The learner must supply 'No lo' to precede 'despiertes', but 'No le' is also grammatically defensible in many regional varieties of Spanish (leísmo with animate masculine referents is widespread and accepted), making the distinction between 'No lo' and 'No le' genuinely ambiguous without an acceptableAnswers list that clarifies which is accepted."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The blank covers only the proclitic pronoun cluster (No lo / No le), not the full negative imperative construction including the subjunctive verb form. The verb 'despiertes' is already given in the sentence, so the learner is not required to produce the subjunctive form themselves — this reduces the exercise's coverage of the grammar point (subjunctive selection after 'no') to near zero."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Distractor 'No lo despierta' uses the indicative rather than the subjunctive, which is a valid distractor for the grammar point, but since the verb is pre-filled in the sentence stem, this distractor is immediately ruled out by the visible 'despiertes', making it trivially eliminable."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Distractor 'Despiértalo no' is also trivially wrong given the visible verb stem, reducing the discriminative power of the options."
+        },
+        {
+          "code": "validator-note",
+          "detail": "No acceptableAnswers declared for the lo/le ambiguity."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "robin"
+    },
+    {
+      "id": "4c128d3c-f605-55e0-b3dc-186c575b81e9",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "4c797462-c93c-596c-b7a0-e8c0d4340919",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "4d7975f5-4a58-5731-b8a0-ea5d53176b48",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "4ddd4d24-2409-55c4-a6f6-5a28055dc785",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point targets negative imperative WITH clitic pronoun placement (e.g., 'No te vayas', 'No se lo digas'), but 'abusar de' is not a pronominal/reflexive verb and takes no clitic pronoun — the correct answer 'No abuses' has no pronoun at all. The distractor 'No te abuses' is a plausible learner error (wrongly adding a reflexive clitic), but the exercise does not actually require the learner to place a clitic pronoun correctly; it only tests the subjunctive form after 'no'. This means the clitic-placement dimension of the grammar point is not exercised."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The context label 'Negative imperative with clitic pronoun placement' is misleading because the target answer contains no clitic pronoun, potentially confusing learners about what they are practising."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence tests the subjunctive-vs-indicative distinction (No abuses vs. No abusas) rather than the proclitic-vs-enclitic placement contrast that defines this grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The vocabulary 'juventud' (youth) and the abstract framing ('Tu juventud es un regalo muy valioso') are appropriate for B1 but the exercise's grammar targeting is off."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "juventud"
+    },
+    {
+      "id": "6d41a52a-f3c0-5aae-b373-8a4288129387",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Leísmo ambiguity: 'llámale' is widely accepted in Peninsular Spanish as a direct-object form for a person ('tu hermana'), making it an equally valid answer alongside 'llámala'. Since no acceptableAnswers are declared, this creates genuine ambiguity between 'llámala' and 'llámale'. A fix would be to either (a) add 'llámale' to acceptableAnswers, or (b) reframe the sentence to use a non-person object (e.g. a phone number, a place) where leísmo does not apply."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sub-construction tested is affirmative-single-enclitic, which is within the grammar point's scope but does not test the negative imperative + proclitic placement that is the headline feature of this grammar point. This is acceptable per spec but noted for pool-diversity monitoring."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider adding 'llámale' to acceptableAnswers to resolve the leísmo ambiguity before approving."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "6e46d1d0-f8b6-5d0c-a921-5d00287ae425",
+      "review_status": "flagged",
+      "quality_score": 0.5,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence elicits an AFFIRMATIVE imperative with enclitic pronoun placement (pídelo), not a NEGATIVE imperative with proclitic placement. The grammar point 'es-b1-imperative-negative-pronouns' specifically targets negative imperatives (No te vayas, No me lo digas) and the contrast with affirmative enclisis. This draft tests only the affirmative half of the contrast, so grammarPointMatch is false."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: 'pídelo' (DO pronoun replacing 'dinero') and 'pídele' (IO pronoun replacing 'a tu jefe') are both grammatically correct affirmative imperatives of 'pedir' in this sentence. Neither is ruled out by the visible text, and no acceptableAnswers list is declared to enumerate the alternant."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Even setting aside the DO/IO ambiguity, the bare imperative 'pide' (without any clitic) is also grammatically acceptable in this frame ('pide a tu jefe antes del viernes'), further widening the answer space."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To fix: reframe the sentence to require a NEGATIVE imperative (e.g. 'No ___ a tu jefe todavía, espera hasta mañana') and ensure the pronoun slot is unambiguous (single recoverable referent for the clitic)."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "6f46d363-79d3-5ad1-aa21-5e9da75e4654",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The target grammar point is 'Negative imperative and clitic pronoun placement', but the correct answer 'Muéstraselas' is an AFFIRMATIVE imperative with enclitic pronouns, not a negative imperative. The sentence context ('así que … ahora mismo') unambiguously calls for an affirmative command. While affirmative imperative enclisis is related background knowledge for this grammar point, the exercise does not test the negative imperative at all — it tests only the affirmative side. grammarPointMatch is therefore false."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise does test multi-clitic enclisis with a written accent (a sub-skill mentioned in the grammar-point description), but the negative imperative + proclitic placement — the core of the declared point — is entirely absent from this item."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The instructions say 'correct imperative form … including the pronouns indicated' and list '(mostrar, se, las)', which gives the learner all three morphemes needed; the only remaining challenge is assembling them correctly and placing the accent. This is a reasonable cloze but misaligned with the declared grammar-point key."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "7146d689-7c0c-565b-ac21-61d7a99781f6",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "7246d81c-f444-55f8-ad21-637424086ce1",
+      "review_status": "flagged",
+      "quality_score": 0.5,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The correct answer 'quédate' is an AFFIRMATIVE imperative with enclitic pronoun, not a NEGATIVE imperative with proclitic pronoun. The grammar point 'es-b1-imperative-negative-pronouns' specifically targets negative imperatives (e.g. 'no te quedes') and the contrast between proclisis on negative imperatives vs. enclisis on affirmative imperatives. This exercise tests only the affirmative side of that contrast, making grammarPointMatch false."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context ('Tienes fiebre alta') makes a negative imperative semantically impossible, so the exercise cannot elicit the target construction at all."
+        },
+        {
+          "code": "validator-note",
+          "detail": "To target this grammar point, the sentence should require a negative imperative form such as 'No te quedes levantado/a; tienes fiebre alta' or similar."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "736f2544-04ab-5968-b468-dd74bda9df41",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "746f26d7-85c8-572d-b568-df113c8d4170",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous blank: 'prueba' (affirmative tú imperative without any pronoun) is also grammatically correct in this sentence. The direct object 'la sopa' is already named in the sentence stem, so the pronoun is pragmatically natural but not grammatically obligatory. A learner could correctly write 'prueba un poco antes de comer' without attaching any clitic. The sentence needs to be restructured so that the pronoun is grammatically required — e.g. by removing the noun antecedent from the visible sentence and placing it only in a prior context, or by using a construction that forces the pronoun."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sub-construction tested (affirmative-single-enclitic) is on-point for the grammar point, but the ambiguity between 'pruébala' and 'prueba' undermines the exercise's ability to reliably elicit the target form."
+        },
+        {
+          "code": "validator-note",
+          "detail": "No acceptableAnswers declared, and 'prueba' is a plausible alternate not listed there."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "7546dcd5-7799-5f47-b021-684ba5250ab2",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "766f29fd-8801-52b7-b768-e24b3ec67d12",
+      "review_status": "flagged",
+      "quality_score": 0.72,
+      "flagged_reasons": [
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Synonym ambiguity: 'no lo mandes' (from 'mandar') is an equally correct negative imperative with proclitic 'lo' and is not listed in acceptableAnswers. Both 'enviar' and 'mandar' are common B1 synonyms for sending a document. The parenthetical '(enviar)' constrains the verb, which rules out 'mandar' — however, reviewers should confirm whether the parenthetical verb cue is considered sufficient to lock the lexeme, or whether 'mandar' should be added to acceptableAnswers."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The parenthetical '(enviar)' does constrain the lexeme, which mitigates the synonym ambiguity. If the exercise convention is that the parenthetical verb must be used, ambiguity is resolved. Reviewer should confirm this convention is communicated to learners via instructions."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "83dce776-351f-5c20-954d-099c160716f5",
+      "review_status": "flagged",
+      "quality_score": 0.55,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence 'La cama está muy sucia — ___ ahora mismo, por favor. (hacer)' is semantically awkward: 'hacer la cama' means 'to make the bed' (tidy it), but a dirty bed would more naturally prompt 'lavar las sábanas' or 'cambiar las sábanas'. Telling someone to 'make' a dirty bed is a slightly odd command. This may confuse learners about the meaning of 'hacer la cama'."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The grammar point is 'Negative imperative and clitic pronoun placement', but this draft tests the AFFIRMATIVE imperative with enclitic pronoun (affirmative-single-enclitic). While this sub-construction is within scope of the grammar point as described, the exercise does not expose any of the key learner errors listed for the negative imperative (proclitic vs. enclitic placement, subjunctive form after 'no'). The exercise is on-point for the broader grammar point but contributes little to the negative imperative contrast that is the headline of this point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The instructions say 'Fill in the blank with the correct imperative form of the verb in parentheses' — this is acceptable but does not hint at whether affirmative or negative is needed, which is fine. However, the sentence context makes the affirmative unambiguous, so the exercise is not particularly challenging for B1 learners who already know the affirmative imperative (an A2 construction). The added value is the enclitic pronoun attachment, which is the B1 element."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The verb hint '(hacer)' is given, which reduces the difficulty significantly — the learner only needs to form 'haz' + 'la', which is relatively straightforward for B1."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "857c0529-5587-5037-ab73-bb1b5069181a",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The blank omits the obligatory 'no' — the sentence reads 'Si tu amigo está pasando por una depresión, ___ solo' and the correct answer is 'lo dejes', but without 'no' in the blank the learner must supply it implicitly. The instructions say 'fill in the blank with the correct negative imperative form' but the blank as written would need to be 'no lo dejes' to be a complete, well-formed negative imperative. This creates a minor ambiguity about whether 'no' is part of the expected answer or is missing from the sentence."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'no déjalo' is a well-chosen common learner error (enclisis on negative imperative), which is good. However, the distractor 'le dejes' (wrong clitic — indirect instead of direct object) tests a different error type (clitic selection) rather than purely pronoun placement, which slightly dilutes the focus of the exercise."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The context field ('Negative imperative with clitic pronoun placement') names the rule category, which is acceptable, but combined with the instructions it makes the target construction very transparent — the learner is explicitly told what form to produce, reducing the cognitive challenge slightly."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The topic of depression, while not culturally offensive, is a sensitive subject that may be uncomfortable for some learners. Consider whether this is appropriate for the learner pool."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "depresión"
+    },
+    {
+      "id": "897c0b75-59f9-574b-a773-b4a754db8f5e",
+      "review_status": "flagged",
+      "quality_score": 0.5,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "No clitic pronoun is present in the sentence or the answer. The grammar point is 'Negative imperative AND clitic pronoun placement', but the correct answer 'No gastes' contains no clitic pronoun at all — there is no direct/indirect object pronoun to place. The exercise tests only the negative imperative subjunctive form (no gastes vs. no gastas), not pronoun placement, which is the distinguishing and harder half of the grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence 'Tengo solo diez dólares. ___ más, por favor.' has no referent that would naturally trigger a clitic pronoun, so the exercise cannot be repaired by simply adding one — the scenario itself would need to be redesigned."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'No gastes los' is grammatically incomplete/nonsensical (dangling article), which makes it trivially eliminable and reduces the diagnostic value of the options."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The context field says 'Negative imperative with clitic pronoun placement' but the exercise does not actually test pronoun placement, creating a mismatch between stated and realized grammar coverage."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "dólar"
+    },
+    {
+      "id": "8b45af80-504e-56b4-a421-00a869d5444d",
+      "review_status": "auto-approved",
+      "quality_score": 0.78,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "8c45b113-d16b-5479-a521-0245e8b8a67c",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "8d45b2a6-5288-523e-a621-03e26c0e7fef",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: The target grammar point is 'Negative imperative AND clitic pronoun placement', but the correct answer 'no llegues' contains no clitic pronoun. The exercise tests only the negative imperative form (subjunctive vs. indicative vs. infinitive) without engaging the pronoun-placement dimension at all. The distractors ('no llegas', 'no llegar', 'no llegas a') confirm the focus is purely on mood/form selection, not on proclitic vs. enclitic pronoun positioning."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context is natural and the B1 vocabulary is appropriate, but the exercise misses the defining feature of the grammar point: clitic pronoun placement before the verb in the negative imperative (e.g., 'no te vayas', 'no se lo digas'). A revision adding a reflexive or object pronoun (e.g., 'no ___ a conclusiones' with a pronoun blank, or a different sentence entirely) would fix this."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Distractor 'no llegas a' is slightly odd as a standalone option since 'llegar a' is a phrasal verb meaning 'to manage to/to end up', which could momentarily confuse learners about whether the sentence involves that construction — minor issue but worth noting."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "conclusión"
+    },
+    {
+      "id": "8e45b439-d3a4-5003-a721-057feaf1e21e",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity not fully resolved: the blank admits multiple semantically distinct verbs beyond those listed in acceptableAnswers. 'no se lo prometas' (promise), 'no se lo cuentes' (tell/recount), and 'no se lo digas' (say/tell) are listed, but other equally valid forms such as 'no se lo menciones', 'no se lo expliques', 'no se lo reveles', or 'no se lo confieses' also fit the context naturally and are not enumerated. The acceptableAnswers list is not exhaustive enough to cure the ambiguity."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The correctAnswer 'no se lo prometas' is semantically slightly off: the sentence says 'sé que quieres contarle el secreto', which frames the action as telling/revealing, not promising. 'Prometar' (to promise) does not naturally follow from 'contarle el secreto', making the designated correct answer the weakest of the three listed options and potentially confusing to learners."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The open-ended nature of the blank (any verb of communication/disclosure in negative imperative + double clitic se lo) makes it structurally difficult to anchor to a single correct answer without a tighter context."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "promet"
+    },
+    {
+      "id": "9045b75f-ccf9-5d65-a921-08b9e4462f38",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "9145b8f2-4e15-5b2a-aa21-0a56679c08ab",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "9245ba85-cf32-58ef-ab21-0bf3e67f6ada",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "9345bc18-5933-54dc-9c20-f3c060f055c5",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "97414536-2410-5bbe-a026-42222bcceac7",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "984146c9-a52d-5983-a126-43bfaab04cf6",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "grammar-point-mismatch"
+        },
+        {
+          "code": "validator-note",
+          "detail": "grammarPointMatch: false — the correct answer 'No hagas' is a negative imperative in the subjunctive (correctly formed), but there is NO clitic pronoun in the sentence or the blank. The declared grammar point is 'Negative imperative AND clitic pronoun placement'; this exercise tests only the negative imperative verb form (subjunctive vs. indicative vs. invented form), entirely omitting the pronoun-placement dimension that is central to the point. A pronoun (e.g. 'No lo hagas', 'No se lo digas') is required to target the full grammar point."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'No haces' (indicative) and 'No hazas' (invented form) do probe the subjunctive-vs-indicative contrast, which is a valid sub-skill, but the pronoun-placement contrast (*no vete vs. no te vayas) — the most distinctive and error-prone feature of this grammar point — is completely absent."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Sentence context is fine and natural; the fix is simply to add a clitic pronoun to the blank slot (e.g. 'No ___ hagas' or restructure to 'No ___ digas a tu hermano')."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "causado"
+    },
+    {
+      "id": "9d414ea8-2abc-5e5c-9626-320032789dad",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "9e41503b-abd8-5c21-9726-339db15bffdc",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "9f4151ce-2cf5-59e6-9826-353a34b1d94f",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "a0415361-ae11-57ab-9926-36d7b3953b7e",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "a14154f4-2649-5748-9a26-38742e062669",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "a2415687-a766-550d-9b26-3a11ace98898",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "a341581a-2882-52d2-9c26-3bae303f620b",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguous: the sentence 'Tienes la respuesta correcta — ___ a nadie todavía' does not uniquely force 'no se la digas'. The indirect object referent is unspecified — 'no me la digas', 'no nos la digas', or 'no te la digas' (in a 2nd-person-to-3rd-person framing) are all grammatically and semantically plausible fills for the same grammar point. Without a context establishing who the answer should not be told to, multiple clitic combinations are equally valid and acceptableAnswers does not enumerate them."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The referent of 'se' (replacing 'le/les') is not established by any prior context, making the indirect object clitic underspecified. A disambiguating context (e.g. naming a specific third-party recipient) is needed to force exactly one answer."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence is otherwise a well-constructed multi-clitic negative imperative item and the grammar point is clearly targeted — a small contextual fix would likely bring this to auto-approval."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "permítamir"
+    },
+    {
+      "id": "a44159ad-a99f-5097-9d26-3d4baf22c43a",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "b045b8e6-17b2-5e6c-b5aa-4c5086af79b9",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Pragmatic/semantic issue: 'No te disculpes por llegar tarde' (Don't apologize for being late) is an unusual, somewhat counterintuitive instruction in everyday communication — it is not a natural, prototypical sentence a B1 learner would encounter or produce. This weakens the exercise's communicative authenticity."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'no disculpes te' (postposed clitic on negative imperative) is a plausible learner error and is well-chosen, but 'no te disculpa' uses the third-person indicative form, which is a weaker distractor — a B1 learner would likely dismiss it immediately on morphological grounds, reducing the diagnostic value of the item."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The verb 'disculparse' (reflexive) is a reasonable choice for testing clitic placement, but the sentence context ('ya sé que fue un accidente') makes the pragmatic register slightly odd — typically one would say 'no te preocupes' or 'no te disculpes' in a reassuring context, but the full sentence reads more like a rebuke, creating a minor register mismatch."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The exercise does correctly expose the core learner errors: proclisis on negative imperative (no te disculpes) vs. enclisis (*no disculpate) and wrong word order (*no disculpes te), and wrong verb form (*no te disculpa). The grammar targeting is sound."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Overall: the exercise is functional and on-point but the pragmatic awkwardness and one weak distractor prevent auto-approval. Flagged for human review."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "discúlpamir"
+    },
+    {
+      "id": "c75a884c-bb28-5380-a8aa-880c5d7bec69",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "c95a8b72-bd61-5f0a-aaaa-8b465fb5280b",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "ca5a8d05-3e7e-5ccf-abaa-8ce3de988a3a",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-double-clitic"
+    },
+    {
+      "id": "e832ee14-df69-5394-bbdd-2a5830b40205",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "eb32f2cd-62bf-5ce3-bedd-2f2fb1d09fd6",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity between 'llámala' and 'llámale': in leísta varieties of Spanish (widely used in Spain and accepted in many Latin American regions), 'le' is a valid direct object clitic for a female human referent, making 'llámale' equally correct. Neither form is listed in acceptableAnswers. A fix would be to add 'llámale' to acceptableAnswers or to rephrase the sentence to make the referent non-human or to specify a non-leísta context."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sub-construction realized is affirmative-single-enclitic, which is within the grammar point scope but is the affirmative side of a point whose headline is the NEGATIVE imperative with proclitic pronouns. The exercise does not expose the common learner errors around negative imperative pronoun placement (e.g., *no llámala vs. no la llames). This is a coverage note, not a rejection reason."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "affirmative-single-enclitic"
+    },
+    {
+      "id": "f43f85cc-466d-5888-8567-c784232058e1",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "f53f875f-c78a-564d-8667-c921a203bb10",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity not fully resolved by acceptableAnswers: the blank can be filled with 'No se lo des' (dar) or 'No se lo digas' (decir), and both are listed — but the sentence context ('Tienes el número de teléfono de Elena') strongly implies 'decir' (don't tell anyone), making 'dar' (don't give it to anyone) a semantically plausible but pragmatically odd reading. However, 'dar' is not implausible enough to rule out, and both forms are structurally distinct (different verbs, different subjunctive stems), so the exercise tests two different lexical items rather than two surface forms of the same item. Listing both in acceptableAnswers means the learner can produce either without being wrong, but the exercise cannot distinguish which verb the learner intended. This is a borderline ambiguity case — the two answers are substantively different (different verbs) and both are accepted, which dilutes the targeting."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The two acceptable answers use different verbs (dar vs. decir), so the exercise simultaneously tests two different lexical items. A tighter sentence context (e.g. 'Elena me contó un secreto...') would force 'decir' and eliminate the 'dar' reading, making the exercise unambiguous."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Minor: the instruction says 'Fill in the blank with the correct negative imperative form' — this is fine and does not spoil the answer, but the reminder about pronoun placement is slightly telegraphing the structure without stating the outcome."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "nenir"
+    },
+    {
+      "id": "f83f8c18-41fb-5174-8967-cdf83077bead",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "f93f8dab-c317-5f39-8a67-cf95af5b20dc",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "fa3f8f3e-4434-5cfe-8b67-d13232b0fa4f",
+      "review_status": "flagged",
+      "quality_score": 0.62,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "ambiguous"
+        },
+        {
+          "code": "validator-note",
+          "detail": "Ambiguity: 'No le prestes' (without the indirect-object pronoun 'se lo') is also a grammatically correct negative imperative with correct proclitic placement — it simply omits the direct-object pronoun 'lo', which the sentence does not force. The blank context 'Ese libro es de tu hermano. ___ a tu amigo sin pedirle permiso' does not grammatically require both object pronouns; 'No le prestes [el libro]' is a fully acceptable negative imperative. acceptableAnswers does not enumerate this alternative, so the draft is ambiguous."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'No le prestes' is therefore not clearly wrong — it tests a different (and valid) clitic combination rather than an error, which weakens the diagnostic value of the multiple-choice set."
+        },
+        {
+          "code": "validator-note",
+          "detail": "Consider tightening the sentence to force the double-clitic form, e.g. by making the direct object pronoun obligatory through prior discourse ('Tu hermano te lo dejó. ___ a tu amigo sin pedirle permiso.') or by adding 'No se lo prestes' to acceptableAnswers and removing 'No le prestes' from the options if the intent is to test the double-clitic form exclusively."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "ee.uu ."
+    },
+    {
+      "id": "fb3f90d1-c550-5ac3-8c67-d2cfb1945c7e",
+      "review_status": "auto-approved",
+      "quality_score": 0.85,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "affirmative-double-enclitic-accent"
+    },
+    {
+      "id": "fc3f9264-3d88-5a60-8d67-d46c2c054769",
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "fd3f93f7-bea5-5825-8e67-d609aae8a998",
+      "review_status": "flagged",
+      "quality_score": 0.55,
+      "flagged_reasons": [
+        {
+          "code": "low-quality-flag"
+        },
+        {
+          "code": "validator-note",
+          "detail": "The blank omits the obligatory 'no' particle: the sentence reads '___ sin darle de comer' and the correct answer is 'te vayas', but the full negative imperative requires 'no te vayas'. Without 'no' in the sentence, the blank is structurally incomplete — a learner filling in 'te vayas' alone produces a grammatically ill-formed clause ('te vayas sin darle de comer' is a bare subjunctive, not a negative imperative). The 'no' must either be pre-printed in the sentence or included in the correct answer as 'no te vayas'."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The distractor 'no vayas' (without the clitic 'te') is a plausible near-miss for a reflexive verb but could confuse learners about whether the clitic is part of the answer or part of the pre-printed sentence frame, compounding the missing-'no' issue."
+        },
+        {
+          "code": "validator-note",
+          "detail": "The sentence context (a hungry kitten) is charming and culturally neutral, but the structural flaw with the missing 'no' is significant enough to require human review before the item is shown to learners."
+        }
+      ],
+      "demotion_reason": null,
+      "seedWord": "gatito"
+    },
+    {
+      "id": "fe3f958a-3fc1-55ea-8f67-d7a62e3e830b",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    },
+    {
+      "id": "ff3f971d-c0de-53af-9067-d943ad21e53a",
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "flagged_reasons": null,
+      "demotion_reason": null,
+      "seedWord": "negative-single-clitic"
+    }
+  ]
+}
