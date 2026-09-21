@@ -66,6 +66,20 @@ describe('reportApiError', () => {
     expect(captureException).not.toHaveBeenCalled();
   });
 
+  it('skips an AuthExpiredError — an expired session redirects to sign-in, it is not a fault', () => {
+    // `createAuthenticatedFetch` throws this when there is no session token.
+    // It is now a handled product state (the app bounces the user to sign-in
+    // and returns them to where they were), so reporting it would refill the
+    // inbox with exactly the noise this fix removes — the reported incident
+    // raised four alerts from one expired session. Constructed by `name` here,
+    // like the RedeemError case below, to keep this file free of an
+    // api-client dependency; `isAuthExpiredError` matches on `name` by design.
+    const e = new Error('Your session has expired. Please sign in again.');
+    e.name = 'AuthExpiredError';
+    reportApiError(e);
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
   it.each(['used', 'expired', 'invalid'])(
     'skips a RedeemError (%s) — every invite-redeem outcome is a handled product state',
     (kind) => {
