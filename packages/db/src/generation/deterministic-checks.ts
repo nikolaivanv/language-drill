@@ -31,7 +31,9 @@ import {
   isClozeContent,
   Language,
 } from '@language-drill/shared';
-import { checkClozeOverlap, checkTurkishCloze } from '@language-drill/ai';
+import { checkClozeOverlap, checkLexemeHint, checkTurkishCloze } from '@language-drill/ai';
+
+import { getGrammarPoint } from '../curriculum';
 
 import type { ReviewStatus, RoutingDecision } from './routing';
 
@@ -64,9 +66,29 @@ export function applyDeterministicChecks(
   decision: RoutingDecision,
   content: ExerciseContent,
   language: Language,
+  grammarPointKey?: string | null,
 ): RoutingDecision {
   if (!isClozeContent(content)) {
     return decision;
+  }
+
+  // Missing verb hint runs first among the flag-level checks: it is decided by
+  // the point's own `requiresLexemeHint` flag, not by anything in the draft, so
+  // it cannot depend on the others. Omitting the key (older 3-arg callers and
+  // their tests) skips it — the check is opt-in per point either way.
+  if (grammarPointKey && getGrammarPoint(grammarPointKey)?.requiresLexemeHint) {
+    if (checkLexemeHint(content, language).kind === 'missing-hint') {
+      decision = {
+        reviewStatus: downgradeToFlagged(decision.reviewStatus),
+        flaggedReasons: [
+          ...decision.flaggedReasons,
+          {
+            code: GenerationReasonCode.MissingLexemeHint,
+            detail: `no parenthetical infinitive in the stem; answer "${content.correctAnswer}"`,
+          },
+        ],
+      };
+    }
   }
 
   const overlap = checkClozeOverlap(content);

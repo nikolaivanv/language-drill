@@ -95,6 +95,13 @@ export enum GenerationReasonCode {
    * rather than discarded. `detail` holds the substitution.
    */
   SuspectedAnswerStemOverlap = "suspected-answer-stem-overlap",
+  /**
+   * Deterministic missing verb hint → flagged. The point is marked
+   * `requiresLexemeHint` (the blank swallows a verb whose lexeme is never the
+   * target), but the stem carries no parenthetical infinitive, so the learner
+   * has to guess which verb the author meant. `detail` names the answer.
+   */
+  MissingLexemeHint = "missing-lexeme-hint",
   /** Free-form validator `flaggedReasons` note. `detail` holds the prose. */
   ValidatorNote = "validator-note",
 
@@ -144,6 +151,8 @@ export const REASON_LABELS: Record<GenerationReasonCode, string> = {
   [GenerationReasonCode.LevelMismatch]: "Level mismatch",
   [GenerationReasonCode.GrammarPointMismatch]: "Grammar point mismatch",
   [GenerationReasonCode.MalformedSurfaceForm]: "Suspected malformed surface form",
+  [GenerationReasonCode.MissingLexemeHint]:
+    "Missing verb hint (blank swallows the verb)",
   [GenerationReasonCode.ValidatorNote]: "Validator note",
   [GenerationReasonCode.LegacyUncoded]: "Legacy (uncoded)",
 };

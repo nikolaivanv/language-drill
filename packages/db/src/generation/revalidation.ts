@@ -220,6 +220,7 @@ export function decideDemotion(
   result: ValidationResult,
   content?: ExerciseContent,
   language?: Language,
+  grammarPointKey?: string | null,
 ): DemotionAction {
   const unreviewable = skipUnreviewable(currentStatus);
   if (unreviewable) return unreviewable;
@@ -229,7 +230,12 @@ export function decideDemotion(
   // 2-arg callers (older tests) working — they get pure LLM routing.
   const routed =
     content && language
-      ? applyDeterministicChecks(routeValidationResult(result), content, language)
+      ? applyDeterministicChecks(
+          routeValidationResult(result),
+          content,
+          language,
+          grammarPointKey,
+        )
       : routeValidationResult(result);
 
   const newStatus = routed.reviewStatus;
@@ -269,6 +275,7 @@ export function decideDeterministicDemotion(
   content: ExerciseContent,
   language: Language,
   existingReasons: readonly GenerationReason[] = [],
+  grammarPointKey?: string | null,
 ): DemotionAction {
   const unreviewable = skipUnreviewable(currentStatus);
   if (unreviewable) return unreviewable;
@@ -277,6 +284,7 @@ export function decideDeterministicDemotion(
     { reviewStatus: currentStatus, flaggedReasons: [...existingReasons] },
     content,
     language,
+    grammarPointKey,
   );
 
   if (STATUS_RANK[routed.reviewStatus] < STATUS_RANK[currentStatus]) {

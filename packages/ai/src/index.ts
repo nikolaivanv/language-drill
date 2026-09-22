@@ -263,6 +263,7 @@ export {
 export type { DeterministicVerdict, TurkishVowel } from "./turkish-harmony.js";
 
 export { checkClozeOverlap } from "./cloze-overlap.js";
+export { checkLexemeHint, type LexemeHintVerdict } from "./lexeme-hint.js";
 export type { ClozeOverlapVerdict } from "./cloze-overlap.js";
 
 export {

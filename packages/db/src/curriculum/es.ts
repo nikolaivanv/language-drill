@@ -4355,6 +4355,16 @@ const esCurriculum: readonly GrammarPoint[] = [
   },
   {
     key: 'es-b1-imperative-negative-pronouns',
+    // Every cloze on this point MUST hand the learner the verb as a
+    // parenthetical infinitive — the target is the mood + clitic placement, so
+    // the lexeme is never what is being tested. Enforced deterministically by
+    // `applyDeterministicChecks`, NOT left to the validator's "does the stem
+    // entail the verb?" call, which is the judgment that failed at the margin
+    // (see `requiresLexemeHint` on the GrammarPoint type for the row).
+    // The affirmative half already does this in 92% of approved rows because
+    // the accented form (`Dáselas`) is unguessable without it; the negative
+    // half had no forcing function and sat at 31%.
+    requiresLexemeHint: true,
     // NO coverageSpec — deliberately. This point carried a polarity axis
     // (affirmative 8 / negative 10, added 2026-07-17) until the
     // constructionVariants below were authored on 2026-08-08. The two

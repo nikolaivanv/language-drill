@@ -364,6 +364,7 @@ export async function validateAndInsertWithRetry(
       routeValidationResult(result),
       currentDraft.contentJson,
       opts.cell.language,
+      opts.cell.grammarPoint.key,
     );
 
     // Seed-match gate (Spec 2): a seeded vocab_recall draft that drifted off

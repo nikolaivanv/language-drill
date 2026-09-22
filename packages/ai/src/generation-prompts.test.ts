@@ -863,6 +863,43 @@ describe("buildGenerationUserPrompt", () => {
     expect(prompt).toContain("Topic domain: mixed");
   });
 
+  // 2026-09-22 — the deterministic gate flags a hint-less cloze on a
+  // `requiresLexemeHint` point, so the generator must be TOLD, or enforcement
+  // just burns yield on drafts the model thought were anchored enough.
+  it("directs a bare infinitive for a requiresLexemeHint cloze point", () => {
+    const inputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPoint: { ...baseInputs.grammarPoint, requiresLexemeHint: true },
+    };
+    const prompt = buildGenerationUserPrompt(inputs, 0, "travel");
+    expect(prompt).toContain("bare infinitive in parentheses");
+    // The citation-form constraint: the hint must not pre-encode the clitic.
+    expect(prompt).toContain("(enviarlo)");
+    // An entailing stem is not an escape hatch on THIS point.
+    expect(prompt).toMatch(/is NOT an exception/);
+  });
+
+  it("omits the lexeme-hint directive on a point without the flag", () => {
+    const prompt = buildGenerationUserPrompt(
+      { ...baseInputs, exerciseType: ExerciseType.CLOZE },
+      0,
+      "travel",
+    );
+    expect(prompt).not.toContain("bare infinitive in parentheses");
+  });
+
+  it("omits the lexeme-hint directive for a non-cloze type on a flagged point", () => {
+    const inputs = {
+      ...baseInputs,
+      exerciseType: ExerciseType.TRANSLATION,
+      grammarPoint: { ...baseInputs.grammarPoint, requiresLexemeHint: true },
+    };
+    expect(buildGenerationUserPrompt(inputs, 0, "travel")).not.toContain(
+      "bare infinitive in parentheses",
+    );
+  });
+
   it("renders the supplied topicDomain", () => {
     const prompt = buildGenerationUserPrompt(baseInputs, 0, "travel");
     expect(prompt).toContain("Topic domain: travel");

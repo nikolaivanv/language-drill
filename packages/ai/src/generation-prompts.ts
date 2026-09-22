@@ -925,13 +925,24 @@ export function buildGenerationUserPrompt(
     inputs.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
       ? `Use constraint kind: ${contextualParaphraseConstraintForOrdinal(ordinal)}.\n\n`
       : "";
+  // A point marked `requiresLexemeHint` drills a verb FORM, so the lexeme is
+  // never the target and `applyDeterministicChecks` FLAGS any cloze on it whose
+  // stem lacks a parenthetical infinitive. Tell the generator that here, or the
+  // gate is enforcement without instruction and simply burns yield: the model
+  // would keep shipping stems it judged "anchored enough" and every one would
+  // be flagged on arrival.
+  const lexemeHintBlock =
+    inputs.grammarPoint.requiresLexemeHint === true &&
+    inputs.exerciseType === ExerciseType.CLOZE
+      ? `This grammar point tests the FORM, never which verb the sentence needs, so the blank MUST NOT ask the learner to guess the lexeme: put the verb's bare infinitive in parentheses next to the sentence — \`(irse)\`, \`(olvidar)\`, \`(dar / se / las)\`. Give the CITATION form only: never attach the clitics or the tested inflection (\`(enviarlo)\`, \`(no lo envíes)\` both hand over what the item is testing), and keep the referent the clitic stands for recoverable from the sentence. A stem the context seems to pin down is NOT an exception — ship the parenthetical every time.\n\n`
+      : "";
   const coverageBlock = renderCoverageBlock(inputs, ordinal, coverageTargets);
   return `Produce exercise #${ordinal + 1}.
 
 Topic domain: ${domain}
 Prefer this everyday domain when building the exercise; if the grammar point does not fit it naturally, use the closest domain that does.
 
-${modeBlock}${paraphraseBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
+${modeBlock}${paraphraseBlock}${lexemeHintBlock}${coverageBlock}${digitFormBlock}${baseWordCueBlock}${seedBlock}Use the ${toolName} tool.`;
 }
 
 // ---------------------------------------------------------------------------
