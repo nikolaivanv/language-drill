@@ -357,7 +357,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-21");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-22");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -508,10 +508,30 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("does NOT apply when the lexical choice IS the grammar point");
   });
 
-  it("bumps the generation prompt version to 2026-09-21", () => {
+  it("carries the clitic-doubling-determinacy rule for clitic-swallowing blanks (2026-09-22)", () => {
+    const prompt = GENERATION_SYSTEM_PROMPT_TEMPLATE;
+    expect(prompt).toContain("Clitic-doubling determinacy on blanks that swallow a clitic cluster");
+    // The trigger is an OVERT POSTVERBAL dative PP — that is what makes the
+    // doubling optional and the lone key a coin flip.
+    expect(prompt).toContain("OVERT POSTVERBAL DATIVE");
+    // This member of the determinacy family INVERTS the family rule: the rival
+    // set is closed at two, so enumeration is the cure rather than forbidden.
+    // If this assertion ever reads "NOT a cure", the rule has been flattened
+    // into its three siblings and the fix is nullified.
+    expect(prompt).toContain("**Enumeration IS the cure here**");
+    expect(prompt).toContain("CLOSED");
+    // Symmetry: keying EITHER form without its counterpart is the defect.
+    expect(prompt).toContain("the trap is symmetric");
+    // Three carve-outs, each a place where doubling is not in fact optional.
+    expect(prompt).toContain("PREVERBAL / left-dislocated");
+    expect(prompt).toContain("es-a2-indirect-object-pronouns-se");
+    expect(prompt).toContain("accusative doubling is not free");
+  });
+
+  it("bumps the generation prompt version to 2026-09-22", () => {
     // 2026-08-18: anti-bypass rule for translation sources on contrasts English
     // leaves optional. Template edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-21");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-22");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {

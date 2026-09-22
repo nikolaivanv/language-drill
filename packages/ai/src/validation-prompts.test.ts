@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -232,6 +232,24 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain("(enviarlo)");
     // Must NOT fire on points where the lexical choice IS the target.
     expect(prompt).toContain("Do NOT apply this when the lexical choice IS the point");
+  });
+
+  it("carries the clitic-doubling-determinacy rule for clitic-swallowing blanks (2026-09-22)", async () => {
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+    expect(prompt).toContain("Clitic-doubling-determinacy (cloze)");
+    expect(prompt).toContain("OVERT POSTVERBAL DATIVE");
+    // Inverted polarity vs. its three siblings: a two-entry acceptableAnswers
+    // IS the fix, so the judge must flag only its ABSENCE. A revalidate
+    // dry-run under the pre-bump prompt returned 4 no-change on the four
+    // offending rows, so nothing else in the prompt covers this class.
+    expect(prompt).toContain("UNLESS `acceptableAnswers` already lists the counterpart");
+    expect(prompt).toContain("**Enumeration DOES cure this one**");
+    // Symmetric: both the keyed-doubled and keyed-undoubled rows are defects.
+    expect(prompt).toContain("the trap is SYMMETRIC");
+    // Three carve-outs where doubling is not optional and the row is clean.
+    expect(prompt).toContain("PREVERBAL / left-dislocated");
+    expect(prompt).toContain("es-a2-indirect-object-pronouns-se");
+    expect(prompt).toContain("accusative doubling is not free");
   });
 
   it("tells the validator the MC options array never resolves ambiguity (2026-09-21)", async () => {
@@ -347,7 +365,15 @@ describe("buildValidationSystemPrompt", () => {
     // Raised to 17000 (~1.4KB headroom) rather than the minimum that passes, so
     // the next concurrent pair does not re-trip it. The ceiling exists to catch
     // unbounded prompt growth, not to be re-tuned on every merge.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(18500);
+    //
+    // validate@2026-09-22 added the Clitic-doubling-determinacy (cloze)
+    // sub-bullet — a blank swallowing the clitic cluster over an OVERT
+    // POSTVERBAL dative PP is ambiguous unless `acceptableAnswers` carries the
+    // ±clitic counterpart — plus its three carve-outs (preverbal dative,
+    // doubling-drilling points, accusative `a`) (~1.4KB, mirrors
+    // generate@2026-09-22). Ceiling raised to 21000 (~1.1KB headroom over the
+    // 19,900-byte body) per the concurrent-edit note below.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(21000);
   });
 
   it("instructs cloze validation to fill candidateFillers before deciding ambiguous", () => {
@@ -375,7 +401,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
   });
 });
 
@@ -1060,7 +1086,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-21");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
   });
 });
 
