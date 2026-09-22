@@ -2228,6 +2228,31 @@ describe('POST /exercises/:id/submit — conjugation branch', () => {
     expect(mockGradeDictationAnswer).not.toHaveBeenCalled();
   });
 
+  it('wrong answer: the synthesized error is attributed to the drilled point', async () => {
+    // This branch builds its EvaluationError by hand instead of going through
+    // the evaluator, and it left grammarPointKey unset — so every conjugation
+    // error that reached error_observations (via the history backfill) was
+    // null-attributed: 3 of 3 rows in prod. A conjugation drill tests exactly
+    // one point and the error IS that form, so the host key is unambiguous.
+    mockLimit.mockResolvedValueOnce([conjugationExercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    mockLimit.mockResolvedValueOnce([]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+
+    const res = await app.request(
+      '/exercises/conj-es-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'iríamo' }),
+      },
+      authEnv,
+    );
+
+    const body = await res.json() as AnyJson;
+    expect(body.errors[0].grammarPointKey).toBe('es-b1-conditional');
+  });
+
   it('returns the submissionId so the answer can be flagged', async () => {
     // exercise fetch
     mockLimit.mockResolvedValueOnce([conjugationExercise]);

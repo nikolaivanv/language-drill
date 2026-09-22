@@ -18,7 +18,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CefrLevel, ExerciseType, Language } from "@language-drill/shared";
+import { CefrLevel, ExerciseType, Language, type EvaluationResult } from "@language-drill/shared";
 
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,6 +26,7 @@ import path from "node:path";
 
 import {
   assertNotProdWithoutAllow,
+  attributionStats,
   cefrIndex,
   cefrStats,
   computeDiff,
@@ -897,6 +898,94 @@ describe("cefrStats", () => {
     expect(stats.agreementRate).toBeCloseTo(1 / 3, 5);
     // Average distance: (0 + 1 + 5) / 3 = 2
     expect(stats.avgDistance).toBeCloseTo(2, 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// attributionStats — the metric the harness was missing
+// ---------------------------------------------------------------------------
+
+describe("attributionStats", () => {
+  const evaluation = (errors: EvaluationResult["errors"]): EvaluationResult => ({
+    score: 0,
+    grammarAccuracy: 0,
+    vocabularyRange: "",
+    taskAchievement: 0,
+    feedback: "",
+    errors,
+    estimatedCefrEvidence: "",
+  });
+  const err = (over: Partial<EvaluationResult["errors"][number]> = {}) => ({
+    type: "grammar" as const,
+    severity: "major" as const,
+    text: "x",
+    correction: "y",
+    explanation: "z",
+    ...over,
+  });
+
+  it("reports the share of GRAMMAR errors carrying a grammarPointKey, per arm", () => {
+    const items: ItemResult[] = [
+      makeItem({
+        expected: evaluation([err(), err({ grammarPointKey: "es-b1-conditional" })]),
+        actual: evaluation([
+          err({ grammarPointKey: "es-b1-conditional" }),
+          err({ grammarPointKey: "es-a1-gender-agreement" }),
+        ]),
+      }),
+    ];
+    const stats = attributionStats(items);
+    expect(stats.baseline.grammarErrors).toBe(2);
+    expect(stats.baseline.attributed).toBe(1);
+    expect(stats.baseline.rate).toBeCloseTo(0.5, 5);
+    expect(stats.candidate.grammarErrors).toBe(2);
+    expect(stats.candidate.attributed).toBe(2);
+    expect(stats.candidate.rate).toBeCloseTo(1, 5);
+    expect(stats.rateDelta).toBeCloseTo(0.5, 5);
+  });
+
+  it("ignores non-grammar errors — a lexical slip is meant to stay unattributed", () => {
+    // PR #732: the per-point surfaces read a null on a vocabulary/spelling
+    // error as "about no grammar point". Counting those in the denominator
+    // would make a correct null look like an attribution miss.
+    const items: ItemResult[] = [
+      makeItem({
+        expected: evaluation([err({ type: "vocabulary" }), err({ type: "spelling" })]),
+        actual: evaluation([err({ type: "vocabulary" }), err({ type: "spelling" })]),
+      }),
+    ];
+    const stats = attributionStats(items);
+    expect(stats.candidate.grammarErrors).toBe(0);
+    expect(stats.candidate.rate).toBe(0);
+    expect(stats.rateDelta).toBe(0);
+  });
+
+  it("treats an explicit null the same as an absent key", () => {
+    const items: ItemResult[] = [
+      makeItem({
+        expected: evaluation([err({ grammarPointKey: null })]),
+        actual: evaluation([err()]),
+      }),
+    ];
+    const stats = attributionStats(items);
+    expect(stats.baseline.attributed).toBe(0);
+    expect(stats.candidate.attributed).toBe(0);
+  });
+
+  it("skips items the candidate failed on, so an error is not scored as a miss", () => {
+    const items: ItemResult[] = [
+      makeItem({ expected: evaluation([err()]), actual: undefined, error: "boom" }),
+    ];
+    const stats = attributionStats(items);
+    expect(stats.candidate.grammarErrors).toBe(0);
+    expect(stats.baseline.grammarErrors).toBe(0);
+  });
+
+  it("returns a zeroed shape for no items", () => {
+    const stats = attributionStats([]);
+    expect(stats.candidate.rate).toBe(0);
+    expect(stats.baseline.rate).toBe(0);
+    expect(stats.rateDelta).toBe(0);
   });
 });
 

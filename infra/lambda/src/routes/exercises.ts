@@ -457,6 +457,12 @@ exercises.post('/exercises/:id/submit', async (c) => {
               text: userAnswer,
               correction: content.targetForm,
               explanation: content.breakdown,
+              // A conjugation drill tests exactly one point and the error IS
+              // that form, so the host point is the attribution — no evaluator
+              // judgment needed. Without this the error reached
+              // `error_observations` (via the history backfill) unattributed,
+              // and the per-point surfaces had nothing but the host fallback.
+              grammarPointKey: exercise.grammarPointKey,
             },
           ],
       estimatedCefrEvidence: exercise.difficulty ?? '',
