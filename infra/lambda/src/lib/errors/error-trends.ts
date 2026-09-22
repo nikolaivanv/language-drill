@@ -1,5 +1,5 @@
 export interface ErrorRow {
-  grammarPointKey: string | null; // effective (errorGrammarPointKey ?? hostGrammarPointKey)
+  grammarPointKey: string | null; // effective point — see effectiveGrammarPointKey
   errorType: string;
   severity: string;
   wrongText: string;

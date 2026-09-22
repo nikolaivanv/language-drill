@@ -14,6 +14,7 @@ import {
 } from '@language-drill/db';
 import { rankPlanCandidates, reasonFor, type PointMastery, type RankContext } from '../lib/mastery/rank';
 import { buildRankContext } from '../lib/mastery/rank-context';
+import { effectiveGrammarPointKeySql } from '../lib/errors/effective-point';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy, scoringEvidenceFilter } from '../lib/exercise-filters';
@@ -471,7 +472,7 @@ sessions.get('/sessions/today', async (c) => {
       .limit(1),
     db
       .select({
-        key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+        key: effectiveGrammarPointKeySql(),
         n: sql<number>`COUNT(*)::int`,
       })
       .from(errorObservations)
@@ -484,9 +485,7 @@ sessions.get('/sessions/today', async (c) => {
           scoringEvidenceFilter(exercisesTable),
         ),
       )
-      .groupBy(
-        sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
-      ),
+      .groupBy(effectiveGrammarPointKeySql()),
     // Latest session this learner could continue. Deliberately NOT bounded to
     // today: `todayRows` above still decides Path A vs Path B, so a stale
     // session can never hydrate today's rail — this row only answers "is there

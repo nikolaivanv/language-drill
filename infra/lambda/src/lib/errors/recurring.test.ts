@@ -57,6 +57,40 @@ describe('rankRecurringErrors', () => {
     expect(themes[0].lastOccurredAt).toEqual(daysAgo(1));
   });
 
+  it('does not file an unattributed vocabulary slip under the drilled point', () => {
+    // The evaluator omits grammarPointKey for a lexical-choice slip on purpose,
+    // so the theme is a point-less "vocabulary" theme the History tab labels by
+    // type — never a slip attributed to whatever point was being drilled.
+    const themes = rankRecurringErrors(
+      [
+        row({
+          errorType: 'vocabulary',
+          wrongText: 'el tamaño más barato',
+          correction: 'una talla más barata',
+        }),
+      ],
+      NOW,
+    );
+    expect(themes).toHaveLength(1);
+    expect(themes[0].errorType).toBe('vocabulary');
+    expect(themes[0].grammarPointKey).toBeNull();
+  });
+
+  it('keeps an unattributed vocabulary slip out of the host point count', () => {
+    const themes = rankRecurringErrors(
+      [
+        row({}),
+        row({}),
+        row({ errorType: 'vocabulary', wrongText: 'tamaño', correction: 'talla' }),
+        row({ errorType: 'spelling', wrongText: 'Muestramelo', correction: 'Muéstramelo' }),
+      ],
+      NOW,
+    );
+    const host = themes.filter((t) => t.grammarPointKey === 'tr-a1-locative');
+    expect(host.map((t) => t.errorType)).toEqual(['grammar']);
+    expect(host[0].count).toBe(2);
+  });
+
   it('honors the limit option', () => {
     const rows = ['a', 'b', 'c', 'd', 'e', 'f'].map((k) => row({ hostGrammarPointKey: k }));
     expect(rankRecurringErrors(rows, NOW, { limit: 3 })).toHaveLength(3);

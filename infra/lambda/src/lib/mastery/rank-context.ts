@@ -12,6 +12,7 @@ import {
   getGrammarPoint,
 } from '@language-drill/db';
 import type { RankContext, PointMastery } from './rank';
+import { effectiveGrammarPointKeySql } from '../errors/effective-point';
 
 /**
  * Builds a RankContext for (userId, language) in two parallel DB queries:
@@ -48,7 +49,7 @@ export async function buildRankContext(
       ),
     db
       .select({
-        key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+        key: effectiveGrammarPointKeySql(),
         n: sql<number>`COUNT(*)::int`,
       })
       .from(errorObservations)
@@ -67,9 +68,7 @@ export async function buildRankContext(
           scoringEvidenceFilter(exercisesTable),
         ),
       )
-      .groupBy(
-        sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
-      ),
+      .groupBy(effectiveGrammarPointKeySql()),
   ]);
 
   const masteryByPoint = new Map<string, PointMastery>(
