@@ -299,7 +299,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // 2026-08-01: cloze Options render only when revealed; user-builder-only.
     // 2026-08-12: cloze glossEn renders as a **Meaning** line and is binding;
     // user-builder-only.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-12");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-09-22");
   });
 });
 
