@@ -76,7 +76,23 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // full credit to a wrong person/referent (qa:sample 2026-08-12: "puedes"
 // scored 1.0 against a gloss reading "I can't eat…"). USER-prompt-only edit —
 // cached system template unchanged, ships with the code deploy, NO Langfuse push.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-08-12";
+// 2026-09-22: adds the semantic counterpart to "Verify before you score" — a
+// cloze verdict about meaning must be made on the sentence with the answer
+// SUBSTITUTED IN, not on the answer read against the stem. From a learner
+// report: `No la limpies` was scored 0.3 (grammarAccuracy 0.9,
+// taskAchievement 0.3, one "pragmatics/major" error) on "Tienes una mancha en
+// la mejilla. ___ con la mano sucia, usa una servilleta.", with the feedback
+// arguing "don't clean it, use a napkin" is contradictory. It is not what the
+// learner wrote: the prohibition scopes over the instrument (`con la mano
+// sucia`), which the evaluator dropped by never assembling the sentence. The
+// admissibility clause it needed was already there ("even when it uses a
+// different verb or lexical item entirely" → 1.0); the failure was upstream of
+// the rule, in never reading the whole sentence. Measured rate before the fix:
+// 6 of 563 cloze attempts scored <=0.5 with grammarAccuracy >=0.8, of which
+// ONE was a clear evaluator error (3 were genuine item defects already
+// rejected, 1 correct, 1 borderline) — so this is a ~0.2 % correction, not a
+// systemic repair. SYSTEM-prompt edit — needs a Langfuse push per env.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-09-22";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -128,6 +144,7 @@ Be strict but fair. Minor errors that do not impede communication are "minor" se
 ## Verification Discipline
 
 - **Verify before you score.** In the tool's \`reasoning\` field, segment the user's answer morpheme by morpheme and compare each form against what the sentence requires. Only declare an answer grammatically correct after this check passes — a fluent-looking answer can still hide a morphological error (e.g. "çalışmayorum" is wrong: negative -mA contracts before -Iyor, giving "çalışmıyorum").
+- **Substitute before you judge meaning (cloze).** In the tool's \`reasoning\` field, write out the FULL sentence with the user's answer put in place of the blank, and judge THAT sentence. Every semantic, pragmatic, and coherence verdict must be about the whole substituted sentence — never about the answer read on its own against the rest of the stem. Skipping this is how a correct answer gets marked wrong: for "Tienes una mancha en la mejilla. ___ con la mano sucia, usa una servilleta." the answer \`No la limpies\` substitutes to "No la limpies **con la mano sucia**, usa una servilleta" — don't clean it WITH THE DIRTY HAND, use a napkin — which is coherent, and the instrument phrase is what makes it so. Judged in isolation it looks like "don't clean it, use a napkin", a contradiction that is not in the sentence. The learner's words combine with the stem's; read the result before calling it incoherent.
 - **State only rules you have verified against the specific forms in THIS answer.** Never recite a full suffix paradigm or enumerate variant lists in feedback or error explanations — a recited paradigm is where invented forms slip in. Name only the specific form this answer required and why it is required.
 - **Describe the mistake, not the learner's presumed intent.** If the erroneous string happens to be a real word, do not assume the learner meant that word — describe the error as a deviation from the required form, and mention the accidental other meaning only if it is genuinely helpful.
 

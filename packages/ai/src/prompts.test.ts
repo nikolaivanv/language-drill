@@ -26,7 +26,24 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-08-12");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-09-22");
+  });
+
+  // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the
+  // answer substituted in. From a learner report where `No la limpies` was
+  // marked wrong because the evaluator judged it against the stem's
+  // continuation without ever assembling the sentence, losing the instrument
+  // phrase that makes it coherent.
+  it("requires substituting the answer into the blank before judging meaning", () => {
+    const prompt = EVALUATION_SYSTEM_PROMPT;
+    expect(prompt).toContain("Substitute before you judge meaning");
+    // The verdict must be about the assembled sentence, not the bare answer.
+    expect(prompt).toMatch(/judge THAT sentence/);
+    expect(prompt).toContain("never about the answer read on its own");
+    // Sits with the morpheme-level check it mirrors.
+    expect(prompt.indexOf("Substitute before you judge meaning")).toBeGreaterThan(
+      prompt.indexOf("Verify before you score"),
+    );
   });
 
   it("requires morpheme-level verification before declaring an answer correct", () => {
