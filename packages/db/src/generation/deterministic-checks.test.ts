@@ -302,3 +302,74 @@ describe('applyDeterministicChecks — answer/stem overlap', () => {
     expect(out.flaggedReasons[0]).toEqual(HARMONY);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Missing verb hint (2026-09-22). `es-b1-imperative-negative-pronouns` is
+// marked `requiresLexemeHint` in the curriculum: the point drills mood +
+// clitic placement, so the verb's lexeme is never the target and must be handed
+// over as a parenthetical infinitive. Added after `generate@2026-09-21` left
+// the call to the LLM ("does the stem entail the verb?") and it failed at the
+// margin on a live row.
+// ---------------------------------------------------------------------------
+
+const HINT_POINT = 'es-b1-imperative-negative-pronouns';
+
+describe('applyDeterministicChecks — missing verb hint', () => {
+  // The exact prod row a learner flagged: kept auto-approved at qs 0.90 by the
+  // LLM validator, which read "con la mano sucia, usa una servilleta" as an
+  // entailment anchor though `no te la limpies` fits identically.
+  const REPORTED = cloze(
+    'Tienes una mancha en la mejilla. ___ con la mano sucia, usa una servilleta.',
+    'No te la toques',
+  );
+
+  it('downgrades an approved row with no parenthetical infinitive', () => {
+    const out = applyDeterministicChecks(approved(), REPORTED, Language.ES, HINT_POINT);
+    expect(out.reviewStatus).toBe('flagged');
+    expect(out.flaggedReasons.map((r) => r.code)).toContain(
+      GenerationReasonCode.MissingLexemeHint,
+    );
+  });
+
+  it('leaves the row alone when the stem supplies the infinitive', () => {
+    const withHint = cloze(
+      'Tienes que hablar con tu jefe hoy — ___ mañana. (irse)',
+      'no te vayas',
+    );
+    const out = applyDeterministicChecks(approved(), withHint, Language.ES, HINT_POINT);
+    expect(out.reviewStatus).toBe('auto-approved');
+    expect(out.flaggedReasons).toEqual([]);
+  });
+
+  it('does not fire on a point without the flag', () => {
+    // Same defective shape, different point — the gate is opt-in per point so
+    // it can never demote a cell nobody has reviewed for this property.
+    const out = applyDeterministicChecks(
+      approved(),
+      REPORTED,
+      Language.ES,
+      'es-b2-verbs-of-change',
+    );
+    expect(out.reviewStatus).toBe('auto-approved');
+  });
+
+  it('does not fire when the caller omits the grammar point key', () => {
+    const out = applyDeterministicChecks(approved(), REPORTED, Language.ES);
+    expect(out.reviewStatus).toBe('auto-approved');
+  });
+
+  it('never upgrades an already-rejected decision', () => {
+    const rejected: RoutingDecision = { reviewStatus: 'rejected', flaggedReasons: [] };
+    const out = applyDeterministicChecks(rejected, REPORTED, Language.ES, HINT_POINT);
+    expect(out.reviewStatus).toBe('rejected');
+  });
+
+  it('keeps the LLM reasons and appends its own', () => {
+    const prior = { code: GenerationReasonCode.Ambiguous } as GenerationReason;
+    const out = applyDeterministicChecks(approved([prior]), REPORTED, Language.ES, HINT_POINT);
+    expect(out.flaggedReasons.map((r) => r.code)).toEqual([
+      GenerationReasonCode.Ambiguous,
+      GenerationReasonCode.MissingLexemeHint,
+    ]);
+  });
+});

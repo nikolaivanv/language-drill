@@ -233,6 +233,23 @@ export type GrammarPoint = Readonly<{
    */
   constructionVariants?: readonly ConstructionVariant[];
   /**
+   * The blank on this point's clozes swallows a verb whose LEXEME is never the
+   * target — the point drills a form (mood, clitic placement, agreement). Set
+   * it and every cloze on the point MUST hand the learner the verb as a
+   * parenthetical infinitive; a stem without one is flagged deterministically
+   * by `applyDeterministicChecks`, with no LLM judgment involved.
+   *
+   * Added 2026-09-22 after `generate@2026-09-21` left the call to the judge
+   * ("does the stem entail the verb?") and it failed at the margin: a prod row
+   * kept `auto-approved` at 0.90 on "Tienes una mancha en la mejilla. ___ con
+   * la mano sucia, usa una servilleta." / `No te la toques`, where the judge
+   * read the instrument phrase as an anchor though `no te la limpies` fits
+   * equally. Only set this where the lexeme is categorically not the target —
+   * NOT on lexical-choice points (ser/estar, verbs of change), where picking
+   * the verb IS the exercise.
+   */
+  requiresLexemeHint?: boolean;
+  /**
    * Declarative coverage spec (Pool Coverage Controller, Phase 2) — which
    * categorical axes a diverse approved set should vary along, and an absolute
    * min approved-count floor per value. Replaces the old `personRotation` flag:

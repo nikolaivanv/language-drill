@@ -1226,6 +1226,7 @@ admin.post('/admin/revalidate', async (c) => {
       result,
       recon.draft.contentJson,
       cell.language,
+      cell.grammarPoint.key,
     );
     if (action.kind === 'skip') {
       bump(action.reason);
