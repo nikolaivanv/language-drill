@@ -774,6 +774,79 @@ export function cefrStats(items: readonly ItemResult[]): {
   };
 }
 
+/** One arm's per-error attribution coverage. */
+export type AttributionArm = {
+  /** Errors typed `grammar` — the only ones attribution is expected on. */
+  grammarErrors: number;
+  /** Of those, how many carry a non-null `grammarPointKey`. */
+  attributed: number;
+  /** `attributed / grammarErrors`, or 0 when there are none. */
+  rate: number;
+};
+
+/**
+ * Per-error grammar-point attribution coverage, candidate vs. baseline.
+ *
+ * The harness measured score / grammarAccuracy / taskAchievement / errorCount /
+ * CEFR / cost / latency and *nothing* about attribution, so it was blind to the
+ * defect it is now used to verify: 88 stored grammar errors (40% of all of
+ * them) carried a null `grammarPointKey` even though the drilled point was in
+ * the evaluator's in-scope set in 100% of those cases.
+ *
+ * Only `type: "grammar"` errors count. A vocabulary/spelling slip is *meant* to
+ * stay unattributed — PR #732's per-point surfaces read a null on a non-grammar
+ * error as "about no grammar point" — so counting those in the denominator
+ * would score a correct null as a miss.
+ */
+export function attributionStats(items: readonly ItemResult[]): {
+  candidate: AttributionArm;
+  baseline: AttributionArm;
+  rateDelta: number;
+} {
+  const tally = (errors: unknown): { grammarErrors: number; attributed: number } => {
+    if (!Array.isArray(errors)) return { grammarErrors: 0, attributed: 0 };
+    let grammarErrors = 0;
+    let attributed = 0;
+    for (const e of errors) {
+      if (!e || typeof e !== "object") continue;
+      const rec = e as { type?: unknown; grammarPointKey?: unknown };
+      if (rec.type !== "grammar") continue;
+      grammarErrors++;
+      if (typeof rec.grammarPointKey === "string" && rec.grammarPointKey.length > 0) {
+        attributed++;
+      }
+    }
+    return { grammarErrors, attributed };
+  };
+
+  let cand = { grammarErrors: 0, attributed: 0 };
+  let base = { grammarErrors: 0, attributed: 0 };
+  for (const item of items) {
+    // An item the candidate failed on has no candidate errors to inspect;
+    // counting its baseline errors alone would fake a coverage regression.
+    if (item.actual === undefined) continue;
+    const c = tally(item.actual.errors);
+    const expected = item.expected as { errors?: unknown } | null;
+    const b = tally(expected && typeof expected === "object" ? expected.errors : undefined);
+    cand = {
+      grammarErrors: cand.grammarErrors + c.grammarErrors,
+      attributed: cand.attributed + c.attributed,
+    };
+    base = {
+      grammarErrors: base.grammarErrors + b.grammarErrors,
+      attributed: base.attributed + b.attributed,
+    };
+  }
+
+  const arm = (t: { grammarErrors: number; attributed: number }): AttributionArm => ({
+    ...t,
+    rate: t.grammarErrors === 0 ? 0 : t.attributed / t.grammarErrors,
+  });
+  const candidate = arm(cand);
+  const baseline = arm(base);
+  return { candidate, baseline, rateDelta: candidate.rate - baseline.rate };
+}
+
 /**
  * Full eval-run summary — `EvalRunSummary` per design Model 3. Written
  * to `./eval-runs/<runName>.json` (with `perItem`) and printed without
@@ -792,6 +865,11 @@ export type EvalRunSummary = {
   grammarAccuracy: DeltaStats;
   taskAchievement: DeltaStats;
   errorCountDelta: DeltaStats;
+  attribution: {
+    candidate: AttributionArm;
+    baseline: AttributionArm;
+    rateDelta: number;
+  };
   cefr: {
     agreementRate: number;
     avgDistance: number;
@@ -855,6 +933,7 @@ export function computeDiff(
     grammarAccuracy: deltaStats(items, (r) => r.grammarAccuracy, 0.5),
     taskAchievement: deltaStats(items, (r) => r.taskAchievement, 0.5),
     errorCountDelta: deltaStats(items, (r) => r.errors.length),
+    attribution: attributionStats(items),
     cefr: cefrStats(items),
     costUsd: {
       candidate: Math.round(candidateCostSum * 10000) / 10000,
@@ -930,6 +1009,10 @@ export function renderMarkdownSummary(summary: EvalRunSummary): string {
     `| taskAchievement | — | — | ${fmtDelta(summary.taskAchievement)} |`,
   );
   lines.push(`| errorCount | — | — | ${fmtDelta(summary.errorCountDelta)} |`);
+  const att = summary.attribution;
+  lines.push(
+    `| attribution | ${(att.candidate.rate * 100).toFixed(1)}% (${att.candidate.attributed}/${att.candidate.grammarErrors}) | ${(att.baseline.rate * 100).toFixed(1)}% (${att.baseline.attributed}/${att.baseline.grammarErrors}) | ${att.rateDelta >= 0 ? "+" : ""}${(att.rateDelta * 100).toFixed(1)}pp |`,
+  );
   lines.push(
     `| CEFR | agreement=${(summary.cefr.agreementRate * 100).toFixed(1)}% | — | avgDistance=${summary.cefr.avgDistance.toFixed(2)} |`,
   );
