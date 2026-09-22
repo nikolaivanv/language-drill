@@ -1,0 +1,54 @@
+{
+  "run": "es-b1-imperative-negative-pronouns — add ±se acceptableAnswers to clitic-doubling-underdetermined clozes",
+  "date": "2026-09-22",
+  "reported_by": "learner report, practice session dc7654df-d7de-4423-b1e3-f45ec778a4b5",
+  "defect": "The visible stem carries an overt dative PP (`a nadie`, `a tu hermano`, `a los niños`) with no parenthetical hint, so dative clitic doubling is optional — both the ±se forms are standard Spanish. Each row stores exactly one of them as `correctAnswer` with no `acceptableAnswers`, so only the keyed form reaches the deterministic short-circuit (infra/lambda/src/routes/exercises.ts); the other falls to the LLM evaluator, which anchors on `correctAnswer` and invents a rule to justify it. Paired probe over the real evaluateAnswer (3 reps each, prod-equivalent prompts): 97414536 penalises the undoubled form 0.55/0.55/0.5 saying `se` is REQUIRED; 1b3e436b penalises the doubled form 1/0.45/1 saying `se` DOESN'T BELONG. Same construction, opposite rulings, key is the only variable.",
+  "coverage_gap": "Not caught by any shipped rule. revalidate:cloze dry-run over these 4 ids under the current validator (incl. the #730 lexeme-determinacy rule) returned 4 no-change, 0 demoted.",
+  "db": {
+    "neon_branch": "br-green-waterfall-ancrvpr5 (production)"
+  },
+  "change": "content_json.acceptableAnswers <- [the opposite-doubling counterpart of correctAnswer]. Nothing else is touched: review_status, quality_score and correctAnswer are unchanged. Scope is deliberately the ±se counterpart only — gender/referent variants (`No se la digas` for `la verdad`) are a different question and were not measured.",
+  "rollback": "UPDATE exercises SET content_json = content_json - 'acceptableAnswers' WHERE id IN ('174d47a9-82d3-5491-9c14-272da01d5220','1b3e436b-c0db-5bd7-a024-056b97e6e82e','1f4d5441-79ee-5669-a414-3415a90240a8','97414536-2410-5bbe-a026-42222bcceac7');  -- all four had acceptableAnswers absent pre-change (see pre_state)",
+  "pre_state": [
+    {
+      "id": "174d47a9-82d3-5491-9c14-272da01d5220",
+      "seedWord": "negative-double-clitic",
+      "sentence": "Ese libro es mío, ___ a tu hermano sin pedirme permiso.",
+      "correctAnswer": "no se lo des",
+      "acceptableAnswers": null,
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "adds": ["no lo des"]
+    },
+    {
+      "id": "1b3e436b-c0db-5bd7-a024-056b97e6e82e",
+      "seedWord": "negative-single-clitic",
+      "sentence": "Esta historia de fantasía es un secreto. ___ a nadie, por favor.",
+      "correctAnswer": "No la cuentes",
+      "acceptableAnswers": null,
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "adds": ["No se la cuentes"]
+    },
+    {
+      "id": "1f4d5441-79ee-5669-a414-3415a90240a8",
+      "seedWord": "negative-double-clitic",
+      "sentence": "Este pastel está hecho con mucho amor — ___ a los niños antes de la cena.",
+      "correctAnswer": "no se lo des",
+      "acceptableAnswers": null,
+      "review_status": "auto-approved",
+      "quality_score": 0.82,
+      "adds": ["no lo des"]
+    },
+    {
+      "id": "97414536-2410-5bbe-a026-42222bcceac7",
+      "seedWord": "negative-double-clitic",
+      "sentence": "La verdad ya salió a la luz — ___ a nadie, por favor.",
+      "correctAnswer": "No se lo digas",
+      "acceptableAnswers": null,
+      "review_status": "auto-approved",
+      "quality_score": 0.88,
+      "adds": ["No lo digas"]
+    }
+  ]
+}
