@@ -492,11 +492,16 @@ function ReadinessStrip({
           </p>
           {nextLevel && onAdvance && (
             <div>
+              {/* `primary`, not the secondary ghost: this is the only action
+                  the readiness band exists to offer. The ghost border is tuned
+                  for paper/paper-2 and measures ~1.5:1 against accent-soft in
+                  both themes — under the 3:1 non-text floor, so the button's
+                  only boundary disappears into the band. */}
               <Button
                 onClick={onAdvance}
                 disabled={advancing}
-                size="sm"
-                variant="default"
+                size="md"
+                variant="primary"
               >
                 {advancing ? 'adding…' : `add ${nextLevel} →`}
               </Button>
