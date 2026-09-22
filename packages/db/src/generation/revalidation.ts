@@ -22,6 +22,7 @@ import {
   Language,
   type ExerciseContent,
   type GenerationReason,
+  GenerationReasonCode,
 } from '@language-drill/shared';
 
 import { getGrammarPoint } from '../curriculum';
@@ -187,9 +188,53 @@ export function reconstructDraftAndSpec(
 // ---------------------------------------------------------------------------
 
 export type DemotionAction =
-  | { kind: 'no-change'; from: ReviewStatus; to: ReviewStatus }
-  | { kind: 'demote'; from: ReviewStatus; to: ReviewStatus; reasons: GenerationReason[] }
+  /**
+   * `reasons` / `provenDefect` are populated when a deterministic checker fired
+   * on a row whose STATUS does not move (typically an already-`flagged` row).
+   * The verdict is a fact about the row, not about the transition, so the
+   * caller still records it — that is what stops a provably broken exercise
+   * from going on counting as learner evidence.
+   */
+  | {
+      kind: 'no-change';
+      from: ReviewStatus;
+      to: ReviewStatus;
+      reasons?: GenerationReason[];
+      provenDefect?: boolean;
+    }
+  | {
+      kind: 'demote';
+      from: ReviewStatus;
+      to: ReviewStatus;
+      reasons: GenerationReason[];
+      /**
+       * A pure checker — not the LLM rubric — proved this row defective. The
+       * caller writes `demotion_reason = 'quality'` on it even when the target
+       * status is `flagged`, so `scoringEvidenceFilter` stops counting its
+       * attempts. Safe to set on `flagged` because `revalidate:promote` clears
+       * `demotion_reason` when a row is reinstated.
+       */
+      provenDefect: boolean;
+    }
   | { kind: 'skip'; from: ReviewStatus; reason: 'manual-approved' | 'rejected' };
+
+/**
+ * Reason codes produced by the pure checkers in `applyDeterministicChecks`.
+ * Their presence is provable from the row's own content — unlike the LLM
+ * rubric's `ambiguous` / `low-quality-*`, which are judgments that a later
+ * model or prompt may overturn.
+ */
+const DETERMINISTIC_REASON_CODES: ReadonlySet<GenerationReasonCode> = new Set([
+  GenerationReasonCode.AnswerStemOverlap,
+  GenerationReasonCode.SuspectedAnswerStemOverlap,
+  GenerationReasonCode.VowelHarmonyAllomorph,
+  GenerationReasonCode.MalformedSurfaceForm,
+  GenerationReasonCode.MissingLexemeHint,
+]);
+
+function hasProvenDefect(reasons: readonly GenerationReason[]): boolean {
+  return reasons.some((r) => DETERMINISTIC_REASON_CODES.has(r.code));
+}
 
 /** Demote-only ranking: rejected < flagged < auto-approved < manual-approved. */
 const STATUS_RANK: Record<ReviewStatus, number> = {
@@ -239,15 +284,22 @@ export function decideDemotion(
       : routeValidationResult(result);
 
   const newStatus = routed.reviewStatus;
+  const proven = hasProvenDefect(routed.flaggedReasons);
   if (STATUS_RANK[newStatus] < STATUS_RANK[currentStatus]) {
     return {
       kind: 'demote',
       from: currentStatus,
       to: newStatus,
       reasons: routed.flaggedReasons,
+      provenDefect: proven,
     };
   }
-  return { kind: 'no-change', from: currentStatus, to: currentStatus };
+  return {
+    kind: 'no-change',
+    from: currentStatus,
+    to: currentStatus,
+    ...(proven ? { reasons: routed.flaggedReasons, provenDefect: true } : {}),
+  };
 }
 
 /**
@@ -287,15 +339,24 @@ export function decideDeterministicDemotion(
     grammarPointKey,
   );
 
+  const proven = hasProvenDefect(routed.flaggedReasons);
   if (STATUS_RANK[routed.reviewStatus] < STATUS_RANK[currentStatus]) {
     return {
       kind: 'demote',
       from: currentStatus,
       to: routed.reviewStatus,
       reasons: routed.flaggedReasons,
+      provenDefect: proven,
     };
   }
-  return { kind: 'no-change', from: currentStatus, to: currentStatus };
+  // An already-`flagged` row whose defect a checker can prove: the status does
+  // not move, but the row must still be tagged so its attempts stop scoring.
+  return {
+    kind: 'no-change',
+    from: currentStatus,
+    to: currentStatus,
+    ...(proven ? { reasons: routed.flaggedReasons, provenDefect: true } : {}),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -344,6 +405,7 @@ export function decidePromotion(
   result: ValidationResult,
   content?: ExerciseContent,
   language?: Language,
+  grammarPointKey?: string | null,
 ): PromotionAction {
   if (currentStatus !== 'flagged') {
     return { kind: 'skip', from: currentStatus, reason: currentStatus };
@@ -351,7 +413,12 @@ export function decidePromotion(
 
   const routed =
     content && language
-      ? applyDeterministicChecks(routeValidationResult(result), content, language)
+      ? applyDeterministicChecks(
+          routeValidationResult(result),
+          content,
+          language,
+          grammarPointKey,
+        )
       : routeValidationResult(result);
 
   if (routed.reviewStatus === 'auto-approved') {

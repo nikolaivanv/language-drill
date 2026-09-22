@@ -646,3 +646,88 @@ describe('decideDeterministicDemotion', () => {
     expect(action.kind).toBe('no-change');
   });
 });
+
+// ---------------------------------------------------------------------------
+// provenDefect (2026-09-22). `scoringEvidenceFilter` keys on demotion_reason,
+// not review_status, so a row demoted to `flagged` kept counting as learner
+// evidence forever — it is out of the serving pool but still on the record.
+// A demotion backed by a PURE checker is provable, so it is safe to tag;
+// `revalidate:promote` clears the field if the row is ever reinstated.
+// ---------------------------------------------------------------------------
+
+describe('provenDefect', () => {
+  const hintless = {
+    type: ExerciseType.CLOZE,
+    instructions: 'Fill in the blank.',
+    sentence: 'Tienes una mancha en la mejilla. ___ con la mano sucia, usa una servilleta.',
+    correctAnswer: 'No te la toques',
+  };
+  const withHint = {
+    type: ExerciseType.CLOZE,
+    instructions: 'Fill in the blank.',
+    sentence: 'Tienes que hablar con tu jefe hoy — ___ mañana. (irse)',
+    correctAnswer: 'no te vayas',
+  };
+  const HINT_POINT = 'es-b1-imperative-negative-pronouns';
+
+  it('marks a deterministic demotion as proven', () => {
+    const action = decideDeterministicDemotion(
+      'auto-approved',
+      hintless,
+      Language.ES,
+      [],
+      HINT_POINT,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') throw new Error('expected demote');
+    expect(action.to).toBe('flagged');
+    expect(action.provenDefect).toBe(true);
+  });
+
+  it('reports a proven defect on an ALREADY-flagged row, with no status change', () => {
+    // The case that leaves a row in limbo: the row is out of the pool, the
+    // status cannot fall further on this checker, but the evidence must stop
+    // counting. This is what reaches the three rows the learner was scored on.
+    const action = decideDeterministicDemotion(
+      'flagged',
+      hintless,
+      Language.ES,
+      [],
+      HINT_POINT,
+    );
+    expect(action.kind).toBe('no-change');
+    if (action.kind !== 'no-change') throw new Error('expected no-change');
+    expect(action.provenDefect).toBe(true);
+    expect(action.reasons?.map((r) => r.code)).toContain(
+      GenerationReasonCode.MissingLexemeHint,
+    );
+  });
+
+  it('does not mark a sound row', () => {
+    const action = decideDeterministicDemotion(
+      'flagged',
+      withHint,
+      Language.ES,
+      [],
+      HINT_POINT,
+    );
+    expect(action.kind).toBe('no-change');
+    if (action.kind !== 'no-change') throw new Error('expected no-change');
+    expect(action.provenDefect).toBeUndefined();
+  });
+
+  it('does not mark an LLM-only flag as proven', () => {
+    // `ambiguous` is a judgment a later prompt may overturn — tagging it would
+    // destroy evidence the pool may yet reinstate.
+    const action = decideDemotion(
+      'auto-approved',
+      makeResult({ qualityScore: 0.6, ambiguous: true }),
+      withHint,
+      Language.ES,
+      HINT_POINT,
+    );
+    expect(action.kind).toBe('demote');
+    if (action.kind !== 'demote') throw new Error('expected demote');
+    expect(action.provenDefect).toBe(false);
+  });
+});

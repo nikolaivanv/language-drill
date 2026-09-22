@@ -486,6 +486,7 @@ async function main(): Promise<void> {
           result,
           recon.draft.contentJson,
           (row.language ?? undefined) as Language | undefined,
+          row.grammarPointKey,
         );
         if (action.kind === 'skip') {
           outcomes[idx] = { kind: 'skip', row, reason: action.reason };

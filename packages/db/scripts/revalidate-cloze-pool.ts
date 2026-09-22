@@ -236,7 +236,11 @@ export function parseRevalidateArgs(argv: readonly string[]): RevalidateArgs {
  * fresh verdict to regenerate reasons from, so it must carry the existing ones
  * forward instead of overwriting them.
  */
-type Candidate = CandidateRow & { flaggedReasons: GenerationReason[] | null };
+type Candidate = CandidateRow & {
+  flaggedReasons: GenerationReason[] | null;
+  /** Read so an already-tagged row is not rewritten on every pass. */
+  demotionReason: string | null;
+};
 
 async function fetchCandidates(
   db: Db,
@@ -266,6 +270,7 @@ async function fetchCandidates(
       modelId: exercises.modelId,
       reviewStatus: exercises.reviewStatus,
       flaggedReasons: exercises.flaggedReasons,
+      demotionReason: exercises.demotionReason,
     })
     .from(exercises)
     .where(and(...filters))
@@ -292,8 +297,37 @@ async function applyDemotion(
       reviewStatus: action.to,
       flaggedReasons: action.reasons,
       ...(qualityScore !== null ? { qualityScore } : {}),
-      ...(action.to === 'rejected' ? { demotionReason: 'quality' as const } : {}),
+      // `rejected` is quality by definition. A demotion to `flagged` is tagged
+      // too WHEN A PURE CHECKER PROVED THE DEFECT — otherwise the row sits out
+      // of the serving pool while its attempts go on counting as learner
+      // evidence (`scoringEvidenceFilter` keys on demotion_reason, not on
+      // review_status). Safe because `revalidate:promote` clears the field when
+      // a row is reinstated; an LLM-only flag stays untagged, since that is a
+      // judgment a later prompt may overturn.
+      ...(action.to === 'rejected' || action.provenDefect
+        ? { demotionReason: 'quality' as const }
+        : {}),
     })
+    .where(eq(exercises.id, rowId));
+}
+
+/**
+ * Tag an already-demoted row whose defect a pure checker has just proved.
+ *
+ * The status does not move (the row is `flagged` already), so there is no
+ * demotion to report — but the row must stop counting as learner evidence, and
+ * the checker's reason belongs in the record. Writes only the two fields, never
+ * `quality_score`: the deterministic pass produces no verdict, so the stored
+ * score is still the last real measurement.
+ */
+async function applyProvenDefectTag(
+  db: Db,
+  rowId: string,
+  reasons: GenerationReason[],
+): Promise<void> {
+  await db
+    .update(exercises)
+    .set({ flaggedReasons: reasons, demotionReason: 'quality' as const })
     .where(eq(exercises.id, rowId));
 }
 
@@ -332,6 +366,12 @@ async function persistDemotion(
 
 type Outcome =
   | { kind: 'no-change'; row: Candidate }
+  /**
+   * Status unchanged, but a pure checker proved the row defective and it is now
+   * tagged `demotion_reason = 'quality'` so its attempts stop scoring. Reported
+   * separately from `no-change` — it IS a write.
+   */
+  | { kind: 'tagged'; row: Candidate }
   // `result` is null for a deterministic demotion — no LLM verdict was produced.
   | { kind: 'demote'; row: Candidate; action: Extract<DemotionAction, { kind: 'demote' }>; result: ValidationResult | null }
   | { kind: 'skip'; row: Candidate; reason: SkipReason | 'manual-approved' | 'rejected'; detail?: string };
@@ -345,10 +385,12 @@ function printSummary(outcomes: readonly Outcome[], usage: ClaudeUsageBreakdown,
     (o) => o.kind === 'demote' && o.action.to === 'rejected',
   ).length;
   const skipped = outcomes.filter((o) => o.kind === 'skip').length;
+  const tagged = outcomes.filter((o) => o.kind === 'tagged').length;
 
   process.stdout.write('\n=== Revalidation summary ===\n');
   process.stdout.write(`  rows scanned:      ${outcomes.length}\n`);
   process.stdout.write(`  no change:         ${noChange}\n`);
+  process.stdout.write(`  tagged (evidence): ${tagged}\n`);
   process.stdout.write(`  demote → flagged:  ${demoteToFlagged}\n`);
   process.stdout.write(`  demote → rejected: ${demoteToRejected}\n`);
   process.stdout.write(`  skipped:           ${skipped}\n`);
@@ -474,6 +516,13 @@ async function main(): Promise<void> {
             return;
           }
           if (action.kind === 'no-change') {
+            if (action.provenDefect && row.demotionReason !== 'quality') {
+              if (args.apply) {
+                await applyProvenDefectTag(db, row.id, action.reasons ?? []);
+              }
+              outcomes[idx] = { kind: 'tagged', row };
+              return;
+            }
             outcomes[idx] = { kind: 'no-change', row };
             return;
           }
@@ -525,6 +574,13 @@ async function main(): Promise<void> {
           return;
         }
         if (action.kind === 'no-change') {
+          if (action.provenDefect && row.demotionReason !== 'quality') {
+            if (args.apply) {
+              await applyProvenDefectTag(db, row.id, action.reasons ?? []);
+            }
+            outcomes[idx] = { kind: 'tagged', row };
+            return;
+          }
           outcomes[idx] = { kind: 'no-change', row };
           return;
         }
