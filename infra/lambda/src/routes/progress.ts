@@ -24,6 +24,7 @@ import {
   type ContributingRow,
 } from '../lib/progress-aggregation';
 import { reviewContributingRows } from '../lib/review/evidence';
+import { effectiveGrammarPointKeySql, errorSampleOrderSql } from '../lib/errors/effective-point';
 import {
   buildCurriculumMap,
   nextCefrLevel,
@@ -197,10 +198,10 @@ progress.get('/progress/curriculum', async (c) => {
       ),
     db
       .select({
-        key: sql<string>`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
+        key: effectiveGrammarPointKeySql(),
         n: sql<number>`COUNT(*)::int`,
-        wrongText: sql<string | null>`(array_agg(${errorObservations.wrongText} ORDER BY ${errorObservations.occurredAt} DESC))[1]`,
-        correction: sql<string | null>`(array_agg(${errorObservations.correction} ORDER BY ${errorObservations.occurredAt} DESC))[1]`,
+        wrongText: sql<string | null>`(array_agg(${errorObservations.wrongText} ORDER BY ${errorSampleOrderSql()}))[1]`,
+        correction: sql<string | null>`(array_agg(${errorObservations.correction} ORDER BY ${errorSampleOrderSql()}))[1]`,
       })
       .from(errorObservations)
       .innerJoin(exercises, eq(errorObservations.exerciseId, exercises.id))
@@ -212,9 +213,7 @@ progress.get('/progress/curriculum', async (c) => {
           scoringEvidenceFilter(exercises),
         ),
       )
-      .groupBy(
-        sql`COALESCE(${errorObservations.errorGrammarPointKey}, ${errorObservations.hostGrammarPointKey})`,
-      ),
+      .groupBy(effectiveGrammarPointKeySql()),
   ]);
 
   const masteryByKey = new Map<string, MasteryRow>();

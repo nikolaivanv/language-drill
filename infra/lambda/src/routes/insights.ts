@@ -9,6 +9,7 @@ import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { rankRecurringErrors, attachGrammarPointNames, type RecurringErrorInput } from '../lib/errors/recurring';
 import { buildErrorTrends, type ErrorRow, type AttemptRow } from '../lib/errors/error-trends';
+import { effectiveGrammarPointKey } from '../lib/errors/effective-point';
 
 const insights = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
@@ -132,7 +133,7 @@ insights.get('/insights/error-trends', async (c) => {
     );
 
   const errors: ErrorRow[] = errorRows.map((r) => ({
-    grammarPointKey: r.errorGrammarPointKey ?? r.hostGrammarPointKey,
+    grammarPointKey: effectiveGrammarPointKey(r),
     errorType: r.errorType,
     severity: r.severity,
     wrongText: r.wrongText,

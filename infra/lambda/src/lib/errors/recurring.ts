@@ -1,3 +1,5 @@
+import { effectiveGrammarPointKey } from './effective-point';
+
 export interface RecurringErrorInput {
   hostGrammarPointKey: string | null;
   errorGrammarPointKey: string | null;
@@ -25,7 +27,10 @@ const DEFAULT_LIMIT = 5;
 /**
  * Pure: collapse raw observations into themes keyed on
  * (effective grammar point, error type), scored by recency-weighted frequency.
- * `errorGrammarPointKey` wins over `hostGrammarPointKey` when present.
+ * The effective point comes from `effectiveGrammarPointKey` — the attribution
+ * wins, and the host point stands in only for an unattributed *grammar* error.
+ * An unattributed vocabulary/spelling/pragmatics slip therefore groups under a
+ * null point, which the History tab renders as a type-named theme.
  */
 export function rankRecurringErrors(
   rows: readonly RecurringErrorInput[],
@@ -38,7 +43,7 @@ export function rankRecurringErrors(
 
   const groups = new Map<string, RecurringErrorTheme>();
   for (const r of rows) {
-    const point = r.errorGrammarPointKey ?? r.hostGrammarPointKey;
+    const point = effectiveGrammarPointKey(r);
     const key = `${point ?? '∅'}::${r.errorType}`;
     const ageDays = Math.max(0, (now.getTime() - r.occurredAt.getTime()) / 86_400_000);
     const weight = Math.exp(-decay * ageDays);
