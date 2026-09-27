@@ -647,6 +647,20 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::Lambda::Url",
     },
+    "ApiGatewayAccessLogsC78D6A1B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RetentionInDays": 30,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
     "ApiGatewayApiCertificate57E1D46D": {
       "Properties": {
         "DomainName": "api.langdrill.app",
@@ -695,6 +709,39 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Stage": "$default",
       },
       "Type": "AWS::ApiGatewayV2::ApiMapping",
+    },
+    "ApiGatewayClientErrorAlarm4728DFCB": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "API Gateway returned >= 200 4xx responses in an hour. These are rejected before the Lambda runs, so they appear in NO Lambda log or metric. Read the AccessLogs group and group by errorResponseType to tell authorizer 401s (expired sessions) from 404s (scanning).",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "ApiId",
+            "Value": {
+              "Ref": "ApiGatewayHttpApi55B01A81",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "4xx",
+        "Namespace": "AWS/ApiGateway",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 200,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
     },
     "ApiGatewayHttpApi55B01A81": {
       "Properties": {
@@ -780,6 +827,15 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
     },
     "ApiGatewayHttpApiDefaultStage22FF1A97": {
       "Properties": {
+        "AccessLogSettings": {
+          "DestinationArn": {
+            "Fn::GetAtt": [
+              "ApiGatewayAccessLogsC78D6A1B",
+              "Arn",
+            ],
+          },
+          "Format": "{"requestId":"$context.requestId","requestTime":"$context.requestTime","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength","responseLatency":"$context.responseLatency","errorResponseType":"$context.error.responseType","errorMessage":$context.error.messageString,"integrationStatus":"$context.integrationStatus","integrationErrorMessage":"$context.integrationErrorMessage","jwtSub":"$context.authorizer.claims.sub"}",
+        },
         "ApiId": {
           "Ref": "ApiGatewayHttpApi55B01A81",
         },
@@ -1268,6 +1324,39 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         },
       },
       "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayServerErrorAlarm34736DBF": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "API Gateway returned a 5xx. Includes caught Hono throws, which leave the Lambda Errors metric at 0 — check the explicit LambdaLogGroup, not the Lambda Errors alarm.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "ApiId",
+            "Value": {
+              "Ref": "ApiGatewayHttpApi55B01A81",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "5xx",
+        "Namespace": "AWS/ApiGateway",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
     },
     "DictationAudioLambdaWrapDictationAudioErrorsAlarm2817E583": {
       "Properties": {

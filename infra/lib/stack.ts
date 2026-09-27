@@ -94,6 +94,7 @@ export class LanguageDrillStack extends Stack {
       apiDomainName: props.apiDomainName,
       clerkIssuerUrl: props.clerkIssuerUrl,
       clerkAudience: props.clerkAudience,
+      alarmTopic: alerts.topic,
     });
 
     const queue = new QueueConstruct(this, "Queue");
