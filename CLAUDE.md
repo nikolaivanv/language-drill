@@ -442,6 +442,22 @@ Sentry covers browser, React render, and Next.js server-side / edge errors in `a
 
 > **Where the API Lambda actually logs.** The Hono API handler (`LambdaConstruct`) writes to an **explicit** CloudWatch log group, **not** the default `/aws/lambda/<function-name>` one. Look in `LanguageDrillStack-LambdaLogGroup*` (prod) / `LanguageDrillStack-dev-LambdaLogGroup*` (dev), e.g. via `aws logs tail "$(aws logs describe-log-groups --query "logGroups[?contains(logGroupName,'LanguageDrillStack-LambdaLogGroup')].logGroupName" --output text)" --since 30m`. The legacy `/aws/lambda/LanguageDrillStack-LambdaHandler*` group is **orphaned** — it stopped receiving events when the explicit group was introduced, so an empty/stale view there does **not** mean logging is broken (it misled a prod incident triage once). Caught handler throws return a 500 via Hono but leave the Lambda `Errors` metric at 0 — confirm an incident from API-Gateway `5xx` + Lambda `Invocations` metrics, then read the explicit log group.
 
+> **Requests that never reach the Lambda.** The JWT authorizer rejects
+> unauthenticated requests *before* the handler runs, so they emit no Lambda
+> metric and write nothing to the log group above — they exist only as
+> `AWS/ApiGateway 4xx`. Measured 2026-09-23/24, *every* prod request that day
+> was a 4xx with zero Lambda invocations. The **access log group**
+> (`LanguageDrillStack-ApiGatewayAccessLogs*`) is the only record of these; it
+> carries one JSON object per request, and `errorResponseType` is the field
+> that separates an authorizer `UNAUTHORIZED` (expired session) from a
+> `NOT_FOUND` (scanning). Per-hour, comparing API-Gateway `Count` against
+> Lambda `Invocations` isolates the two populations: real usage has
+> `Count ≈ Invocations` with `4xx ≈ 0`, while rejected traffic has
+> `Count == 4xx` with `Invocations == 0` (and therefore no CORS preflight,
+> which is how you know it is not a browser). Two alarms watch this layer —
+> 4xx `>= 200/hour` (set above the ~85-91/day background scan rate) and any
+> 5xx — both on the shared SNS alert topic.
+
 ### Clerk JWT setup
 
 The Clerk production instance must have a **JWT template** named `api` with these claims:
