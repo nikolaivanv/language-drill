@@ -18,12 +18,18 @@ import { ApiGatewayConstruct } from './api-gateway';
  * emitted from inside a Lambda. This layer was structurally unmonitored.
  *
  * Two things close that hole, and both are pinned here:
- *  1. Access logging on the default stage — the only way to tell a `401`
- *     (authorizer) from a `404` (no matching route), and the only record of
- *     the source IP and path.
- *  2. Gateway-level 4xx and 5xx alarms wired to the shared SNS topic.
+ *  1. Access logging on the default stage — the only record of a rejected
+ *     request's path, source IP and user agent.
+ *  2. A gateway 5xx alarm on both stacks, and a 4xx alarm on prod only.
+ *
+ * Note `errorResponseType` does NOT separate scanners from real users here:
+ * every method routes through `/{proxy+}`, so any path matches a route and
+ * fails at the authorizer, and `NOT_FOUND` essentially never appears. The
+ * discriminator is `path` + `ip`.
  */
-function buildStack(alarmTopic?: sns.ITopic): Template {
+function buildStack(
+  opts: { withTopic?: boolean; enableClientErrorAlarm?: boolean } = {},
+): Template {
   const app = new App();
   const stack = new Stack(app, 'TestStack');
   const handler = new lambda.Function(stack, 'Handler', {
@@ -36,9 +42,17 @@ function buildStack(alarmTopic?: sns.ITopic): Template {
     apiName: 'language-drill-api-test',
     clerkIssuerUrl: 'https://clerk.example.com',
     clerkAudience: ['language-drill'],
-    alarmTopic,
+    alarmTopic: opts.withTopic ? new sns.Topic(stack, 'Alerts') : undefined,
+    enableClientErrorAlarm: opts.enableClientErrorAlarm ?? true,
   });
   return Template.fromStack(stack);
+}
+
+/** Every AWS/ApiGateway alarm in a template, in no particular order. */
+function gatewayAlarms(template: Template): Record<string, string>[] {
+  return Object.values(template.findResources('AWS::CloudWatch::Alarm'))
+    .filter((a) => a.Properties?.Namespace === 'AWS/ApiGateway')
+    .map((a) => a.Properties);
 }
 
 describe('ApiGatewayConstruct observability', () => {
@@ -64,10 +78,10 @@ describe('ApiGatewayConstruct observability', () => {
       });
     });
 
-    it('logs the fields needed to tell an authorizer 401 from a route 404', () => {
-      // The whole point of turning access logs on. `status` alone cannot
-      // distinguish them, and without `routeKey`/`path`/`ip` there is no way
-      // to tell a scanner from a real user failing auth.
+    it('logs the fields needed to tell a scanner from a real user', () => {
+      // The whole point of turning access logs on. `status` cannot do it
+      // (both are 401) and neither can `errorResponseType` (both are
+      // UNAUTHORIZED) — only `path` + `ip` + `userAgent` can.
       const stages = template.findResources('AWS::ApiGatewayV2::Stage');
       const stage = Object.values(stages).find(
         (s) => s.Properties?.StageName === '$default',
@@ -88,7 +102,7 @@ describe('ApiGatewayConstruct observability', () => {
 
     it('emits the access log as one JSON object per request', () => {
       // Logs Insights can only parse fields out of a structured line; the
-      // CLF-style default format would make the 401-vs-404 question a regex
+      // CLF-style default format would make every triage query a regex
       // exercise.
       //
       // `$context.error.messageString` is deliberately the one UNQUOTED value
@@ -151,11 +165,28 @@ describe('ApiGatewayConstruct observability', () => {
       // Prod sees a steady ~85-91 rejected requests/day from scanners. An
       // alarm that fires on those is an alarm that gets muted, so the
       // threshold has to sit above a routine sweep while still catching the
-      // 437-in-one-hour burst seen on 2026-09-26.
+      // 437-in-one-hour burst seen on 2026-09-26. Still unproven against a
+      // real prod auth failure — nothing has tripped it yet.
       const alarm = Object.values(
         template.findResources('AWS::CloudWatch::Alarm'),
       ).find((a) => a.Properties?.MetricName === '4xx');
       expect(alarm!.Properties.Threshold).toBeGreaterThanOrEqual(100);
+    });
+
+    it('tells the reader to triage by path and ip, not errorResponseType', () => {
+      // The first version of this description said to group by
+      // `errorResponseType` to tell authorizer 401s from 404 scanning. That is
+      // wrong on this API: every method is routed through `/{proxy+}`, so ANY
+      // path matches a route and fails at the authorizer. A scan for `/.env`
+      // reports `UNAUTHORIZED` exactly like an expired session, and
+      // `NOT_FOUND` essentially never appears. Confirmed 2026-09-28: 413
+      // requests probing `/.env`, `/gcp-key.json`, `/actuator/*` — all 401.
+      const alarm = gatewayAlarms(template).find(
+        (a) => a.MetricName === '4xx',
+      );
+      expect(alarm!.AlarmDescription).toContain('path');
+      expect(alarm!.AlarmDescription).toContain('ip');
+      expect(alarm!.AlarmDescription).not.toContain('404');
     });
 
     it('does not alarm on missing data', () => {
@@ -170,33 +201,57 @@ describe('ApiGatewayConstruct observability', () => {
     });
   });
 
+  describe('when enableClientErrorAlarm=false (the dev stack)', () => {
+    // A dev 4xx spike has no actionable reading: dev has essentially no
+    // legitimate traffic, so it can never mean "users are failing auth" —
+    // only "someone scanned us", which is constant background on any public
+    // endpoint. The dev alarm fired within a day of shipping on a 412-request
+    // credential sweep that reached nothing. An alarm that cries wolf gets
+    // muted, and muting is not per-stack in practice — it costs you the prod
+    // alarm too, which is the one with signal.
+    const devTemplate = buildStack({ enableClientErrorAlarm: false });
+
+    it('creates no 4xx alarm', () => {
+      const alarms = gatewayAlarms(devTemplate);
+      expect(alarms.map((a) => a.MetricName)).not.toContain('4xx');
+    });
+
+    it('still creates the 5xx alarm', () => {
+      // A dev 5xx is a real bug signal — it means the integration itself is
+      // failing — so this half is NOT gated.
+      const alarms = gatewayAlarms(devTemplate);
+      expect(alarms).toHaveLength(1);
+      expect(alarms[0]!.MetricName).toBe('5xx');
+    });
+
+    it('still writes access logs', () => {
+      // The 4xx alarm going away must not take the record with it: the log is
+      // how the scan was identified in the first place, and how a future one
+      // gets dismissed in two queries instead of an investigation.
+      devTemplate.hasResourceProperties('AWS::ApiGatewayV2::Stage', {
+        StageName: '$default',
+        AccessLogSettings: {
+          DestinationArn: Match.anyValue(),
+          Format: Match.anyValue(),
+        },
+      });
+    });
+
+    it('still wires the surviving alarm to the topic', () => {
+      const alarms = gatewayAlarms(
+        buildStack({ withTopic: true, enableClientErrorAlarm: false }),
+      );
+      expect(alarms).toHaveLength(1);
+      expect(alarms[0]!.AlarmActions).toHaveLength(1);
+    });
+  });
+
   describe('when an alarm topic is supplied', () => {
     it('wires both gateway alarms to it', () => {
-      const withTopic = (() => {
-        const app = new App();
-        const stack = new Stack(app, 'TopicStack');
-        const topic = new sns.Topic(stack, 'Alerts');
-        const handler = new lambda.Function(stack, 'Handler', {
-          runtime: lambda.Runtime.NODEJS_22_X,
-          handler: 'index.handler',
-          code: lambda.Code.fromInline('exports.handler = async () => {};'),
-        });
-        new ApiGatewayConstruct(stack, 'ApiGateway', {
-          handler,
-          apiName: 'language-drill-api-test',
-          clerkIssuerUrl: 'https://clerk.example.com',
-          clerkAudience: ['language-drill'],
-          alarmTopic: topic,
-        });
-        return Template.fromStack(stack);
-      })();
-
-      const alarms = Object.values(
-        withTopic.findResources('AWS::CloudWatch::Alarm'),
-      ).filter((a) => a.Properties?.Namespace === 'AWS/ApiGateway');
+      const alarms = gatewayAlarms(buildStack({ withTopic: true }));
       expect(alarms).toHaveLength(2);
       for (const alarm of alarms) {
-        expect(alarm.Properties.AlarmActions).toHaveLength(1);
+        expect(alarm.AlarmActions).toHaveLength(1);
       }
     });
   });

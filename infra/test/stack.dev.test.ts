@@ -30,6 +30,7 @@ function buildDevStack() {
     operationalEmails: ["ops@example.com"],
     billingEmails: ["billing@example.com"],
     createCostMonitoring: false,
+    enableApiClientErrorAlarm: false,
   });
 }
 
@@ -52,6 +53,7 @@ function buildProdStack() {
     operationalEmails: ["ops@example.com"],
     billingEmails: ["billing@example.com"],
     createCostMonitoring: true,
+    enableApiClientErrorAlarm: true,
   });
 }
 

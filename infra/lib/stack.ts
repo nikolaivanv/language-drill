@@ -53,6 +53,12 @@ export interface LanguageDrillStackProps extends StackProps {
   // stack. True for exactly one stack (prod) — these track total account spend,
   // so two would double-count.
   createCostMonitoring: boolean;
+  /**
+   * Create the API Gateway 4xx alarm. True on prod, false on dev — a dev 4xx
+   * spike only ever means "someone scanned us", since dev has no real users.
+   * See `ApiGatewayConstructProps.enableClientErrorAlarm`.
+   */
+  enableApiClientErrorAlarm: boolean;
   // Monthly cost-budget ceiling in USD (prod only). Defaults to 50.
   monthlyBudgetUsd?: number;
 }
@@ -95,6 +101,7 @@ export class LanguageDrillStack extends Stack {
       clerkIssuerUrl: props.clerkIssuerUrl,
       clerkAudience: props.clerkAudience,
       alarmTopic: alerts.topic,
+      enableClientErrorAlarm: props.enableApiClientErrorAlarm,
     });
 
     const queue = new QueueConstruct(this, "Queue");

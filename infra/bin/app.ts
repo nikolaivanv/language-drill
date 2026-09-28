@@ -66,6 +66,7 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
   // Account-wide cost monitoring (budget + anomaly detection) lives on the prod
   // stack only (avoids two copies double-counting the same account spend).
   createCostMonitoring: true,
+  enableApiClientErrorAlarm: true,
 });
 
 new LanguageDrillStack(app, "LanguageDrillStack-dev", {
@@ -85,4 +86,8 @@ new LanguageDrillStack(app, "LanguageDrillStack-dev", {
   billingEmails,
   // Cost monitoring is account-wide and created on prod only.
   createCostMonitoring: false,
+  // No 4xx alarm on dev. Dev has no real users, so a 4xx spike can only mean
+  // background scanning — it fired within a day of shipping on a 412-request
+  // credential sweep that reached nothing. The 5xx alarm stays on both stacks.
+  enableApiClientErrorAlarm: false,
 });
