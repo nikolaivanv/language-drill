@@ -68,6 +68,7 @@ describe("LanguageDrillStack (prod) CFN snapshot", () => {
       operationalEmails: ["ops@example.com"],
       billingEmails: ["billing@example.com"],
       createCostMonitoring: true,
+      enableApiClientErrorAlarm: true,
     });
 
     const template = scrubAssetHashes(Template.fromStack(stack).toJSON());

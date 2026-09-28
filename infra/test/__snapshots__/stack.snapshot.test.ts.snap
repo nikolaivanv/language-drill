@@ -717,7 +717,7 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
             "Ref": "AlertsAlertsTopic96BD0900",
           },
         ],
-        "AlarmDescription": "API Gateway returned >= 200 4xx responses in an hour. These are rejected before the Lambda runs, so they appear in NO Lambda log or metric. Read the AccessLogs group and group by errorResponseType to tell authorizer 401s (expired sessions) from 404s (scanning).",
+        "AlarmDescription": "API Gateway returned >= 200 4xx responses in an hour. These are rejected before the Lambda runs, so they appear in NO Lambda log or metric. Triage in the AccessLogs group by path + ip. Do NOT group by errorResponseType: every method routes through /{proxy+}, so any path matches a route and fails at the authorizer — a scan for /.env reports UNAUTHORIZED exactly like an expired session does. One ip spraying secret paths (/.env, /gcp-key.json, /actuator/*) is a credential sweep; it reaches nothing, and the user agent is spoofed.",
         "ComparisonOperator": "GreaterThanOrEqualToThreshold",
         "Dimensions": [
           {

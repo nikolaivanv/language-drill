@@ -448,15 +448,20 @@ Sentry covers browser, React render, and Next.js server-side / edge errors in `a
 > `AWS/ApiGateway 4xx`. Measured 2026-09-23/24, *every* prod request that day
 > was a 4xx with zero Lambda invocations. The **access log group**
 > (`LanguageDrillStack-ApiGatewayAccessLogs*`) is the only record of these; it
-> carries one JSON object per request, and `errorResponseType` is the field
-> that separates an authorizer `UNAUTHORIZED` (expired session) from a
-> `NOT_FOUND` (scanning). Per-hour, comparing API-Gateway `Count` against
+> carries one JSON object per request. **Triage by `path` + `ip`, not by
+> `errorResponseType`:** every method routes through `/{proxy+}`, so any path
+> matches a route and fails at the authorizer — a scan for `/.env` reports
+> `UNAUTHORIZED` exactly like an expired session, and `NOT_FOUND` essentially
+> never appears. One ip spraying secret paths (`/.env`, `/gcp-key.json`,
+> `/actuator/*`) behind a rotating set of spoofed crawler user agents is a
+> credential sweep; it reaches nothing. Per-hour, comparing API-Gateway `Count` against
 > Lambda `Invocations` isolates the two populations: real usage has
 > `Count ≈ Invocations` with `4xx ≈ 0`, while rejected traffic has
 > `Count == 4xx` with `Invocations == 0` (and therefore no CORS preflight,
-> which is how you know it is not a browser). Two alarms watch this layer —
-> 4xx `>= 200/hour` (set above the ~85-91/day background scan rate) and any
-> 5xx — both on the shared SNS alert topic.
+> which is how you know it is not a browser). Alarms on the shared SNS topic:
+> any `5xx` on **both** stacks, and `4xx >= 200/hour` on **prod only** — dev
+> has no real users, so a dev 4xx spike can only ever mean background
+> scanning (`enableApiClientErrorAlarm` in `infra/bin/app.ts`).
 
 ### Clerk JWT setup
 
