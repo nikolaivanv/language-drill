@@ -349,9 +349,20 @@ maps to the same boosted limits.
 > `GET /public/conjugation/set` (`/try/conjugation` on the web) carries no
 > `authMiddleware`, no per-user or per-bucket usage metering, and makes no AI
 > call — client-side grading means there is nothing to meter. Its only cost
-> ceiling is the module-scope pool cache plus API Gateway route-level
-> throttling (see `infra/lib/constructs/api-gateway.ts`), not the invite/plan
-> system above.
+> ceiling is the module-scope pool cache (5-min TTL, plus a 20s negative entry
+> so a failing database is not re-queried at the open-web request rate), not the
+> invite/plan system above.
+>
+> **There is deliberately NO request-rate limit on it.** Route-level throttling
+> was tried and reverted: an `AWS::ApiGatewayV2::Stage` `RouteSettings` entry
+> must reference a route that already exists, and CloudFormation updates the
+> stage before creating the route, so the first deploy failed with
+> `Unable to find Route by key GET /public/{proxy+}` and left the stack in
+> `UPDATE_ROLLBACK_FAILED`. Re-adding it needs an explicit stage→route
+> `DependsOn` and must be proven on the dev stack first — CDK assertions and
+> snapshots validate the synthesized template, not deployability, so neither
+> caught it. Until then the per-instance cache ceiling is the only brake, and it
+> is bounded per Lambda instance, which cold starts multiply.
 
 ---
 
