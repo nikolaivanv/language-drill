@@ -60,7 +60,21 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
   enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
-  aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP,
+  // Free-tier global brake, with the value COMMITTED rather than env-only.
+  // Nothing in `.github/workflows/` ever passed `AI_GLOBAL_DAILY_CAP`, so the
+  // cap was silently off in prod from the day it shipped — and a GitHub
+  // variable would keep that failure mode: unset, renamed or deleted, it fails
+  // OPEN (no cap), which is exactly what we are fixing. An env var still wins
+  // when present, for an emergency tighten without a code review.
+  //
+  // 1500/day counts every `usage_events` row in the trailing 24h across all
+  // three AI buckets, and blocks ONLY `plan === 'free'` — admin and boosted
+  // always pass, so this can never lock the operator out. Sizing: measured
+  // usage was 71 AI events in the 30 days to 2026-09-29; a few dozen real
+  // users peak near 600/day, so this is ~2.5x a realistic peak (invisible in
+  // normal operation) while capping worst-case spend near $8-22/day instead of
+  // the $50-150/day that an unset cap allows.
+  aiGlobalDailyCap: process.env.AI_GLOBAL_DAILY_CAP ?? "1500",
   operationalEmails,
   billingEmails,
   // Account-wide cost monitoring (budget + anomaly detection) lives on the prod
