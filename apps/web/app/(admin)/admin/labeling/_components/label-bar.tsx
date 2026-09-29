@@ -34,7 +34,12 @@ export function LabelBar({ draft, onChange, error, disabled, critiqueRef }: Labe
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-rule bg-paper p-4">
+    // Sticky to the bottom of the scrollable admin `<main>`: a submission's
+    // stimulus + Claude's feedback can run long enough to push this bar (and
+    // the shortcut legend a labeler leans on for an hour straight) below the
+    // fold. Pinning it keeps the controls and legend in view regardless of
+    // how tall the card above happens to be.
+    <div className="sticky bottom-0 z-10 flex flex-col gap-3 rounded-lg border border-rule bg-paper p-4">
       <div className="flex flex-wrap items-center gap-4">
         <Verdict label="grade" value={draft.gradeOk} />
         <Verdict label="feedback" value={draft.feedbackOk} />
