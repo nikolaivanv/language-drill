@@ -54,6 +54,9 @@ function buildProdStack() {
     billingEmails: ["billing@example.com"],
     createCostMonitoring: true,
     enableApiClientErrorAlarm: true,
+    // Mirrors the committed default in `bin/app.ts`: prod ships a free-tier
+    // global AI cap, dev does not.
+    aiGlobalDailyCap: "1500",
   });
 }
 
@@ -194,4 +197,47 @@ describe("LanguageDrillStack-dev", () => {
     });
   });
 
+  // The free-tier global AI brake must reach BOTH Lambdas that can spend money
+  // on Anthropic: the Hono API (POST /exercises/:id/submit) and the
+  // annotate-stream Function URL. `checkGlobalCapacity` reads it from
+  // `process.env`, so a Lambda missing the variable silently has no cap — and
+  // the cap being silently absent is exactly the bug this guards (nothing in
+  // `.github/workflows/` ever passed `AI_GLOBAL_DAILY_CAP`, so prod ran
+  // uncapped from the day the feature shipped).
+  it("propagates the free-tier AI daily cap to every AI-spending Lambda (prod)", () => {
+    const lambdas = prodTemplate.findResources("AWS::Lambda::Function");
+    const capped = Object.values(lambdas)
+      .map(
+        (f) =>
+          (f as { Properties: { Environment?: { Variables?: Record<string, string> } } })
+            .Properties.Environment?.Variables,
+      )
+      .filter((vars): vars is Record<string, string> => !!vars && "AI_GLOBAL_DAILY_CAP" in vars);
+
+    // API handler + annotate-stream. If this count changes, a new AI-spending
+    // Lambda was added and must be checked for the cap rather than silently
+    // shifting the expectation.
+    expect(capped).toHaveLength(2);
+    for (const vars of capped) {
+      expect(vars.AI_GLOBAL_DAILY_CAP).toBe("1500");
+    }
+  });
+
+  // Dev has no real users, so it deliberately carries no cap — an empty string
+  // means "no cap" to `checkGlobalCapacity` (it parses to NaN, which fails the
+  // `> 0` check).
+  it("leaves the AI daily cap unset on dev", () => {
+    const lambdas = devTemplate.findResources("AWS::Lambda::Function");
+    const values = Object.values(lambdas)
+      .map(
+        (f) =>
+          (f as { Properties: { Environment?: { Variables?: Record<string, string> } } })
+            .Properties.Environment?.Variables,
+      )
+      .filter((vars): vars is Record<string, string> => !!vars && "AI_GLOBAL_DAILY_CAP" in vars)
+      .map((vars) => vars.AI_GLOBAL_DAILY_CAP);
+
+    expect(values).toHaveLength(2);
+    expect(new Set(values)).toEqual(new Set([""]));
+  });
 });
