@@ -7,6 +7,7 @@ import {
   HttpApi,
   HttpMethod,
   HttpNoneAuthorizer,
+  HttpRoute,
 } from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpJwtAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
@@ -64,6 +65,29 @@ const ACCESS_LOG_FORMAT = JSON.stringify(
  */
 const CLIENT_ERROR_THRESHOLD = 200;
 const ALARM_PERIOD = Duration.hours(1);
+
+/**
+ * Throttle applied ONLY to `GET /public/{proxy+}`.
+ *
+ * The public conjugation surface has no JWT authorizer and no per-user rate
+ * limit (`infra/lambda/src/routes/public.ts`), so its only other brake is the
+ * module-scope pool cache — and that ceiling is bounded PER LAMBDA INSTANCE,
+ * which an attacker multiplies with cold starts. A stage route throttle is the
+ * one layer that rejects traffic before the Lambda is invoked, so it is the
+ * only thing that actually bounds invocation, DB and egress cost at once.
+ *
+ * `routeSettings` is keyed per route, so authenticated capacity is untouched.
+ * The bucket is shared across all anonymous callers rather than per-IP: a
+ * scraper above the limit will 429 real visitors too. That is the accepted
+ * trade — API Gateway v2 offers no per-IP setting, and AWS WAF does not attach
+ * to HTTP APIs, so per-IP fairness would have to live inside the Lambda, after
+ * the invocation cost has already been paid.
+ *
+ * 20 rps sustained / 50 burst is far above what a real visitor needs: one set
+ * fetch per sitting, then every answer graded in the browser.
+ */
+const PUBLIC_ROUTE_THROTTLE_RATE_LIMIT = 20;
+const PUBLIC_ROUTE_THROTTLE_BURST_LIMIT = 50;
 
 export interface ApiGatewayConstructProps {
   handler: IFunction;
@@ -161,13 +185,14 @@ export class ApiGatewayConstruct extends Construct {
     // OPTIONS carries the CORS preflight, which never carries a token. As with
     // the email routes above, a more-specific path takes precedence over
     // /{proxy+}, so only /public/* is unauthenticated.
-    this.httpApi.addRoutes({
+    const publicRoutes = this.httpApi.addRoutes({
       path: "/public/{proxy+}",
       methods: [HttpMethod.GET, HttpMethod.OPTIONS],
       integration: lambdaIntegration,
     });
 
     this.addAccessLogging();
+    this.addRouteThrottling(publicRoutes);
     this.addGatewayAlarms(props.enableClientErrorAlarm, props.alarmTopic);
 
     if (props.apiDomainName) {
@@ -217,6 +242,54 @@ export class ApiGatewayConstruct extends Construct {
       destinationArn: accessLogs.logGroupArn,
       format: ACCESS_LOG_FORMAT,
     };
+  }
+
+  /**
+   * Route-level throttling for `GET /public/{proxy+}` only.
+   *
+   * `HttpApi`'s L2 exposes no per-route throttling, so this mutates the
+   * underlying `CfnStage`'s `routeSettings` — the same reach-through as
+   * `addAccessLogging()` above.
+   *
+   * THE DEPENDENCY IS LOAD-BEARING, NOT TIDINESS. A `RouteSettings` key must
+   * name a route that already exists. Without an explicit dependency
+   * CloudFormation updates the stage BEFORE creating the route, and API
+   * Gateway rejects the update:
+   *
+   *   Unable to find Route by key GET /public/{proxy+} within the provided
+   *   RouteSettings (ApiGatewayV2, 404, HandlerErrorCode: NotFound)
+   *
+   * That is not hypothetical — it failed the prod deploy of PR #740 and then
+   * failed the rollback on the same resource, leaving the stack in
+   * UPDATE_ROLLBACK_FAILED and blocking every later deploy until a manual
+   * `continue-update-rollback --resources-to-skip`. It was reverted in #742 and
+   * is reintroduced here with the ordering fixed.
+   *
+   * Note what does NOT catch this: `cdk synth`, the snapshot test and
+   * `hasResourceProperties` all validate the synthesized template, which was
+   * perfectly valid. Only a real deploy exercises the constraint, which is why
+   * this change was proven against the dev stack before being merged.
+   *
+   * `routeSettings` is typed `any` on the L1 (a free-form map keyed by route
+   * key, not a fixed CFN property), so it bypasses the generated camelCase ->
+   * PascalCase mapping. The nested keys must be given in raw CloudFormation
+   * form.
+   */
+  private addRouteThrottling(publicRoutes: HttpRoute[]): void {
+    const defaultStage = this.httpApi.defaultStage?.node
+      .defaultChild as CfnStage;
+
+    defaultStage.routeSettings = {
+      "GET /public/{proxy+}": {
+        ThrottlingRateLimit: PUBLIC_ROUTE_THROTTLE_RATE_LIMIT,
+        ThrottlingBurstLimit: PUBLIC_ROUTE_THROTTLE_BURST_LIMIT,
+      },
+    };
+
+    // Force the routes to exist before the stage references them.
+    for (const route of publicRoutes) {
+      defaultStage.node.addDependency(route);
+    }
   }
 
   /**
