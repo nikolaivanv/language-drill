@@ -23,6 +23,12 @@ import {
 export interface PublicConjugationRunnerProps {
   lang: PublicLanguage;
   level: PublicLevel;
+  /**
+   * The levels this language actually has approved content for (see
+   * `PUBLIC_LEVELS_BY_LANGUAGE`), so the empty state can point the visitor
+   * somewhere that works rather than a bare "try another level."
+   */
+  availableLevels: PublicLevel[];
 }
 
 type Answered = {
@@ -51,7 +57,11 @@ type ConjugationItem = { id: string; content: ConjugationContent };
  * Nothing is persisted: no history row, no mastery update, no anonymous session.
  * The debrief says so rather than implying saved progress.
  */
-export function PublicConjugationRunner({ lang, level }: PublicConjugationRunnerProps) {
+export function PublicConjugationRunner({
+  lang,
+  level,
+  availableLevels,
+}: PublicConjugationRunnerProps) {
   const fetchFn = React.useMemo(() => createPublicFetch(), []);
   const { data, isLoading, isError, isFetching, refetch } = usePublicConjugationSet({
     lang,
@@ -121,11 +131,14 @@ export function PublicConjugationRunner({ lang, level }: PublicConjugationRunner
   }
 
   if (items.length === 0) {
+    const otherLevels = availableLevels.filter((l) => l !== level);
     return (
       <Card padding="lg">
         <p className="t-body">
-          There&apos;s nothing to practise here yet for {lang} {level}. Try another
-          level.
+          There&apos;s nothing to practise here yet for {lang} {level}.{' '}
+          {otherLevels.length > 0
+            ? `${lang} has content at ${otherLevels.join(', ')}.`
+            : `Try a different language.`}
         </p>
       </Card>
     );

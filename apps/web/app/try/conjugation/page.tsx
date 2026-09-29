@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicConjugationRunner } from './_components/public-conjugation-runner';
-import type { PublicLanguage, PublicLevel } from '@language-drill/api-client';
+import {
+  PUBLIC_LEVELS_BY_LANGUAGE,
+  type PublicLanguage,
+  type PublicLevel,
+} from '@language-drill/api-client';
 
 export const metadata: Metadata = {
   title: 'drill — try a conjugation set',
@@ -10,7 +14,11 @@ export const metadata: Metadata = {
 };
 
 const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
-const LEVELS: PublicLevel[] = ['A1', 'A2', 'B1', 'B2'];
+
+// B1 has content for every language in PUBLIC_LEVELS_BY_LANGUAGE, so it is a
+// safe universal fallback for an unrecognised or duplicated `?level=` — and
+// for a `?lang=` switch that lands on a level the new language doesn't offer.
+const DEFAULT_LEVEL: PublicLevel = 'B1';
 
 /**
  * Next's App Router hands every search param as `string | string[] | undefined`
@@ -28,16 +36,26 @@ function parseLang(raw: string | string[] | undefined): PublicLanguage {
   return (LANGS as string[]).includes(upper) ? (upper as PublicLanguage) : 'ES';
 }
 
-function parseLevel(raw: string | string[] | undefined): PublicLevel {
-  const upper = (first(raw) ?? '').toUpperCase();
-  return (LEVELS as string[]).includes(upper) ? (upper as PublicLevel) : 'B1';
+/**
+ * Validates against the LANGUAGE-SPECIFIC level list, not the union of all
+ * four — the pool has zero approved rows for ES/DE at B2, so a level that is
+ * merely a valid `PublicLevel` in general must still fall back if it isn't
+ * one this language actually offers. Also the guard for a `?lang=` switch:
+ * calling this with the new language and the old level lands on
+ * `DEFAULT_LEVEL` rather than an empty cell.
+ */
+function levelForLanguage(raw: string, lang: PublicLanguage): PublicLevel {
+  const upper = raw.toUpperCase();
+  const allowed = PUBLIC_LEVELS_BY_LANGUAGE[lang] as string[];
+  return allowed.includes(upper) ? (upper as PublicLevel) : DEFAULT_LEVEL;
 }
 
 /**
  * Public, unauthenticated conjugation drill. `?lang=` / `?level=` make a posted
  * link pre-targeted (a Turkish link for a Turkish community, not a picker), and
- * anything unrecognised — including a duplicated param — falls back to ES/B1
- * rather than erroring.
+ * anything unrecognised — including a duplicated param, or a level the current
+ * language doesn't offer — falls back gracefully rather than erroring or
+ * landing on an empty cell.
  */
 export default async function TryConjugationPage({
   searchParams,
@@ -46,7 +64,8 @@ export default async function TryConjugationPage({
 }) {
   const { lang: rawLang, level: rawLevel } = await searchParams;
   const lang = parseLang(rawLang);
-  const level = parseLevel(rawLevel);
+  const level = levelForLanguage(first(rawLevel) ?? '', lang);
+  const levels = PUBLIC_LEVELS_BY_LANGUAGE[lang];
 
   return (
     <main className="mx-auto flex max-w-[640px] flex-col gap-s-6 px-s-4 py-s-8">
@@ -55,7 +74,7 @@ export default async function TryConjugationPage({
           drill
         </Link>
         <nav aria-label="level" className="flex gap-s-4">
-          {LEVELS.map((l) => (
+          {levels.map((l) => (
             <Link
               key={l}
               href={`/try/conjugation?lang=${lang}&level=${l}`}
@@ -71,12 +90,14 @@ export default async function TryConjugationPage({
       </header>
 
       <h1 className="t-display-m">try a conjugation set</h1>
+      <p className="t-body text-ink-mute">Type the form the cues ask for.</p>
+      <p className="t-small text-ink-mute">Nothing is saved — no signup.</p>
 
       <nav aria-label="language" className="flex gap-s-4">
         {LANGS.map((l) => (
           <Link
             key={l}
-            href={`/try/conjugation?lang=${l}&level=${level}`}
+            href={`/try/conjugation?lang=${l}&level=${levelForLanguage(level, l)}`}
             aria-current={l === lang ? 'page' : undefined}
             className={
               l === lang ? 't-body' : 't-body text-ink-mute underline underline-offset-2'
@@ -87,7 +108,7 @@ export default async function TryConjugationPage({
         ))}
       </nav>
 
-      <PublicConjugationRunner lang={lang} level={level} />
+      <PublicConjugationRunner lang={lang} level={level} availableLevels={levels} />
     </main>
   );
 }

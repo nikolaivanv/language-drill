@@ -193,4 +193,21 @@ describe("LanguageDrillStack-dev", () => {
       AuthorizationType: "NONE",
     });
   });
+
+  // Regression: GET /public/{proxy+} has no JWT authorizer and no per-user
+  // rate limit, so route-level throttling on the stage is the only defense
+  // against an attacker spinning up fresh Lambda instances to bypass the
+  // pool cache's per-instance cost ceiling. This must bound ONLY the public
+  // route — authenticated routes share the same stage and must keep their
+  // full capacity.
+  it("GET /public/{proxy+} carries route-level throttling on the default stage", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Stage", {
+      RouteSettings: {
+        "GET /public/{proxy+}": {
+          ThrottlingRateLimit: 20,
+          ThrottlingBurstLimit: 50,
+        },
+      },
+    });
+  });
 });

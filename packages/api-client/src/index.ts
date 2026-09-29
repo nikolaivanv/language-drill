@@ -279,6 +279,7 @@ export {
   type UsePublicConjugationSetParams,
   type PublicLanguage,
   type PublicLevel,
+  PUBLIC_LEVELS_BY_LANGUAGE,
 } from './hooks/usePublicConjugationSet';
 export {
   useRedeemInvite,

@@ -342,6 +342,14 @@ maps to the same boosted limits.
 > Note: the gate-era `infra/lambda/src/middleware/invite.ts` (`403 NO_INVITE`) is
 > dead code — it was never mounted. The Clerk webhook no longer auto-claims invites.
 
+> **The public drill is the one exception to "every surface needs an account."**
+> `GET /public/conjugation/set` (`/try/conjugation` on the web) carries no
+> `authMiddleware`, no per-user or per-bucket usage metering, and makes no AI
+> call — client-side grading means there is nothing to meter. Its only cost
+> ceiling is the module-scope pool cache plus API Gateway route-level
+> throttling (see `infra/lib/constructs/api-gateway.ts`), not the invite/plan
+> system above.
+
 ---
 
 ## CI/CD
@@ -470,7 +478,13 @@ Sentry covers browser, React render, and Next.js server-side / edge errors in `a
 > `4xx ≈ 0`" heuristic above now describes authenticated *plus* public traffic.
 > To separate them, filter the access log group by `path` — `/public/*` is the
 > anonymous population. The prod `4xx >= 200/hour` alarm is unaffected:
-> rejected scans still fail at the authorizer.
+> rejected scans still fail at the authorizer. One thing this inverts: a scanner
+> probe under `/public/...` (e.g. a bogus sub-path the credential-sweep bots
+> above like to try) no longer gets the free, zero-cost authorizer rejection
+> described above — `/public/{proxy+}` has no authorizer, so the request
+> reaches the Lambda, Hono returns a 404 for the unmatched route, and it costs
+> a real Lambda invocation. That path now shows up as `Invocations > 0` with a
+> `4xx`, which the old heuristic would have misread as "not a scanner."
 
 ### Clerk JWT setup
 

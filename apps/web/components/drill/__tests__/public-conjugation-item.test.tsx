@@ -108,6 +108,26 @@ describe('PublicConjugationItem', () => {
     expect(screen.getByRole('textbox')).toBeDisabled();
   });
 
+  it('focuses the advance control once graded, so keyboard flow continues without tabbing', () => {
+    // The parent flips `locked` by passing a new `verdict` prop — `locked` is
+    // derived, not local state — so a rerender with a graded verdict is what
+    // the real grading flow produces.
+    const { rerender } = setup({ verdict: null });
+
+    rerender(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={{ correct: true }}
+        onSubmit={vi.fn()}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /^next$/i })).toHaveFocus();
+  });
+
   it('clears the answer and refocuses the input for a new item', async () => {
     const { rerender } = setup();
     const input = screen.getByRole('textbox') as HTMLInputElement;

@@ -30,11 +30,16 @@ function item(id: string, lemma: string, targetForm: string) {
   };
 }
 
-function renderRunner() {
+function renderRunner(overrides: Partial<React.ComponentProps<typeof PublicConjugationRunner>> = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <PublicConjugationRunner lang="TR" level="B1" />
+      <PublicConjugationRunner
+        lang="TR"
+        level="B1"
+        availableLevels={['A1', 'A2', 'B1', 'B2']}
+        {...overrides}
+      />
     </QueryClientProvider>,
   );
 }
@@ -108,6 +113,16 @@ describe('PublicConjugationRunner', () => {
     );
     renderRunner();
     expect(await screen.findByText(/nothing to practise here yet/i)).toBeInTheDocument();
+  });
+
+  it('names the levels that do have content, instead of a bare "try another level"', async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ exercises: [], available: 0 })),
+    );
+    renderRunner({ level: 'B2', availableLevels: ['A1', 'A2', 'B1'] });
+    const message = await screen.findByText(/nothing to practise here yet/i);
+    expect(message).toHaveTextContent('A1, A2, B1');
+    expect(message).not.toHaveTextContent(/try another level/i);
   });
 
   it('shows an honest error card on initial load failure, with a working retry', async () => {

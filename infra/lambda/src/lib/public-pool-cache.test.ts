@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createPoolCache, shuffled, PUBLIC_POOL_TTL_MS } from './public-pool-cache';
+import {
+  createPoolCache,
+  shuffled,
+  PUBLIC_POOL_TTL_MS,
+  PUBLIC_POOL_NEGATIVE_TTL_MS,
+} from './public-pool-cache';
 
 describe('createPoolCache', () => {
   it('loads once and serves the cached rows within the TTL', async () => {
@@ -34,6 +39,78 @@ describe('createPoolCache', () => {
     expect(await cache.get('ES|B1', es)).toEqual([{ id: 'es' }]);
     expect(await cache.get('DE|B1', de)).toEqual([{ id: 'de' }]);
     expect(cache.size()).toBe(2);
+  });
+});
+
+describe('createPoolCache negative caching', () => {
+  it('re-throws a load failure to the caller', async () => {
+    const cache = createPoolCache<{ id: string }>({ now: () => 0 });
+    const load = vi.fn(async () => {
+      throw new Error('db down');
+    });
+
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not re-query on a repeat call within the negative TTL', async () => {
+    let clock = 1_000;
+    const cache = createPoolCache<{ id: string }>({ now: () => clock });
+    const load = vi.fn(async () => {
+      throw new Error('db down');
+    });
+
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+    clock += PUBLIC_POOL_NEGATIVE_TTL_MS - 1;
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+
+    // The second call served the cached failure rather than calling load again.
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-queries once the negative TTL has elapsed', async () => {
+    let clock = 1_000;
+    const cache = createPoolCache<{ id: string }>({ now: () => clock });
+    const load = vi.fn(async () => {
+      throw new Error('db down');
+    });
+
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+    clock += PUBLIC_POOL_NEGATIVE_TTL_MS;
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('recovers into a normal cache entry once the database heals', async () => {
+    let clock = 1_000;
+    const cache = createPoolCache<{ id: string }>({ now: () => clock });
+    const load = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('db down'))
+      .mockResolvedValueOnce([{ id: 'a' }]);
+
+    await expect(cache.get('ES|B1', load)).rejects.toThrow('db down');
+    clock += PUBLIC_POOL_NEGATIVE_TTL_MS;
+    expect(await cache.get('ES|B1', load)).toEqual([{ id: 'a' }]);
+
+    // The recovered result is now served from the (positive) cache, not
+    // treated as a fresh error.
+    expect(await cache.get('ES|B1', load)).toEqual([{ id: 'a' }]);
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('a negative entry does not clobber an unrelated key positive cache', async () => {
+    const cache = createPoolCache<{ id: string }>({ now: () => 0 });
+    const good = vi.fn(async () => [{ id: 'es' }]);
+    const bad = vi.fn(async () => {
+      throw new Error('db down');
+    });
+
+    expect(await cache.get('ES|B1', good)).toEqual([{ id: 'es' }]);
+    await expect(cache.get('DE|B1', bad)).rejects.toThrow('db down');
+    expect(await cache.get('ES|B1', good)).toEqual([{ id: 'es' }]);
+    expect(good).toHaveBeenCalledTimes(1);
   });
 });
 

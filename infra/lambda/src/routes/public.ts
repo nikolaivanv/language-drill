@@ -56,6 +56,45 @@ export function __clearPoolCacheForTests(): void {
   poolCache.clear();
 }
 
+// Keys inside `content_json` that exist only to serve the generation/review
+// pipeline, never the learner. `_dedupKey` provably reaches anonymous callers
+// today (`packages/db/scripts/review-flagged.ts` strips it before showing
+// content to a HUMAN reviewer, precisely because it is writer metadata), and
+// `seedWord` (the variant-seeding backfill's classification, see
+// `backfill:variant-seeds`) is the same kind of internal bookkeeping. The
+// column projection above is explicit and column-level only — it cannot catch
+// keys hiding inside the `contentJson` blob itself.
+const WRITER_ONLY_CONTENT_KEYS = ['_dedupKey', 'seedWord'] as const;
+
+function stripWriterOnlyContent(contentJson: unknown): unknown {
+  if (contentJson === null || typeof contentJson !== 'object' || Array.isArray(contentJson)) {
+    return contentJson;
+  }
+  const clean = { ...(contentJson as Record<string, unknown>) };
+  for (const key of WRITER_ONLY_CONTENT_KEYS) {
+    delete clean[key];
+  }
+  return clean;
+}
+
+/**
+ * Explicit wire projection. Deliberately a `.map()` rather than passing the
+ * DB row through whole — the DB row is exactly the wire shape today, but an
+ * implicit pass-through means a future field added to `PoolRow` (or a future
+ * writer-only key added inside `contentJson`) ships to anonymous callers
+ * silently. This pins the shape so that can't happen unnoticed.
+ */
+function toWireExercise(row: PoolRow) {
+  return {
+    id: row.id,
+    type: row.type,
+    language: row.language,
+    difficulty: row.difficulty,
+    grammarPointKey: row.grammarPointKey,
+    contentJson: stripWriterOnlyContent(row.contentJson),
+  };
+}
+
 publicRoutes.get('/public/conjugation/set', async (c) => {
   const parsed = SetQuerySchema.safeParse(c.req.query());
   if (!parsed.success) {
@@ -72,36 +111,48 @@ publicRoutes.get('/public/conjugation/set', async (c) => {
   const { lang, level, count } = parsed.data;
   const target = count ?? PUBLIC_CONJUGATION_SET_DEFAULT;
 
-  const rows = await poolCache.get(`${lang}|${level}`, () =>
-    db
-      // Explicit projection, unlike the authenticated `.select()`: a column
-      // added to `exercises` later (quality_score, flagged_reasons,
-      // demotion_reason, model_id) must not start leaking to the open web.
-      .select({
-        id: exercisesTable.id,
-        type: exercisesTable.type,
-        language: exercisesTable.language,
-        difficulty: exercisesTable.difficulty,
-        grammarPointKey: exercisesTable.grammarPointKey,
-        contentJson: exercisesTable.contentJson,
-      })
-      .from(exercisesTable)
-      .where(
-        and(
-          eq(exercisesTable.language, lang),
-          eq(exercisesTable.difficulty, level),
-          eq(exercisesTable.type, PUBLIC_TYPE),
-          approvedStatusFilter(exercisesTable),
-          // No-op today: audioReadyFilter only excludes `type = 'dictation'`
-          // rows lacking audio, and `type` here is pinned to 'conjugation' —
-          // it can never filter anything out. Kept for consistency with the
-          // other serve paths and so it takes effect automatically if this
-          // router is ever extended to a dictation-adjacent public type.
-          audioReadyFilter(exercisesTable),
-        ),
-      )
-      .limit(CONJUGATION_SET_FETCH_CAP),
-  );
+  let rows: PoolRow[];
+  try {
+    rows = await poolCache.get(`${lang}|${level}`, () =>
+      db
+        // Explicit projection, unlike the authenticated `.select()`: a column
+        // added to `exercises` later (quality_score, flagged_reasons,
+        // demotion_reason, model_id) must not start leaking to the open web.
+        .select({
+          id: exercisesTable.id,
+          type: exercisesTable.type,
+          language: exercisesTable.language,
+          difficulty: exercisesTable.difficulty,
+          grammarPointKey: exercisesTable.grammarPointKey,
+          contentJson: exercisesTable.contentJson,
+        })
+        .from(exercisesTable)
+        .where(
+          and(
+            eq(exercisesTable.language, lang),
+            eq(exercisesTable.difficulty, level),
+            eq(exercisesTable.type, PUBLIC_TYPE),
+            approvedStatusFilter(exercisesTable),
+            // No-op today: audioReadyFilter only excludes `type = 'dictation'`
+            // rows lacking audio, and `type` here is pinned to 'conjugation' —
+            // it can never filter anything out. Kept for consistency with the
+            // other serve paths and so it takes effect automatically if this
+            // router is ever extended to a dictation-adjacent public type.
+            audioReadyFilter(exercisesTable),
+          ),
+        )
+        .limit(CONJUGATION_SET_FETCH_CAP),
+    );
+  } catch {
+    // The pool cache has already negative-cached this key (see
+    // `public-pool-cache.ts`) so a burst of requests during an outage does not
+    // re-query a database that is already struggling.
+    c.header('Cache-Control', 'no-store');
+    return c.json(
+      { error: 'The exercise pool is temporarily unavailable', code: 'POOL_UNAVAILABLE' },
+      503,
+    );
+  }
 
   // Randomisation happens here rather than in SQL (`ORDER BY random()`): the
   // window is cached, so the DB is not re-queried per request.
@@ -111,7 +162,15 @@ publicRoutes.get('/public/conjugation/set', async (c) => {
     (r) => `${r.grammarPointKey ?? ''}|${conjugationSignature(r.contentJson)}`,
   );
 
-  return c.json({ exercises: chosen, available: chosen.length, difficulty: level });
+  // "Practise more" refetches this exact URL for a fresh shuffle — an
+  // intermediary that cached the response would hand back the same set and
+  // make the button look broken.
+  c.header('Cache-Control', 'no-store');
+  return c.json({
+    exercises: chosen.map(toWireExercise),
+    available: chosen.length,
+    difficulty: level,
+  });
 });
 
 export default publicRoutes;

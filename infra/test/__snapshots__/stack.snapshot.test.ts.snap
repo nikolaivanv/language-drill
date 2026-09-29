@@ -840,6 +840,12 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
           "Ref": "ApiGatewayHttpApi55B01A81",
         },
         "AutoDeploy": true,
+        "RouteSettings": {
+          "GET /public/{proxy+}": {
+            "ThrottlingBurstLimit": 50,
+            "ThrottlingRateLimit": 20,
+          },
+        },
         "StageName": "$default",
         "Tags": {
           "env": "prod",

@@ -36,6 +36,7 @@ export function PublicConjugationItem({
 }: PublicConjugationItemProps) {
   const [answer, setAnswer] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const advanceRef = React.useRef<HTMLButtonElement | null>(null);
   const locked = verdict !== null;
 
   // Clear and refocus for each new item; this component is reused across items.
@@ -46,6 +47,15 @@ export function PublicConjugationItem({
   React.useEffect(() => {
     if (!locked) inputRef.current?.focus();
   }, [content, locked]);
+
+  // Once graded, the input goes `disabled` and drops focus to <body>. Without
+  // this, reaching the advance control means tabbing past the page's header,
+  // level and language links — for a sitting that is nothing but repeated
+  // typing, that's real friction. Focusing the button also gets Enter-to-
+  // advance for free, since Enter activates a focused <button>.
+  React.useEffect(() => {
+    if (locked) advanceRef.current?.focus();
+  }, [locked]);
 
   const submit = React.useCallback(() => {
     if (locked || !answer.trim()) return;
@@ -105,7 +115,7 @@ export function PublicConjugationItem({
               </ul>
             )}
             <div className="flex justify-end">
-              <Button variant="primary" onClick={onNext}>
+              <Button ref={advanceRef} variant="primary" onClick={onNext}>
                 {isLast ? 'see results' : 'next'}
               </Button>
             </div>

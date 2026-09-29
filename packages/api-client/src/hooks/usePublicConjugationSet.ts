@@ -8,6 +8,20 @@ import type { ApiFetch } from '../fetchClient';
 export type PublicLanguage = 'ES' | 'DE' | 'TR';
 export type PublicLevel = 'A1' | 'A2' | 'B1' | 'B2';
 
+/**
+ * Levels the public conjugation pool actually has approved content for, per
+ * language. Prod measurement at branch-time found ZERO approved conjugation
+ * rows for ES/DE at B2 — offering it in a picker one click from the default
+ * would land a first-time, no-context visitor on an empty state. Single
+ * source of truth for both the page's level picker and its empty-state copy;
+ * update this when the pool gains B2 coverage for ES/DE.
+ */
+export const PUBLIC_LEVELS_BY_LANGUAGE: Record<PublicLanguage, PublicLevel[]> = {
+  ES: ['A1', 'A2', 'B1'],
+  DE: ['A1', 'A2', 'B1'],
+  TR: ['A1', 'A2', 'B1', 'B2'],
+};
+
 export type UsePublicConjugationSetParams = {
   lang: PublicLanguage;
   level: PublicLevel;

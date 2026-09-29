@@ -9,21 +9,49 @@
 
 export const PUBLIC_POOL_TTL_MS = 5 * 60_000;
 
-type Entry<T> = { rows: T[]; fetchedAt: number };
+// Negative-cache TTL for a failed load. Deliberately much shorter than the
+// happy-path TTL: a database outage should self-heal into this cache within
+// seconds of recovering, not minutes. Deliberately much longer than a single
+// request: without it, a degraded database gets re-queried at the full open-web
+// request rate — the exact amplification this cache exists to prevent, arriving
+// exactly when the database is weakest.
+export const PUBLIC_POOL_NEGATIVE_TTL_MS = 20_000;
 
-export function createPoolCache<T>(opts: { ttlMs?: number; now?: () => number } = {}) {
+type Entry<T> =
+  | { kind: 'rows'; rows: T[]; fetchedAt: number }
+  | { kind: 'error'; error: unknown; fetchedAt: number };
+
+export function createPoolCache<T>(
+  opts: { ttlMs?: number; negativeTtlMs?: number; now?: () => number } = {},
+) {
   const ttlMs = opts.ttlMs ?? PUBLIC_POOL_TTL_MS;
+  const negativeTtlMs = opts.negativeTtlMs ?? PUBLIC_POOL_NEGATIVE_TTL_MS;
   const now = opts.now ?? Date.now;
   const store = new Map<string, Entry<T>>();
 
   return {
+    /**
+     * Resolves to the cached (or freshly loaded) rows for `key`. If `load`
+     * throws, the failure itself is cached for `negativeTtlMs` — a repeat call
+     * within that window re-throws the same error without calling `load`
+     * again — and the original error is re-thrown to the caller either way.
+     */
     async get(key: string, load: () => Promise<T[]>): Promise<T[]> {
       const at = now();
       const hit = store.get(key);
-      if (hit && at - hit.fetchedAt < ttlMs) return hit.rows;
-      const rows = await load();
-      store.set(key, { rows, fetchedAt: at });
-      return rows;
+      if (hit) {
+        const age = at - hit.fetchedAt;
+        if (hit.kind === 'rows' && age < ttlMs) return hit.rows;
+        if (hit.kind === 'error' && age < negativeTtlMs) throw hit.error;
+      }
+      try {
+        const rows = await load();
+        store.set(key, { kind: 'rows', rows, fetchedAt: at });
+        return rows;
+      } catch (error) {
+        store.set(key, { kind: 'error', error, fetchedAt: at });
+        throw error;
+      }
     },
     size(): number {
       return store.size;

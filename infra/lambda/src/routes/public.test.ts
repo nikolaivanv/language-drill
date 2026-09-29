@@ -22,6 +22,7 @@ vi.mock('../db', () => {
     };
     c.limit = (n: number) => {
       captured.limit = n;
+      if (state.dbError) return Promise.reject(state.dbError);
       return Promise.resolve(state.rows ?? []);
     };
     return c;
@@ -214,5 +215,58 @@ describe('GET /public/conjugation/set', () => {
     expect(captured.limit).toBe(300); // a fresh query ran for the new cell
     const body = (await res.json()) as AnyJson;
     expect(body.exercises[0].id).toBe('es-a2');
+  });
+
+  it('strips writer-only contentJson keys while keeping learner-facing fields', async () => {
+    state.rows = [
+      {
+        ...row('a', 'ir', 'iríamos'),
+        contentJson: {
+          ...row('a', 'ir', 'iríamos').contentJson,
+          _dedupKey: 'ir|iríamos|nosotros',
+          seedWord: 'ir',
+        },
+      },
+    ];
+    const res = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    const body = (await res.json()) as AnyJson;
+    const content = body.exercises[0].contentJson;
+    expect(content).not.toHaveProperty('_dedupKey');
+    expect(content).not.toHaveProperty('seedWord');
+    // Learner-facing fields survive untouched.
+    expect(content).toMatchObject({
+      type: 'conjugation',
+      lemma: 'ir',
+      targetForm: 'iríamos',
+      subject: { pronoun: 'nosotros', gloss: 'we' },
+    });
+  });
+
+  it('sets Cache-Control: no-store on a successful response', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    const res = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+  });
+
+  it('returns 503 POOL_UNAVAILABLE when the database load fails, with no-store', async () => {
+    state.dbError = new Error('connection refused');
+    const res = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    const body = (await res.json()) as AnyJson;
+    expect(body.code).toBe('POOL_UNAVAILABLE');
+  });
+
+  it('negative-caches a database failure: a second request within the window does not re-query', async () => {
+    state.dbError = new Error('connection refused');
+    const first = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(first.status).toBe(503);
+
+    captured.limit = undefined;
+    const second = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(second.status).toBe(503);
+    // No fresh query ran for the second request — served from the negative
+    // cache entry instead.
+    expect(captured.limit).toBeUndefined();
   });
 });

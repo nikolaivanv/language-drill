@@ -65,6 +65,22 @@ const ACCESS_LOG_FORMAT = JSON.stringify(
 const CLIENT_ERROR_THRESHOLD = 200;
 const ALARM_PERIOD = Duration.hours(1);
 
+/**
+ * Throttle applied ONLY to `GET /public/{proxy+}`.
+ *
+ * The public conjugation surface has no JWT authorizer and no per-user rate
+ * limit (see `infra/lambda/src/routes/public.ts`), so instance-scoped defenses
+ * like the pool cache are the only cost ceiling — and that ceiling is bounded
+ * per Lambda instance, which an attacker controls via cold starts. Route-level
+ * throttling on the API Gateway stage is the layer that cannot be bypassed by
+ * spinning up fresh instances. These numbers bound anonymous traffic far below
+ * what a real visitor needs (one set fetch per sitting) while leaving every
+ * authenticated route's capacity untouched — `routeSettings` is keyed per
+ * route, not stage-wide.
+ */
+const PUBLIC_ROUTE_THROTTLE_RATE_LIMIT = 20;
+const PUBLIC_ROUTE_THROTTLE_BURST_LIMIT = 50;
+
 export interface ApiGatewayConstructProps {
   handler: IFunction;
   apiName: string;
@@ -168,6 +184,7 @@ export class ApiGatewayConstruct extends Construct {
     });
 
     this.addAccessLogging();
+    this.addRouteThrottling();
     this.addGatewayAlarms(props.enableClientErrorAlarm, props.alarmTopic);
 
     if (props.apiDomainName) {
@@ -216,6 +233,31 @@ export class ApiGatewayConstruct extends Construct {
     defaultStage.accessLogSettings = {
       destinationArn: accessLogs.logGroupArn,
       format: ACCESS_LOG_FORMAT,
+    };
+  }
+
+  /**
+   * Route-level throttling for `GET /public/{proxy+}` only.
+   *
+   * `HttpApi`'s L2 exposes no per-route throttling setting, so — same reach-
+   * through as `addAccessLogging()` above — this mutates the underlying
+   * `CfnStage`'s `routeSettings`, which CFN keys by route key. Every other
+   * route (including `OPTIONS /public/{proxy+}`, which carries no auth but
+   * also carries no query cost) is unaffected.
+   */
+  private addRouteThrottling(): void {
+    const defaultStage = this.httpApi.defaultStage?.node
+      .defaultChild as CfnStage;
+    // `routeSettings` is typed `any` on the L1 (it's a free-form map keyed by
+    // route key, not a fixed CFN property), so it bypasses the generated
+    // camelCase -> PascalCase property mapping that every other CfnStage
+    // property gets. The nested keys must therefore be given in their raw
+    // CloudFormation form directly.
+    defaultStage.routeSettings = {
+      "GET /public/{proxy+}": {
+        ThrottlingRateLimit: PUBLIC_ROUTE_THROTTLE_RATE_LIMIT,
+        ThrottlingBurstLimit: PUBLIC_ROUTE_THROTTLE_BURST_LIMIT,
+      },
     };
   }
 
