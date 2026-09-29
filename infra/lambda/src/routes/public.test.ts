@@ -133,12 +133,17 @@ describe('GET /public/conjugation/set', () => {
   it('projects only the public columns', async () => {
     state.rows = [row('a', 'ir', 'iríamos')];
     await app.request('/public/conjugation/set?lang=ES&level=B1');
-    expect(Object.keys(captured.projection).sort()).toEqual(
-      ['contentJson', 'difficulty', 'grammarPointKey', 'id', 'language', 'type'].sort(),
-    );
+    expect(captured.projection).toEqual({
+      id: 'id',
+      type: 'type',
+      language: 'language',
+      difficulty: 'difficulty',
+      grammarPointKey: 'grammar_point_key',
+      contentJson: 'content_json',
+    });
   });
 
-  it('clamps count to the public maximum of 10', async () => {
+  it('rejects a count above the public maximum of 10', async () => {
     state.rows = Array.from({ length: 30 }, (_, i) => row(`r${i}`, `lemma${i}`, `form${i}`));
     const res = await app.request('/public/conjugation/set?lang=ES&level=B1&count=50');
     expect(res.status).toBe(400);
@@ -173,7 +178,25 @@ describe('GET /public/conjugation/set', () => {
     state.rows = [row('a', 'ir', 'iríamos')];
     await app.request('/public/conjugation/set?lang=ES&level=B1');
     captured.limit = undefined;
-    await app.request('/public/conjugation/set?lang=ES&level=B1');
+    const res = await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(res.status).toBe(200);
     expect(captured.limit).toBeUndefined();
+  });
+
+  it('caches per cell, not globally', async () => {
+    state.rows = [row('es-a', 'ir', 'iríamos')];
+    await app.request('/public/conjugation/set?lang=ES&level=B1');
+
+    // A different (language, level) cell must trigger its own query rather
+    // than reusing the ES|B1 cache entry — if the cache key stopped
+    // distinguishing cells (e.g. collapsed to a constant, or to `lang` alone),
+    // this request would silently serve ES|B1's cached rows instead.
+    state.rows = [{ ...row('de-b', 'gehen', 'gingen'), language: 'DE', difficulty: 'B2' }];
+    captured.limit = undefined;
+    const res = await app.request('/public/conjugation/set?lang=DE&level=B2');
+    expect(res.status).toBe(200);
+    expect(captured.limit).toBe(300); // a fresh query ran for the new cell
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises[0].id).toBe('de-b');
   });
 });

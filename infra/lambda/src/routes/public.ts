@@ -16,10 +16,11 @@ import { createPoolCache, shuffled } from '../lib/public-pool-cache';
 // ---------------------------------------------------------------------------
 // UNAUTHENTICATED ROUTER.
 //
-// This is the ONLY router in this app that does not apply `authMiddleware`.
-// Every sibling does; the omission here is deliberate, and the corresponding
-// API Gateway route is registered without a JWT authorizer in
-// `infra/lib/constructs/api-gateway.ts`.
+// This is the only router serving learner content without `authMiddleware`
+// (`health` is the other unauthenticated one, by design — it exposes no
+// content). Every other content router applies `authMiddleware`; the omission
+// here is deliberate, and the corresponding API Gateway route is registered
+// without a JWT authorizer in `infra/lib/constructs/api-gateway.ts`.
 //
 // Two constraints keep that safe and MUST NOT be relaxed:
 //   1. `type` is a server constant, never a request parameter. `contentJson`
@@ -91,6 +92,11 @@ publicRoutes.get('/public/conjugation/set', async (c) => {
           eq(exercisesTable.difficulty, level),
           eq(exercisesTable.type, PUBLIC_TYPE),
           approvedStatusFilter(exercisesTable),
+          // No-op today: audioReadyFilter only excludes `type = 'dictation'`
+          // rows lacking audio, and `type` here is pinned to 'conjugation' —
+          // it can never filter anything out. Kept for consistency with the
+          // other serve paths and so it takes effect automatically if this
+          // router is ever extended to a dictation-adjacent public type.
           audioReadyFilter(exercisesTable),
         ),
       )
