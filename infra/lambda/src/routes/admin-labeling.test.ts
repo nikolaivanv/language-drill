@@ -1,12 +1,47 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
-import { adminMiddleware } from '../middleware/admin';
-import type { Bindings, Variables } from '../middleware/auth';
-import { adminLabeling, extractReferenceAnswers, safeSeed } from './admin-labeling';
+import { PgDialect } from 'drizzle-orm/pg-core';
+import { and } from 'drizzle-orm';
+import { LABELABLE_EXERCISE_TYPES } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
-// DB chain mock (copied verbatim from exercise-flags.test.ts, itself copied
-// from admin.test.ts:1-133 — the established pattern in this package)
+// Mock harness — copied from admin-diversity.test.ts / admin.test.ts (the
+// established pattern for a route that must be exercised through the REAL
+// admin.ts, so its inherited `authMiddleware, adminMiddleware` gate is what
+// actually runs, not a stand-in). Diverging from it causes the auth
+// middleware's user upsert to hit a real driver.
+//
+// UNLIKE admin-diversity.test.ts / admin.test.ts, this file does NOT replace
+// `exercises` / `userExerciseHistory` / `submissionLabels` with `{ __mock }`
+// sentinels below. The `buildQueueConditions` / `buildQueueOrder` tests need
+// the REAL schema objects (real drizzle Column instances) so the dialect can
+// compile them to actual SQL text — a sentinel would either produce garbage
+// SQL or (per the review finding this responds to) silently build conditions
+// against `undefined` columns without ever throwing. This route makes no
+// inserts, so the `insertedValuesByTable` bookkeeping those sentinels exist
+// for buys nothing here.
+// ---------------------------------------------------------------------------
+
+const sqsSend = vi.fn().mockResolvedValue({});
+vi.mock('@aws-sdk/client-sqs', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  SQSClient: vi.fn(function (this: any) { this.send = sqsSend; }),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  SendMessageCommand: vi.fn(function (this: any, input: unknown) { this.input = input; }),
+}));
+
+const mockValidateDraft = vi.fn();
+vi.mock('@language-drill/ai', async () => {
+  const actual = await vi.importActual<typeof import('@language-drill/ai')>('@language-drill/ai');
+  return {
+    ...actual,
+    createClaudeClient: vi.fn(() => ({})),
+    validateDraft: (...args: unknown[]) => mockValidateDraft(...args),
+  };
+});
+
+// ---------------------------------------------------------------------------
+// DB chain mock
 // ---------------------------------------------------------------------------
 
 const queryQueue: unknown[] = [];
@@ -17,7 +52,10 @@ function makeChain() {
     from: vi.fn(() => chain),
     where: vi.fn(() => chain),
     innerJoin: vi.fn(() => chain),
+    leftJoin: vi.fn(() => chain),
+    as: vi.fn(() => chain),
     groupBy: vi.fn(() => chain),
+    having: vi.fn(() => chain),
     orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
@@ -46,28 +84,30 @@ vi.mock('../db', () => ({
   },
 }));
 
-vi.mock('@language-drill/db', async () => {
-  const actual =
-    await vi.importActual<typeof import('@language-drill/db')>('@language-drill/db');
-  return {
-    ...actual,
-    exercises: { __mock: 'exercises' },
-    userExerciseHistory: { __mock: 'userExerciseHistory' },
-    submissionLabels: { __mock: 'submissionLabels' },
-  };
-});
-
 // ---------------------------------------------------------------------------
-// Admin fixtures
+// Auth + admin env fixtures — API-Gateway-shaped, so requests traverse the
+// REAL authMiddleware / adminMiddleware chain admin.ts declares, not a
+// hand-rolled stand-in.
 // ---------------------------------------------------------------------------
 
 const ADMIN_ID = 'admin_user_001';
+const NON_ADMIN_ID = 'user_nobody';
+
+const unauthenticatedEnv = { event: { requestContext: {} } };
+const nonAdminEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: NON_ADMIN_ID } } } } } };
+const adminEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: ADMIN_ID } } } } } };
+
 const previousAdminUserIds = process.env.ADMIN_USER_IDS;
 
-beforeEach(() => {
+let app: Hono;
+
+beforeEach(async () => {
   vi.clearAllMocks();
   queryQueue.length = 0;
   process.env.ADMIN_USER_IDS = ADMIN_ID;
+  const mod = await import('./admin');
+  app = new Hono();
+  app.route('/', mod.default);
 });
 
 afterEach(() => {
@@ -78,27 +118,21 @@ afterEach(() => {
   }
 });
 
-// ---------------------------------------------------------------------------
-// Test harness — build a Hono app, stamp `userId` via middleware ahead of the
-// router (standing in for authMiddleware, which is inherited from admin.ts
-// in production), apply the admin gate directly (also inherited in
-// production), then mount `adminLabeling` on its own.
-// ---------------------------------------------------------------------------
-
-async function request(path: string, opts: { userId: string }) {
-  const app = new Hono<{ Bindings: Bindings; Variables: Variables }>();
-  app.use('*', async (c, next) => {
-    c.set('userId', opts.userId);
-    await next();
-  });
-  app.use('/admin/*', adminMiddleware);
-  app.route('/', adminLabeling);
-  return app.request(path);
+function request(path: string, env: unknown) {
+  return app.request(path, undefined, env);
 }
 
 // ---------------------------------------------------------------------------
-// Tests
+// Pure-function unit tests
 // ---------------------------------------------------------------------------
+
+import {
+  buildQueueConditions,
+  buildQueueOrder,
+  extractReferenceAnswers,
+  safeSeed,
+  type QueueQuery,
+} from './admin-labeling';
 
 describe('safeSeed', () => {
   it('falls back to the date when no seed is given, so a queue is resumable', () => {
@@ -134,16 +168,104 @@ describe('extractReferenceAnswers', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// buildQueueConditions / buildQueueOrder — compiled to REAL SQL text via
+// drizzle's own dialect, against the REAL schema objects (no mocked
+// `@language-drill/db` in this file — see the harness comment above). This is
+// the only way to prove the row-selection predicates reference the right
+// tables/columns: a request-level test with a mocked `db.select()` never
+// calls `.toSQL()`, so a wrong column reference would pass it silently.
+// ---------------------------------------------------------------------------
+
+describe('buildQueueConditions (compiled SQL)', () => {
+  const dialect = new PgDialect();
+
+  it('emits the deterministic-source exclusion, the labelable-type restriction, and the per-labeler NOT EXISTS against the real columns', () => {
+    const conditions = buildQueueConditions({ stratum: 'random' } as QueueQuery, ADMIN_ID);
+    const compiled = dialect.sqlToQuery(and(...conditions)!);
+    const lower = compiled.sql.toLowerCase();
+
+    // Deterministic-source exclusion: real qualified column, exact operator.
+    expect(compiled.sql).toContain('"user_exercise_history"."response_json"');
+    expect(lower).toContain("is distinct from 'deterministic'");
+
+    // LABELABLE_EXERCISE_TYPES restriction: real qualified column, and the
+    // exact six curriculum type values bound as params (not inlined).
+    expect(compiled.sql).toContain('"exercises"."type" in');
+    expect(compiled.params.slice(0, 6)).toEqual([...LABELABLE_EXERCISE_TYPES]);
+
+    // Per-labeler NOT EXISTS: the real table name, the real submission_id/id
+    // join column (qualified — proving it isn't correlating on a bare "id"),
+    // and labeled_by bound to the passed-in labeler, not inlined or swapped.
+    expect(lower).toContain('not exists');
+    expect(compiled.sql).toContain('SELECT 1 FROM "submission_labels" sl');
+    expect(compiled.sql).toContain('sl.submission_id = "user_exercise_history"."id"');
+    expect(compiled.sql).toContain('sl.labeled_by =');
+    expect(compiled.params).toContain(ADMIN_ID);
+  });
+
+  it('adds the language/type/grammarPoint/hasErrors/nearBoundary/score filters only when requested', () => {
+    const conditions = buildQueueConditions(
+      {
+        stratum: 'targeted',
+        language: 'ES',
+        type: 'cloze',
+        grammarPoint: 'es.b1.preterite-vs-imperfect',
+        hasErrors: 'true',
+        nearBoundary: 'true',
+      } as QueueQuery,
+      ADMIN_ID,
+    );
+    const compiled = dialect.sqlToQuery(and(...conditions)!);
+    const lower = compiled.sql.toLowerCase();
+
+    expect(compiled.sql).toContain('"exercises"."language" =');
+    expect(compiled.params).toContain('ES');
+    expect(compiled.params).toContain('cloze');
+    expect(compiled.sql).toContain('"exercises"."grammar_point_key" =');
+    expect(compiled.params).toContain('es.b1.preterite-vs-imperfect');
+    expect(lower).toContain('jsonb_array_length');
+    expect(compiled.sql).toContain('"user_exercise_history"."score" >=');
+    expect(compiled.sql).toContain('"user_exercise_history"."score" <=');
+  });
+
+  it('omits the near-boundary and explicit score bounds by default', () => {
+    const conditions = buildQueueConditions({ stratum: 'random' } as QueueQuery, ADMIN_ID);
+    const compiled = dialect.sqlToQuery(and(...conditions)!);
+    expect(compiled.sql).not.toContain('"user_exercise_history"."score"');
+  });
+});
+
+describe('buildQueueOrder (compiled SQL)', () => {
+  const dialect = new PgDialect();
+
+  it('pins the md5 random-stratum ordering expression, seed inlined', () => {
+    const compiled = dialect.sqlToQuery(buildQueueOrder('random', 'pass2'));
+    expect(compiled.sql).toBe("md5(user_exercise_history.id::text || 'pass2')");
+  });
+
+  it('orders the targeted stratum by distance from CORRECT_THRESHOLD, then recency', () => {
+    const compiled = dialect.sqlToQuery(buildQueueOrder('targeted', '2026-09-29'));
+    const lower = compiled.sql.toLowerCase();
+    expect(lower).toContain('abs(');
+    expect(compiled.sql).toContain('"user_exercise_history"."score"');
+    expect(lower).toContain('asc');
+    expect(compiled.sql).toContain('"user_exercise_history"."evaluated_at"');
+    expect(lower).toContain('desc');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Request-level tests — real admin.ts, real gate.
+// ---------------------------------------------------------------------------
+
 type QueueResponse = {
   items: Array<Record<string, unknown>>;
   remaining: number;
+  dropped: number;
 };
 
 describe('GET /admin/labeling/queue', () => {
-  beforeEach(() => {
-    queryQueue.length = 0;
-  });
-
   const row = {
     submissionId: '11111111-1111-4111-8111-111111111111',
     exerciseId: '22222222-2222-4222-8222-222222222222',
@@ -157,22 +279,28 @@ describe('GET /admin/labeling/queue', () => {
     evaluatedAt: new Date('2026-09-20T12:00:00Z'),
   };
 
+  it('401s for an unauthenticated request', async () => {
+    const res = await request('/admin/labeling/queue?stratum=random', unauthenticatedEnv);
+    expect(res.status).toBe(401);
+  });
+
   it('403s for a non-admin', async () => {
-    const res = await request('/admin/labeling/queue?stratum=random', { userId: 'user_nobody' });
+    const res = await request('/admin/labeling/queue?stratum=random', nonAdminEnv);
     expect(res.status).toBe(403);
   });
 
   it('400s on an unknown stratum', async () => {
-    const res = await request('/admin/labeling/queue?stratum=everything', { userId: ADMIN_ID });
+    const res = await request('/admin/labeling/queue?stratum=everything', adminEnv);
     expect(res.status).toBe(400);
   });
 
   it('renders the learner view server-side and returns the evaluation', async () => {
     queryQueue.push([row], [{ count: 42 }]);
-    const res = await request('/admin/labeling/queue?stratum=random', { userId: ADMIN_ID });
+    const res = await request('/admin/labeling/queue?stratum=random', adminEnv);
     expect(res.status).toBe(200);
     const body = (await res.json()) as QueueResponse;
     expect(body.remaining).toBe(42);
+    expect(body.dropped).toBe(0);
     expect(body.items).toHaveLength(1);
     const item = body.items[0];
     expect(item.learnerView).toContain('Ayer ___ al mercado.');
@@ -190,24 +318,33 @@ describe('GET /admin/labeling/queue', () => {
       responseJson: { ...row.responseJson, optionsRevealed: true },
     };
     queryQueue.push([withOptions], [{ count: 1 }]);
-    const res = await request('/admin/labeling/queue?stratum=random', { userId: ADMIN_ID });
+    const res = await request('/admin/labeling/queue?stratum=random', adminEnv);
     const item = ((await res.json()) as QueueResponse).items[0];
     expect(item.optionsRevealed).toBe(true);
     expect(item.learnerView).toContain('Options:');
   });
 
-  it('omits an item whose content type renderLearnerView cannot render, rather than 500ing', async () => {
+  it('omits an item whose content type renderLearnerView cannot render, rather than 500ing, and counts it as dropped', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     queryQueue.push([{ ...row, exerciseType: 'dictation', contentJson: { type: 'dictation' } }], [{ count: 1 }]);
-    const res = await request('/admin/labeling/queue?stratum=random', { userId: ADMIN_ID });
+    const res = await request('/admin/labeling/queue?stratum=random', adminEnv);
     expect(res.status).toBe(200);
-    expect(((await res.json()) as QueueResponse).items).toHaveLength(0);
+    const body = (await res.json()) as QueueResponse;
+    expect(body.items).toHaveLength(0);
+    expect(body.dropped).toBe(1);
+    expect(body.remaining).toBe(1);
+    // Finding 3: the drop is logged, not silent — names the submission so a
+    // labeler staring at an empty page with remaining > 0 can be diagnosed.
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0]).toContain(row.submissionId);
+    warnSpy.mockRestore();
   });
 
   it('accepts the targeted stratum with filters', async () => {
     queryQueue.push([row], [{ count: 3 }]);
     const res = await request(
       '/admin/labeling/queue?stratum=targeted&language=ES&type=cloze&nearBoundary=true',
-      { userId: ADMIN_ID },
+      adminEnv,
     );
     expect(res.status).toBe(200);
   });
