@@ -7,6 +7,8 @@ import type {
   ConjugationContent,
   VocabRecallContent,
   ContextualParaphraseContent,
+  LabelableExerciseType,
+  ExerciseContent,
 } from "@language-drill/shared";
 import type Anthropic from "@anthropic-ai/sdk";
 import {
@@ -338,7 +340,7 @@ describe("craftProbeAnswers", () => {
 
 describe('renderLearnerView covers every labelable exercise type', () => {
   // Minimal valid content per type — enough for renderLearnerView's switch.
-  const SAMPLE: Record<string, unknown> = {
+  const SAMPLE: Partial<Record<LabelableExerciseType, ExerciseContent>> = {
     cloze: { type: 'cloze', instructions: 'Fill the blank', sentence: 'Ayer ___ al mercado.', correctAnswer: 'fui' },
     translation: {
       type: 'translation', instructions: 'Translate', sourceLanguage: 'EN', targetLanguage: 'ES',
@@ -362,7 +364,7 @@ describe('renderLearnerView covers every labelable exercise type', () => {
   it.each(LABELABLE_EXERCISE_TYPES)('renders %s without throwing', (type) => {
     const content = SAMPLE[type];
     expect(content, `no sample content for ${type}`).toBeDefined();
-    expect(() => renderLearnerView(content as never)).not.toThrow();
-    expect(renderLearnerView(content as never).length).toBeGreaterThan(0);
+    expect(() => renderLearnerView(content)).not.toThrow();
+    expect(renderLearnerView(content).length).toBeGreaterThan(0);
   });
 });
