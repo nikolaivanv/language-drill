@@ -188,6 +188,98 @@ describe('LabelingPage', () => {
     expect(saveMutate).toHaveBeenCalledTimes(2);
   });
 
+  it('discards a draft typed during the refetch-failed retry once the retry succeeds', async () => {
+    // First refetch (automatic, after saving the last item) fails; the
+    // second (manual retry via Enter) succeeds.
+    refetchQueue.mockResolvedValueOnce({ data: undefined, isError: true, error: new Error('network') });
+    refetchQueue.mockResolvedValueOnce({ data: queueData, isError: false, error: null });
+
+    render(<LabelingPage />);
+
+    // Advance to the last item and label it: save succeeds, refetch fails.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText(/Translate: I went/)).toBeInTheDocument());
+
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() =>
+      expect(screen.getByText(/label saved.*next page failed to load/i)).toBeInTheDocument(),
+    );
+
+    // The labeler, still looking at the stale (already-saved) card, types a
+    // draft — a critique, and a verdict via the shortcut. This must never
+    // ride onto the fresh page's first item once the retry succeeds.
+    const box = screen.getByLabelText(/critique/i);
+    fireEvent.change(box, { target: { value: 'typed while stale' } });
+    fireEvent.keyDown(window, { key: 'f' });
+
+    // Retry the refetch (this time it succeeds).
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(() => expect(screen.getByText(/Ayer ___ al mercado/)).toBeInTheDocument());
+    expect(screen.getByLabelText(/critique/i)).toHaveValue('');
+    // Both verdict badges read "unsure" (draft.gradeOk/feedbackOk both
+    // null) — the 'f' pressed while looking at the stale card did not
+    // survive into the fresh item's draft.
+    expect(screen.getAllByText('unsure')).toHaveLength(2);
+    // No save happened off the back of the stale draft — only the original 2.
+    expect(saveMutate).toHaveBeenCalledTimes(2);
+  });
+
+  it('clears the refetch-failed state and its error when switching strata', async () => {
+    refetchQueue.mockResolvedValueOnce({ data: undefined, isError: true, error: new Error('network') });
+
+    render(<LabelingPage />);
+
+    // Advance to the last item and label it: save succeeds, refetch fails.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText(/Translate: I went/)).toBeInTheDocument());
+
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() =>
+      expect(screen.getByText(/label saved.*next page failed to load/i)).toBeInTheDocument(),
+    );
+
+    // Switch strata to escape the stuck retry.
+    fireEvent.change(screen.getByLabelText('stratum'), { target: { value: 'targeted' } });
+
+    expect(screen.queryByText(/label saved.*next page failed to load/i)).not.toBeInTheDocument();
+
+    // The next Enter must be a normal save attempt — not silently swallowed
+    // into a retry-fetch for a state that no longer applies.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(3));
+  });
+
+  it('does not double-save when Enter fires twice in the same tick, before either await resolves', async () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    // Fired back-to-back with no `await` between them, unlike the
+    // "refetch in flight" test above (which waits for the first save before
+    // firing the repeat). This is the narrower, same-tick race the ref-based
+    // guard (committingRef) exists to close: on the first item (not the
+    // page's last), isRefetching is never touched, and the mocked
+    // save.isPending never turns true — so the state-based checks alone
+    // would not have caught this even in principle.
+    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    // Flush any pending microtasks and confirm no further call ever lands.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(saveMutate).toHaveBeenCalledTimes(1);
+  });
+
   it('refetches the queue and resets to the top after labeling the last item on the page', async () => {
     render(<LabelingPage />);
 
