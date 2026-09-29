@@ -199,4 +199,20 @@ describe('GET /public/conjugation/set', () => {
     const body = (await res.json()) as AnyJson;
     expect(body.exercises[0].id).toBe('de-b');
   });
+
+  it('keys on level, not language alone', async () => {
+    state.rows = [row('es-b1', 'ir', 'iríamos')];
+    await app.request('/public/conjugation/set?lang=ES&level=B1');
+
+    // Same language, different level: if the cache key dropped `level` (e.g.
+    // collapsed to `lang` alone), this request would hit the ES|B1 cache
+    // entry and silently serve B1 rows to a caller who asked for A2.
+    state.rows = [{ ...row('es-a2', 'hablar', 'hablabas'), difficulty: 'A2' }];
+    captured.limit = undefined;
+    const res = await app.request('/public/conjugation/set?lang=ES&level=A2');
+    expect(res.status).toBe(200);
+    expect(captured.limit).toBe(300); // a fresh query ran for the new cell
+    const body = (await res.json()) as AnyJson;
+    expect(body.exercises[0].id).toBe('es-a2');
+  });
 });
