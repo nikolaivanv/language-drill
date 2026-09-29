@@ -6,6 +6,7 @@ import {
   gradeFluencyAnswer,
   isConjugationContent,
   type ConjugationContent,
+  type ExerciseContent,
 } from '@language-drill/shared';
 import {
   createPublicFetch,
@@ -24,7 +25,22 @@ export interface PublicConjugationRunnerProps {
   level: PublicLevel;
 }
 
-type Answered = { lemma: string; targetForm: string; userAnswer: string; correct: boolean };
+type Answered = {
+  id: string;
+  lemma: string;
+  targetForm: string;
+  userAnswer: string;
+  correct: boolean;
+};
+
+/**
+ * One exercise narrowed to conjugation content. `contentJson` arrives off the
+ * wire as `unknown` (it's a polymorphic column); we assert it once to the
+ * declared `ExerciseContent` union — the type the value actually is at
+ * runtime — and let the `isConjugationContent` predicate do the narrowing
+ * from there, so nothing downstream needs a second, unchecked cast.
+ */
+type ConjugationItem = { id: string; content: ConjugationContent };
 
 /**
  * The anonymous sitting. Fetches one set, then grades every answer in the
@@ -37,7 +53,7 @@ type Answered = { lemma: string; targetForm: string; userAnswer: string; correct
  */
 export function PublicConjugationRunner({ lang, level }: PublicConjugationRunnerProps) {
   const fetchFn = React.useMemo(() => createPublicFetch(), []);
-  const { data, isLoading, isError, refetch } = usePublicConjugationSet({
+  const { data, isLoading, isError, isFetching, refetch } = usePublicConjugationSet({
     lang,
     level,
     fetchFn,
@@ -46,25 +62,54 @@ export function PublicConjugationRunner({ lang, level }: PublicConjugationRunner
   const [index, setIndex] = React.useState(0);
   const [verdict, setVerdict] = React.useState<PublicVerdict>(null);
   const [done, setDone] = React.useState(false);
+  const [restartError, setRestartError] = React.useState(false);
   const answersRef = React.useRef<Answered[]>([]);
 
-  const items = React.useMemo(
-    () =>
-      (data?.exercises ?? []).filter((e) => isConjugationContent(e.contentJson as never)),
-    [data],
-  );
+  const items = React.useMemo<ConjugationItem[]>(() => {
+    const exercises = data?.exercises ?? [];
+    const result: ConjugationItem[] = [];
+    for (const exercise of exercises) {
+      const content = exercise.contentJson as ExerciseContent;
+      if (isConjugationContent(content)) {
+        result.push({ id: exercise.id, content });
+      }
+    }
+    return result;
+  }, [data]);
 
+  // Deliberately does not reset the sitting (index/verdict/done) until the
+  // refetch has actually landed. Resetting eagerly would either flash the
+  // stale set under the visitor once fresh data arrives, or — if the
+  // network blips — throw away the debrief they were just reading with no
+  // way back to it. On failure the debrief stays up and reports the blip
+  // inline instead.
   function restart() {
-    answersRef.current = [];
-    setIndex(0);
-    setVerdict(null);
-    setDone(false);
-    void refetch();
+    setRestartError(false);
+    void refetch().then((result) => {
+      if (result.isSuccess) {
+        answersRef.current = [];
+        setIndex(0);
+        setVerdict(null);
+        setDone(false);
+      } else {
+        setRestartError(true);
+      }
+    });
   }
 
-  if (isLoading) return <p className="t-body text-ink-mute">loading…</p>;
+  if (isLoading) {
+    return (
+      <p role="status" className="t-body text-ink-mute">
+        loading…
+      </p>
+    );
+  }
 
-  if (isError) {
+  // Gated on there being no usable data rather than on `isError` alone:
+  // React Query keeps `isError` true after a failed refetch of a query that
+  // already has data, and a failed "practise more" refetch must not blank
+  // out a sitting already in progress or a debrief already on screen.
+  if (isError && items.length === 0) {
     return (
       <Card padding="lg">
         <p className="t-body">Couldn&apos;t load the drill just now.</p>
@@ -92,28 +137,41 @@ export function PublicConjugationRunner({ lang, level }: PublicConjugationRunner
     return (
       <Card padding="lg">
         <div className="flex flex-col gap-s-4">
-          <p className="t-display-m">
-            {correct} / {answersRef.current.length}
-          </p>
+          <div className="flex flex-col gap-s-2">
+            <p className="t-display-m">
+              {correct} / {answersRef.current.length}
+            </p>
+            {/* Prominent, not an afterthought: statelessness is the entire
+                justification for the no-reclaim design, so being honest about
+                it belongs next to the score, not buried under a long list. */}
+            <p className="t-body">
+              This practice wasn&apos;t saved. Sign up to track which forms
+              you actually know.
+            </p>
+          </div>
           {missed.length > 0 && (
             <ul className="flex flex-col gap-s-2">
               {missed.map((a) => (
-                <li key={`${a.lemma}-${a.userAnswer}`} className="t-body">
+                <li key={a.id} className="t-body">
                   {a.lemma}: you wrote <em>{a.userAnswer}</em> — {a.targetForm}
                 </li>
               ))}
             </ul>
           )}
-          <p className="t-small text-ink-mute">
-            This practice wasn&apos;t saved. Sign up to track which forms you
-            actually know.
-          </p>
-          <div className="flex gap-s-3">
-            <Link href="/sign-up" className="t-body">
-              sign up
+          {restartError && (
+            <p className="t-small text-ink-mute">
+              Couldn&apos;t load a new set just now.
+            </p>
+          )}
+          <div className="flex items-center gap-s-3">
+            <Link href="/sign-up" className="link-arrow">
+              sign up{' '}
+              <span className="lk-arr" aria-hidden="true">
+                →
+              </span>
             </Link>
-            <Button variant="ghost" onClick={restart}>
-              practise more
+            <Button variant="ghost" onClick={restart} disabled={isFetching}>
+              {isFetching ? 'loading…' : 'practise more'}
             </Button>
           </div>
         </div>
@@ -122,11 +180,12 @@ export function PublicConjugationRunner({ lang, level }: PublicConjugationRunner
   }
 
   const current = items[index]!;
-  const content = current.contentJson as ConjugationContent;
+  const content = current.content;
 
   function handleSubmit(answer: string) {
     const correct = gradeFluencyAnswer(content, answer);
     answersRef.current.push({
+      id: current.id,
       lemma: content.lemma,
       targetForm: content.targetForm,
       userAnswer: answer,

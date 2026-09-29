@@ -97,6 +97,9 @@ describe('PublicConjugationRunner', () => {
     expect(screen.getByText(/1 \/ 2/)).toBeInTheDocument();
     expect(screen.getByText(/wasn't saved/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
+    // Still only the one set fetch — advancing through items (and reaching
+    // the debrief) must not trigger a refetch on its own.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders an honest empty state for a cell with no content', async () => {
@@ -105,5 +108,47 @@ describe('PublicConjugationRunner', () => {
     );
     renderRunner();
     expect(await screen.findByText(/nothing to practise here yet/i)).toBeInTheDocument();
+  });
+
+  it('shows an honest error card on initial load failure, with a working retry', async () => {
+    fetchMock
+      .mockRejectedValueOnce(new Error('network down'))
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ exercises: [item('a', 'gitmek', 'gitti')], available: 1 }),
+        ),
+      );
+    renderRunner();
+
+    expect(await screen.findByText(/couldn't load the drill/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /try again/i }));
+
+    expect(await screen.findByRole('textbox')).toBeInTheDocument();
+  });
+
+  it('keeps the debrief visible — not the generic error card — when refreshing for another set fails', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ exercises: [item('a', 'gitmek', 'gitti')], available: 1 }),
+        ),
+      )
+      .mockRejectedValueOnce(new Error('network blip'));
+    renderRunner();
+
+    await userEvent.type(await screen.findByRole('textbox'), 'gitti');
+    await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await userEvent.click(screen.getByRole('button', { name: /see results/i }));
+
+    expect(screen.getByText(/1 \/ 1/)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: /practise more/i }));
+
+    // The score must still be on screen — a failed refetch is reported inline,
+    // not by replacing the debrief with the generic "couldn't load" card.
+    expect(await screen.findByText(/couldn't load a new set/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 \/ 1/)).toBeInTheDocument();
+    expect(screen.queryByText(/couldn't load the drill just now/i)).not.toBeInTheDocument();
   });
 });
