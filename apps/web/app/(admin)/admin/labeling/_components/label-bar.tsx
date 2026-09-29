@@ -89,7 +89,7 @@ export function LabelBar({ draft, onChange, error, disabled, critiqueRef, rootRe
         <span className="font-medium text-ink">k</span>/<span className="font-medium text-ink">d</span> feedback ok/wrong ·{' '}
         <span className="font-medium text-ink">u</span> unsure · <span className="font-medium text-ink">1-7</span> tag ·{' '}
         <span className="font-medium text-ink">/</span> critique · <span className="font-medium text-ink">Enter</span> save ·{' '}
-        <span className="font-medium text-ink">←/→</span> move
+        <span className="font-medium text-ink">←/→</span> move · <span className="font-medium text-ink">↑/↓</span> scroll card
       </p>
     </div>
   );

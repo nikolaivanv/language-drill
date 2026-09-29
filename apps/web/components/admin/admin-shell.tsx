@@ -32,6 +32,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <UserFooter />
       </nav>
       <main className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-paper">
+        {/* `py-[36px]` here is mirrored by ADMIN_MAIN_BOTTOM_PADDING in
+            app/(admin)/admin/labeling/page.tsx, which sizes its scrollable
+            card against this padding — changing this value will silently
+            mis-size that page (no test or type error catches it). */}
         <div className="max-w-max-content mx-auto w-full py-[36px] px-[48px]">
           {children}
         </div>

@@ -14,6 +14,9 @@ import { LabelBar, type LabelDraft } from './_components/label-bar';
 import { FilterSelect } from '../../../../components/admin/filter-select';
 
 const EMPTY_DRAFT: LabelDraft = { gradeOk: null, feedbackOk: null, tags: [], critique: '' };
+// Per-keypress scroll distance for ArrowUp/ArrowDown over the card (see the
+// canScrollDown/CARD_SCROLL_STEP usage in LabelingPage).
+const CARD_SCROLL_STEP = 140;
 
 export default function LabelingPage() {
   const { getToken } = useAuth();
@@ -108,6 +111,33 @@ export default function LabelingPage() {
     window.addEventListener('resize', recompute);
     return () => window.removeEventListener('resize', recompute);
   }, [barHeight, item]);
+  // A clipped-but-not-labelled card is worse than no clipping at all: a
+  // labeler who never learns the feedback continues will grade `feedbackOk`
+  // against a partial read, silently corrupting the very ground truth this
+  // page exists to collect. `canScrollDown` drives a visible "↓ more" marker
+  // (rendered only while true, so it never becomes noise on a short
+  // submission that already fits) and is recomputed on scroll, on layout
+  // changes (paired with the cardMaxHeight effect above, which changes the
+  // DOM height this reads), and once more per item in case a new submission
+  // starts already scrolled to a stale position.
+  const [canScrollDown, setCanScrollDown] = useState(false);
+  const recomputeScrollAffordance = useCallback(() => {
+    const el = cardWrapperRef.current;
+    if (!el) {
+      setCanScrollDown(false);
+      return;
+    }
+    setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > 1);
+  }, []);
+  useLayoutEffect(() => {
+    recomputeScrollAffordance();
+  }, [recomputeScrollAffordance, cardMaxHeight, item]);
+  useEffect(() => {
+    const el = cardWrapperRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', recomputeScrollAffordance);
+    return () => el.removeEventListener('scroll', recomputeScrollAffordance);
+  }, [recomputeScrollAffordance, item]);
 
   const move = useCallback(
     (delta: number) => {
@@ -258,6 +288,19 @@ export default function LabelingPage() {
         case 'Enter': e.preventDefault(); void commit(); break;
         case 'ArrowRight': move(1); break;
         case 'ArrowLeft': move(-1); break;
+        // The card wrapper carries no `tabIndex` (adding one would steal
+        // Tab-order focus on a page that is otherwise entirely
+        // keydown-shortcut-driven), so it can never receive focus and a
+        // native arrow key would never scroll it — these two are the only
+        // way to reach a submission's remaining feedback from the keyboard.
+        case 'ArrowDown':
+          e.preventDefault();
+          cardWrapperRef.current?.scrollBy({ top: CARD_SCROLL_STEP });
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          cardWrapperRef.current?.scrollBy({ top: -CARD_SCROLL_STEP });
+          break;
         default: {
           const n = Number(e.key);
           if (Number.isInteger(n) && n >= 1 && n <= LABEL_TAGS.length) {
@@ -326,13 +369,26 @@ export default function LabelingPage() {
               cardMaxHeight effect above) so a long stimulus + Claude
               feedback scrolls WITHIN this box, with its own visible
               scrollbar, and never renders underneath the bar's opaque
-              panel. */}
-          <div
-            ref={cardWrapperRef}
-            className="min-h-0 overflow-y-auto"
-            style={cardMaxHeight !== null ? { maxHeight: cardMaxHeight } : undefined}
-          >
-            <SubmissionCard item={item} />
+              panel. The "↓ more" marker (canScrollDown) is the only cue that
+              a submission continues past the fold — without it, a labeler
+              can grade `feedbackOk` having read only part of the feedback,
+              which corrupts the ground truth this page exists to collect —
+              so it is load-bearing, not decoration. */}
+          <div className="relative min-h-0">
+            <div
+              ref={cardWrapperRef}
+              className="min-h-0 overflow-y-auto"
+              style={cardMaxHeight !== null ? { maxHeight: cardMaxHeight } : undefined}
+            >
+              <SubmissionCard item={item} />
+            </div>
+            {canScrollDown && (
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-2">
+                <span className="rounded-full border border-rule bg-paper px-3 py-1 text-[11px] font-medium text-ink-soft shadow-[0_1px_4px_rgba(0,0,0,0.12)]">
+                  ↓ more — ↑/↓ to scroll
+                </span>
+              </div>
+            )}
           </div>
           <LabelBar
             draft={draft}
