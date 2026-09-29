@@ -340,6 +340,18 @@ describe("craftProbeAnswers", () => {
 
 describe('renderLearnerView covers every labelable exercise type', () => {
   // Minimal valid content per type — enough for renderLearnerView's switch.
+  //
+  // The `Partial<Record<LabelableExerciseType, ExerciseContent>>` annotation
+  // below is DOCUMENTATION ONLY, not a checked constraint: this is a
+  // `*.test.ts` file, and `packages/ai/tsconfig.json` excludes `**/*.test.ts`
+  // from typecheck, so `tsc` never sees this literal, and vitest's esbuild
+  // transform strips types without checking them either. A missing or
+  // mistyped key here would not be caught at compile time. The property this
+  // annotation was previously (incorrectly) believed to guarantee is actually
+  // enforced entirely at runtime, by the `it.each(LABELABLE_EXERCISE_TYPES)`
+  // below: `expect(content, ...).toBeDefined()` fails loudly for any type
+  // missing from `SAMPLE`, and `not.toThrow()` / the length assertion catch a
+  // sample that doesn't actually render.
   const SAMPLE: Partial<Record<LabelableExerciseType, ExerciseContent>> = {
     cloze: { type: 'cloze', instructions: 'Fill the blank', sentence: 'Ayer ___ al mercado.', correctAnswer: 'fui' },
     translation: {

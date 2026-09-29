@@ -293,7 +293,7 @@ export default function LabelingPage() {
       // Re-entrancy guard, mirrored from commit(): while a save or the
       // end-of-page refetch is in flight, no shortcut (including Enter)
       // should be able to mutate the draft or re-trigger a commit.
-      if (save.isPending || isRefetching) return;
+      if (committingRef.current || save.isPending || isRefetching) return;
 
       const target = e.target as HTMLElement | null;
 
@@ -314,8 +314,11 @@ export default function LabelingPage() {
       }
 
       // Outside the critique box, still don't let shortcuts fire while some
-      // other form control (e.g. the stratum <select>) has focus.
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT')) return;
+      // other form control (e.g. the stratum <select>, a filter <select>) has
+      // focus. TEXTAREA is included on principle, not because one exists
+      // today outside the critique box (which is caught by the check above)
+      // — a second textarea added later must not silently reopen this gap.
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       switch (e.key) {

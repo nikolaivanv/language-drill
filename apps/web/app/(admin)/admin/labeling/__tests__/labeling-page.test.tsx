@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { LABEL_TAGS } from '@language-drill/shared';
 
 const saveMutate = vi.fn();
 const refetchQueue = vi.fn();
@@ -353,5 +354,67 @@ describe('LabelingPage', () => {
     fireEvent.change(screen.getByLabelText('language'), { target: { value: 'ES' } });
     expect(screen.getByLabelText(/critique/i)).toHaveValue('');
     expect(screen.getAllByText('unsure')).toHaveLength(2);
+  });
+
+  // ---------------------------------------------------------------------
+  // Keyboard bindings not otherwise covered above: d, u, /, the 1-7 tag
+  // digits, and ←/→. (↑/↓ card-scrolling is verified by a throwaway
+  // Playwright script per the dispatch — jsdom has no real layout/scroll
+  // machinery to meaningfully assert scrollBy against, so it is skipped
+  // here rather than faked.)
+  // ---------------------------------------------------------------------
+
+  it('records feedback-wrong on "d"', async () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'd' });
+    fireEvent.change(screen.getByLabelText(/critique/i), { target: { value: 'feedback is wrong' } });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    expect(saveMutate.mock.calls[0][0]).toMatchObject({ gradeOk: true, feedbackOk: false });
+  });
+
+  it('clears both verdicts on "u"', () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'u' });
+    expect(screen.getAllByText('unsure')).toHaveLength(2);
+  });
+
+  it('focuses the critique box on "/"', () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: '/' });
+    expect(screen.getByLabelText(/critique/i)).toHaveFocus();
+  });
+
+  it('toggles tags 1 and 3 on digit keys, saved in LABEL_TAGS order', async () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: '1' });
+    fireEvent.keyDown(window, { key: '3' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    expect(saveMutate.mock.calls[0][0].tags).toEqual([LABEL_TAGS[0], LABEL_TAGS[2]]);
+  });
+
+  it('untoggles a tag on a second press of the same digit', async () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: '2' });
+    fireEvent.keyDown(window, { key: '2' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    expect(saveMutate.mock.calls[0][0].tags).toEqual([]);
+  });
+
+  it('moves forward and back with ArrowRight/ArrowLeft', () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(screen.getByText(/Translate: I went/)).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(screen.getByText(/Ayer ___ al mercado/)).toBeInTheDocument();
   });
 });
