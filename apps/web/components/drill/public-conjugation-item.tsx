@@ -5,6 +5,7 @@ import type { ConjugationContent } from '@language-drill/shared';
 import { AccentPicker, Button, Card, Input } from '../ui';
 import { ConjugationPromptCard } from './conjugation-prompt';
 import { conjugationVerdict } from '../../lib/drill/verdict-tier';
+import { submitOnEnter } from '../../lib/drill/keyboard';
 
 export type PublicVerdict = { correct: boolean } | null;
 
@@ -63,11 +64,10 @@ export function PublicConjugationItem({
       <div className="flex flex-col gap-s-3">
         <Input
           ref={inputRef}
+          aria-label="your answer"
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') submit();
-          }}
+          onKeyDown={submitOnEnter(submit)}
           readOnly={locked}
           disabled={locked}
           className="font-display"
