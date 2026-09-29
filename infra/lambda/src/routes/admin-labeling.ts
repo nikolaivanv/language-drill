@@ -14,7 +14,7 @@ import { CORRECT_THRESHOLD, LABELABLE_EXERCISE_TYPES, LABEL_STRATA, LABEL_TAGS }
 import { exercises, submissionLabels, userExerciseHistory } from '@language-drill/db';
 import { EVALUATION_SYSTEM_PROMPT_VERSION, renderLearnerView } from '@language-drill/ai';
 import { Hono } from 'hono';
-import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import { and, eq, getTableName, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '../db';
@@ -104,8 +104,19 @@ export function buildQueueConditions(q: QueueQuery, labeler: string) {
 export function buildQueueOrder(stratum: QueueQuery['stratum'], seed: string) {
   // Stable pseudo-random order: a refresh must not reshuffle, a session must be
   // resumable, and a sample we quote a production rate from must be replayable.
+  //
+  // The table name is DERIVED via `getTableName`, not spelled out as a
+  // literal: a hardcoded string here plus a compiled-SQL test that asserts
+  // the same hardcoded string is an illusory mitigation — after a table
+  // rename, the hardcode and the assertion would stay in agreement while
+  // production (a real, renamed table) breaks. `sql.raw` is still required
+  // for the seed half of the expression (see `safeSeed`'s doc comment: a
+  // bound literal inside this SQL function has broken before), so the two
+  // pieces are concatenated rather than expressed with `sql` template
+  // interpolation throughout.
+  const table = getTableName(userExerciseHistory);
   return stratum === 'random'
-    ? sql.raw(`md5(user_exercise_history.id::text || '${seed}')`)
+    ? sql.raw(`md5(${table}.id::text || '${seed}')`)
     : sql`abs(${userExerciseHistory.score} - ${CORRECT_THRESHOLD}) asc, ${userExerciseHistory.evaluatedAt} desc`;
 }
 
@@ -224,7 +235,14 @@ const SaveLabelSchema = z
     gradeOk: z.boolean().nullable(),
     feedbackOk: z.boolean().nullable(),
     stratum: z.enum(LABEL_STRATA),
-    tags: z.array(z.enum(LABEL_TAGS)).max(LABEL_TAGS.length).optional(),
+    tags: z
+      .array(z.enum(LABEL_TAGS))
+      .max(LABEL_TAGS.length)
+      // The UI can't produce a duplicate (it toggles a tag in/out of a set),
+      // but a raw request can, and an unrejected duplicate double-counts that
+      // tag in the /admin/labeling/stats histogram.
+      .refine((t) => new Set(t).size === t.length, { message: 'Duplicate tags are not allowed' })
+      .optional(),
     critique: z.string().trim().max(2000).optional(),
   })
   // labeledBy and promptVersion are stamped server-side. A body that supplies
@@ -281,12 +299,21 @@ adminLabeling.post('/admin/labeling/:submissionId', async (c) => {
     })
     .onConflictDoUpdate({
       target: [submissionLabels.submissionId, submissionLabels.labeledBy],
+      // `stratum` is deliberately ABSENT here (present only in the INSERT
+      // values above). It is fixed at first touch, not re-stamped on
+      // re-label: first touch is the only correct provenance, since it names
+      // the selection mechanism that actually put the row in front of the
+      // labeler. Without this, a labeler who labels a row under `targeted`
+      // and later revisits it from a stale-cached `random` page (queue pages
+      // are `staleTime: Infinity`, and a page fetched before this row was
+      // labelled can still list it) would silently rewrite its stratum from
+      // `targeted` to `random` — smuggling a boundary-selected row into the
+      // one denominator that must never be blended with a defect hunt.
       set: {
         gradeOk,
         feedbackOk,
         tags: tags ?? [],
         critique: critique ?? null,
-        stratum,
         promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
         labeledAt,
       },

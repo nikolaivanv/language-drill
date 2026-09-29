@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { and, getTableName } from 'drizzle-orm';
 import { LABELABLE_EXERCISE_TYPES } from '@language-drill/shared';
+import { userExerciseHistory } from '@language-drill/db';
 
 // ---------------------------------------------------------------------------
 // Mock harness — copied from admin-diversity.test.ts / admin.test.ts (the
@@ -52,6 +53,12 @@ vi.mock('@language-drill/ai', async () => {
 // ---------------------------------------------------------------------------
 
 const queryQueue: unknown[] = [];
+// Captures every `.onConflictDoUpdate(...)` argument across all chains (there
+// is only ever one insert per request, but keeping a list rather than a
+// single slot avoids any ordering assumption). Used by the "does not
+// re-stamp stratum" regression test — that guarantee lives entirely in the
+// `set` clause, which `insertedValuesByTable` (INSERT values only) can't see.
+const onConflictDoUpdateCalls: Array<{ target: unknown; set: Record<string, unknown> }> = [];
 
 function makeChain() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,7 +81,10 @@ function makeChain() {
     // absent here — it throws synchronously and is caught by that
     // middleware's own try/catch, matching the pre-existing GET-endpoint
     // tests' behavior.
-    onConflictDoUpdate: vi.fn(() => chain),
+    onConflictDoUpdate: vi.fn((arg: { target: unknown; set: Record<string, unknown> }) => {
+      onConflictDoUpdateCalls.push(arg);
+      return chain;
+    }),
     then: (
       resolve: (value: unknown) => unknown,
       reject?: (reason: unknown) => unknown,
@@ -137,6 +147,7 @@ let app: Hono;
 beforeEach(async () => {
   vi.clearAllMocks();
   queryQueue.length = 0;
+  onConflictDoUpdateCalls.length = 0;
   for (const k of Object.keys(insertedValuesByTable)) {
     delete insertedValuesByTable[k];
   }
@@ -289,7 +300,10 @@ describe('buildQueueOrder (compiled SQL)', () => {
 
   it('pins the md5 random-stratum ordering expression, seed inlined', () => {
     const compiled = dialect.sqlToQuery(buildQueueOrder('random', 'pass2'));
-    expect(compiled.sql).toBe("md5(user_exercise_history.id::text || 'pass2')");
+    // Table name derived via getTableName, not spelled out — a hardcoded
+    // literal here plus a hardcoded assertion would stay in agreement across
+    // a table rename while production broke. See buildQueueOrder's comment.
+    expect(compiled.sql).toBe(`md5(${getTableName(userExerciseHistory)}.id::text || 'pass2')`);
   });
 
   it('orders the targeted stratum by distance from CORRECT_THRESHOLD, then recency', () => {
@@ -470,6 +484,40 @@ describe('POST /admin/labeling/:submissionId', () => {
       adminEnv,
     );
     expect(res.status).toBe(400);
+  });
+
+  it('rejects duplicate tags, which would double-count in the stats histogram', async () => {
+    const res = await post(
+      `/admin/labeling/${SUB}`,
+      { gradeOk: true, feedbackOk: true, stratum: 'random', tags: ['other', 'other'] },
+      adminEnv,
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('does not re-stamp stratum on an upsert onto an already-labelled row', async () => {
+    // Regression for the finding: a stale-cached `random` queue page can
+    // still list a row the labeler already labelled under `targeted`
+    // (queue pages are staleTime: Infinity). Re-labelling it must not let
+    // the second stratum silently overwrite the first, since first touch is
+    // the only correct provenance of which selection mechanism served the
+    // row. Assert directly on the captured `set` payload, since a request
+    // with a fresh stratum still 200s (the endpoint has no way to know this
+    // submission was already labelled by this same labeler) — the row-level
+    // guarantee lives entirely in the SQL statement's `set` clause.
+    queryQueue.push([{ id: SUB }], []);
+    const res = await post(
+      `/admin/labeling/${SUB}`,
+      { gradeOk: true, feedbackOk: true, stratum: 'random' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    // The `.values()` capture only records the INSERT values (see the
+    // harness comment above) — assert against the chain's onConflictDoUpdate
+    // call instead, which is what actually carries the `set` payload.
+    const onConflictArg = onConflictDoUpdateCalls[onConflictDoUpdateCalls.length - 1];
+    expect(onConflictArg.set).not.toHaveProperty('stratum');
+    expect(onConflictArg.set).toMatchObject({ gradeOk: true, feedbackOk: true });
   });
 });
 
