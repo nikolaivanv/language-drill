@@ -66,9 +66,11 @@ export type {
 } from './theory';
 export { adminAuditLog } from './audit';
 export { exerciseFlags } from './exercise-flags';
+export type { ExerciseFlag, NewExerciseFlag } from './exercise-flags';
+export { submissionLabels } from './labeling';
+export type { SubmissionLabel, NewSubmissionLabel } from './labeling';
 export { glossCache } from './gloss-cache';
 export type { GlossCacheRow, NewGlossCacheRow } from './gloss-cache';
-export type { ExerciseFlag, NewExerciseFlag } from './exercise-flags';
 export { emailPreferences, sentEmails } from './email';
 export type {
   EmailPreferences,
