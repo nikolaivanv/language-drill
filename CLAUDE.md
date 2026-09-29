@@ -335,6 +335,9 @@ maps to the same boosted limits.
   gated by `ADMIN_USER_IDS`; the web admin page is at `/admin/invites`. Codes are
   canonical uppercase 8-char alphanumeric. `GET /me` returns the caller's plan,
   limits, and today's usage.
+- `/admin/labeling` — hand-label evaluator output on real submissions. Only the
+  `random` stratum may be quoted as a quality rate; never blend it with `targeted`.
+  See `docs/superpowers/specs/2026-09-29-evaluator-labeling-design.md`.
 - **Later:** Stripe subscriptions add a paid `'pro'` tier (same boosted limits) for
   users without an invite.
 - Bot protection: Clerk at signup; per-user daily caps on the AI endpoints.

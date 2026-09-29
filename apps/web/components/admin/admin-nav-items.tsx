@@ -10,6 +10,7 @@ export interface AdminNavDestination {
 export const ADMIN_NAV: AdminNavDestination[] = [
   { href: '/admin/moderation', label: 'Moderation' },
   { href: '/admin/flags', label: 'User flags' },
+  { href: '/admin/labeling', label: 'Labeling' },
   { href: '/admin/content', label: 'Content' },
   { href: '/admin/pool', label: 'Pool' },
   { href: '/admin/invites', label: 'Invites' },

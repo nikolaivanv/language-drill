@@ -48,6 +48,7 @@ import { adminMiddleware } from '../middleware/admin';
 import type { Bindings, Variables } from '../middleware/auth';
 import { recordAdminAction } from '../lib/admin-audit';
 import { adminDiversity } from './admin-diversity';
+import { adminLabeling } from './admin-labeling';
 
 // ---------------------------------------------------------------------------
 // Validation schemas
@@ -67,6 +68,7 @@ const admin = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 admin.use('/admin/*', authMiddleware, adminMiddleware);
 
 admin.route('/', adminDiversity);
+admin.route('/', adminLabeling);
 
 // Tolerates both Date (production Drizzle) and string (test mock) date values.
 const toIso = (v: Date | string | null): string | null =>

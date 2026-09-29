@@ -50,6 +50,44 @@ export const LANGUAGE_NAMES: Record<Language, string> = {
 // Score >= this counts as correct in session summaries; matches the 'solid' tier in apps/web/lib/drill/verdict-tier.ts
 export const CORRECT_THRESHOLD = 0.7;
 
+/**
+ * Closed tag vocabulary for evaluator labels. A starting guess, not a finding —
+ * expect to extend it after the first ~30 labels. Adding a tag requires editing
+ * the Zod union in packages/api-client/src/schemas/labeling.ts too, or the web
+ * client throws a ZodError on a row carrying the new tag.
+ */
+export const LABEL_TAGS = [
+  'invented-error',
+  'missed-real-error',
+  'wrong-point-attribution',
+  'alternative-rejected',
+  'feedback-contradicts-score',
+  'feedback-wrong-rule',
+  'other',
+] as const;
+export type LabelTag = (typeof LABEL_TAGS)[number];
+
+/** 'random' is the unbiased spine; 'targeted' is defect hunting. Never blend. */
+export const LABEL_STRATA = ['random', 'targeted'] as const;
+export type LabelStratum = (typeof LABEL_STRATA)[number];
+
+/**
+ * The exercise types the labeling queue may serve — exactly the set
+ * `renderLearnerView` handles (it throws on any other, which would 500 the
+ * queue endpoint; pinned by a test in packages/ai/src/qa-sample.test.ts).
+ * Dictation and free-writing are evaluated by different prompts with different
+ * output shapes and are deliberately out of scope.
+ */
+export const LABELABLE_EXERCISE_TYPES = [
+  'cloze',
+  'translation',
+  'vocab_recall',
+  'sentence_construction',
+  'conjugation',
+  'contextual_paraphrase',
+] as const;
+export type LabelableExerciseType = (typeof LABELABLE_EXERCISE_TYPES)[number];
+
 // Upper bound on a submitted exercise answer (chars). A free-form answer is
 // interpolated raw into the evaluation prompt and forwarded to Claude, so an
 // unbounded answer is a token-cost amplification lever (a 100 KB answer is

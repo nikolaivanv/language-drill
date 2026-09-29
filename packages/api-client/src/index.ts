@@ -499,6 +499,17 @@ export {
   useFlagExercise, useUserFlagsQueue, useResolveUserFlag, type UserFlagStatus,
 } from './hooks/useUserFlags';
 export {
+  LabelTagEnum, type LabelTagValue,
+  LabelStratumEnum, type LabelStratumValue,
+  LabelQueueItemSchema, type LabelQueueItem,
+  LabelQueueResponseSchema, type LabelQueueResponse,
+  SaveLabelResponseSchema,
+  LabelingStatsSchema, type LabelingStats,
+} from './schemas/labeling';
+export {
+  useLabelingQueue, useSaveLabel, useLabelingStats, type LabelingFilters,
+} from './hooks/useLabeling';
+export {
   ActivitySessionListItemSchema, type ActivitySessionListItem,
   ActivitySessionsPageSchema, type ActivitySessionsPage,
   ActivitySessionDetailSchema, type ActivitySessionDetail,

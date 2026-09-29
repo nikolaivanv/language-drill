@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { ExerciseType } from "@language-drill/shared";
+import { ExerciseType, LABELABLE_EXERCISE_TYPES } from "@language-drill/shared";
 import type {
   ClozeContent,
   TranslationContent,
@@ -7,6 +7,8 @@ import type {
   ConjugationContent,
   VocabRecallContent,
   ContextualParaphraseContent,
+  LabelableExerciseType,
+  ExerciseContent,
 } from "@language-drill/shared";
 import type Anthropic from "@anthropic-ai/sdk";
 import {
@@ -333,5 +335,48 @@ describe("craftProbeAnswers", () => {
 
     const callArg = create.mock.calls[0][0];
     expect(callArg.thinking).toEqual({ type: "disabled" });
+  });
+});
+
+describe('renderLearnerView covers every labelable exercise type', () => {
+  // Minimal valid content per type — enough for renderLearnerView's switch.
+  //
+  // The `Partial<Record<LabelableExerciseType, ExerciseContent>>` annotation
+  // below is DOCUMENTATION ONLY, not a checked constraint: this is a
+  // `*.test.ts` file, and `packages/ai/tsconfig.json` excludes `**/*.test.ts`
+  // from typecheck, so `tsc` never sees this literal, and vitest's esbuild
+  // transform strips types without checking them either. A missing or
+  // mistyped key here would not be caught at compile time. The property this
+  // annotation was previously (incorrectly) believed to guarantee is actually
+  // enforced entirely at runtime, by the `it.each(LABELABLE_EXERCISE_TYPES)`
+  // below: `expect(content, ...).toBeDefined()` fails loudly for any type
+  // missing from `SAMPLE`, and `not.toThrow()` / the length assertion catch a
+  // sample that doesn't actually render.
+  const SAMPLE: Partial<Record<LabelableExerciseType, ExerciseContent>> = {
+    cloze: { type: 'cloze', instructions: 'Fill the blank', sentence: 'Ayer ___ al mercado.', correctAnswer: 'fui' },
+    translation: {
+      type: 'translation', instructions: 'Translate', sourceLanguage: 'EN', targetLanguage: 'ES',
+      sourceText: 'I went to the market.', referenceTranslation: 'Fui al mercado.',
+    },
+    vocab_recall: { type: 'vocab_recall', instructions: 'Give the word', prompt: 'market', expectedWord: 'mercado', hints: [], exampleSentence: 'Fui al mercado.' },
+    sentence_construction: {
+      type: 'sentence_construction', instructions: 'Build a sentence',
+      promptMode: 'keywords', prompt: 'Use mercado', keywords: ['mercado'], modelAnswers: ['Fui al mercado.'],
+    },
+    conjugation: {
+      type: 'conjugation', instructions: 'Conjugate', lemma: 'ir', lemmaGloss: 'to go',
+      featureBundle: 'preterite · 1s', targetForm: 'fui', breakdown: 'fui', exampleSentences: ['Fui al mercado.'],
+    },
+    contextual_paraphrase: {
+      type: 'contextual_paraphrase', instructions: 'Rephrase', sourceText: 'Fui al mercado.',
+      constraintKind: 'avoid', bannedTerms: ['fui'], constraintLabel: 'use imperfect', referenceParaphrases: ['Iba al mercado.'],
+    },
+  };
+
+  it.each(LABELABLE_EXERCISE_TYPES)('renders %s without throwing', (type) => {
+    const content = SAMPLE[type];
+    expect(content, `no sample content for ${type}`).toBeDefined();
+    expect(() => renderLearnerView(content)).not.toThrow();
+    expect(renderLearnerView(content).length).toBeGreaterThan(0);
   });
 });
