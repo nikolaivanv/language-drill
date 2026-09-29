@@ -19,6 +19,7 @@ import { eq } from 'drizzle-orm';
 import { users, userLanguageProfiles } from '@language-drill/db';
 import { db } from './db';
 import health from './routes/health';
+import publicRoutes from './routes/public';
 import exercises from './routes/exercises';
 import profiles from './routes/profiles';
 import sessions from './routes/sessions';
@@ -80,6 +81,7 @@ app.use('*', async (c, next) => {
 });
 
 app.route('/', health);
+app.route('/', publicRoutes); // unauthenticated — see routes/public.ts
 app.route('/', exercises);
 app.route('/', profiles);
 app.route('/', sessions);

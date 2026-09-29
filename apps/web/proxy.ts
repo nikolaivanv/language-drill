@@ -1,9 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isPublicRoute = createRouteMatcher([
+export const isPublicRoute = createRouteMatcher([
   '/', // public marketing landing page (signed-in users are bounced to /home)
   '/why-not-chatgpt', // standalone marketing comparison page
   '/academic-rigour', // standalone marketing deep-dive on how the material is made
+  // Public, unauthenticated drill surface — no signup required. `:path*`
+  // matches on path-segment boundaries (unlike the deprecated `(.*)` used by
+  // the entries above, which also matches siblings — `/try(.*)` would make
+  // `/trybeta` public too).
+  '/try',
+  '/try/:path*',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/invite(.*)',

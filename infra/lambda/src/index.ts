@@ -6,6 +6,7 @@ import { FALLBACK_ORIGINS } from '@language-drill/shared';
 import { flushObservability } from '@language-drill/ai';
 
 import health from './routes/health';
+import publicRoutes from './routes/public';
 import exercises from './routes/exercises';
 import theory from './routes/theory';
 import sessions from './routes/sessions';
@@ -76,6 +77,7 @@ export async function flushMiddleware(_c: Context, next: Next): Promise<void> {
 app.use('*', flushMiddleware);
 
 app.route('/', health);
+app.route('/', publicRoutes); // unauthenticated — see routes/public.ts
 app.route('/', exercises);
 app.route('/', theory);
 app.route('/', sessions);

@@ -3,7 +3,14 @@ const BASE_URL =
     ? (process.env['NEXT_PUBLIC_API_URL'] ?? '')
     : '';
 
-export type AuthenticatedFetch = (path: string, init?: RequestInit) => Promise<Response>;
+/** Any API fetch wrapper — authenticated or public. */
+export type ApiFetch = (path: string, init?: RequestInit) => Promise<Response>;
+
+/**
+ * Historical name, kept so existing call sites compile unchanged. Identical to
+ * {@link ApiFetch}: the distinction is which factory produced it, not its shape.
+ */
+export type AuthenticatedFetch = ApiFetch;
 
 /**
  * Thrown when a request needs a session token and there is none — the caller
@@ -32,6 +39,35 @@ export class AuthExpiredError extends Error {
  */
 export function isAuthExpiredError(error: unknown): boolean {
   return error instanceof Error && error.name === 'AuthExpiredError';
+}
+
+/**
+ * Builds the Error thrown for a non-ok response, shared by every `ApiFetch`
+ * wrapper regardless of how it authenticates. Parses the JSON error body when
+ * present, falls back to a generic message, and attaches `.status`/`.body` so
+ * callers can distinguish failure kinds (e.g. a documented 400 vs. a 5xx).
+ *
+ * Deliberately contains zero auth logic and is not exported — the public and
+ * authenticated wrappers differ only in how they build the request, never in
+ * how they report a failure.
+ */
+async function buildResponseError(response: Response): Promise<Error> {
+  let errorBody: unknown;
+  try {
+    errorBody = await response.json();
+  } catch {
+    errorBody = null;
+  }
+
+  const message =
+    errorBody && typeof errorBody === 'object' && 'error' in errorBody
+      ? (errorBody as { error: string }).error
+      : `Request failed: ${response.status}`;
+
+  const error = new Error(message);
+  (error as any).status = response.status;
+  (error as any).body = errorBody;
+  return error;
 }
 
 /**
@@ -66,23 +102,31 @@ export function createAuthenticatedFetch(
     });
 
     if (!response.ok) {
-      // Parse error body if available
-      let errorBody: unknown;
-      try {
-        errorBody = await response.json();
-      } catch {
-        errorBody = null;
-      }
+      throw await buildResponseError(response);
+    }
 
-      const message =
-        errorBody && typeof errorBody === 'object' && 'error' in errorBody
-          ? (errorBody as { error: string }).error
-          : `Request failed: ${response.status}`;
+    return response;
+  };
+}
 
-      const error = new Error(message);
-      (error as any).status = response.status;
-      (error as any).body = errorBody;
-      throw error;
+/**
+ * Fetch wrapper for the unauthenticated `/public/*` endpoints. Sends no
+ * Authorization header and never calls Clerk, so it works for a signed-out
+ * visitor. Error handling mirrors `createAuthenticatedFetch` so callers can
+ * treat failures identically.
+ */
+export function createPublicFetch(): ApiFetch {
+  return async (path: string, init?: RequestInit): Promise<Response> => {
+    const response = await fetch(`${BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers as Record<string, string>),
+      },
+    });
+
+    if (!response.ok) {
+      throw await buildResponseError(response);
     }
 
     return response;

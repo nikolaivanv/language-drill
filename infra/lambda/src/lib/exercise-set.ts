@@ -12,6 +12,12 @@ export const CONJUGATION_SET_MAX = 20;
 // duplicate-heavy, so pull a generous slice and let de-dup pick distinct items.
 export const CONJUGATION_SET_FETCH_CAP = 300;
 
+// Public (unauthenticated) sitting size. Deliberately a SEPARATE pair from the
+// authenticated CONJUGATION_SET_* constants so raising the authenticated limit
+// can never widen the public surface.
+export const PUBLIC_CONJUGATION_SET_DEFAULT = 10;
+export const PUBLIC_CONJUGATION_SET_MAX = 10;
+
 /**
  * Salient signature for a conjugation exercise: what the learner is asked to
  * produce — `"<lemma>|<targetForm>|<pronoun>"`. Deliberately ignores
