@@ -10,9 +10,9 @@
  *
  * See docs/superpowers/specs/2026-09-29-evaluator-labeling-design.md.
  */
-import { CORRECT_THRESHOLD, LABELABLE_EXERCISE_TYPES, LABEL_STRATA } from '@language-drill/shared';
+import { CORRECT_THRESHOLD, LABELABLE_EXERCISE_TYPES, LABEL_STRATA, LABEL_TAGS } from '@language-drill/shared';
 import { exercises, submissionLabels, userExerciseHistory } from '@language-drill/db';
-import { renderLearnerView } from '@language-drill/ai';
+import { EVALUATION_SYSTEM_PROMPT_VERSION, renderLearnerView } from '@language-drill/ai';
 import { Hono } from 'hono';
 import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
@@ -217,4 +217,121 @@ adminLabeling.get('/admin/labeling/queue', async (c) => {
   });
 
   return c.json({ items, remaining: Number(remainingRows[0]?.count ?? 0), dropped });
+});
+
+const SaveLabelSchema = z
+  .object({
+    gradeOk: z.boolean().nullable(),
+    feedbackOk: z.boolean().nullable(),
+    stratum: z.enum(LABEL_STRATA),
+    tags: z.array(z.enum(LABEL_TAGS)).max(LABEL_TAGS.length).optional(),
+    critique: z.string().trim().max(2000).optional(),
+  })
+  // labeledBy and promptVersion are stamped server-side. A body that supplies
+  // either is a client bug, so fail loudly instead of silently ignoring it.
+  .strict();
+
+adminLabeling.post('/admin/labeling/:submissionId', async (c) => {
+  const submissionId = c.req.param('submissionId');
+  if (!z.string().uuid().safeParse(submissionId).success) {
+    return c.json({ error: 'Invalid submission id', code: 'VALIDATION_ERROR' }, 400);
+  }
+  let raw: unknown;
+  try {
+    raw = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const parsed = SaveLabelSchema.safeParse(raw);
+  if (!parsed.success) {
+    return c.json({ error: 'Invalid label', code: 'VALIDATION_ERROR', details: parsed.error.flatten() }, 400);
+  }
+  const { gradeOk, feedbackOk, stratum, tags, critique } = parsed.data;
+
+  // A bare `false` is unusable three weeks later, and the critique is the raw
+  // material the next tag comes from.
+  const hasFalse = gradeOk === false || feedbackOk === false;
+  if (hasFalse && (critique === undefined || critique.length === 0)) {
+    return c.json({ error: 'Explain what was wrong', code: 'CRITIQUE_REQUIRED' }, 400);
+  }
+
+  const exists = await db
+    .select({ id: userExerciseHistory.id })
+    .from(userExerciseHistory)
+    .where(eq(userExerciseHistory.id, submissionId))
+    .limit(1);
+  if (exists.length === 0) {
+    return c.json({ error: 'Submission not found', code: 'SUBMISSION_NOT_FOUND' }, 404);
+  }
+
+  const labeledBy = c.get('userId');
+  const labeledAt = new Date();
+  await db
+    .insert(submissionLabels)
+    .values({
+      submissionId,
+      gradeOk,
+      feedbackOk,
+      tags: tags ?? [],
+      critique: critique ?? null,
+      stratum,
+      promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+      labeledBy,
+      labeledAt,
+    })
+    .onConflictDoUpdate({
+      target: [submissionLabels.submissionId, submissionLabels.labeledBy],
+      set: {
+        gradeOk,
+        feedbackOk,
+        tags: tags ?? [],
+        critique: critique ?? null,
+        stratum,
+        promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION,
+        labeledAt,
+      },
+    });
+
+  return c.json({ saved: true, promptVersion: EVALUATION_SYSTEM_PROMPT_VERSION });
+});
+
+adminLabeling.get('/admin/labeling/stats', async (c) => {
+  const perStratum = await db
+    .select({
+      stratum: submissionLabels.stratum,
+      count: sql<number>`count(*)`,
+      gradeOk: sql<number>`count(*) filter (where ${submissionLabels.gradeOk} = true)`,
+      feedbackOk: sql<number>`count(*) filter (where ${submissionLabels.feedbackOk} = true)`,
+    })
+    .from(submissionLabels)
+    .groupBy(submissionLabels.stratum)
+    .orderBy(submissionLabels.stratum);
+
+  const tagRows = await db
+    .select({
+      tag: sql<string>`jsonb_array_elements_text(${submissionLabels.tags})`,
+      count: sql<number>`count(*)`,
+    })
+    .from(submissionLabels)
+    .groupBy(sql`jsonb_array_elements_text(${submissionLabels.tags})`)
+    .orderBy(sql`count(*) desc`);
+
+  const todayRows = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(submissionLabels)
+    .where(sql`${submissionLabels.labeledAt} >= date_trunc('day', now())`);
+
+  return c.json({
+    strata: perStratum.map((r) => {
+      const count = Number(r.count);
+      return {
+        stratum: r.stratum,
+        count,
+        gradeOkRate: count === 0 ? 0 : Number(r.gradeOk) / count,
+        feedbackOkRate: count === 0 ? 0 : Number(r.feedbackOk) / count,
+      };
+    }),
+    tags: tagRows.map((r) => ({ tag: r.tag, count: Number(r.count) })),
+    labeledToday: Number(todayRows[0]?.count ?? 0),
+  });
 });

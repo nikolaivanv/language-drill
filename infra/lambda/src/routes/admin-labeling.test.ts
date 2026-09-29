@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { PgDialect } from 'drizzle-orm/pg-core';
-import { and } from 'drizzle-orm';
+import { and, getTableName } from 'drizzle-orm';
 import { LABELABLE_EXERCISE_TYPES } from '@language-drill/shared';
 
 // ---------------------------------------------------------------------------
@@ -17,9 +17,16 @@ import { LABELABLE_EXERCISE_TYPES } from '@language-drill/shared';
 // the REAL schema objects (real drizzle Column instances) so the dialect can
 // compile them to actual SQL text — a sentinel would either produce garbage
 // SQL or (per the review finding this responds to) silently build conditions
-// against `undefined` columns without ever throwing. This route makes no
-// inserts, so the `insertedValuesByTable` bookkeeping those sentinels exist
-// for buys nothing here.
+// against `undefined` columns without ever throwing.
+//
+// Task 4 adds a real insert (POST /admin/labeling/:submissionId), and because
+// the schema objects here are real (not `{ __mock }` sentinels), the
+// `insertedValuesByTable` key can't be read off a sentinel tag the way
+// admin.test.ts does. Instead the key is derived from the real table via
+// drizzle's own `getTableName` — which also means the auth middleware's own
+// `db.insert(users)...` (fired on every authenticated request, see
+// `authMiddleware`) lands under the `users` key, not `submission_labels`, so
+// it can never be mistaken for this route's insert.
 // ---------------------------------------------------------------------------
 
 const sqsSend = vi.fn().mockResolvedValue({});
@@ -62,6 +69,12 @@ function makeChain() {
     values: vi.fn(() => chain),
     returning: vi.fn(() => chain),
     set: vi.fn(() => chain),
+    // Only the labeling insert (below) uses onConflictDoUpdate. The auth
+    // middleware's own upsert uses onConflictDoNothing, which is deliberately
+    // absent here — it throws synchronously and is caught by that
+    // middleware's own try/catch, matching the pre-existing GET-endpoint
+    // tests' behavior.
+    onConflictDoUpdate: vi.fn(() => chain),
     then: (
       resolve: (value: unknown) => unknown,
       reject?: (reason: unknown) => unknown,
@@ -74,10 +87,30 @@ function makeChain() {
   return chain;
 }
 
+// Capture the rows passed to `.values()` per insert, keyed by the real
+// table's name (see the harness comment above for why this differs from
+// admin.test.ts's `__mock`-sentinel key).
+const insertedValuesByTable: Record<string, unknown> = {};
+
+function dbInsert(table: unknown) {
+  const chain = makeChain();
+  let key = 'unknown';
+  try {
+    key = getTableName(table as never);
+  } catch {
+    // ignore — fall back to 'unknown'
+  }
+  chain.values = vi.fn((rows: unknown) => {
+    insertedValuesByTable[key] = rows;
+    return chain;
+  });
+  return chain;
+}
+
 vi.mock('../db', () => ({
   db: {
     select: () => makeChain(),
-    insert: () => makeChain(),
+    insert: (table: unknown) => dbInsert(table),
     update: () => makeChain(),
     transaction: async (fn: (tx: unknown) => unknown) => fn({ update: () => makeChain() }),
     execute: () => Promise.resolve({ rows: queryQueue.shift() ?? [] }),
@@ -104,6 +137,9 @@ let app: Hono;
 beforeEach(async () => {
   vi.clearAllMocks();
   queryQueue.length = 0;
+  for (const k of Object.keys(insertedValuesByTable)) {
+    delete insertedValuesByTable[k];
+  }
   process.env.ADMIN_USER_IDS = ADMIN_ID;
   const mod = await import('./admin');
   app = new Hono();
@@ -120,6 +156,18 @@ afterEach(() => {
 
 function request(path: string, env: unknown) {
   return app.request(path, undefined, env);
+}
+
+function post(path: string, body: unknown, env: unknown) {
+  return app.request(
+    path,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    },
+    env,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -347,5 +395,126 @@ describe('GET /admin/labeling/queue', () => {
       adminEnv,
     );
     expect(res.status).toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /admin/labeling/:submissionId — save endpoint.
+//
+// Every authenticated request also fires the auth middleware's own
+// `db.insert(users)...` (see the harness comment above), which lands under
+// the `users` key in `insertedValuesByTable`. Assertions below read the
+// `submission_labels` key specifically, never `Object.values(...)[0]`, so
+// they can't be confused by that middleware insert.
+// ---------------------------------------------------------------------------
+
+describe('POST /admin/labeling/:submissionId', () => {
+  const SUB = '11111111-1111-4111-8111-111111111111';
+
+  beforeEach(() => {
+    queryQueue.length = 0;
+  });
+
+  it('403s for a non-admin', async () => {
+    const res = await post(`/admin/labeling/${SUB}`, { gradeOk: true, feedbackOk: true, stratum: 'random' }, nonAdminEnv);
+    expect(res.status).toBe(403);
+  });
+
+  it('400s when a false verdict carries no critique', async () => {
+    const res = await post(`/admin/labeling/${SUB}`, { gradeOk: false, feedbackOk: true, stratum: 'random' }, adminEnv);
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('CRITIQUE_REQUIRED');
+  });
+
+  it('accepts a false verdict that explains itself', async () => {
+    queryQueue.push([{ id: SUB }], []);
+    const res = await post(
+      `/admin/labeling/${SUB}`,
+      { gradeOk: false, feedbackOk: true, stratum: 'random', tags: ['alternative-rejected'], critique: 'me fui is also correct' },
+      adminEnv,
+    );
+    expect(res.status).toBe(200);
+    const saved = insertedValuesByTable['submission_labels'] as Record<string, unknown>;
+    expect(saved.gradeOk).toBe(false);
+    expect(saved.tags).toEqual(['alternative-rejected']);
+    expect(saved.labeledBy).toBe(ADMIN_ID);
+  });
+
+  it('rejects a body that tries to set promptVersion or labeledBy itself', async () => {
+    queryQueue.push([{ id: SUB }], []);
+    const res = await post(
+      `/admin/labeling/${SUB}`,
+      { gradeOk: true, feedbackOk: true, stratum: 'random', labeledBy: 'user_someone_else', promptVersion: 'evaluate@1999-01-01' },
+      adminEnv,
+    );
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('404s when the submission does not exist', async () => {
+    queryQueue.push([]);
+    const res = await post(`/admin/labeling/${SUB}`, { gradeOk: true, feedbackOk: true, stratum: 'random' }, adminEnv);
+    expect(res.status).toBe(404);
+  });
+
+  it('accepts unsure on both axes without a critique', async () => {
+    queryQueue.push([{ id: SUB }], []);
+    const res = await post(`/admin/labeling/${SUB}`, { gradeOk: null, feedbackOk: null, stratum: 'random' }, adminEnv);
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects a tag outside the closed vocabulary', async () => {
+    const res = await post(
+      `/admin/labeling/${SUB}`,
+      { gradeOk: true, feedbackOk: true, stratum: 'random', tags: ['vibes-off'] },
+      adminEnv,
+    );
+    expect(res.status).toBe(400);
+  });
+});
+
+type StatsResponse = {
+  strata: Array<{ stratum: string; count: number; gradeOkRate: number; feedbackOkRate: number }>;
+  tags: Array<{ tag: string; count: number }>;
+  labeledToday: number;
+};
+
+describe('GET /admin/labeling/stats', () => {
+  beforeEach(() => {
+    queryQueue.length = 0;
+  });
+
+  it('reports each stratum separately so the two are never blended', async () => {
+    queryQueue.push(
+      [
+        { stratum: 'random', count: 40, gradeOk: 34, feedbackOk: 31 },
+        { stratum: 'targeted', count: 12, gradeOk: 4, feedbackOk: 6 },
+      ],
+      [{ tag: 'alternative-rejected', count: 5 }],
+      [{ count: 7 }],
+    );
+    const res = await request('/admin/labeling/stats', adminEnv);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as StatsResponse;
+    expect(body.strata).toEqual([
+      { stratum: 'random', count: 40, gradeOkRate: 0.85, feedbackOkRate: 0.775 },
+      { stratum: 'targeted', count: 12, gradeOkRate: 1 / 3, feedbackOkRate: 0.5 },
+    ]);
+    expect(body.tags).toEqual([{ tag: 'alternative-rejected', count: 5 }]);
+    expect(body.labeledToday).toBe(7);
+  });
+
+  it('reports a 0 rate when every label in a stratum says not-ok', async () => {
+    queryQueue.push([{ stratum: 'random', count: 3, gradeOk: 0, feedbackOk: 0 }], [], [{ count: 0 }]);
+    const body = (await (await request('/admin/labeling/stats', adminEnv)).json()) as StatsResponse;
+    expect(body.strata[0].gradeOkRate).toBe(0);
+    expect(body.strata[0].count).toBe(3);
+  });
+
+  it('survives an empty table without dividing by zero', async () => {
+    queryQueue.push([], [], [{ count: 0 }]);
+    const body = (await (await request('/admin/labeling/stats', adminEnv)).json()) as StatsResponse;
+    expect(body.strata).toEqual([]);
+    expect(body.labeledToday).toBe(0);
   });
 });
