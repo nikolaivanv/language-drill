@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const saveMutate = vi.fn();
 const refetchQueue = vi.fn();
+const useLabelingQueueSpy = vi.fn();
 const queueData = {
   items: [
     {
@@ -28,7 +29,10 @@ vi.mock('@clerk/nextjs', () => ({ useAuth: () => ({ getToken: vi.fn() }) }));
 vi.mock('@language-drill/api-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@language-drill/api-client')>()),
   createAuthenticatedFetch: () => vi.fn(),
-  useLabelingQueue: () => ({ data: queueData, isLoading: false, isError: false, refetch: refetchQueue }),
+  useLabelingQueue: (args: unknown) => {
+    useLabelingQueueSpy(args);
+    return { data: queueData, isLoading: false, isError: false, refetch: refetchQueue };
+  },
   useSaveLabel: () => ({ mutate: saveMutate, mutateAsync: saveMutate, isPending: false }),
   useLabelingStats: () => ({ data: { strata: [], tags: [], labeledToday: 0 }, isLoading: false }),
 }));
@@ -39,6 +43,7 @@ describe('LabelingPage', () => {
   beforeEach(() => {
     saveMutate.mockReset();
     refetchQueue.mockReset();
+    useLabelingQueueSpy.mockReset();
     saveMutate.mockResolvedValue({ saved: true, promptVersion: 'evaluate@2026-09-22' });
     // Matches the real useQuery#refetch() shape closely enough for the
     // page's `res.isError` check: it resolves (never rejects) with a
@@ -300,5 +305,53 @@ describe('LabelingPage', () => {
 
     await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(refetchQueue).toHaveBeenCalledTimes(1));
+  });
+
+  // ---------------------------------------------------------------------
+  // Filter UI (language / type / hasErrors) — previously unreachable dead
+  // code in useLabelingQueue's `filters` param. These pin that the selects
+  // actually reach the hook, and that (like the stratum select) changing one
+  // resets the in-progress draft rather than letting it leak onto whatever
+  // the new query serves at the same index.
+  // ---------------------------------------------------------------------
+
+  it('reaches useLabelingQueue with the selected language filter', () => {
+    render(<LabelingPage />);
+    fireEvent.change(screen.getByLabelText('language'), { target: { value: 'ES' } });
+    expect(useLabelingQueueSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stratum: 'random',
+        filters: expect.objectContaining({ language: 'ES', type: undefined, hasErrors: undefined }),
+      }),
+    );
+  });
+
+  it('reaches useLabelingQueue with the selected type filter', () => {
+    render(<LabelingPage />);
+    fireEvent.change(screen.getByLabelText('type'), { target: { value: 'translation' } });
+    expect(useLabelingQueueSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ type: 'translation' }),
+      }),
+    );
+  });
+
+  it('reaches useLabelingQueue with the hasErrors filter', () => {
+    render(<LabelingPage />);
+    fireEvent.change(screen.getByLabelText('hasErrors'), { target: { value: 'true' } });
+    expect(useLabelingQueueSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: expect.objectContaining({ hasErrors: true }),
+      }),
+    );
+  });
+
+  it('resets the draft when a filter changes, same as switching strata', () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'f' });
+    fireEvent.change(screen.getByLabelText(/critique/i), { target: { value: 'typed before filtering' } });
+    fireEvent.change(screen.getByLabelText('language'), { target: { value: 'ES' } });
+    expect(screen.getByLabelText(/critique/i)).toHaveValue('');
+    expect(screen.getAllByText('unsure')).toHaveLength(2);
   });
 });

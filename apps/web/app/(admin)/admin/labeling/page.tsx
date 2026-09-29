@@ -8,7 +8,13 @@ import {
   useLabelingStats,
   useSaveLabel,
 } from '@language-drill/api-client';
-import { LABEL_TAGS, LABEL_STRATA, type LabelTag } from '@language-drill/shared';
+import {
+  LABEL_TAGS,
+  LABEL_STRATA,
+  LABELABLE_EXERCISE_TYPES,
+  type LabelTag,
+  type LabelableExerciseType,
+} from '@language-drill/shared';
 import { SubmissionCard } from './_components/submission-card';
 import { LabelBar, type LabelDraft } from './_components/label-bar';
 import { FilterSelect } from '../../../../components/admin/filter-select';
@@ -18,11 +24,22 @@ const EMPTY_DRAFT: LabelDraft = { gradeOk: null, feedbackOk: null, tags: [], cri
 // canScrollDown/CARD_SCROLL_STEP usage in LabelingPage).
 const CARD_SCROLL_STEP = 140;
 
+// The endpoint's QueueQuerySchema.language enum — kept as a literal tuple
+// (rather than importing from the lambda package, which the web app cannot
+// depend on) so 'all' can be prepended as the unfiltered sentinel option.
+const LANGUAGES = ['ES', 'DE', 'TR'] as const;
+type LanguageFilter = 'all' | (typeof LANGUAGES)[number];
+type TypeFilter = 'all' | LabelableExerciseType;
+type HasErrorsFilter = 'all' | 'true';
+
 export default function LabelingPage() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
 
   const [stratum, setStratum] = useState<(typeof LABEL_STRATA)[number]>('random');
+  const [language, setLanguage] = useState<LanguageFilter>('all');
+  const [type, setType] = useState<TypeFilter>('all');
+  const [hasErrors, setHasErrors] = useState<HasErrorsFilter>('all');
   const [index, setIndex] = useState(0);
   const [draft, setDraft] = useState<LabelDraft>(EMPTY_DRAFT);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +64,30 @@ export default function LabelingPage() {
   // in place too, since they're what drive the disabled UI.
   const committingRef = useRef(false);
 
-  const queue = useLabelingQueue({ fetchFn, stratum });
+  // Shared by the stratum select and every filter select: switching to a
+  // different query means the current index/draft/error/retry state all
+  // describe a row from the OLD query and must never ride onto the new one
+  // — a missed reset here is exactly how a draft has leaked onto the wrong
+  // submission before on this page (see committingRef's own history). Pulled
+  // into one function rather than duplicated at each onChange so a fifth
+  // filter added later can't reintroduce that gap by copy-paste omission.
+  const resetForNewQuery = useCallback(() => {
+    setIndex(0);
+    setDraft(EMPTY_DRAFT);
+    setError(null);
+    setRefetchFailed(false);
+  }, []);
+
+  const filters = useMemo(
+    () => ({
+      language: language === 'all' ? undefined : language,
+      type: type === 'all' ? undefined : type,
+      hasErrors: hasErrors === 'all' ? undefined : true,
+    }),
+    [language, type, hasErrors],
+  );
+
+  const queue = useLabelingQueue({ fetchFn, stratum, filters });
   const stats = useLabelingStats({ fetchFn });
   const save = useSaveLabel({ fetchFn });
 
@@ -330,19 +370,49 @@ export default function LabelingPage() {
           value={stratum}
           onChange={(e) => {
             setStratum(e.target.value as (typeof LABEL_STRATA)[number]);
-            setIndex(0);
-            setDraft(EMPTY_DRAFT);
-            // A stuck refetchFailed retry state (and its error message)
-            // belongs to the old stratum's stale page — carrying it into
-            // the new stratum would silently route the labeler's first
-            // Enter here into a retry-fetch instead of their intended save.
-            setRefetchFailed(false);
-            setError(null);
+            resetForNewQuery();
           }}
         >
           {LABEL_STRATA.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
+        </FilterSelect>
+        <FilterSelect
+          aria-label="language"
+          value={language}
+          onChange={(e) => {
+            setLanguage(e.target.value as LanguageFilter);
+            resetForNewQuery();
+          }}
+        >
+          <option value="all">all languages</option>
+          {LANGUAGES.map((l) => (
+            <option key={l} value={l}>{l}</option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          aria-label="type"
+          value={type}
+          onChange={(e) => {
+            setType(e.target.value as TypeFilter);
+            resetForNewQuery();
+          }}
+        >
+          <option value="all">all types</option>
+          {LABELABLE_EXERCISE_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </FilterSelect>
+        <FilterSelect
+          aria-label="hasErrors"
+          value={hasErrors}
+          onChange={(e) => {
+            setHasErrors(e.target.value as HasErrorsFilter);
+            resetForNewQuery();
+          }}
+        >
+          <option value="all">all rows</option>
+          <option value="true">only rows with errors</option>
         </FilterSelect>
         <span>{items.length === 0 ? 'nothing queued' : `${index + 1} / ${items.length} on this page`}</span>
         <span>· {queue.data?.remaining ?? 0} unlabelled in scope</span>
