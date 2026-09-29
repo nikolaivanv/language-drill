@@ -257,9 +257,11 @@ export {
 } from './hooks/useVocabularyMutations';
 export {
   createAuthenticatedFetch,
+  createPublicFetch,
   AuthExpiredError,
   isAuthExpiredError,
   type AuthenticatedFetch,
+  type ApiFetch,
 } from './fetchClient';
 export { MeResponseSchema, type MeResponse } from './schemas/me';
 export {
@@ -272,6 +274,12 @@ export {
   type CreateInvitesResponse,
 } from './schemas/invites';
 export { useMe, type UseMeParams } from './hooks/useMe';
+export {
+  usePublicConjugationSet,
+  type UsePublicConjugationSetParams,
+  type PublicLanguage,
+  type PublicLevel,
+} from './hooks/usePublicConjugationSet';
 export {
   useRedeemInvite,
   RedeemError,
