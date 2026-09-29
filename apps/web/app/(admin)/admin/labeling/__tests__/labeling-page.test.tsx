@@ -40,7 +40,10 @@ describe('LabelingPage', () => {
     saveMutate.mockReset();
     refetchQueue.mockReset();
     saveMutate.mockResolvedValue({ saved: true, promptVersion: 'evaluate@2026-09-22' });
-    refetchQueue.mockResolvedValue({ data: queueData });
+    // Matches the real useQuery#refetch() shape closely enough for the
+    // page's `res.isError` check: it resolves (never rejects) with a
+    // result object.
+    refetchQueue.mockResolvedValue({ data: queueData, isError: false, error: null });
   });
 
   it('shows the first queued submission', () => {
@@ -81,13 +84,108 @@ describe('LabelingPage', () => {
     expect(screen.getByText(/Ayer ___ al mercado/)).toBeInTheDocument();
   });
 
-  it('does not fire a shortcut while the critique box has focus', async () => {
+  it('ignores verdict-shortcut keys typed while the critique box has focus', async () => {
     render(<LabelingPage />);
     const box = screen.getByLabelText(/critique/i);
     box.focus();
+    // Dispatched on the box itself: in a real browser, a keydown while a
+    // textarea is focused reports that textarea as e.target (fireEvent
+    // dispatching on `window` instead does not reproduce real focus/target
+    // behavior).
     fireEvent.keyDown(box, { key: 'f' });
-    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.change(box, { target: { value: 'typed literally' } });
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    expect(saveMutate.mock.calls[0][0]).toMatchObject({
+      submissionId: 'sub-1',
+      gradeOk: null, // the 'f' pressed while the box had focus had no effect
+      critique: 'typed literally',
+    });
+  });
+
+  it('saves when Enter is pressed from inside the focused critique box', async () => {
+    render(<LabelingPage />);
+    fireEvent.keyDown(window, { key: 'f' });
+    const box = screen.getByLabelText(/critique/i);
+    fireEvent.change(box, { target: { value: 'wrong because X' } });
+    box.focus();
+    fireEvent.keyDown(box, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(1));
+    expect(saveMutate.mock.calls[0][0]).toMatchObject({
+      submissionId: 'sub-1',
+      gradeOk: false,
+      critique: 'wrong because X',
+    });
+  });
+
+  it('does not save on Shift+Enter from inside the critique box (newline instead)', () => {
+    render(<LabelingPage />);
+    const box = screen.getByLabelText(/critique/i);
+    box.focus();
+    fireEvent.keyDown(box, { key: 'Enter', shiftKey: true });
     expect(saveMutate).not.toHaveBeenCalled();
+  });
+
+  it('does not double-save when Enter fires again while the end-of-page refetch is in flight', async () => {
+    let resolveRefetch!: (value: { data: typeof queueData; isError: boolean; error: null }) => void;
+    refetchQueue.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveRefetch = resolve;
+        }),
+    );
+
+    render(<LabelingPage />);
+
+    // Advance to the last item.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText(/Translate: I went/)).toBeInTheDocument());
+
+    // Label the last item on the page — this starts the refetch and holds
+    // it open (the mock above doesn't resolve yet).
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(saveMutate).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(refetchQueue).toHaveBeenCalledTimes(1));
+
+    // A repeated Enter — key-repeat from holding it down, or a habitual
+    // double-press — must not re-save the row that already saved.
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(saveMutate).toHaveBeenCalledTimes(2);
+
+    resolveRefetch({ data: queueData, isError: false, error: null });
+    await waitFor(() => expect(screen.queryByText(/Loading…/)).not.toBeInTheDocument());
+  });
+
+  it('keeps the position and shows a distinct message when the end-of-page refetch fails', async () => {
+    refetchQueue.mockResolvedValueOnce({ data: undefined, isError: true, error: new Error('network') });
+
+    render(<LabelingPage />);
+
+    // Advance to the last item.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await waitFor(() => expect(screen.getByText(/Translate: I went/)).toBeInTheDocument());
+
+    // Label the last item — the save succeeds but the refetch fails.
+    fireEvent.keyDown(window, { key: 'j' });
+    fireEvent.keyDown(window, { key: 'k' });
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(() => expect(refetchQueue).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.getByText(/label saved.*next page failed to load/i)).toBeInTheDocument(),
+    );
+    // The index was NOT reset: the still-displayed item is the one that was
+    // just labelled, not item 0 of an (unfetched) new page.
+    expect(screen.getByText(/Translate: I went/)).toBeInTheDocument();
+    // Only the one save happened — no accidental second save from the
+    // failed-refetch path.
+    expect(saveMutate).toHaveBeenCalledTimes(2);
   });
 
   it('refetches the queue and resets to the top after labeling the last item on the page', async () => {
