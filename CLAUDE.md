@@ -462,6 +462,15 @@ Sentry covers browser, React render, and Next.js server-side / edge errors in `a
 > any `5xx` on **both** stacks, and `4xx >= 200/hour` on **prod only** — dev
 > has no real users, so a dev 4xx spike can only ever mean background
 > scanning (`enableApiClientErrorAlarm` in `infra/bin/app.ts`).
+>
+> **Changed by the public drill surface.** `GET /public/*` (the unauthenticated
+> conjugation drill) has no JWT authorizer, so anonymous traffic now reaches the
+> Lambda and logs normally. `Invocations > 0` therefore no longer implies
+> authenticated usage, and the "real usage has `Count ≈ Invocations` with
+> `4xx ≈ 0`" heuristic above now describes authenticated *plus* public traffic.
+> To separate them, filter the access log group by `path` — `/public/*` is the
+> anonymous population. The prod `4xx >= 200/hour` alarm is unaffected:
+> rejected scans still fail at the authorizer.
 
 ### Clerk JWT setup
 

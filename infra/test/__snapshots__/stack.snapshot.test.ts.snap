@@ -1016,6 +1016,56 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
       },
       "Type": "AWS::Lambda::Permission",
     },
+    "ApiGatewayHttpApiGETpublicproxyED1D74AF": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "GET /public/{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiGETpublicproxyLambdaIntegrationPermissionABF68B17": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/public/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
     "ApiGatewayHttpApiOPTIONSproxy719D1011": {
       "Properties": {
         "ApiId": {
@@ -1060,6 +1110,56 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
                 "Ref": "ApiGatewayHttpApi55B01A81",
               },
               "/*/*/{proxy+}",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "ApiGatewayHttpApiOPTIONSpublicproxyE1033A29": {
+      "Properties": {
+        "ApiId": {
+          "Ref": "ApiGatewayHttpApi55B01A81",
+        },
+        "AuthorizationType": "NONE",
+        "RouteKey": "OPTIONS /public/{proxy+}",
+        "Target": {
+          "Fn::Join": [
+            "",
+            [
+              "integrations/",
+              {
+                "Ref": "ApiGatewayHttpApiGETproxyLambdaIntegrationDD4BBDC4",
+              },
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::ApiGatewayV2::Route",
+    },
+    "ApiGatewayHttpApiOPTIONSpublicproxyLambdaIntegrationPermission909B4E66": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "LambdaHandlerF6372945",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:us-east-1:123456789012:",
+              {
+                "Ref": "ApiGatewayHttpApi55B01A81",
+              },
+              "/*/*/public/{proxy+}",
             ],
           ],
         },

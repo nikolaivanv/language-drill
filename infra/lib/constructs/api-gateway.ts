@@ -156,6 +156,17 @@ export class ApiGatewayConstruct extends Construct {
       integration: lambdaIntegration,
     });
 
+    // Public drill surface — no JWT authorizer. `GET /public/*` serves the
+    // unauthenticated conjugation set (see infra/lambda/src/routes/public.ts);
+    // OPTIONS carries the CORS preflight, which never carries a token. As with
+    // the email routes above, a more-specific path takes precedence over
+    // /{proxy+}, so only /public/* is unauthenticated.
+    this.httpApi.addRoutes({
+      path: "/public/{proxy+}",
+      methods: [HttpMethod.GET, HttpMethod.OPTIONS],
+      integration: lambdaIntegration,
+    });
+
     this.addAccessLogging();
     this.addGatewayAlarms(props.enableClientErrorAlarm, props.alarmTopic);
 

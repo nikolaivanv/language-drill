@@ -176,4 +176,21 @@ describe("LanguageDrillStack-dev", () => {
       AuthorizationType: "NONE",
     });
   });
+
+  // Regression: the public drill surface must have no JWT authorizer. A
+  // `{proxy+}` path under /public keeps future public routes free, and a
+  // more-specific path takes precedence over the catch-all /{proxy+}.
+  it("GET /public/{proxy+} is a public API Gateway route (no JWT authorizer)", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+      RouteKey: "GET /public/{proxy+}",
+      AuthorizationType: "NONE",
+    });
+  });
+
+  it("OPTIONS /public/{proxy+} is a public API Gateway route (no JWT authorizer)", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+      RouteKey: "OPTIONS /public/{proxy+}",
+      AuthorizationType: "NONE",
+    });
+  });
 });
