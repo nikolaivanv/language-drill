@@ -16,6 +16,13 @@ export interface LabelBarProps {
   error: string | null;
   disabled?: boolean;
   critiqueRef: React.RefObject<HTMLTextAreaElement | null>;
+  /**
+   * Exposes the bar's own (sticky) root node so the page can measure its
+   * rendered height and bound the scrollable card above it to match — see
+   * the `cardMaxHeight` effect in page.tsx for why a plain trailing gap
+   * can't do this.
+   */
+  rootRef?: React.Ref<HTMLDivElement>;
 }
 
 function Verdict({ label, value }: { label: string; value: boolean | null }) {
@@ -27,7 +34,7 @@ function Verdict({ label, value }: { label: string; value: boolean | null }) {
   );
 }
 
-export function LabelBar({ draft, onChange, error, disabled, critiqueRef }: LabelBarProps) {
+export function LabelBar({ draft, onChange, error, disabled, critiqueRef, rootRef }: LabelBarProps) {
   const toggleTag = (tag: LabelTag) => {
     const tags = draft.tags.includes(tag) ? draft.tags.filter((t) => t !== tag) : [...draft.tags, tag];
     onChange({ ...draft, tags });
@@ -39,7 +46,7 @@ export function LabelBar({ draft, onChange, error, disabled, critiqueRef }: Labe
     // the shortcut legend a labeler leans on for an hour straight) below the
     // fold. Pinning it keeps the controls and legend in view regardless of
     // how tall the card above happens to be.
-    <div className="sticky bottom-0 z-10 flex flex-col gap-3 rounded-lg border border-rule bg-paper p-4">
+    <div ref={rootRef} className="sticky bottom-0 z-10 flex flex-col gap-3 rounded-lg border border-rule bg-paper p-4">
       <div className="flex flex-wrap items-center gap-4">
         <Verdict label="grade" value={draft.gradeOk} />
         <Verdict label="feedback" value={draft.feedbackOk} />

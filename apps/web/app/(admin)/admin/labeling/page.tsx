@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
   createAuthenticatedFetch,
@@ -50,6 +50,64 @@ export default function LabelingPage() {
 
   const items = queue.data?.items ?? [];
   const item = items[index];
+
+  // Measures the sticky LabelBar's own rendered height so the scrollable
+  // card above it can reserve exactly that much bottom space. The bar's
+  // height itself varies (tag rows wrap, the error line appears/disappears,
+  // the critique textarea can grow) so a hardcoded pixel guess would drift;
+  // ResizeObserver keeps this exact across every submission and window size.
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const [barHeight, setBarHeight] = useState(0);
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) setBarHeight(entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [item]);
+  // Reserving bottom PADDING on the card for the bar's height (tried first)
+  // does not work: the card's own content is already laid out — trailing
+  // space added after it can never pull an earlier line up out from behind
+  // a bar that is pinned to the viewport bottom for the entire scrollable
+  // range whenever total content exceeds one viewport (verified empirically
+  // — the feedback text stayed cut off with that approach). The only way to
+  // guarantee the card's real content never renders under the bar is to cap
+  // the card's own box to the space actually available above the bar and
+  // let IT scroll internally, so the outer column never needs the bar's
+  // sticky clamp to engage at all. `cardWrapperRef.getBoundingClientRect().top`
+  // already reflects every ancestor's padding (including AdminShell's
+  // `<main>` py-[36px], which this page reads but does not touch), so no
+  // other magic number is needed for the top side; ADMIN_MAIN_BOTTOM_PADDING
+  // mirrors that same `<main>` padding for the bottom side, since nothing
+  // below the card measures it for us.
+  //
+  // Keyed on `item` too (not just `barHeight`): the card wrapper and its ref
+  // don't exist in the DOM until the first item has loaded, so the very
+  // first measurement has to be retried once that mount actually happens —
+  // a `barHeight`-only dependency would fire once against a null ref (while
+  // the queue was still loading) and never again.
+  const ADMIN_MAIN_BOTTOM_PADDING = 36;
+  const CARD_TO_BAR_GAP = 16; // matches the flex column's own `gap-4`.
+  const cardWrapperRef = useRef<HTMLDivElement | null>(null);
+  const [cardMaxHeight, setCardMaxHeight] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    function recompute() {
+      const el = cardWrapperRef.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top;
+      const available =
+        window.innerHeight - top - CARD_TO_BAR_GAP - barHeight - ADMIN_MAIN_BOTTOM_PADDING;
+      // Never collapse below a usable minimum — an extreme window size
+      // should degrade to "mostly scrolled" rather than an unusable sliver.
+      setCardMaxHeight(Math.max(available, 160));
+    }
+    recompute();
+    window.addEventListener('resize', recompute);
+    return () => window.removeEventListener('resize', recompute);
+  }, [barHeight, item]);
 
   const move = useCallback(
     (delta: number) => {
@@ -263,13 +321,26 @@ export default function LabelingPage() {
         <p className="text-[13px] text-ink-soft">Nothing left to label in this scope.</p>
       ) : (
         <>
-          <SubmissionCard item={item} />
+          {/* Bounded + independently scrollable: caps the card's own box to
+              whatever space is actually free above the sticky bar (see the
+              cardMaxHeight effect above) so a long stimulus + Claude
+              feedback scrolls WITHIN this box, with its own visible
+              scrollbar, and never renders underneath the bar's opaque
+              panel. */}
+          <div
+            ref={cardWrapperRef}
+            className="min-h-0 overflow-y-auto"
+            style={cardMaxHeight !== null ? { maxHeight: cardMaxHeight } : undefined}
+          >
+            <SubmissionCard item={item} />
+          </div>
           <LabelBar
             draft={draft}
             onChange={setDraft}
             error={error}
             disabled={save.isPending || refetchFailed}
             critiqueRef={critiqueRef}
+            rootRef={barRef}
           />
         </>
       )}
