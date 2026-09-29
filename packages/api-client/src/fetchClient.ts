@@ -42,6 +42,35 @@ export function isAuthExpiredError(error: unknown): boolean {
 }
 
 /**
+ * Builds the Error thrown for a non-ok response, shared by every `ApiFetch`
+ * wrapper regardless of how it authenticates. Parses the JSON error body when
+ * present, falls back to a generic message, and attaches `.status`/`.body` so
+ * callers can distinguish failure kinds (e.g. a documented 400 vs. a 5xx).
+ *
+ * Deliberately contains zero auth logic and is not exported — the public and
+ * authenticated wrappers differ only in how they build the request, never in
+ * how they report a failure.
+ */
+async function buildResponseError(response: Response): Promise<Error> {
+  let errorBody: unknown;
+  try {
+    errorBody = await response.json();
+  } catch {
+    errorBody = null;
+  }
+
+  const message =
+    errorBody && typeof errorBody === 'object' && 'error' in errorBody
+      ? (errorBody as { error: string }).error
+      : `Request failed: ${response.status}`;
+
+  const error = new Error(message);
+  (error as any).status = response.status;
+  (error as any).body = errorBody;
+  return error;
+}
+
+/**
  * Creates a fetch wrapper that attaches the Clerk session token
  * as a Bearer authorization header to all requests.
  *
@@ -73,23 +102,7 @@ export function createAuthenticatedFetch(
     });
 
     if (!response.ok) {
-      // Parse error body if available
-      let errorBody: unknown;
-      try {
-        errorBody = await response.json();
-      } catch {
-        errorBody = null;
-      }
-
-      const message =
-        errorBody && typeof errorBody === 'object' && 'error' in errorBody
-          ? (errorBody as { error: string }).error
-          : `Request failed: ${response.status}`;
-
-      const error = new Error(message);
-      (error as any).status = response.status;
-      (error as any).body = errorBody;
-      throw error;
+      throw await buildResponseError(response);
     }
 
     return response;
@@ -113,17 +126,7 @@ export function createPublicFetch(): ApiFetch {
     });
 
     if (!response.ok) {
-      let errorBody: unknown;
-      try {
-        errorBody = await response.json();
-      } catch {
-        errorBody = null;
-      }
-      const message =
-        errorBody && typeof errorBody === 'object' && 'error' in errorBody
-          ? (errorBody as { error: string }).error
-          : `Request failed: ${response.status}`;
-      throw new Error(message);
+      throw await buildResponseError(response);
     }
 
     return response;

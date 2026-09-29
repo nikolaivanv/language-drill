@@ -31,7 +31,7 @@ export function usePublicConjugationSet({
     queryKey: ['public-conjugation-set', lang, level, count],
     queryFn: async () => {
       const params = new URLSearchParams({ lang, level });
-      if (count) params.set('count', String(count));
+      if (count !== undefined) params.set('count', String(count));
       const response = await fetchFn(`/public/conjugation/set?${params.toString()}`);
       const json: unknown = await response.json();
       return ExerciseSetResponseSchema.parse(json);

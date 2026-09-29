@@ -44,6 +44,18 @@ describe('usePublicConjugationSet', () => {
     expect(result.current.data?.available).toBe(1);
   });
 
+  it('omits the count param when count is not provided', async () => {
+    const fetchFn = vi.fn(async () => new Response(JSON.stringify(payload)));
+
+    const { result } = renderHook(
+      () => usePublicConjugationSet({ lang: 'ES', level: 'A2', fetchFn }),
+      { wrapper: wrapper() },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(fetchFn).toHaveBeenCalledWith('/public/conjugation/set?lang=ES&level=A2');
+  });
+
   it('does not fetch while disabled', () => {
     const fetchFn = vi.fn(async () => new Response(JSON.stringify(payload)));
     renderHook(
