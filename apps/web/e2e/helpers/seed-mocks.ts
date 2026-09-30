@@ -167,6 +167,99 @@ export async function seedConjugation(page: Page): Promise<void> {
  * own query contract (`lang`/`level`, not `language`/`difficulty`), and the
  * page reaches it with no token at all.
  */
+/**
+ * Content for one language, keyed by the `lang` the page actually asked for.
+ *
+ * A single fixture served for every language is worse than no fixture: it makes
+ * a screenshot of the Turkish page show Spanish prompts, which is exactly what a
+ * language-routing bug would look like, so the mock would hide the bug it should
+ * expose.
+ */
+const PUBLIC_FORMS_BY_LANG: Record<string, Record<string, unknown>[]> = {
+  ES: [
+    {
+      id: '11111111-2222-3333-4444-555555555555',
+      type: 'conjugation',
+      language: 'ES',
+      difficulty: 'B1',
+      grammarPointKey: 'es-b1-present-subjunctive',
+      contentJson: {
+        type: 'conjugation',
+        instructions: 'Write the correct form.',
+        lemma: 'salir',
+        lemmaGloss: 'to leave',
+        featureBundle: 'presente de subjuntivo · 1ª persona del plural',
+        features: [{ term: 'presente de subjuntivo', gloss: 'present subjunctive' }],
+        subject: { pronoun: 'nosotros', gloss: 'we' },
+        targetForm: 'salgamos',
+        breakdown: 'salg- (yo-form stem salgo) + -amos (subjunctive -er/-ir ending)',
+        exampleSentences: ['Quiere que salgamos temprano.'],
+      },
+    },
+    {
+      id: '22222222-3333-4444-5555-666666666666',
+      type: 'conjugation',
+      language: 'ES',
+      difficulty: 'B1',
+      grammarPointKey: 'es-b1-conditional',
+      contentJson: {
+        type: 'conjugation',
+        instructions: 'Write the correct form.',
+        lemma: 'poder',
+        lemmaGloss: 'to be able to',
+        featureBundle: 'condicional · 3ª persona del singular',
+        features: [{ term: 'condicional', gloss: 'conditional' }],
+        subject: { pronoun: 'ella', gloss: 'she' },
+        targetForm: 'podría',
+        breakdown: 'podr- (irregular stem) + -ía (conditional ending)',
+        exampleSentences: ['Ella podría venir mañana.'],
+      },
+    },
+  ],
+  TR: [
+    {
+      id: '33333333-4444-5555-6666-777777777777',
+      type: 'conjugation',
+      language: 'TR',
+      difficulty: 'B1',
+      grammarPointKey: 'tr-b1-past-continuous-iyordu',
+      contentJson: {
+        type: 'conjugation',
+        instructions: 'Write the correct form.',
+        lemma: 'gitmek',
+        lemmaGloss: 'to go',
+        featureBundle: 'şimdiki zamanın hikâyesi · 1. tekil',
+        features: [{ term: 'şimdiki zamanın hikâyesi', gloss: 'past continuous' }],
+        subject: { pronoun: 'ben', gloss: 'I' },
+        targetForm: 'gidiyordum',
+        breakdown: 'git- → gid- (voicing) + -iyor (continuous) + -du (past) + -m (1sg)',
+        exampleSentences: ['Dün okula gidiyordum.'],
+      },
+    },
+  ],
+  DE: [
+    {
+      id: '44444444-5555-6666-7777-888888888888',
+      type: 'conjugation',
+      language: 'DE',
+      difficulty: 'B1',
+      grammarPointKey: 'de-b1-praeteritum',
+      contentJson: {
+        type: 'conjugation',
+        instructions: 'Write the correct form.',
+        lemma: 'fahren',
+        lemmaGloss: 'to drive',
+        featureBundle: 'Präteritum · 3rd person singular',
+        features: [{ term: 'Präteritum', gloss: 'simple past' }],
+        subject: { pronoun: 'er', gloss: 'he' },
+        targetForm: 'fuhr',
+        breakdown: 'fahr- → fuhr (strong verb, a → u) + no ending (3sg)',
+        exampleSentences: ['Er fuhr jeden Tag zur Arbeit.'],
+      },
+    },
+  ],
+};
+
 export async function seedPublicForms(page: Page): Promise<void> {
   await page.route('**/public/conjugation/points**', (route) =>
     route.request().method() === 'GET'
@@ -179,65 +272,23 @@ export async function seedPublicForms(page: Page): Promise<void> {
               { key: 'es-b1-futuro-simple', name: 'Simple future', category: 'tenses', order: 2, count: 9 },
               { key: 'es-b1-present-subjunctive', name: 'Present subjunctive', category: 'moods', order: 3, count: 52 },
             ],
-            language: 'ES',
-            difficulty: 'B1',
           }),
         })
       : route.fallback(),
   );
 
-  await page.route('**/public/conjugation/set**', (route) =>
-    route.request().method() === 'GET'
-      ? route.fulfill(
-          validatedReply(ExerciseSetResponseSchema, {
-            exercises: [
-              {
-                id: '11111111-2222-3333-4444-555555555555',
-                type: 'conjugation',
-                language: 'ES',
-                difficulty: 'B1',
-                grammarPointKey: 'es-b1-present-subjunctive',
-                contentJson: {
-                  type: 'conjugation',
-                  instructions: 'Write the correct form.',
-                  lemma: 'salir',
-                  lemmaGloss: 'to leave',
-                  featureBundle: 'presente de subjuntivo · 1ª persona del plural',
-                  features: [
-                    { term: 'presente de subjuntivo', gloss: 'present subjunctive' },
-                  ],
-                  subject: { pronoun: 'nosotros', gloss: 'we' },
-                  targetForm: 'salgamos',
-                  breakdown: 'salg- (yo-form stem salgo) + -amos (subjunctive -er/-ir ending)',
-                  exampleSentences: ['Quiere que salgamos temprano.'],
-                },
-              },
-              {
-                id: '22222222-3333-4444-5555-666666666666',
-                type: 'conjugation',
-                language: 'ES',
-                difficulty: 'B1',
-                grammarPointKey: 'es-b1-conditional',
-                contentJson: {
-                  type: 'conjugation',
-                  instructions: 'Write the correct form.',
-                  lemma: 'poder',
-                  lemmaGloss: 'to be able to',
-                  featureBundle: 'condicional · 3ª persona del singular',
-                  features: [{ term: 'condicional', gloss: 'conditional' }],
-                  subject: { pronoun: 'ella', gloss: 'she' },
-                  targetForm: 'podría',
-                  breakdown: 'podr- (irregular stem) + -ía (conditional ending)',
-                  exampleSentences: ['Ella podría venir mañana.'],
-                },
-              },
-            ],
-            available: 2,
-            difficulty: 'B1',
-          }),
-        )
-      : route.fallback(),
-  );
+  await page.route('**/public/conjugation/set**', (route) => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    const lang = new URL(route.request().url()).searchParams.get('lang') ?? 'ES';
+    const exercises = PUBLIC_FORMS_BY_LANG[lang] ?? PUBLIC_FORMS_BY_LANG.ES!;
+    return route.fulfill(
+      validatedReply(ExerciseSetResponseSchema, {
+        exercises,
+        available: exercises.length,
+        difficulty: 'B1',
+      }),
+    );
+  });
 }
 
 /** Everything: the shell plus every per-screen seed. Used by the harness. */

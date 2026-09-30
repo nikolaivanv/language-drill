@@ -1,0 +1,18 @@
+import type { Metadata } from 'next';
+import { LanguageLanding } from '../../components/public/language-landing';
+
+export const metadata: Metadata = {
+  title: 'German forms practice — verbs, adjective endings, weak nouns',
+  description:
+    'Free German practice: present and Präteritum verb forms, modal verbs, adjective declension and weak nouns. You type the form and it is graded instantly. No signup, nothing saved.',
+  alternates: { canonical: '/german' },
+};
+
+// Three explicit routes rather than one `[language]` segment at the app root:
+// a root-level dynamic segment would capture every otherwise-unmatched path and
+// turn 404s into this page, and it would have to coexist with the Clerk
+// middleware's public-route matcher. Explicit is cheaper to reason about than
+// clever here, and each language gets its own metadata anyway.
+export default function DeLandingPage() {
+  return <LanguageLanding lang="DE" />;
+}
