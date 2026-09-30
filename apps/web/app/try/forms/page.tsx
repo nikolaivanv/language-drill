@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { LANGUAGE_NAMES, Language } from '@language-drill/shared';
+import { PublicHeader } from '../../../components/public/public-header';
 import { PublicConjugationRunner } from './_components/public-conjugation-runner';
 import {
   PUBLIC_LEVELS_BY_LANGUAGE,
@@ -8,9 +10,11 @@ import {
 } from '@language-drill/api-client';
 
 export const metadata: Metadata = {
-  title: 'drill — try a conjugation set',
+  title: 'drill — type the form',
   description:
-    'Ten conjugation prompts in Spanish, German or Turkish, graded instantly. No signup.',
+    'Practise producing Spanish, German and Turkish forms — verb tenses, cases, ' +
+    'adjective endings — typed, not tapped, and graded the moment you press enter. ' +
+    'No signup.',
 };
 
 const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
@@ -68,47 +72,38 @@ export default async function TryConjugationPage({
   const levels = PUBLIC_LEVELS_BY_LANGUAGE[lang];
 
   return (
-    <main className="mx-auto flex max-w-[640px] flex-col gap-s-6 px-s-4 py-s-8">
-      <header className="flex items-baseline justify-between">
-        <Link href="/" className="t-body">
-          drill
-        </Link>
-        <nav aria-label="level" className="flex gap-s-4">
+    <div className="mx-auto flex max-w-[640px] flex-col px-s-4 py-s-6">
+      <PublicHeader
+        activeLanguage={lang}
+        languageHref={(l) => `/try/forms?lang=${l}&level=${levelForLanguage(level, l)}`}
+      />
+
+      <main className="flex flex-col gap-s-6 pt-s-6">
+        <div className="flex flex-col gap-s-2">
+          <h1 className="t-display-m">{LANGUAGE_NAMES[lang as Language]} forms</h1>
+          <p className="t-body text-ink-mute">Type the form the cues ask for.</p>
+          <p className="t-small text-ink-mute">Nothing is saved — no signup.</p>
+        </div>
+
+        <nav aria-label="level" className="flex items-center gap-s-3">
           {levels.map((l) => (
             <Link
               key={l}
-              href={`/try/conjugation?lang=${lang}&level=${l}`}
+              href={`/try/forms?lang=${lang}&level=${l}`}
               aria-current={l === level ? 'page' : undefined}
               className={
-                l === level ? 't-small' : 't-small text-ink-mute underline underline-offset-2'
+                l === level
+                  ? 't-small text-ink'
+                  : 't-small text-ink-mute underline underline-offset-2'
               }
             >
               {l}
             </Link>
           ))}
         </nav>
-      </header>
 
-      <h1 className="t-display-m">try a conjugation set</h1>
-      <p className="t-body text-ink-mute">Type the form the cues ask for.</p>
-      <p className="t-small text-ink-mute">Nothing is saved — no signup.</p>
-
-      <nav aria-label="language" className="flex gap-s-4">
-        {LANGS.map((l) => (
-          <Link
-            key={l}
-            href={`/try/conjugation?lang=${l}&level=${levelForLanguage(level, l)}`}
-            aria-current={l === lang ? 'page' : undefined}
-            className={
-              l === lang ? 't-body' : 't-body text-ink-mute underline underline-offset-2'
-            }
-          >
-            {l}
-          </Link>
-        ))}
-      </nav>
-
-      <PublicConjugationRunner lang={lang} level={level} availableLevels={levels} />
-    </main>
+        <PublicConjugationRunner lang={lang} level={level} availableLevels={levels} />
+      </main>
+    </div>
   );
 }

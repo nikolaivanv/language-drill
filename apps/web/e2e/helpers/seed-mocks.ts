@@ -161,10 +161,72 @@ export async function seedConjugation(page: Page): Promise<void> {
   );
 }
 
+/**
+ * The signed-out drill at `/try/forms`. A separate seed from
+ * `seedConjugation` because the public endpoint is a different route with its
+ * own query contract (`lang`/`level`, not `language`/`difficulty`), and the
+ * page reaches it with no token at all.
+ */
+export async function seedPublicForms(page: Page): Promise<void> {
+  await page.route('**/public/conjugation/set**', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill(
+          validatedReply(ExerciseSetResponseSchema, {
+            exercises: [
+              {
+                id: '11111111-2222-3333-4444-555555555555',
+                type: 'conjugation',
+                language: 'ES',
+                difficulty: 'B1',
+                grammarPointKey: 'es-b1-present-subjunctive',
+                contentJson: {
+                  type: 'conjugation',
+                  instructions: 'Write the correct form.',
+                  lemma: 'salir',
+                  lemmaGloss: 'to leave',
+                  featureBundle: 'presente de subjuntivo · 1ª persona del plural',
+                  features: [
+                    { term: 'presente de subjuntivo', gloss: 'present subjunctive' },
+                  ],
+                  subject: { pronoun: 'nosotros', gloss: 'we' },
+                  targetForm: 'salgamos',
+                  breakdown: 'salg- (yo-form stem salgo) + -amos (subjunctive -er/-ir ending)',
+                  exampleSentences: ['Quiere que salgamos temprano.'],
+                },
+              },
+              {
+                id: '22222222-3333-4444-5555-666666666666',
+                type: 'conjugation',
+                language: 'ES',
+                difficulty: 'B1',
+                grammarPointKey: 'es-b1-conditional',
+                contentJson: {
+                  type: 'conjugation',
+                  instructions: 'Write the correct form.',
+                  lemma: 'poder',
+                  lemmaGloss: 'to be able to',
+                  featureBundle: 'condicional · 3ª persona del singular',
+                  features: [{ term: 'condicional', gloss: 'conditional' }],
+                  subject: { pronoun: 'ella', gloss: 'she' },
+                  targetForm: 'podría',
+                  breakdown: 'podr- (irregular stem) + -ía (conditional ending)',
+                  exampleSentences: ['Ella podría venir mañana.'],
+                },
+              },
+            ],
+            available: 2,
+            difficulty: 'B1',
+          }),
+        )
+      : route.fallback(),
+  );
+}
+
 /** Everything: the shell plus every per-screen seed. Used by the harness. */
 export async function seedAll(page: Page): Promise<void> {
   await seedShell(page);
   await seedRead(page);
   await seedFluency(page);
   await seedConjugation(page);
+  await seedPublicForms(page);
 }
