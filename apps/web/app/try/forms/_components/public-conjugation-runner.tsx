@@ -218,9 +218,6 @@ export function PublicConjugationRunner({
 
   return (
     <div className="flex flex-col gap-s-4">
-      <p className="t-small text-ink-mute">
-        {index + 1} of {items.length}
-      </p>
       <PublicConjugationItem
         content={content}
         language={lang}
@@ -228,6 +225,7 @@ export function PublicConjugationRunner({
         onSubmit={handleSubmit}
         onNext={handleNext}
         isLast={index + 1 >= items.length}
+        position={{ index: index + 1, total: items.length }}
       />
     </div>
   );
