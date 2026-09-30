@@ -79,4 +79,12 @@ describe('ThemeCycleButton', () => {
     await userEvent.click(screen.getByRole('button'));
     expect(setTheme).toHaveBeenCalledWith('system');
   });
+
+  // Every other signup entry point on these pages is at the end — the debrief
+  // after ten items, a landing page's footer. This one exists for the visitor
+  // who abandons at item three.
+  it('offers a signup entry point that does not depend on finishing anything', () => {
+    render(<PublicHeader />);
+    expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('href', '/sign-up');
+  });
 });

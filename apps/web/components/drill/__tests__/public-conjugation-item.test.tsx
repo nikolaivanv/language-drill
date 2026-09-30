@@ -208,4 +208,50 @@ describe('PublicConjugationItem', () => {
     );
     expect(screen.getByText('gitti')).toBeInTheDocument();
   });
+
+  // The rule affordance is the highest-intent conversion moment on the page:
+  // the learner has just produced a form and been told whether it was right.
+  it('offers the rule only after grading, never while the prompt is open', () => {
+    const { rerender } = render(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={null}
+        onSubmit={vi.fn()}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    expect(screen.queryByRole('link', { name: /rule behind this form/i })).not.toBeInTheDocument();
+
+    rerender(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={{ correct: false }}
+        onSubmit={vi.fn()}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    // Leads with what the link DOES, because it goes to signup rather than to
+    // an explanation — naming it "why this form?" would be a bait and switch.
+    const link = screen.getByRole('link', { name: /Sign up to read the rule behind this form/i });
+    expect(link).toHaveAttribute('href', '/sign-up');
+  });
+
+  it('keeps the advance control the primary action after grading', () => {
+    render(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={{ correct: true }}
+        onSubmit={vi.fn()}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    // The rule is a text link; `next` is the button and holds focus.
+    expect(screen.getByRole('button', { name: /next/i })).toHaveFocus();
+  });
 });
