@@ -353,16 +353,27 @@ maps to the same boosted limits.
 > so a failing database is not re-queried at the open-web request rate), not the
 > invite/plan system above.
 >
-> **There is deliberately NO request-rate limit on it.** Route-level throttling
-> was tried and reverted: an `AWS::ApiGatewayV2::Stage` `RouteSettings` entry
-> must reference a route that already exists, and CloudFormation updates the
-> stage before creating the route, so the first deploy failed with
-> `Unable to find Route by key GET /public/{proxy+}` and left the stack in
-> `UPDATE_ROLLBACK_FAILED`. Re-adding it needs an explicit stage→route
-> `DependsOn` and must be proven on the dev stack first — CDK assertions and
-> snapshots validate the synthesized template, not deployability, so neither
-> caught it. Until then the per-instance cache ceiling is the only brake, and it
-> is bounded per Lambda instance, which cold starts multiply.
+> **Rate limiting:** `GET /public/{proxy+}` carries an API Gateway stage route
+> throttle (20 rps / 50 burst), which is the only layer that rejects anonymous
+> traffic before the Lambda is invoked. The bucket is **shared across all
+> anonymous callers, not per-IP** — a scraper above the limit will 429 real
+> visitors too. API Gateway v2 has no per-IP setting and WAF does not attach to
+> HTTP APIs, so per-IP fairness would have to run inside the Lambda, after the
+> invocation is already paid for; that is a deliberate follow-up, not an
+> oversight.
+>
+> The throttle's `RouteSettings` entry **must** keep its explicit stage→route
+> `DependsOn` (`addRouteThrottling` in `infra/lib/constructs/api-gateway.ts`). A
+> `RouteSettings` key must name a route that already exists, and without the
+> dependency CloudFormation updates the stage first: that failed PR #740's prod
+> deploy with `Unable to find Route by key GET /public/{proxy+}`, then failed the
+> rollback on the same resource and left the stack in `UPDATE_ROLLBACK_FAILED`,
+> blocking every later deploy until a manual
+> `continue-update-rollback --resources-to-skip`. `cdk synth`, the snapshot test
+> and `hasResourceProperties` all passed on the broken version — they validate the
+> template, not deployability — so **changes to stage route settings must be
+> proven against the dev stack (`pnpm --filter @language-drill/infra deploy:dev`)
+> before merging.**
 
 ---
 

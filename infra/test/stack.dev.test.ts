@@ -240,4 +240,48 @@ describe("LanguageDrillStack-dev", () => {
     expect(values).toHaveLength(2);
     expect(new Set(values)).toEqual(new Set([""]));
   });
+  // Regression: GET /public/{proxy+} has no JWT authorizer and no per-user rate
+  // limit, so a stage route throttle is the only layer that rejects anonymous
+  // traffic BEFORE the Lambda is invoked. It must bound only the public route —
+  // authenticated routes share the same stage and must keep full capacity.
+  it("GET /public/{proxy+} carries route-level throttling on the default stage", () => {
+    prodTemplate.hasResourceProperties("AWS::ApiGatewayV2::Stage", {
+      RouteSettings: {
+        "GET /public/{proxy+}": {
+          ThrottlingRateLimit: 20,
+          ThrottlingBurstLimit: 50,
+        },
+      },
+    });
+  });
+
+  // THE assertion that guards the outage. A RouteSettings key must name a route
+  // that already exists; without an explicit DependsOn, CloudFormation updates
+  // the stage first and API Gateway rejects it with
+  // "Unable to find Route by key GET /public/{proxy+}" — which failed PR #740's
+  // prod deploy, then failed the rollback, wedging the stack in
+  // UPDATE_ROLLBACK_FAILED. Synth and snapshot both passed on that code, so this
+  // ordering is the only thing a test can pin.
+  it("orders the default stage AFTER the public routes it throttles", () => {
+    const routes = prodTemplate.findResources("AWS::ApiGatewayV2::Route");
+    const publicRouteIds = Object.entries(routes)
+      .filter(([, r]) =>
+        String(
+          (r as { Properties: { RouteKey?: string } }).Properties.RouteKey ?? "",
+        ).includes("/public/{proxy+}"),
+      )
+      .map(([logicalId]) => logicalId);
+
+    // GET + OPTIONS.
+    expect(publicRouteIds).toHaveLength(2);
+
+    const stages = prodTemplate.findResources("AWS::ApiGatewayV2::Stage");
+    const stageEntries = Object.values(stages) as { DependsOn?: string[] }[];
+    expect(stageEntries).toHaveLength(1);
+    const dependsOn = stageEntries[0]!.DependsOn ?? [];
+
+    for (const routeId of publicRouteIds) {
+      expect(dependsOn).toContain(routeId);
+    }
+  });
 });
