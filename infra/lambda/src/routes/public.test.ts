@@ -25,6 +25,12 @@ vi.mock('../db', () => {
       if (state.dbError) return Promise.reject(state.dbError);
       return Promise.resolve(state.rows ?? []);
     };
+    // The points query is the one that terminates on groupBy rather than limit.
+    c.groupBy = (...args: unknown[]) => {
+      captured.groupBy = args;
+      if (state.dbError) return Promise.reject(state.dbError);
+      return Promise.resolve(state.rows ?? []);
+    };
     return c;
   };
   return {
@@ -37,6 +43,19 @@ vi.mock('../db', () => {
   };
 });
 
+// A miniature curriculum. `es-b1-conditional` is ES/B1; `es-a2-imperfect` is
+// ES/A2, so it is a real key that is nonetheless WRONG for the B1 cell — the
+// case that separates "the key exists" from "the key belongs here".
+const CURRICULUM: Record<string, { name: string; language: string; cefrLevel: string }> = {
+  'es-b1-conditional': { name: 'Conditional', language: 'ES', cefrLevel: 'B1' },
+  'es-b1-present-subjunctive': {
+    name: 'Present subjunctive',
+    language: 'ES',
+    cefrLevel: 'B1',
+  },
+  'es-a2-imperfect': { name: 'Imperfect', language: 'ES', cefrLevel: 'A2' },
+};
+
 vi.mock('@language-drill/db', () => ({
   exercises: {
     id: 'id',
@@ -48,6 +67,13 @@ vi.mock('@language-drill/db', () => ({
     contentJson: 'content_json',
     audioS3Key: 'audio_s3_key',
   },
+  getGrammarPoint: (key: string) => CURRICULUM[key],
+  curriculumOrderOf: (key: string) => Object.keys(CURRICULUM).indexOf(key) + 1,
+}));
+
+vi.mock('@language-drill/shared', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@language-drill/shared')>()),
+  resolveTheoryCategory: () => 'tenses',
 }));
 
 // `eq` / `and` are replaced with plain data so the test can inspect the
@@ -120,16 +146,14 @@ describe('GET /public/conjugation/set', () => {
     expect(eqPairs().map(([, value]) => value)).not.toContain('free_writing');
   });
 
-  it('ignores a caller-supplied grammarPoint', async () => {
-    state.rows = [row('a', 'ir', 'iríamos')];
-    const res = await app.request(
-      '/public/conjugation/set?lang=ES&level=B1&grammarPoint=es-b1-subjunctive',
-    );
-    expect(res.status).toBe(200);
-    // No grammar-point predicate at all: an unvalidated caller-supplied key
-    // would make the cache key space unbounded (spec D3).
-    expect(eqPairs().map(([column]) => column)).not.toContain('grammar_point_key');
-  });
+  // NOTE: this file previously asserted that `grammarPoint` was IGNORED — the
+  // original design excluded the parameter so the cache key space could not be
+  // inflated by a caller (spec D3). The parameter now exists, because a drill
+  // you cannot aim is a worse product, and the bound is what actually mattered.
+  // The replacement for that test is the validation group further down: an
+  // unknown key, a key from another level and a key from another language are
+  // all rejected before any query runs, and a mixed request still carries no
+  // grammar-point predicate. Those cases ARE the bound — do not weaken them.
 
   it('projects only the public columns', async () => {
     state.rows = [row('a', 'ir', 'iríamos')];
@@ -268,5 +292,96 @@ describe('GET /public/conjugation/set', () => {
     // No fresh query ran for the second request — served from the negative
     // cache entry instead.
     expect(captured.limit).toBeUndefined();
+  });
+
+  // --- grammarPoint: the parameter the original design refused to have ------
+  //
+  // It is admitted only because it is validated against the curriculum. These
+  // cases are the validation, so weakening them re-opens the unbounded-cache-key
+  // hole the exclusion existed to prevent.
+
+  it('rejects a grammar point the curriculum does not know', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    const res = await app.request(
+      '/public/conjugation/set?lang=ES&level=B1&grammarPoint=../../etc/passwd',
+    );
+    expect(res.status).toBe(400);
+    // Nothing was queried, so no cache key was minted for the invented string.
+    expect(captured.limit).toBeUndefined();
+  });
+
+  it('rejects a real grammar point that belongs to another level', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    const res = await app.request(
+      '/public/conjugation/set?lang=ES&level=B1&grammarPoint=es-a2-imperfect',
+    );
+    expect(res.status).toBe(400);
+    expect(captured.limit).toBeUndefined();
+  });
+
+  it('rejects a real grammar point that belongs to another language', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    const res = await app.request(
+      '/public/conjugation/set?lang=DE&level=B1&grammarPoint=es-b1-conditional',
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('filters on an accepted grammar point', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    const res = await app.request(
+      '/public/conjugation/set?lang=ES&level=B1&grammarPoint=es-b1-conditional',
+    );
+    expect(res.status).toBe(200);
+    expect(eqPairs()).toContainEqual(['grammar_point_key', 'es-b1-conditional']);
+  });
+
+  it('caches a targeted set separately from the mixed one', async () => {
+    state.rows = [row('mixed', 'ir', 'iríamos')];
+    await app.request('/public/conjugation/set?lang=ES&level=B1');
+
+    state.rows = [row('targeted', 'poder', 'podría')];
+    captured.limit = undefined;
+    const res = await app.request(
+      '/public/conjugation/set?lang=ES&level=B1&grammarPoint=es-b1-conditional',
+    );
+
+    // A fresh query ran, and the targeted request did not serve the mixed
+    // set's cached rows.
+    expect(captured.limit).toBe(300);
+    expect(((await res.json()) as AnyJson).exercises[0].id).toBe('targeted');
+  });
+
+  it('omits the grammar-point predicate entirely for a mixed set', async () => {
+    state.rows = [row('a', 'ir', 'iríamos')];
+    await app.request('/public/conjugation/set?lang=ES&level=B1');
+    expect(eqPairs().map(([column]) => column)).not.toContain('grammar_point_key');
+  });
+
+  // --- GET /public/conjugation/points ---------------------------------------
+
+  it('lists only points the curriculum can name, with their counts', async () => {
+    state.rows = [
+      { key: 'es-b1-conditional', total: 12 },
+      { key: 'es-b1-present-subjunctive', total: 9 },
+      // Orphaned: a real pool row whose point was retired from the curriculum.
+      // It cannot be named, so it must not be offered — it stays reachable
+      // through the mixed set.
+      { key: 'es-b1-retired-point', total: 4 },
+      { key: null, total: 3 },
+    ];
+    const res = await app.request('/public/conjugation/points?lang=ES&level=B1');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.points.map((p: AnyJson) => p.key)).toEqual([
+      'es-b1-conditional',
+      'es-b1-present-subjunctive',
+    ]);
+    expect(body.points[0]).toMatchObject({ name: 'Conditional', count: 12, category: 'tenses' });
+  });
+
+  it('rejects an invalid cell on the points endpoint', async () => {
+    expect((await app.request('/public/conjugation/points?lang=EN&level=B1')).status).toBe(400);
+    expect((await app.request('/public/conjugation/points?lang=ES&level=C1')).status).toBe(400);
   });
 });

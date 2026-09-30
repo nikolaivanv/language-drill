@@ -4,7 +4,18 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PublicConjugationRunner } from '../_components/public-conjugation-runner';
 
-const fetchMock = vi.fn();
+// The runner makes TWO requests: the set, and the picker's point list. The mock
+// routes by path so a set assertion is never satisfied by a points call, and so
+// "one fetch per sitting" keeps meaning what it says.
+const setMock = vi.fn();
+const pointsMock = vi.fn(
+  async () => new Response(JSON.stringify({ points: [] })),
+);
+const fetchMock = vi.fn((path: string, init?: RequestInit) =>
+  path.startsWith('/public/conjugation/points')
+    ? pointsMock()
+    : setMock(path, init),
+);
 vi.mock('@language-drill/api-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@language-drill/api-client')>()),
   createPublicFetch: () => fetchMock,
@@ -50,7 +61,7 @@ describe('PublicConjugationRunner', () => {
   });
 
   it('grades a correct answer locally, with no network call per answer', async () => {
-    fetchMock.mockResolvedValue(
+    setMock.mockResolvedValue(
       new Response(
         JSON.stringify({ exercises: [item('a', 'gitmek', 'gitti')], available: 1 }),
       ),
@@ -67,11 +78,11 @@ describe('PublicConjugationRunner', () => {
     expect(screen.getByText('exact')).toBeInTheDocument();
     expect(screen.getByText('gitmek breakdown')).toBeInTheDocument();
     // One fetch for the set, and only one.
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(setMock).toHaveBeenCalledTimes(1);
   });
 
   it('accepts a Turkish answer typed with a non-Turkish keyboard capital', async () => {
-    fetchMock.mockResolvedValue(
+    setMock.mockResolvedValue(
       new Response(
         JSON.stringify({ exercises: [item('a', 'içmek', 'içti')], available: 1 }),
       ),
@@ -86,7 +97,7 @@ describe('PublicConjugationRunner', () => {
   });
 
   it('ends on a debrief that reports the score and says nothing was saved', async () => {
-    fetchMock.mockResolvedValue(
+    setMock.mockResolvedValue(
       new Response(
         JSON.stringify({
           exercises: [item('a', 'gitmek', 'gitti'), item('b', 'gelmek', 'geldi')],
@@ -109,11 +120,11 @@ describe('PublicConjugationRunner', () => {
     expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
     // Still only the one set fetch — advancing through items (and reaching
     // the debrief) must not trigger a refetch on its own.
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(setMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders an honest empty state for a cell with no content', async () => {
-    fetchMock.mockResolvedValue(
+    setMock.mockResolvedValue(
       new Response(JSON.stringify({ exercises: [], available: 0 })),
     );
     renderRunner();
@@ -121,7 +132,7 @@ describe('PublicConjugationRunner', () => {
   });
 
   it('names the levels that do have content, instead of a bare "try another level"', async () => {
-    fetchMock.mockResolvedValue(
+    setMock.mockResolvedValue(
       new Response(JSON.stringify({ exercises: [], available: 0 })),
     );
     renderRunner({ level: 'B2', availableLevels: ['A1', 'A2', 'B1'] });
@@ -131,7 +142,7 @@ describe('PublicConjugationRunner', () => {
   });
 
   it('shows an honest error card on initial load failure, with a working retry', async () => {
-    fetchMock
+    setMock
       .mockRejectedValueOnce(new Error('network down'))
       .mockResolvedValueOnce(
         new Response(
@@ -148,7 +159,7 @@ describe('PublicConjugationRunner', () => {
   });
 
   it('keeps the debrief visible — not the generic error card — when refreshing for another set fails', async () => {
-    fetchMock
+    setMock
       .mockResolvedValueOnce(
         new Response(
           JSON.stringify({ exercises: [item('a', 'gitmek', 'gitti')], available: 1 }),

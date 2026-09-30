@@ -32,6 +32,26 @@ export const ExerciseSetResponseSchema = z.object({
 
 export type ExerciseSetResponse = z.infer<typeof ExerciseSetResponseSchema>;
 
+// Response from GET /public/conjugation/points — the grammar points that have
+// approved content for one language + level, already named, categorised and
+// curriculum-ordered server-side so the browser never loads the curriculum.
+export const PublicPointSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  category: z.string(),
+  order: z.number().int().nullable(),
+  count: z.number().int().nonnegative(),
+});
+
+export const PublicPointsResponseSchema = z.object({
+  points: z.array(PublicPointSchema),
+  language: z.string().optional(),
+  difficulty: z.string().optional(),
+});
+
+export type PublicPoint = z.infer<typeof PublicPointSchema>;
+export type PublicPointsResponse = z.infer<typeof PublicPointsResponseSchema>;
+
 // Error in evaluation
 const EvaluationErrorSchema = z.object({
   type: z.enum(['grammar', 'vocabulary', 'spelling', 'pragmatics']),
