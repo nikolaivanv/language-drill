@@ -19,6 +19,12 @@ import { ThemeCycleButton } from './theme-cycle-button';
  * `languageHref` is supplied by the page because the rail means different
  * things in different places: on a language landing page it navigates to
  * another language's page, on the drill it re-targets the current sitting.
+ *
+ * The sign-up link is here, and quiet, for one reason: every other entry point
+ * on these pages is at the END — the debrief after ten items, the footer of a
+ * landing page. Someone who abandons at item three currently never sees one at
+ * all. It is a text link rather than a button because the page's primary action
+ * is the drill, and a button here would compete with it.
  */
 
 const LANGS: readonly PublicLanguage[] = ['ES', 'DE', 'TR'];
@@ -63,7 +69,7 @@ export function PublicHeader({
         drill
       </Link>
 
-      <div className="flex items-center gap-s-3">
+      <div className="flex flex-wrap items-center justify-end gap-s-3">
         {languageHref && (
           <nav aria-label="language" className="flex items-center gap-[4px] rounded-[10px] bg-paper-2 p-[4px]">
             {LANGS.map((language) => {
@@ -88,6 +94,12 @@ export function PublicHeader({
           </nav>
         )}
         <ThemeCycleButton />
+        <Link
+          href="/sign-up"
+          className="text-[13px] whitespace-nowrap text-ink-mute underline underline-offset-2 hover:text-ink"
+        >
+          sign up
+        </Link>
       </div>
     </header>
   );

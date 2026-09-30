@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import type { ConjugationContent } from '@language-drill/shared';
 import { AccentPicker, Button, Input } from '../ui';
 import { PublicCoordinatePrompt } from './public-coordinate-prompt';
@@ -147,6 +148,21 @@ export function PublicConjugationItem({
                   ))}
                 </ul>
               )}
+
+              {/* The breakdown above explains this ONE form mechanically; the
+                  rule it comes from is written up in full. Every grammar point
+                  the public drill serves has an approved theory page (38 of 38,
+                  checked), so this promises something that actually exists —
+                  and the copy leads with "Sign up" because that is what the
+                  link does. Placed after the teaching, where a learner has just
+                  met the form and is most likely to want the rule, and kept a
+                  text link so it never competes with `next`. */}
+              <Link href="/sign-up" className="link-arrow self-start text-[13px]">
+                Sign up to read the rule behind this form
+                <span className="lk-arr" aria-hidden="true">
+                  →
+                </span>
+              </Link>
             </div>
           </div>
         )}
