@@ -61,21 +61,21 @@ async function mockConjugationSet(page: import('@playwright/test').Page) {
   });
 }
 
-test.describe('public conjugation drill', () => {
+test.describe('public forms drill', () => {
   test('a signed-out visitor is not redirected to sign-in', async ({ page }) => {
     await mockConjugationSet(page);
 
-    await page.goto('/try/conjugation?lang=ES&level=B1');
+    await page.goto('/try/forms?lang=ES&level=B1');
 
     // The single most likely catastrophic regression here is someone removing
     // `/try` from the middleware's public-route matcher (apps/web/proxy.ts) —
     // that would bounce this request to Clerk's hosted sign-in. Assert both
     // that the URL never left the drill and that it isn't Clerk's domain.
-    await expect(page).toHaveURL(/\/try\/conjugation/);
+    await expect(page).toHaveURL(/\/try\/forms/);
     expect(page.url()).not.toContain('sign-in');
     expect(page.url()).not.toContain('clerk');
 
-    await expect(page.getByRole('heading', { name: /try a conjugation set/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /spanish forms/i })).toBeVisible();
     // The prompt: lemma + feature bundle from the mocked set (see
     // `ConjugationPromptCard`; `instructions` isn't rendered anywhere in the
     // UI, so it's not a usable assertion target).
@@ -87,7 +87,7 @@ test.describe('public conjugation drill', () => {
   test('answering an item produces a verdict and an advance control', async ({ page }) => {
     await mockConjugationSet(page);
 
-    await page.goto('/try/conjugation?lang=ES&level=B1');
+    await page.goto('/try/forms?lang=ES&level=B1');
 
     const input = page.getByRole('textbox', { name: /your answer/i });
     await expect(input).toBeVisible();
@@ -115,14 +115,23 @@ test.describe('public conjugation drill', () => {
     // which previously threw a TypeError (`.toUpperCase()` on an array) inside
     // `parseLang`. The fix picks the first entry; this asserts the page still
     // renders the drill rather than an error page.
-    await page.goto('/try/conjugation?lang=ES&lang=DE');
+    await page.goto('/try/forms?lang=ES&lang=DE');
 
-    await expect(page).toHaveURL(/\/try\/conjugation/);
-    await expect(page.getByRole('heading', { name: /try a conjugation set/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/try\/forms/);
+    await expect(page.getByRole('heading', { name: /spanish forms/i })).toBeVisible();
     await expect(page.getByRole('textbox', { name: /your answer/i })).toBeVisible();
 
     // No Next.js error overlay / digest, and no 500-style copy.
     await expect(page.getByText(/application error/i)).toHaveCount(0);
     await expect(page.getByText(/something went wrong/i)).toHaveCount(0);
+  });
+
+  // The surface was renamed from /try/conjugation once it was clear it also
+  // covers noun and adjective declension. Anything already linking to the old
+  // path must keep working.
+  test('the old /try/conjugation path still lands on the drill', async ({ page }) => {
+    await page.goto('/try/conjugation?lang=ES&level=B1');
+    await expect(page).toHaveURL(/\/try\/forms/);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Spanish forms');
   });
 });

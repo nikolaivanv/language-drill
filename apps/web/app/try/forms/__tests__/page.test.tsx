@@ -76,14 +76,17 @@ describe('TryConjugationPage', () => {
         searchParams: Promise.resolve({ lang: 'DE', level: 'A2' }),
       }),
     );
-    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+    // The heading names the language in ENGLISH — the audience is an English
+    // speaker arriving cold from a link, not someone who already reads German.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('German forms');
     const levelNav = screen.getByRole('navigation', { name: 'level' });
     const languageNav = screen.getByRole('navigation', { name: 'language' });
     expect(within(levelNav).getByRole('link', { name: 'A2' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(within(languageNav).getByRole('link', { name: 'DE' })).toHaveAttribute(
+    // The rail shows NATIVE names, matching the marketing pages' vocabulary.
+    expect(within(languageNav).getByRole('link', { name: 'deutsch' })).toHaveAttribute(
       'aria-current',
       'page',
     );
@@ -136,7 +139,7 @@ describe('TryConjugationPage', () => {
       }),
     );
     const languageNav = screen.getByRole('navigation', { name: 'language' });
-    const deLink = within(languageNav).getByRole('link', { name: 'DE' });
-    expect(deLink).toHaveAttribute('href', '/try/conjugation?lang=DE&level=B1');
+    const deLink = within(languageNav).getByRole('link', { name: 'deutsch' });
+    expect(deLink).toHaveAttribute('href', '/try/forms?lang=DE&level=B1');
   });
 });

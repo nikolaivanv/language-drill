@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
   // PostHog reverse proxy (EU Cloud). Keeps ingestion first-party so ad-blockers
   // don't break it and no third-party host is contacted directly.
   skipTrailingSlashRedirect: true,
+  // `/try/conjugation` was the original public drill path. The surface also
+  // covers noun and adjective declension, so it was renamed to `/try/forms`;
+  // the old path is kept permanently redirected in case anything already links
+  // to it.
+  async redirects() {
+    return [
+      { source: '/try/conjugation', destination: '/try/forms', permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       { source: '/ingest/static/:path*', destination: 'https://eu-assets.i.posthog.com/static/:path*' },
