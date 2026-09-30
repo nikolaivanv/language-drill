@@ -60,7 +60,12 @@ describe('PublicConjugationRunner', () => {
     await userEvent.type(await screen.findByRole('textbox'), 'gitti');
     await userEvent.click(screen.getByRole('button', { name: /submit/i }));
 
-    expect(screen.getByText('gitti')).toBeInTheDocument();
+    // Graded, and graded CORRECT. The target form is deliberately not repeated
+    // when the typed answer matched it exactly — it is already in the cell — so
+    // the result is asserted through the verdict and the post-answer teaching
+    // rather than through the form appearing twice.
+    expect(screen.getByText('exact')).toBeInTheDocument();
+    expect(screen.getByText('gitmek breakdown')).toBeInTheDocument();
     // One fetch for the set, and only one.
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

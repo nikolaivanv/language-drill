@@ -160,4 +160,52 @@ describe('PublicConjugationItem', () => {
     expect(input).toHaveFocus();
     elsewhere.remove();
   });
+
+  // The typed form is still visible in the cell, so restating it as "the
+  // answer" when it matched exactly is noise. It stays for a wrong answer, and
+  // for a right one reached via an accepted variant, where the canonical form
+  // is genuinely new information.
+  it('does not repeat the target form when the typed answer matched it exactly', async () => {
+    const onSubmit = vi.fn();
+    const { rerender } = render(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={null}
+        onSubmit={onSubmit}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    await userEvent.type(screen.getByRole('textbox'), 'gitti');
+    await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+
+    rerender(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={{ correct: true }}
+        onSubmit={onSubmit}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    // The breakdown and example still appear; only the duplicated form is gone.
+    expect(screen.getByText('git- + -ti')).toBeInTheDocument();
+    expect(screen.queryByText('gitti')).not.toBeInTheDocument();
+  });
+
+  it('still shows the target form when the answer was wrong', async () => {
+    render(
+      <PublicConjugationItem
+        content={content}
+        language="TR"
+        verdict={{ correct: false }}
+        onSubmit={vi.fn()}
+        onNext={vi.fn()}
+        isLast={false}
+      />,
+    );
+    expect(screen.getByText('gitti')).toBeInTheDocument();
+  });
 });

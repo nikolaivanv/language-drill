@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import type { ConjugationContent } from '@language-drill/shared';
-import { AccentPicker, Button, Card, Input } from '../ui';
-import { ConjugationPromptCard } from './conjugation-prompt';
+import { AccentPicker, Button, Input } from '../ui';
+import { PublicCoordinatePrompt } from './public-coordinate-prompt';
 import { conjugationVerdict } from '../../lib/drill/verdict-tier';
 import { submitOnEnter } from '../../lib/drill/keyboard';
 
@@ -16,6 +16,8 @@ export interface PublicConjugationItemProps {
   onSubmit: (answer: string) => void;
   onNext: () => void;
   isLast: boolean;
+  /** 1-based position in the sitting. Rendered with the prompt it belongs to. */
+  position?: { index: number; total: number };
 }
 
 /**
@@ -23,8 +25,14 @@ export interface PublicConjugationItemProps {
  *
  * Deliberately independent of the dashboard: `FeedbackShell` and `FluencyItem`
  * live under `app/(dashboard)/`, and a public page that imported them would
- * couple the signed-out surface to the authenticated shell's evolution. The
- * shared pieces (prompt card, ui primitives, verdict tiers) are reused.
+ * couple the signed-out surface to the authenticated shell's evolution.
+ *
+ * The prompt, the answer field and the result are ONE bordered surface rather
+ * than a card with a separate input floating beneath it. The task is "produce
+ * the form at these coordinates", so the field is the cell being filled — the
+ * last row of the table, not a detached control. It also fixes the thing the
+ * first screenshot made obvious: as its own full-width box, an empty input was
+ * the loudest element on a page whose job is to be read first.
  */
 export function PublicConjugationItem({
   content,
@@ -33,6 +41,7 @@ export function PublicConjugationItem({
   onSubmit,
   onNext,
   isLast,
+  position,
 }: PublicConjugationItemProps) {
   const [answer, setAnswer] = React.useState('');
   const inputRef = React.useRef<HTMLInputElement | null>(null);
@@ -63,64 +72,94 @@ export function PublicConjugationItem({
   }, [answer, locked, onSubmit]);
 
   const tier = verdict ? conjugationVerdict(verdict.correct ? 1 : 0) : null;
+
+  // The form the learner typed is still on screen in the cell above, so
+  // repeating it as "the answer" when they got it exactly right says nothing.
+  // It IS worth showing when they were wrong, and when they were right via an
+  // accepted variant — there the canonical form is new information.
+  const typed = answer.trim().toLowerCase();
+  const showTarget =
+    !verdict?.correct || typed !== content.targetForm.trim().toLowerCase();
   const alsoAccepted = (content.acceptableForms ?? []).filter(
     (f) => f.trim().toLowerCase() !== content.targetForm.trim().toLowerCase(),
   );
 
   return (
-    <div className="flex flex-col gap-s-4">
-      <ConjugationPromptCard content={content} />
-
-      <div className="flex flex-col gap-s-3">
-        <Input
-          ref={inputRef}
-          aria-label="your answer"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          onKeyDown={submitOnEnter(submit)}
-          readOnly={locked}
-          disabled={locked}
-          className="font-display"
-          style={{ fontSize: 22, paddingTop: 14, paddingBottom: 14 }}
-        />
-        <AccentPicker language={language} targetRef={inputRef} disabled={locked} />
-      </div>
-
-      {!locked && (
-        <div className="flex justify-end">
-          <Button variant="primary" onClick={submit} disabled={!answer.trim()}>
-            submit
-          </Button>
+    <div className="flex flex-col gap-s-3">
+      <div className="overflow-hidden rounded-lg border border-rule bg-card">
+        <div className="px-s-4 pt-s-4 pb-s-3">
+          <PublicCoordinatePrompt content={content} position={position} />
         </div>
-      )}
 
-      {verdict && tier && (
-        <Card padding="lg">
-          <div className="flex flex-col gap-s-4">
-            <p className="t-small text-ink-mute">{tier.label}</p>
-            <p className="t-display-m">{content.targetForm}</p>
-            {alsoAccepted.length > 0 && (
-              <p className="t-small text-ink-mute">
-                also accepted: {alsoAccepted.join(', ')}
-              </p>
-            )}
-            <p className="t-body-l text-ink-mute">{content.breakdown}</p>
-            {content.exampleSentences.length > 0 && (
-              <ul className="flex flex-col gap-s-2">
-                {content.exampleSentences.map((sentence) => (
-                  <li key={sentence} className="t-body">
-                    {sentence}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex justify-end">
-              <Button ref={advanceRef} variant="primary" onClick={onNext}>
-                {isLast ? 'see results' : 'next'}
-              </Button>
+        <div className="flex items-center gap-s-2 border-t border-rule px-s-4 py-s-2">
+          <Input
+            ref={inputRef}
+            aria-label="your answer"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onKeyDown={submitOnEnter(submit)}
+            readOnly={locked}
+            disabled={locked}
+            placeholder={locked ? undefined : 'type the form'}
+            className="font-display !border-0 !bg-transparent !px-0 !shadow-none focus:!shadow-none"
+            style={{ fontSize: 22, paddingTop: 10, paddingBottom: 10 }}
+          />
+          {!locked && (
+            <Button variant="primary" onClick={submit} disabled={!answer.trim()}>
+              submit
+            </Button>
+          )}
+        </div>
+
+        {verdict && tier && (
+          <div
+            className="border-t-2 px-s-4 py-s-3"
+            style={{
+              borderTopColor: verdict.correct ? 'var(--color-ok)' : 'var(--color-accent)',
+            }}
+          >
+            <div className="flex flex-col gap-s-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-s-2">
+                {showTarget && (
+                  <p className="font-display text-[26px] leading-[1.15] font-medium text-ink">
+                    {content.targetForm}
+                  </p>
+                )}
+                <p className="text-[13px] text-ink-mute">{tier.label}</p>
+              </div>
+
+              {alsoAccepted.length > 0 && (
+                <p className="t-small text-ink-mute">
+                  also accepted: {alsoAccepted.join(', ')}
+                </p>
+              )}
+
+              <p className="t-body text-ink-soft">{content.breakdown}</p>
+
+              {content.exampleSentences.length > 0 && (
+                <ul className="m-0 flex list-none flex-col gap-[4px] p-0">
+                  {content.exampleSentences.map((sentence) => (
+                    // Target-language text, so it takes the display serif like
+                    // every other target-language string on the page.
+                    <li key={sentence} className="font-display text-[16px] leading-[1.45] text-ink-2">
+                      {sentence}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-        </Card>
+        )}
+      </div>
+
+      {!locked && <AccentPicker language={language} targetRef={inputRef} disabled={locked} />}
+
+      {verdict && (
+        <div className="flex justify-end">
+          <Button ref={advanceRef} variant="primary" onClick={onNext}>
+            {isLast ? 'see results' : 'next'}
+          </Button>
+        </div>
       )}
     </div>
   );
