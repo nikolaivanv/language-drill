@@ -28,4 +28,18 @@ describe('isPublicRoute', () => {
     expect(isPublicRoute(req('/home'))).toBe(false);
     expect(isPublicRoute(req('/drill'))).toBe(false);
   });
+
+  // The landing pages are the public entry points. A missing entry here does
+  // not fail a build or a type check — it silently redirects the whole feature
+  // to sign-in, which is why this list is asserted at all.
+  it('treats every language landing page as public', () => {
+    expect(isPublicRoute(req('/spanish'))).toBe(true);
+    expect(isPublicRoute(req('/german'))).toBe(true);
+    expect(isPublicRoute(req('/turkish'))).toBe(true);
+  });
+
+  it('does not make sibling paths public by accident', () => {
+    expect(isPublicRoute(req('/spanishx'))).toBe(false);
+    expect(isPublicRoute(req('/germany'))).toBe(false);
+  });
 });
