@@ -4,6 +4,9 @@ export {
   type ExerciseResponse,
   ExerciseSetResponseSchema,
   type ExerciseSetResponse,
+  PublicPointsResponseSchema,
+  type PublicPointsResponse,
+  type PublicPoint,
   EvaluationResultSchema,
   type EvaluationResultResponse,
   DictationResultSchema,
@@ -276,6 +279,8 @@ export {
 export { useMe, type UseMeParams } from './hooks/useMe';
 export {
   usePublicConjugationSet,
+  usePublicConjugationPoints,
+  type UsePublicConjugationPointsParams,
   type UsePublicConjugationSetParams,
   type PublicLanguage,
   type PublicLevel,

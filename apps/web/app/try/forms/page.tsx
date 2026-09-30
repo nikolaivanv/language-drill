@@ -66,10 +66,15 @@ export default async function TryConjugationPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { lang: rawLang, level: rawLevel } = await searchParams;
+  const { lang: rawLang, level: rawLevel, point: rawPoint } = await searchParams;
   const lang = parseLang(rawLang);
   const level = levelForLanguage(first(rawLevel) ?? '', lang);
   const levels = PUBLIC_LEVELS_BY_LANGUAGE[lang];
+  // Passed through unvalidated on purpose: the server checks it against the
+  // curriculum and 400s an unknown key, so validating here as well would mean
+  // shipping the curriculum to the browser to duplicate a check that already
+  // exists where it can be trusted.
+  const grammarPoint = first(rawPoint);
 
   return (
     <div className="mx-auto flex max-w-[640px] flex-col px-s-4 py-s-6">
@@ -102,7 +107,12 @@ export default async function TryConjugationPage({
           ))}
         </nav>
 
-        <PublicConjugationRunner lang={lang} level={level} availableLevels={levels} />
+        <PublicConjugationRunner
+          lang={lang}
+          level={level}
+          grammarPoint={grammarPoint}
+          availableLevels={levels}
+        />
       </main>
     </div>
   );

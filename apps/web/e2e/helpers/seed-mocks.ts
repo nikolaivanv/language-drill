@@ -168,6 +168,24 @@ export async function seedConjugation(page: Page): Promise<void> {
  * page reaches it with no token at all.
  */
 export async function seedPublicForms(page: Page): Promise<void> {
+  await page.route('**/public/conjugation/points**', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            points: [
+              { key: 'es-b1-conditional', name: 'Conditional', category: 'tenses', order: 1, count: 12 },
+              { key: 'es-b1-futuro-simple', name: 'Simple future', category: 'tenses', order: 2, count: 9 },
+              { key: 'es-b1-present-subjunctive', name: 'Present subjunctive', category: 'moods', order: 3, count: 52 },
+            ],
+            language: 'ES',
+            difficulty: 'B1',
+          }),
+        })
+      : route.fallback(),
+  );
+
   await page.route('**/public/conjugation/set**', (route) =>
     route.request().method() === 'GET'
       ? route.fulfill(

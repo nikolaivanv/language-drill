@@ -11,10 +11,12 @@ import {
 import {
   createPublicFetch,
   usePublicConjugationSet,
+  usePublicConjugationPoints,
   type PublicLanguage,
   type PublicLevel,
 } from '@language-drill/api-client';
 import { Button, Card } from '../../../../components/ui';
+import { PointPicker } from './point-picker';
 import {
   PublicConjugationItem,
   type PublicVerdict,
@@ -23,6 +25,8 @@ import {
 export interface PublicConjugationRunnerProps {
   lang: PublicLanguage;
   level: PublicLevel;
+  /** Narrows the sitting to one grammar point; undefined = the mixed set. */
+  grammarPoint?: string;
   /**
    * The levels this language actually has approved content for (see
    * `PUBLIC_LEVELS_BY_LANGUAGE`), so the empty state can point the visitor
@@ -60,14 +64,17 @@ type ConjugationItem = { id: string; content: ConjugationContent };
 export function PublicConjugationRunner({
   lang,
   level,
+  grammarPoint,
   availableLevels,
 }: PublicConjugationRunnerProps) {
   const fetchFn = React.useMemo(() => createPublicFetch(), []);
   const { data, isLoading, isError, isFetching, refetch } = usePublicConjugationSet({
     lang,
     level,
+    grammarPoint,
     fetchFn,
   });
+  const pointsQuery = usePublicConjugationPoints({ lang, level, fetchFn });
 
   const [index, setIndex] = React.useState(0);
   const [verdict, setVerdict] = React.useState<PublicVerdict>(null);
@@ -130,17 +137,35 @@ export function PublicConjugationRunner({
     );
   }
 
+  const picker = (
+    <PointPicker
+      lang={lang}
+      level={level}
+      points={pointsQuery.data?.points ?? []}
+      activePoint={grammarPoint}
+      isLoading={pointsQuery.isLoading}
+    />
+  );
+
   if (items.length === 0) {
     const otherLevels = availableLevels.filter((l) => l !== level);
     return (
-      <Card padding="lg">
-        <p className="t-body">
-          There&apos;s nothing to practise here yet for {lang} {level}.{' '}
-          {otherLevels.length > 0
-            ? `${lang} has content at ${otherLevels.join(', ')}.`
-            : `Try a different language.`}
-        </p>
-      </Card>
+      <div className="flex flex-col gap-s-4">
+        {picker}
+        <Card padding="lg">
+          <p className="t-body">
+            {grammarPoint
+              ? // A targeted link can outlive its content — the picker only
+                // offers points that have rows, but a shared URL does not.
+                'There is nothing to practise for that topic right now. Choose another, or drill everything at this level.'
+              : `There's nothing to practise here yet for ${lang} ${level}. ${
+                  otherLevels.length > 0
+                    ? `${lang} has content at ${otherLevels.join(', ')}.`
+                    : 'Try a different language.'
+                }`}
+          </p>
+        </Card>
+      </div>
     );
   }
 
@@ -218,6 +243,7 @@ export function PublicConjugationRunner({
 
   return (
     <div className="flex flex-col gap-s-4">
+      {picker}
       <PublicConjugationItem
         content={content}
         language={lang}
