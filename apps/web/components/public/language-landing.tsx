@@ -8,6 +8,9 @@ import {
 } from '@language-drill/api-client';
 import { PublicHeader } from './public-header';
 import { LandingTryBlock } from './landing-try-block';
+import { LANDING_PATH } from '../../lib/public-paths';
+
+export { LANDING_PATH };
 
 /**
  * A language's entry point, and the page meant to be found in search.
@@ -21,12 +24,6 @@ import { LandingTryBlock } from './landing-try-block';
  * because the claim being made is that you produce forms instead of
  * recognising them, and a visitor can test that claim in one keystroke.
  */
-
-export const LANDING_PATH: Record<PublicLanguage, string> = {
-  ES: '/spanish',
-  DE: '/german',
-  TR: '/turkish',
-};
 
 /** The level the hero draws from: B1 has content in all three languages. */
 const HERO_LEVEL: PublicLevel = 'B1';
