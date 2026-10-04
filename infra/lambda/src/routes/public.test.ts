@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Hono } from 'hono';
+import {
+  fetchApprovedTopicList,
+  fetchApprovedTopicContent,
+} from '../lib/theory-queries';
+import { fetchConjugationDrillKeys, fetchQuickCheck } from '../lib/theory-practice';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const state: Record<string, any> = {};
@@ -89,6 +94,25 @@ vi.mock('drizzle-orm', async (importOriginal) => {
   };
 });
 
+// The theory routes are composed entirely from `theory-queries.ts` /
+// `theory-practice.ts`, both of which have their own SQL-level tests (Tasks 1
+// and 2). Mocking them here means these route tests assert routing,
+// validation and composition — never SQL — and never touch the `../db` chain
+// mock above, which stays scoped to the conjugation routes.
+vi.mock('../lib/theory-queries', () => ({
+  APPROVED_THEORY_STATUSES: ['auto-approved', 'manual-approved'] as const,
+  THEORY_TOPIC_ID_REGEX: /^[a-z0-9-]+$/,
+  fetchApprovedTopicList: vi.fn(),
+  fetchApprovedTopicContent: vi.fn(),
+  filterApprovedRelated: vi.fn(async (_lang: string, related: unknown) => related),
+}));
+
+vi.mock('../lib/theory-practice', () => ({
+  QUICK_CHECK_SIZE: 3,
+  fetchConjugationDrillKeys: vi.fn(async () => new Set<string>()),
+  fetchQuickCheck: vi.fn(async () => []),
+}));
+
 /** The `[column, value]` pairs the route passed to `eq()`. */
 function eqPairs(): Array<[string, string]> {
   const preds = (captured.where[0] as { __and: Array<{ __eq?: [string, string] }> }).__and;
@@ -111,21 +135,23 @@ function row(id: string, lemma: string, targetForm: string) {
   };
 }
 
+// Module-scope so the theory describes below share the same app + reset
+// routine as the conjugation describe, rather than each inventing its own.
+let app: Hono;
+
+beforeEach(async () => {
+  vi.clearAllMocks();
+  for (const k of Object.keys(state)) delete state[k];
+  for (const k of Object.keys(captured)) delete captured[k];
+  const mod = await import('./public');
+  // Each test gets a clean cache — the module-scope cache would otherwise
+  // leak rows between cases.
+  mod.__clearPoolCacheForTests();
+  app = new Hono();
+  app.route('/', mod.default);
+});
+
 describe('GET /public/conjugation/set', () => {
-  let app: Hono;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    for (const k of Object.keys(state)) delete state[k];
-    for (const k of Object.keys(captured)) delete captured[k];
-    const mod = await import('./public');
-    // Each test gets a clean cache — the module-scope cache would otherwise
-    // leak rows between cases.
-    mod.__clearPoolCacheForTests();
-    app = new Hono();
-    app.route('/', mod.default);
-  });
-
   it('serves a set with NO Authorization header', async () => {
     state.rows = [row('a', 'ir', 'iríamos')];
     const res = await app.request('/public/conjugation/set?lang=ES&level=B1');
@@ -383,5 +409,123 @@ describe('GET /public/conjugation/set', () => {
   it('rejects an invalid cell on the points endpoint', async () => {
     expect((await app.request('/public/conjugation/points?lang=EN&level=B1')).status).toBe(400);
     expect((await app.request('/public/conjugation/points?lang=ES&level=C1')).status).toBe(400);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /public/theory/:lang and GET /public/theory/:lang/:topicId
+// ---------------------------------------------------------------------------
+
+const TOPIC_JSON = {
+  id: 'es-a2-ser-vs-estar',
+  title: 'Ser vs estar',
+  subtitle: 'Two verbs for one English verb.',
+  cefr: 'A2',
+  sections: [
+    { id: 'short', title: 'The short version', body: [{ kind: 'paragraph', text: [{ kind: 'text', text: 'Ser is essence.' }] }] },
+  ],
+};
+
+describe('GET /public/theory/:lang', () => {
+  it('rejects a language outside ES/DE/TR', async () => {
+    const res = await app.request('/public/theory/FR');
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as AnyJson).code).toBe('VALIDATION_ERROR');
+  });
+
+  it('marks only the topics whose point has a public conjugation pool', async () => {
+    vi.mocked(fetchApprovedTopicList).mockResolvedValue({
+      total: 2,
+      rows: [
+        { id: 'a2-preterite', title: 'Preterite', cefr: 'A2', subtitle: 'Finished events.', category: 'tenses', order: 3, grammarPointKey: 'es-a2-preterite' },
+        { id: 'a1-noun-gender', title: 'Noun gender', cefr: 'A1', subtitle: 'el and la.', category: 'morphology', order: 1, grammarPointKey: 'es-a1-noun-gender' },
+      ],
+    });
+    vi.mocked(fetchConjugationDrillKeys).mockResolvedValue(new Set(['es-a2-preterite']));
+
+    const res = await app.request('/public/theory/ES');
+    expect(res.status).toBe(200);
+    const { topics } = (await res.json()) as AnyJson;
+    expect(topics).toEqual([
+      { id: 'a2-preterite', title: 'Preterite', cefr: 'A2', subtitle: 'Finished events.', category: 'tenses', order: 3, hasConjugationDrill: true },
+      { id: 'a1-noun-gender', title: 'Noun gender', cefr: 'A1', subtitle: 'el and la.', category: 'morphology', order: 1, hasConjugationDrill: false },
+    ]);
+  });
+
+  it('never leaks grammarPointKey to the open web', async () => {
+    vi.mocked(fetchApprovedTopicList).mockResolvedValue({
+      total: 1,
+      rows: [{ id: 'a2-preterite', title: 'Preterite', cefr: 'A2', subtitle: 'x', category: 'tenses', order: 3, grammarPointKey: 'es-a2-preterite' }],
+    });
+    const res = await app.request('/public/theory/ES');
+    expect(await res.text()).not.toContain('grammarPointKey');
+  });
+
+  it('drops a subtitle-less row instead of publishing a blank description', async () => {
+    vi.mocked(fetchApprovedTopicList).mockResolvedValue({
+      total: 2,
+      rows: [
+        { id: 'ok', title: 'Fine', cefr: 'A2', subtitle: 'Has one.', category: 'tenses', order: 1, grammarPointKey: 'es-a2-x' },
+        { id: 'broken', title: 'Corrupt', cefr: 'A2', subtitle: null, category: 'tenses', order: 2, grammarPointKey: 'es-a2-y' },
+      ],
+    });
+    const res = await app.request('/public/theory/ES');
+    const { topics } = (await res.json()) as AnyJson;
+    expect(topics.map((t: { id: string }) => t.id)).toEqual(['ok']);
+  });
+
+  it('500s when the list query throws', async () => {
+    vi.mocked(fetchApprovedTopicList).mockRejectedValue(new Error('connection reset'));
+    const res = await app.request('/public/theory/ES');
+    expect(res.status).toBe(500);
+    expect(((await res.json()) as AnyJson).code).toBe('INTERNAL_ERROR');
+  });
+});
+
+describe('GET /public/theory/:lang/:topicId', () => {
+  it('rejects a topic id outside the slug shape', async () => {
+    const res = await app.request('/public/theory/ES/Ser_Vs_Estar');
+    expect(res.status).toBe(400);
+  });
+
+  it('404s an unknown topic', async () => {
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue(null);
+    const res = await app.request('/public/theory/ES/a2-nope');
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as AnyJson).code).toBe('TOPIC_NOT_FOUND');
+  });
+
+  it('returns the article plus related, drill flag and quick check', async () => {
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON });
+    vi.mocked(fetchConjugationDrillKeys).mockResolvedValue(new Set(['es-a2-ser-vs-estar']));
+    vi.mocked(fetchQuickCheck).mockResolvedValue([
+      { sentence: 'Ayer ___ aquí.', instructions: 'Type it.', correctAnswer: 'estuve', acceptableAnswers: [] },
+      { sentence: 'Ella ___ médica.', instructions: 'Type it.', correctAnswer: 'es', acceptableAnswers: [] },
+      { sentence: 'Hoy ___ cansado.', instructions: 'Type it.', correctAnswer: 'estoy', acceptableAnswers: [] },
+    ]);
+
+    const res = await app.request('/public/theory/ES/a2-ser-vs-estar');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body.title).toBe('Ser vs estar');
+    expect(body.sections).toHaveLength(1);
+    expect(body.hasConjugationDrill).toBe(true);
+    expect(body.quickCheck).toHaveLength(3);
+    expect(body.related).toEqual({ buildsOn: [], leadsTo: [], siblings: [] });
+  });
+
+  it('500s rather than 404s when content_json cannot be parsed', async () => {
+    // A 404 here would teach a crawler the page is gone; a parse failure is a
+    // data bug on our side and must read as one.
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: { title: 'no sections' } });
+    const res = await app.request('/public/theory/ES/a2-ser-vs-estar');
+    expect(res.status).toBe(500);
+    expect(((await res.json()) as AnyJson).code).toBe('INTERNAL_ERROR');
+  });
+
+  it('asks for the quick check with the full grammar-point key', async () => {
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON });
+    await app.request('/public/theory/ES/a2-ser-vs-estar');
+    expect(vi.mocked(fetchQuickCheck)).toHaveBeenCalledWith('ES', 'es-a2-ser-vs-estar');
   });
 });
