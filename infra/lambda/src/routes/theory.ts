@@ -1,14 +1,13 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { and, count, eq, inArray, sql } from 'drizzle-orm';
-import { theoryTopics, curriculumOrderOf } from '@language-drill/db';
-import { parseTheoryTopicJson, resolveTheoryCategory } from '@language-drill/shared';
-import { db } from '../db';
+import { parseTheoryTopicJson } from '@language-drill/shared';
+import { deriveRelatedGrammarPoints } from '../lib/theory-related';
 import {
-  deriveRelatedGrammarPoints,
-  type RelatedTheoryTopics,
-  type RelatedTopicRef,
-} from '../lib/theory-related';
+  THEORY_TOPIC_ID_REGEX,
+  fetchApprovedTopicList,
+  fetchApprovedTopicContent,
+  filterApprovedRelated,
+} from '../lib/theory-queries';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 
@@ -17,8 +16,6 @@ import type { Bindings, Variables } from '../middleware/auth';
 // ---------------------------------------------------------------------------
 
 const LANGUAGE_SCHEMA = z.enum(['ES', 'DE', 'TR']);
-const TOPIC_ID_REGEX = /^[a-z0-9-]+$/;
-const APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
 
 // ---------------------------------------------------------------------------
 // Router
@@ -27,45 +24,6 @@ const APPROVED_STATUSES = ['auto-approved', 'manual-approved'] as const;
 const theory = new Hono<{ Bindings: Bindings; Variables: Variables }>();
 
 theory.use('/theory/*', authMiddleware);
-
-// ---------------------------------------------------------------------------
-// Related-topics enrichment: keep only candidates that actually have an
-// approved theory page, so the client never renders a dead link. Related
-// links are an enhancement — on any failure the topic still renders, with
-// empty groups.
-// ---------------------------------------------------------------------------
-async function filterApprovedRelated(
-  lang: z.infer<typeof LANGUAGE_SCHEMA>,
-  related: RelatedTheoryTopics,
-): Promise<RelatedTheoryTopics> {
-  const slugs = [...related.buildsOn, ...related.leadsTo, ...related.siblings].map(
-    (r) => r.topicId,
-  );
-  if (slugs.length === 0) return related;
-  try {
-    const rows = await db
-      .select({ topicId: theoryTopics.topicId })
-      .from(theoryTopics)
-      .where(
-        and(
-          eq(theoryTopics.language, lang),
-          inArray(theoryTopics.topicId, slugs),
-          inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES]),
-        ),
-      );
-    const approved = new Set(rows.map((r) => r.topicId));
-    const keep = (refs: RelatedTopicRef[]) => refs.filter((r) => approved.has(r.topicId));
-    return {
-      buildsOn: keep(related.buildsOn),
-      leadsTo: keep(related.leadsTo),
-      siblings: keep(related.siblings),
-    };
-  } catch (dbError) {
-    const message = dbError instanceof Error ? dbError.message : String(dbError);
-    console.error(`theory: related-topics approved-filter failed for ${lang}: ${message}`);
-    return { buildsOn: [], leadsTo: [], siblings: [] };
-  }
-}
 
 // ---------------------------------------------------------------------------
 // GET /theory/:lang/:topicId — return one approved theory topic as raw
@@ -79,29 +37,17 @@ theory.get('/theory/:lang/:topicId', async (c) => {
   const lang = langParse.data;
 
   const topicId = c.req.param('topicId');
-  if (!TOPIC_ID_REGEX.test(topicId)) {
+  if (!THEORY_TOPIC_ID_REGEX.test(topicId)) {
     return c.json({ error: 'Invalid topicId', code: 'VALIDATION_ERROR' }, 400);
   }
 
   try {
-    const rows = await db
-      .select({ id: theoryTopics.id, contentJson: theoryTopics.contentJson })
-      .from(theoryTopics)
-      .where(
-        and(
-          eq(theoryTopics.language, lang),
-          eq(theoryTopics.topicId, topicId),
-          inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES]),
-        ),
-      )
-      .orderBy(sql`${theoryTopics.generatedAt} DESC NULLS LAST`)
-      .limit(1);
+    const row = await fetchApprovedTopicContent(lang, topicId);
 
-    if (rows.length === 0) {
+    if (!row) {
       return c.json({ error: 'Topic not found', code: 'TOPIC_NOT_FOUND' }, 404);
     }
 
-    const row = rows[0];
     try {
       const parsed = parseTheoryTopicJson(row.contentJson);
       // Additive enrichment: `related` is derived per-request from curriculum
@@ -144,36 +90,7 @@ theory.get('/theory/:lang', async (c) => {
   const lang = langParse.data;
 
   try {
-    const [rows, totalRows] = await Promise.all([
-      db
-        .select({
-          id: theoryTopics.topicId,
-          title: sql<string>`${theoryTopics.contentJson}->>'title'`,
-          cefr: sql<string>`${theoryTopics.contentJson}->>'cefr'`,
-          grammarPointKey: theoryTopics.grammarPointKey,
-        })
-        .from(theoryTopics)
-        .where(
-          and(
-            eq(theoryTopics.language, lang),
-            inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES]),
-            sql`${theoryTopics.contentJson}->>'title' IS NOT NULL`,
-            sql`${theoryTopics.contentJson}->>'cefr' IS NOT NULL`,
-          ),
-        )
-        .orderBy(sql`${theoryTopics.contentJson}->>'title' ASC`),
-      db
-        .select({ total: count() })
-        .from(theoryTopics)
-        .where(
-          and(
-            eq(theoryTopics.language, lang),
-            inArray(theoryTopics.reviewStatus, [...APPROVED_STATUSES]),
-          ),
-        ),
-    ]);
-
-    const total = totalRows[0]?.total ?? 0;
+    const { rows, total } = await fetchApprovedTopicList(lang);
     if (total > rows.length) {
       console.warn(
         `theory: dropped corrupt rows from list response`,
@@ -181,16 +98,10 @@ theory.get('/theory/:lang', async (c) => {
       );
     }
 
-    // Enrich each surviving row with its theory category and curriculum-order
-    // position, both resolved from the topic's grammar-point key. Done here
-    // (server-side) so the client groups/sorts without shipping curriculum
-    // data to the browser. `grammarPointKey` itself is not part of the wire
-    // contract — drop it after enrichment.
-    const topics = rows.map(({ grammarPointKey, ...rest }) => ({
-      ...rest,
-      category: resolveTheoryCategory(grammarPointKey),
-      order: curriculumOrderOf(grammarPointKey ?? '') ?? null,
-    }));
+    // `subtitle` and `grammarPointKey` are internal to the shared query
+    // (category/order enrichment, plus a future public-route need) — neither
+    // is part of this authenticated endpoint's wire contract, so strip both.
+    const topics = rows.map(({ subtitle: _subtitle, grammarPointKey: _key, ...rest }) => rest);
 
     return c.json({ topics });
   } catch (dbError) {

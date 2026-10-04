@@ -6,7 +6,7 @@ import {
   getGrammarPoint,
   curriculumOrderOf,
 } from '@language-drill/db';
-import { resolveTheoryCategory } from '@language-drill/shared';
+import { resolveTheoryCategory, parseTheoryTopicJson } from '@language-drill/shared';
 import { db } from '../db';
 import { approvedStatusFilter, audioReadyFilter } from '../lib/exercise-filters';
 import {
@@ -17,6 +17,14 @@ import {
   PUBLIC_CONJUGATION_SET_MAX,
 } from '../lib/exercise-set';
 import { createPoolCache, shuffled } from '../lib/public-pool-cache';
+import { deriveRelatedGrammarPoints } from '../lib/theory-related';
+import {
+  THEORY_TOPIC_ID_REGEX,
+  fetchApprovedTopicList,
+  fetchApprovedTopicContent,
+  filterApprovedRelated,
+} from '../lib/theory-queries';
+import { fetchConjugationDrillKeys, fetchQuickCheck } from '../lib/theory-practice';
 
 // ---------------------------------------------------------------------------
 // UNAUTHENTICATED ROUTER.
@@ -27,7 +35,7 @@ import { createPoolCache, shuffled } from '../lib/public-pool-cache';
 // here is deliberate, and the corresponding API Gateway route is registered
 // without a JWT authorizer in `infra/lib/constructs/api-gateway.ts`.
 //
-// Two constraints keep that safe and MUST NOT be relaxed:
+// Three constraints keep that safe and MUST NOT be relaxed:
 //   1. `type` is a server constant, never a request parameter. `contentJson`
 //      is returned wholesale (answers included), so an overridable type would
 //      expose the whole ~30k-row pool.
@@ -38,6 +46,13 @@ import { createPoolCache, shuffled } from '../lib/public-pool-cache';
 //      the parameter entirely for this reason; it is admitted here only with
 //      that validation, because a drill you cannot aim is a worse product and
 //      the bound is what actually mattered.
+//   3. The theory routes added below serve `theory_topics.content_json`
+//      wholesale too, but `parseTheoryTopicJson` doubles as the wire
+//      projection for that content — it decodes only known keys, so it
+//      cannot forward anything the writer pipeline stashed on the row. The
+//      only answers this router ships anywhere are the three quick-check
+//      items, and those come from an explicit field pick in
+//      `theory-practice.ts`, never a row pass-through.
 // ---------------------------------------------------------------------------
 
 const publicRoutes = new Hono();
@@ -300,6 +315,117 @@ publicRoutes.get('/public/conjugation/points', async (c) => {
 
   c.header('Cache-Control', 'no-store');
   return c.json({ points, language: lang, difficulty: level });
+});
+
+// ---------------------------------------------------------------------------
+// PUBLIC THEORY. Unlike the conjugation routes above there is no answer to
+// leak: a theory topic IS the published content, and `parseTheoryTopicJson`
+// doubles as the wire projection because it picks only known keys. The quick
+// check is the one part that ships answers, and it is an explicit field pick in
+// `theory-practice.ts`, not a row pass-through.
+// ---------------------------------------------------------------------------
+
+publicRoutes.get('/public/theory/:lang', async (c) => {
+  const langParse = LANG.safeParse(c.req.param('lang'));
+  if (!langParse.success) {
+    return c.json({ error: 'Invalid language', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const lang = langParse.data;
+
+  try {
+    const [{ rows, total }, drillKeys] = await Promise.all([
+      fetchApprovedTopicList(lang),
+      fetchConjugationDrillKeys(lang),
+    ]);
+
+    const topics = rows.flatMap(({ grammarPointKey, subtitle, ...rest }) => {
+      // The index renders the subtitle as each row's description. A row without
+      // one is a data defect, and a blank description is worse than a missing
+      // row — so drop it and let the dropped count say so.
+      if (!subtitle) return [];
+      return [
+        {
+          ...rest,
+          subtitle,
+          hasConjugationDrill: grammarPointKey ? drillKeys.has(grammarPointKey) : false,
+        },
+      ];
+    });
+
+    if (total > topics.length) {
+      console.warn('public theory: dropped unusable rows from list response', {
+        language: lang,
+        dropped: total - topics.length,
+      });
+    }
+
+    return c.json({ topics });
+  } catch (dbError) {
+    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    console.error(`public theory: list query failed for ${lang}: ${message}`);
+    return c.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, 500);
+  }
+});
+
+publicRoutes.get('/public/theory/:lang/:topicId', async (c) => {
+  const langParse = LANG.safeParse(c.req.param('lang'));
+  if (!langParse.success) {
+    return c.json({ error: 'Invalid language', code: 'VALIDATION_ERROR' }, 400);
+  }
+  const lang = langParse.data;
+
+  const topicId = c.req.param('topicId');
+  if (!THEORY_TOPIC_ID_REGEX.test(topicId)) {
+    return c.json({ error: 'Invalid topicId', code: 'VALIDATION_ERROR' }, 400);
+  }
+
+  let row: { id: string; contentJson: unknown; grammarPointKey: string | null } | null;
+  try {
+    row = await fetchApprovedTopicContent(lang, topicId);
+  } catch (dbError) {
+    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    console.error(`public theory: query failed for (${lang}, ${topicId}): ${message}`);
+    return c.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, 500);
+  }
+
+  if (!row) {
+    return c.json({ error: 'Topic not found', code: 'TOPIC_NOT_FOUND' }, 404);
+  }
+
+  let parsed;
+  try {
+    parsed = parseTheoryTopicJson(row.contentJson);
+  } catch (parseError) {
+    // A 404 here would teach a crawler the page is gone; a parse failure is a
+    // data bug on our side and must read as one.
+    const message = parseError instanceof Error ? parseError.message : String(parseError);
+    console.error(`public theory: failed to parse content_json for row ${row.id}: ${message}`);
+    return c.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, 500);
+  }
+
+  // `content_json.id` carries the FULL grammar-point key (`es-a2-ser-vs-estar`),
+  // while the URL slug is that key minus the language prefix. The drill lookup
+  // and the quick check both key on the full one.
+  //
+  // The COLUMN (`theory_topics.grammar_point_key`) is authoritative, not
+  // `content_json.id` — the list route already keys on the column, and the two
+  // can disagree when a point is re-levelled after generation (generator
+  // output goes stale; the column is kept current). `parsed.id` is a
+  // belt-and-braces fallback for the case the column is ever empty.
+  const grammarPointKey = row.grammarPointKey || parsed.id;
+
+  const [related, drillKeys, quickCheck] = await Promise.all([
+    filterApprovedRelated(lang, deriveRelatedGrammarPoints(lang, topicId)),
+    fetchConjugationDrillKeys(lang),
+    fetchQuickCheck(lang, grammarPointKey),
+  ]);
+
+  return c.json({
+    ...parsed,
+    related,
+    hasConjugationDrill: drillKeys.has(grammarPointKey),
+    quickCheck,
+  });
 });
 
 export default publicRoutes;

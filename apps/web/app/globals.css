@@ -783,6 +783,28 @@ button:hover .lk-arr {
   color: var(--color-ink);
 }
 
+/* ─── Theory: public long-form variant ───
+   The in-app `.theory-*` scale (15px/1.65, 24px titles) is tuned for a sidebar
+   panel next to a drill. A public page is an article a stranger reads on a
+   phone, so it steps up. Same tokens, different scale — no forked renderer. */
+.theory-public .theory-content {
+  font-size: 17px;
+  line-height: 1.7;
+}
+.theory-public .theory-section {
+  border-bottom: 0;
+  padding: var(--spacing-s-4) 0;
+}
+.theory-public .theory-section-title {
+  font-size: 28px;
+  letter-spacing: -0.4px;
+  scroll-margin-top: 90px;
+}
+@media (max-width: 560px) {
+  .theory-public .theory-content { font-size: 16px; }
+  .theory-public .theory-section-title { font-size: 24px; }
+}
+
 /* ─── Theory: bullet lists ─── */
 .theory-list {
   list-style: disc;

@@ -326,12 +326,25 @@ export {
   type RelatedTheoryTopics,
 } from './schemas/theory';
 export {
+  PublicTopicSummarySchema,
+  PublicTopicListResponseSchema,
+  QuickCheckItemSchema,
+  PublicTopicEnvelopeSchema,
+} from './schemas/theory-public';
+export {
   parseTheoryTopicJson,
   type TheoryTopicJson,
   type TheorySectionJson,
   type TheoryBlockJson,
   type TheoryInlineJson,
 } from '@language-drill/shared';
+export type {
+  PublicTopicSummary,
+  PublicTopicListResponse,
+  QuickCheckItem,
+  RelatedTheoryTopicsWire,
+  PublicTopicEnvelope,
+} from './schemas/theory-public';
 export {
   HubOverviewSchema,
   ReviewFilterSchema,
