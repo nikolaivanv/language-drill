@@ -23,6 +23,16 @@ export const isPublicRoute = createRouteMatcher([
   '/privacy',
   '/terms',
   '/cookies',
+  // Crawler-facing metadata routes. `config.matcher` below excludes static
+  // file extensions (.png, .svg, .webmanifest, …) but NOT `.xml` or `.txt`,
+  // so without these two entries Clerk's middleware runs on them, neither
+  // matches any pattern above, and `auth.protect()` 307s them to sign-in.
+  // Observed in production: `curl https://www.langdrill.app/sitemap.xml`
+  // redirected to `/sign-in` with `x-clerk-auth-reason: protect-rewrite` —
+  // this is not theoretical, robots.txt and sitemap.xml were both
+  // unreachable by Googlebot. See `apps/web/app/sitemap.ts` / `robots.ts`.
+  '/sitemap.xml',
+  '/robots.txt',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

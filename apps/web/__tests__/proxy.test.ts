@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isPublicRoute } from '../proxy';
+import { isPublicRoute, config } from '../proxy';
 
 function req(path: string) {
   return new NextRequest(new URL(path, 'https://langdrill.app'));
@@ -56,6 +56,16 @@ describe('isPublicRoute', () => {
 
   it('still does not make a sibling of a language path public', () => {
     expect(isPublicRoute(req('/spanishx/grammar'))).toBe(false);
+  });
+
+  // F10: observed in production — without these entries, Clerk's middleware
+  // ran on /sitemap.xml and /robots.txt (config.matcher excludes .png/.svg/
+  // .webmanifest etc. but not .xml or .txt), neither matched any pattern
+  // above, and auth.protect() 307'd BOTH to sign-in
+  // (x-clerk-auth-reason: protect-rewrite). Googlebot could reach neither.
+  it('treats the crawler-facing metadata routes as public', () => {
+    expect(isPublicRoute(req('/sitemap.xml'))).toBe(true);
+    expect(isPublicRoute(req('/robots.txt'))).toBe(true);
   });
 
   // Derived from the app tree rather than a hand-kept list: the failure mode this
@@ -144,6 +154,95 @@ describe('isPublicRoute', () => {
     });
 
     const missing = candidates.filter((url) => !isPublicRoute(req(url)));
+    expect(missing).toEqual([]);
+  });
+
+  // F10 sibling guard: `collectPageUrls` above walks `page.tsx` files, so it
+  // structurally cannot see Next's file-based metadata-route conventions
+  // (sitemap.ts, robots.ts, icon.*, apple-icon.*, manifest.*, opengraph-image.*,
+  // twitter-image.*, favicon.*) — exactly how /sitemap.xml and /robots.txt went
+  // unreachable in production without anything catching it. This enumerates
+  // those files directly and checks each one's SERVED url.
+
+  // `sitemap.ts` / `robots.ts` serve a different extension than their source
+  // file (Next's own special-cased convention) — stated explicitly rather than
+  // derived by a general "strip the extension" rule, which would get every
+  // other convention (icon.svg -> /icon.svg, unchanged) wrong.
+  const METADATA_ROUTE_URL: Record<string, string> = {
+    'sitemap.ts': '/sitemap.xml',
+    'robots.ts': '/robots.txt',
+  };
+
+  // Every basename Next.js recognises as a file-based metadata-route
+  // convention, any extension. See
+  // https://nextjs.org/docs/app/api-reference/file-conventions — favicon,
+  // icon, apple-icon, opengraph-image, twitter-image, sitemap, robots,
+  // manifest.
+  const METADATA_BASENAME =
+    /^(sitemap|robots|favicon|icon|apple-icon|opengraph-image|twitter-image|manifest)\.[a-z0-9]+$/i;
+
+  /**
+   * Whether `config.matcher`'s own static-extension exclusion already keeps
+   * Clerk's middleware from running on `filename` at all — in which case
+   * `isPublicRoute`'s answer is moot (the middleware function is never
+   * invoked for that path), not a reason to trust the file is fine on faith.
+   * Parsed from `config.matcher[0]` itself (not a hand-copied list) so this
+   * cannot silently drift from what the middleware actually excludes.
+   */
+  function matcherSkipsFile(filename: string): boolean {
+    const ext = filename.slice(filename.lastIndexOf('.') + 1).toLowerCase();
+    const pattern = config.matcher[0];
+    // One alternative inside the extension group is itself a group
+    // (`js(?!on)`), so a naive "stop at the first `)`" regex truncates mid-
+    // pattern. Walk paren depth to find the group's REAL matching close.
+    const marker = '(?:';
+    const openIdx = pattern.indexOf(marker, pattern.indexOf('\\.'));
+    if (openIdx === -1) {
+      throw new Error('proxy.ts matcher shape changed — update matcherSkipsFile()');
+    }
+    let depth = 0;
+    let closeIdx = -1;
+    for (let i = openIdx; i < pattern.length; i++) {
+      if (pattern[i] === '(') depth++;
+      else if (pattern[i] === ')') {
+        depth--;
+        if (depth === 0) {
+          closeIdx = i;
+          break;
+        }
+      }
+    }
+    if (closeIdx === -1) {
+      throw new Error('proxy.ts matcher shape changed — update matcherSkipsFile()');
+    }
+    const alternatives = pattern.slice(openIdx + marker.length, closeIdx).split('|');
+    return alternatives.some((alt) => new RegExp(`^${alt}$`, 'i').test(ext));
+  }
+
+  it('treats every file-based metadata route as public, or documents why checking it is moot', () => {
+    const metaUrl = import.meta.url;
+    const appDir = fileURLToPath(new URL('../app', metaUrl));
+    const metadataFiles = readdirSync(appDir, { withFileTypes: true })
+      .filter((e) => e.isFile() && METADATA_BASENAME.test(e.name))
+      .map((e) => e.name);
+
+    // Guards a renamed convention or a wrong path silently passing: without
+    // this, an empty candidate list makes `missing` vacuously `[]`.
+    expect(metadataFiles.length).toBeGreaterThan(0);
+
+    const exemptByMatcher = metadataFiles.filter(matcherSkipsFile).sort();
+    // Pins exactly which files this exempts, so a reader never has to run the
+    // parser themselves — and so a NEW metadata file landing in an already-
+    // excluded extension (safe) or a matcher change that stops excluding one
+    // of these two (not safe) both show up as a diff here, not a silent pass.
+    expect(exemptByMatcher).toEqual(['apple-icon.png', 'icon.svg']);
+
+    const checked = metadataFiles.filter((name) => !matcherSkipsFile(name));
+    expect(checked.length).toBeGreaterThan(0);
+
+    const missing = checked
+      .map((name) => METADATA_ROUTE_URL[name] ?? `/${name}`)
+      .filter((url) => !isPublicRoute(req(url)));
     expect(missing).toEqual([]);
   });
 });
