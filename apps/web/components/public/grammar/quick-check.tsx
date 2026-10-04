@@ -2,8 +2,13 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { gradeFluencyAnswer, type ExerciseContent } from '@language-drill/shared';
+import {
+  gradeFluencyAnswer,
+  type ExerciseContent,
+  type PublicLanguage,
+} from '@language-drill/shared';
 import type { QuickCheckItem } from '@language-drill/api-client';
+import { track } from '../../../lib/analytics/track';
 
 /**
  * Three cloze sentences from the approved pool, graded in the browser — no LLM
@@ -62,9 +67,16 @@ function VerdictIcon({ correct }: { correct: boolean }) {
 export function QuickCheck({
   items,
   drillHref,
+  language,
+  cefr,
+  grammarPoint,
 }: {
   items: QuickCheckItem[];
   drillHref: string | null;
+  /** Analytics context only — none of these affect rendering or grading. */
+  language: PublicLanguage;
+  cefr: string;
+  grammarPoint: string;
 }) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState('');
@@ -101,7 +113,18 @@ export function QuickCheck({
       correctAnswer: item.correctAnswer,
       acceptableAnswers: item.acceptableAnswers,
     } as unknown as ExerciseContent;
-    setResults((prev) => [...prev, gradeFluencyAnswer(content, typed)]);
+    const correct = gradeFluencyAnswer(content, typed);
+    const answered = [...results, correct];
+    const analytics = { surface: 'quick_check', language, cefr, grammarPoint } as const;
+    track('public_item_answered', { ...analytics, correct });
+    if (answered.length === items.length) {
+      track('public_set_completed', {
+        ...analytics,
+        correct: answered.filter(Boolean).length,
+        total: items.length,
+      });
+    }
+    setResults(answered);
     setShowFeedback(true);
   }
 

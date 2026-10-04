@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { PublicHeader } from '../public-header';
 import { ThemeCycleButton } from '../theme-cycle-button';
+import { track } from '../../../lib/analytics/track';
+
+vi.mock('../../../lib/analytics/track', () => ({ track: vi.fn() }));
 
 const setTheme = vi.fn();
 let currentTheme = 'system';
@@ -86,5 +89,14 @@ describe('ThemeCycleButton', () => {
   it('offers a signup entry point that does not depend on finishing anything', () => {
     render(<PublicHeader />);
     expect(screen.getByRole('link', { name: /sign up/i })).toHaveAttribute('href', '/sign-up');
+  });
+
+  it('tracks a click on the header sign-up link', async () => {
+    render(<PublicHeader activeLanguage="DE" />);
+    await userEvent.click(screen.getByRole('link', { name: /sign up/i }));
+    expect(track).toHaveBeenCalledWith('signup_cta_clicked', {
+      surface: 'public_header',
+      language: 'DE',
+    });
   });
 });

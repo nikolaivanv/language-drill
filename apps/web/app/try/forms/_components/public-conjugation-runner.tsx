@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import {
   gradeFluencyAnswer,
   isConjugationContent,
@@ -16,6 +15,8 @@ import {
   type PublicLevel,
 } from '@language-drill/api-client';
 import { Button, Card } from '../../../../components/ui';
+import { TrackedLink } from '../../../../components/analytics/tracked-link';
+import { track } from '../../../../lib/analytics/track';
 import { PointPicker } from './point-picker';
 import {
   PublicConjugationItem,
@@ -202,12 +203,17 @@ export function PublicConjugationRunner({
             </p>
           )}
           <div className="flex items-center gap-s-3">
-            <Link href="/sign-up" className="link-arrow">
+            <TrackedLink
+              href="/sign-up"
+              className="link-arrow"
+              event="signup_cta_clicked"
+              eventProps={{ surface: 'try_forms_debrief', language: lang, cefr: level }}
+            >
               sign up{' '}
               <span className="lk-arr" aria-hidden="true">
                 →
               </span>
-            </Link>
+            </TrackedLink>
             <Button variant="ghost" onClick={restart} disabled={isFetching}>
               {isFetching ? 'loading…' : 'practise more'}
             </Button>
@@ -222,6 +228,13 @@ export function PublicConjugationRunner({
 
   function handleSubmit(answer: string) {
     const correct = gradeFluencyAnswer(content, answer);
+    track('public_item_answered', {
+      surface: 'try_forms',
+      language: lang,
+      cefr: level,
+      grammarPoint,
+      correct,
+    });
     answersRef.current.push({
       id: current.id,
       lemma: content.lemma,
@@ -234,6 +247,14 @@ export function PublicConjugationRunner({
 
   function handleNext() {
     if (index + 1 >= items.length) {
+      track('public_set_completed', {
+        surface: 'try_forms',
+        language: lang,
+        cefr: level,
+        grammarPoint,
+        correct: answersRef.current.filter((a) => a.correct).length,
+        total: answersRef.current.length,
+      });
       setDone(true);
       return;
     }

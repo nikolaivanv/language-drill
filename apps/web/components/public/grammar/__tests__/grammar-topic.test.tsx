@@ -1,9 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { track } from '../../../../lib/analytics/track';
 import { PracticeRail } from '../practice-rail';
 import { TopicPager, GrammarTopic, type PagerNeighbour } from '../grammar-topic';
 import { TopicBreadcrumbs } from '../topic-breadcrumbs';
 import { fetchPublicTopic, fetchPublicTopicList } from '../../../../lib/public-theory';
+
+vi.mock('../../../../lib/analytics/track', () => ({ track: vi.fn() }));
 
 vi.mock('../../../../lib/public-theory', () => ({
   fetchPublicTopic: vi.fn(),
@@ -66,6 +70,19 @@ describe('PracticeRail', () => {
     );
     expect(screen.queryByRole('link', { name: /start drilling/i })).toBeNull();
     expect(screen.getByRole('link', { name: /sign up/i })).toBeInTheDocument();
+  });
+
+  it('tracks a click on the rail sign-up with the topic it came from', async () => {
+    render(
+      <PracticeRail lang="ES" cefr="A2" grammarPointKey="es-a2-x" hasConjugationDrill={false} />,
+    );
+    await userEvent.click(screen.getByRole('link', { name: /sign up free/i }));
+    expect(track).toHaveBeenCalledWith('signup_cta_clicked', {
+      surface: 'grammar_rail',
+      language: 'ES',
+      cefr: 'A2',
+      grammarPoint: 'es-a2-x',
+    });
   });
 
   it('never offers a coached session, which does not exist yet', () => {

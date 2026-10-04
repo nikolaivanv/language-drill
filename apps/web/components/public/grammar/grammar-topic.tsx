@@ -173,6 +173,9 @@ export async function GrammarTopic({
             ))}
             <QuickCheck
               items={envelope.quickCheck}
+              language={lang}
+              cefr={topic.cefr}
+              grammarPoint={topic.id}
               drillHref={
                 envelope.hasConjugationDrill && drillLevel
                   ? tryFormsHref(lang, drillLevel, topic.id)
