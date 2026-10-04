@@ -338,6 +338,12 @@ maps to the same boosted limits.
 - `/admin/labeling` — hand-label evaluator output on real submissions. Only the
   `random` stratum may be quoted as a quality rate; never blend it with `targeted`.
   See `docs/superpowers/specs/2026-09-29-evaluator-labeling-design.md`.
+- `/spanish/grammar`, `/german/grammar`, `/turkish/grammar` (+ `/<lang>/grammar/<topic-id>`)
+  — the public, unauthenticated theory library: 312 server-rendered pages served from
+  `GET /public/theory/*`. Only 38 topics have a public conjugation drill, so the
+  per-topic pill on the index is load-bearing — never promise a drill on a topic page
+  without `hasConjugationDrill`. See
+  `docs/superpowers/specs/2026-10-04-public-theory-pages-design.md`.
 - **Later:** Stripe subscriptions add a paid `'pro'` tier (same boosted limits) for
   users without an invite.
 - Bot protection: Clerk at signup; per-user daily caps on the AI endpoints.
