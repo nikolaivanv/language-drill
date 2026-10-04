@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server';
 import { isPublicRoute, config } from '../proxy';
 
 function req(path: string) {
@@ -63,6 +64,24 @@ describe('isPublicRoute', () => {
   // .webmanifest etc. but not .xml or .txt), neither matched any pattern
   // above, and auth.protect() 307'd BOTH to sign-in
   // (x-clerk-auth-reason: protect-rewrite). Googlebot could reach neither.
+  // Observed in production: `/ingest/*` (the PostHog reverse proxy) was
+  // neither public nor skipped by the matcher, so Clerk 404'd every analytics
+  // request from a signed-out visitor (x-clerk-auth-reason: protect-rewrite)
+  // and no anonymous event ever reached PostHog. The middleware must not run
+  // on it at all. `unstable_doesMiddlewareMatch` applies the matcher exactly
+  // as Next does, so this checks the real routing decision, not a regex copy.
+  it('does not run Clerk on the PostHog ingestion proxy', () => {
+    for (const url of ['/ingest/e/', '/ingest/flags/?v=2', '/ingest/s/', '/ingest/i/v0/e/']) {
+      expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(false);
+    }
+  });
+
+  it('still runs Clerk on pages and on a sibling of /ingest', () => {
+    for (const url of ['/home', '/spanish/grammar', '/ingestion']) {
+      expect(unstable_doesMiddlewareMatch({ config, url }), url).toBe(true);
+    }
+  });
+
   it('treats the crawler-facing metadata routes as public', () => {
     expect(isPublicRoute(req('/sitemap.xml'))).toBe(true);
     expect(isPublicRoute(req('/robots.txt'))).toBe(true);

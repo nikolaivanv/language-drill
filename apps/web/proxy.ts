@@ -43,8 +43,15 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals, the PostHog reverse proxy, and static files
+    // unless found in search params. `ingest` must be skipped: the
+    // `/ingest/*` rewrite in next.config.ts runs AFTER middleware, so without
+    // this Clerk's `auth.protect()` 404'd every analytics request from a
+    // signed-out visitor (x-clerk-auth-reason: protect-rewrite) — the script
+    // loaded (`.js` is excluded below) but no event ever reached PostHog.
+    // Skipped rather than listed in `isPublicRoute` because Clerk has no
+    // business running on analytics traffic at all.
+    '/((?!_next|ingest/|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],

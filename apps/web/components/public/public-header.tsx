@@ -3,6 +3,7 @@ import { LANGUAGE_NATIVE_NAMES, Language } from '@language-drill/shared';
 import type { PublicLanguage } from '@language-drill/api-client';
 import { cn } from '../../lib/cn';
 import { ThemeCycleButton } from './theme-cycle-button';
+import { TrackedLink } from '../analytics/tracked-link';
 
 /**
  * Chrome for the signed-out surfaces: the wordmark, a language rail, and the
@@ -94,12 +95,14 @@ export function PublicHeader({
           </nav>
         )}
         <ThemeCycleButton />
-        <Link
+        <TrackedLink
           href="/sign-up"
+          event="signup_cta_clicked"
+          eventProps={{ surface: 'public_header', language: activeLanguage }}
           className="text-[13px] whitespace-nowrap text-ink-mute underline underline-offset-2 hover:text-ink"
         >
           sign up
-        </Link>
+        </TrackedLink>
       </div>
     </header>
   );

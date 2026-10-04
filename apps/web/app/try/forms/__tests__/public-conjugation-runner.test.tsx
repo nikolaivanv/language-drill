@@ -3,6 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PublicConjugationRunner } from '../_components/public-conjugation-runner';
+import { track } from '../../../../lib/analytics/track';
+
+vi.mock('../../../../lib/analytics/track', () => ({ track: vi.fn() }));
 
 // The runner makes TWO requests: the set, and the picker's point list. The mock
 // routes by path so a set assertion is never satisfied by a points call, and so
@@ -121,6 +124,34 @@ describe('PublicConjugationRunner', () => {
     // Still only the one set fetch — advancing through items (and reaching
     // the debrief) must not trigger a refetch on its own.
     expect(setMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('tracks each answer, the completed set, and the debrief sign-up click', async () => {
+    setMock.mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          exercises: [item('a', 'gitmek', 'gitti'), item('b', 'gelmek', 'geldi')],
+          available: 2,
+        }),
+      ),
+    );
+    renderRunner({ grammarPoint: 'tr-b1-past' });
+
+    await userEvent.type(await screen.findByRole('textbox'), 'gitti');
+    await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await userEvent.click(screen.getByRole('button', { name: /next/i }));
+    await userEvent.type(screen.getByRole('textbox'), 'wrong');
+    await userEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await userEvent.click(screen.getByRole('button', { name: /see results/i }));
+    await userEvent.click(screen.getByRole('link', { name: /sign up/i }));
+
+    const base = { surface: 'try_forms', language: 'TR', cefr: 'B1', grammarPoint: 'tr-b1-past' };
+    expect(vi.mocked(track).mock.calls).toEqual([
+      ['public_item_answered', { ...base, correct: true }],
+      ['public_item_answered', { ...base, correct: false }],
+      ['public_set_completed', { ...base, correct: 1, total: 2 }],
+      ['signup_cta_clicked', { surface: 'try_forms_debrief', language: 'TR', cefr: 'B1' }],
+    ]);
   });
 
   it('renders an honest empty state for a cell with no content', async () => {

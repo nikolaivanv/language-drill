@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { PublicLanguage } from '@language-drill/shared';
 import { publicLevelFor, tryFormsHref } from '../../../lib/public-paths';
+import { TrackedLink } from '../../analytics/tracked-link';
 
 /**
  * The drill card renders only when the point genuinely has a public
@@ -57,12 +58,14 @@ export function PracticeRail({
           With a free account, drill tracks this topic and brings it back when you
           start to slip.
         </p>
-        <Link
+        <TrackedLink
           href="/sign-up"
+          event="signup_cta_clicked"
+          eventProps={{ surface: 'grammar_rail', language: lang, cefr, grammarPoint: grammarPointKey }}
           className="flex w-full items-center justify-center rounded-md bg-ink px-s-4 py-s-3 text-center font-medium text-paper no-underline transition-colors duration-150 hover:bg-ink-hover"
         >
           Sign up free
-        </Link>
+        </TrackedLink>
       </div>
     </aside>
   );

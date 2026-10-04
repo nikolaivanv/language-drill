@@ -18,6 +18,7 @@ import {
   PublicConjugationItem,
   type PublicVerdict,
 } from '../drill/public-conjugation-item';
+import { track } from '../../lib/analytics/track';
 
 /**
  * The landing hero: one real item, answerable before the visitor has read
@@ -83,7 +84,11 @@ export function LandingTryBlock({ lang, level, drillHref }: LandingTryBlockProps
         content={content}
         language={lang}
         verdict={verdict}
-        onSubmit={(answer) => setVerdict({ correct: gradeFluencyAnswer(content, answer) })}
+        onSubmit={(answer) => {
+          const correct = gradeFluencyAnswer(content, answer);
+          track('public_item_answered', { surface: 'landing_hero', language: lang, cefr: level, correct });
+          setVerdict({ correct });
+        }}
         onNext={() => undefined}
         isLast
       />

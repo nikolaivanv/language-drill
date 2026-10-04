@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { LanguageLanding } from '../language-landing';
+import { track } from '../../../lib/analytics/track';
+
+vi.mock('../../../lib/analytics/track', () => ({ track: vi.fn() }));
 
 vi.mock('../landing-try-block', () => ({
   // The hero is a client component with its own fetching; this suite is about
@@ -83,6 +87,15 @@ describe('LanguageLanding', () => {
     expect(screen.getByRole('link', { name: /Create an account/ })).toBeInTheDocument();
     // No empty "What you can drill" shell.
     expect(screen.queryByText('What you can drill')).not.toBeInTheDocument();
+  });
+
+  it('tracks a click on the footer call to action', async () => {
+    render(await LanguageLanding({ lang: 'TR' }));
+    await userEvent.click(screen.getByRole('link', { name: /Create an account/ }));
+    expect(track).toHaveBeenCalledWith('signup_cta_clicked', {
+      surface: 'landing_footer',
+      language: 'TR',
+    });
   });
 
   it('does not fetch at all without an API base, and still renders', async () => {

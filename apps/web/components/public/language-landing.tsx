@@ -8,6 +8,7 @@ import {
 } from '@language-drill/api-client';
 import { PublicHeader } from './public-header';
 import { LandingTryBlock } from './landing-try-block';
+import { TrackedLink } from '../analytics/tracked-link';
 import { LANDING_PATH, grammarIndexHref } from '../../lib/public-paths';
 
 export { LANDING_PATH };
@@ -181,12 +182,17 @@ export async function LanguageLanding({ lang }: { lang: PublicLanguage }) {
             Drilling here is not saved. An account keeps track of which forms
             you actually know, and what to practise next.
           </p>
-          <Link href="/sign-up" className="link-arrow self-start">
+          <TrackedLink
+            href="/sign-up"
+            className="link-arrow self-start"
+            event="signup_cta_clicked"
+            eventProps={{ surface: 'landing_footer', language: lang }}
+          >
             Create an account
             <span className="lk-arr" aria-hidden="true">
               →
             </span>
-          </Link>
+          </TrackedLink>
         </section>
       </main>
     </div>
