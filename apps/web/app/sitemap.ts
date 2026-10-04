@@ -1,4 +1,7 @@
 import type { MetadataRoute } from 'next';
+import type { PublicLanguage } from '@language-drill/shared';
+import { fetchPublicTopicList } from '../lib/public-theory';
+import { grammarIndexHref, grammarTopicHref } from '../lib/public-paths';
 
 /**
  * The pages that should be found in search.
@@ -9,12 +12,65 @@ import type { MetadataRoute } from 'next';
  * language landings are the canonical entry points and carry the content a
  * crawler should actually read.
  *
+ * The grammar surface (`/<language>/grammar` and its topics) is appended below
+ * for the same reason, but it has to fetch the live topic list to do it — see
+ * `grammarEntries` for why that fetch's error policy inverts the one
+ * `fetchPublicTopicList` otherwise guarantees.
+ *
  * Signed-in surfaces are absent by construction — everything under the
  * dashboard requires an account, so there is nothing for a crawler to reach.
  */
 const SITE = 'https://www.langdrill.app';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Matches `REVALIDATE_SECONDS` in `lib/public-theory.ts` — this route's own
+// cache window should not outlive the data it is built from.
+export const revalidate = 3600;
+
+const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
+
+/**
+ * `fetchPublicTopicList` is written to throw on anything but a genuine 404,
+ * and every page that calls it must let that throw propagate — rendering an
+ * empty library during an outage would lie to a reader. A sitemap is
+ * different: Next serves `sitemap.ts`'s thrown error as a 500 for the WHOLE
+ * document, which means an outage in one language would take down the
+ * `/`, the landings, and every other language's URLs along with it — URLs
+ * that already rank. So here, and only here, a per-language failure is
+ * caught and swallowed: the hub URL for that language still ships (it is a
+ * real route regardless of whether the API answered), its topics are simply
+ * omitted for this revalidation window, and the other languages are
+ * unaffected. Losing one language's topic URLs for an hour is strictly
+ * better than losing all 322.
+ */
+async function grammarEntries(now: Date): Promise<MetadataRoute.Sitemap> {
+  const perLanguage = await Promise.all(
+    LANGS.map(async (lang) => {
+      const hub = {
+        url: `${SITE}${grammarIndexHref(lang)}`,
+        lastModified: now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      };
+      try {
+        const topics = await fetchPublicTopicList(lang);
+        return [
+          hub,
+          ...topics.map((t) => ({
+            url: `${SITE}${grammarTopicHref(lang, t.id)}`,
+            lastModified: now,
+            changeFrequency: 'monthly' as const,
+            priority: 0.6,
+          })),
+        ];
+      } catch {
+        return [hub];
+      }
+    }),
+  );
+  return perLanguage.flat();
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   return [
     { url: `${SITE}/`, lastModified: now, changeFrequency: 'monthly', priority: 1 },
@@ -24,5 +80,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/try/forms`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE}/why-not-chatgpt`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE}/academic-rigour`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    ...(await grammarEntries(now)),
   ];
 }
