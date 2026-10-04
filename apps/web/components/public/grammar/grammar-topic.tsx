@@ -180,7 +180,22 @@ export async function GrammarTopic({
               }
             />
           </article>
-          <aside aria-label="Topic navigation" className="flex flex-col gap-s-5">
+          {/*
+            The sticky context belongs HERE, on the whole column — not on the
+            TOC inside it. With `sticky` on the nav alone, the nav detached and
+            held its offset while the practise rail, an ordinary sibling below
+            it in the same flex column, scrolled up underneath and the two
+            rendered on top of each other.
+
+            `lg:` only: at `grid-cols-1` this column is a normal block beneath
+            the article, and a sticky element there would hover over the prose.
+            The max-height plus scroll keeps a long TOC-plus-rail inside the
+            viewport instead of clipping its tail behind the fold.
+          */}
+          <aside
+            aria-label="Topic navigation"
+            className="flex flex-col gap-s-5 lg:sticky lg:top-[96px] lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto"
+          >
             <TopicToc sections={tocSections} />
             <PracticeRail
               lang={lang}

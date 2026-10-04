@@ -47,12 +47,20 @@ export function PracticeRail({
           <span className="t-small text-accent-2">Start drilling →</span>
         </Link>
       )}
-      <div className="rounded-lg border border-dashed border-rule-strong p-s-4">
-        <p className="t-small m-0 text-ink-soft">
+      {/*
+        A solid card and a filled button, not a dashed box and a text link: on
+        the 274 topics with no public drill this is the rail's ONLY call to
+        action, and as a quiet underline it read as a footnote.
+      */}
+      <div className="rounded-lg border border-rule bg-card p-s-4">
+        <p className="t-small mt-0 mb-s-3 text-ink-soft">
           With a free account, drill tracks this topic and brings it back when you
           start to slip.
         </p>
-        <Link href="/sign-up" className="link-arrow mt-s-3 inline-flex">
+        <Link
+          href="/sign-up"
+          className="flex w-full items-center justify-center rounded-md bg-ink px-s-4 py-s-3 text-center font-medium text-paper no-underline transition-colors duration-150 hover:bg-ink-hover"
+        >
           Sign up free
         </Link>
       </div>

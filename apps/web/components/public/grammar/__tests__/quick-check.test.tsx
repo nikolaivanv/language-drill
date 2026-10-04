@@ -17,6 +17,44 @@ describe('QuickCheck', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('echoes what the reader typed next to the correct answer when wrong', async () => {
+    // Reported from production: a wrong verdict showed only the correct form,
+    // so the reader could not see what they had actually written.
+    render(<QuickCheck items={items} drillHref={null} />);
+    await userEvent.type(screen.getByRole('textbox'), 'comía');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+
+    expect(screen.getByText(/you wrote/i)).toBeInTheDocument();
+    expect(screen.getByText('comía')).toBeInTheDocument();
+    expect(screen.getByText(/^correct$/i)).toBeInTheDocument();
+    expect(screen.getByText('comí')).toBeInTheDocument();
+  });
+
+  it('echoes what the reader typed when right, without a correct-answer row', async () => {
+    render(<QuickCheck items={items} drillHref={null} />);
+    await userEvent.type(screen.getByRole('textbox'), 'comí');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+
+    expect(screen.getByText(/you wrote/i)).toBeInTheDocument();
+    expect(screen.getByText('comí')).toBeInTheDocument();
+    // Nothing to correct, so the second row is absent rather than duplicating.
+    expect(screen.queryByText(/^correct$/i)).toBeNull();
+  });
+
+  it('trims the echoed answer so stray whitespace is not displayed', async () => {
+    render(<QuickCheck items={items} drillHref={null} />);
+    await userEvent.type(screen.getByRole('textbox'), '  comí  ');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    expect(screen.getByText('comí')).toBeInTheDocument();
+  });
+
+  it('announces the verdict to assistive tech', async () => {
+    render(<QuickCheck items={items} drillHref={null} />);
+    await userEvent.type(screen.getByRole('textbox'), 'comí');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    expect(screen.getByRole('status')).toHaveTextContent(/right/i);
+  });
+
   it('accepts the correct answer', async () => {
     render(<QuickCheck items={items} drillHref={null} />);
     await userEvent.type(screen.getByRole('textbox'), 'comí');

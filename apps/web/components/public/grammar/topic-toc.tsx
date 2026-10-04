@@ -29,7 +29,12 @@ export function TopicToc({ sections }: { sections: { id: string; title: string }
   }, [sections]);
 
   return (
-    <nav aria-label="On this page" className="sticky top-[96px]">
+    // Deliberately NOT sticky itself. The sticky context lives on the parent
+    // <aside> in `grammar-topic.tsx`, so this nav and the practise rail below it
+    // travel as one block. When the sticky lived here, the nav detached and
+    // parked at a fixed offset while its own sibling scrolled underneath it —
+    // the TOC rendered straight through the practise card and the sign-up CTA.
+    <nav aria-label="On this page">
       <div className="t-mono text-[11px] tracking-[1.6px] text-ink-mute uppercase">
         On this page
       </div>
