@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Language, type LearningLanguage, type PublicLanguage } from '@language-drill/shared';
+import type { PublicLanguage } from '@language-drill/shared';
 import type { PublicTopicSummary } from '@language-drill/api-client';
 import { fetchPublicTopic, fetchPublicTopicList } from '../../../lib/public-theory';
 import {
@@ -11,25 +11,11 @@ import {
 } from '../../../lib/public-paths';
 import { PublicHeader } from '../public-header';
 import { AppFooter } from '../../shell/app-footer';
-import { TheorySections } from '../../theory/theory-sections';
 import { TopicBreadcrumbs } from './topic-breadcrumbs';
 import { TopicToc } from './topic-toc';
 import { PracticeRail } from './practice-rail';
 import { QuickCheck } from './quick-check';
 import { RelatedTopicsGrid } from './related-topics-grid';
-
-/**
- * `TheorySections` is keyed by the `Language` enum (`LearningLanguage`), while
- * every public surface passes the string-literal `PublicLanguage`. Mapping the
- * three keys explicitly keeps one source of truth without casting a string
- * literal onto an enum member — same reasoning as `LANGUAGE_LABEL` in
- * `lib/public-paths.ts`.
- */
-const LEARNING_LANGUAGE: Record<PublicLanguage, LearningLanguage> = {
-  ES: Language.ES,
-  DE: Language.DE,
-  TR: Language.TR,
-};
 
 export type PagerNeighbour = { id: string; title: string; cefr: string };
 
@@ -154,11 +140,26 @@ export async function GrammarTopic({
 
         <div className="grid grid-cols-1 gap-s-6 lg:grid-cols-[1fr_260px] lg:items-start">
           <article className="theory-public flex flex-col">
-            <TheorySections
-              topic={topic}
-              language={LEARNING_LANGUAGE[lang]}
-              onSwitchTopic={() => undefined}
-            />
+            {/*
+              Not `TheorySections` — that component wraps its children in a
+              class-based React error boundary (`TheoryErrorBoundary`), and a
+              class component cannot be a Server Component. This page must stay
+              a pure Server Component so the article ships as plain HTML with no
+              hydration payload (the whole point of this plan). Do not "fix" this
+              duplication by reaching for `TheorySections` again — that takes
+              every public topic page back to a 500 the way `GrammarTopic` first
+              shipped. On a public page a render error is allowed to surface as
+              a 500 (malformed content is already rejected upstream by
+              `parseTheoryTopicJson`), so no boundary is needed here at all.
+              `<h2>` (not the authenticated reader's `<h3>`) because this is the
+              article's one level of structure under its single `<h1>`.
+            */}
+            {topic.sections.map((section) => (
+              <section key={section.id} id={section.id} className="theory-section">
+                <h2 className="theory-section-title">{section.title}</h2>
+                <div className="theory-content">{section.body}</div>
+              </section>
+            ))}
             <QuickCheck
               items={envelope.quickCheck}
               drillHref={
