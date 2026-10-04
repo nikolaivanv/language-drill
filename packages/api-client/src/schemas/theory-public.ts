@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { RelatedTheoryTopicsSchema } from './theory';
 
 /**
  * Wire schemas for the two unauthenticated theory endpoints.
@@ -9,6 +10,9 @@ import { z } from 'zod';
  * drift from it. So `sections` is passed through as unknown-shaped data and the
  * page hands the whole object to `parseTheoryTopicJson`; these schemas validate
  * the ENVELOPE the public route adds around it.
+ *
+ * The `related` field uses the schema from ./theory; this keeps one definition
+ * as the source of truth for the related-topics structure.
  */
 
 export const PublicTopicSummarySchema = z.object({
@@ -23,18 +27,6 @@ export const PublicTopicSummarySchema = z.object({
 
 export const PublicTopicListResponseSchema = z.object({
   topics: z.array(PublicTopicSummarySchema),
-});
-
-export const RelatedTopicRefSchema = z.object({
-  topicId: z.string().min(1),
-  title: z.string().min(1),
-  cefr: z.string().min(1),
-});
-
-export const RelatedTheoryTopicsSchema = z.object({
-  buildsOn: z.array(RelatedTopicRefSchema),
-  leadsTo: z.array(RelatedTopicRefSchema),
-  siblings: z.array(RelatedTopicRefSchema),
 });
 
 export const QuickCheckItemSchema = z.object({

@@ -328,8 +328,6 @@ export {
 export {
   PublicTopicSummarySchema,
   PublicTopicListResponseSchema,
-  RelatedTopicRefSchema,
-  RelatedTheoryTopicsSchema,
   QuickCheckItemSchema,
   PublicTopicEnvelopeSchema,
 } from './schemas/theory-public';

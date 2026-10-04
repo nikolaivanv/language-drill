@@ -6,6 +6,7 @@ import {
   type PublicPointsResponse,
 } from '../schemas/exercise';
 import type { ApiFetch } from '../fetchClient';
+import type { PublicLanguage, PublicLevel } from '@language-drill/shared';
 
 // Moved to @language-drill/shared so the Lambda (which does not depend on
 // api-client) can read the same list. Re-exported here so every existing
