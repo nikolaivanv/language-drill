@@ -9,8 +9,11 @@ export const isPublicRoute = createRouteMatcher([
   // the entries above, which also matches siblings — `/try(.*)` would make
   // `/trybeta` public too).
   '/spanish', // per-language landing pages: public entry points + SEO
+  '/spanish/:path*', // …and everything under them (/spanish/grammar/<topic>)
   '/german',
+  '/german/:path*',
   '/turkish',
+  '/turkish/:path*',
   '/try',
   '/try/:path*',
   '/sign-in(.*)',

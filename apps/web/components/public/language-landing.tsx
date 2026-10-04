@@ -8,7 +8,7 @@ import {
 } from '@language-drill/api-client';
 import { PublicHeader } from './public-header';
 import { LandingTryBlock } from './landing-try-block';
-import { LANDING_PATH } from '../../lib/public-paths';
+import { LANDING_PATH, grammarIndexHref } from '../../lib/public-paths';
 
 export { LANDING_PATH };
 
@@ -132,7 +132,18 @@ export async function LanguageLanding({ lang }: { lang: PublicLanguage }) {
 
         {populated.length > 0 && (
           <section className="flex flex-col gap-s-5">
-            <h2 className="t-display-m">What you can drill</h2>
+            <div className="flex items-baseline justify-between gap-s-3">
+              <h2 className="t-display-m">What you can drill</h2>
+              {/* This is the edge that makes the grammar hub reachable by a
+                  crawler from an already-indexed page. Worded as reading
+                  rather than drilling — the hub explains, it doesn't grade. */}
+              <Link
+                href={grammarIndexHref(lang)}
+                className="t-small shrink-0 text-ink-mute underline underline-offset-2 hover:text-ink"
+              >
+                Grammar explained →
+              </Link>
+            </div>
             {populated.map(({ level, points }) => (
               <div key={level} className="flex flex-col gap-s-2">
                 <div className="flex items-baseline justify-between gap-s-3">
