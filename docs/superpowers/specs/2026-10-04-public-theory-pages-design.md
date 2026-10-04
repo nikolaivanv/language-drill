@@ -152,9 +152,17 @@ type PublicTopicSummary = {
 ```
 
 All 312 approved rows carry a non-empty `subtitle`, `grammar_point_key` and
-`cefr_level` (measured). The list query still filters `subtitle IS NOT NULL`
-alongside the existing `title`/`cefr` guards and keeps the same dropped-row
-`console.warn`, so a future corrupt row degrades the index instead of 500ing it.
+`cefr_level` (measured). The shared SQL keeps the existing `title`/`cefr`
+NOT NULL guards **unchanged** — adding a `subtitle` guard there would alter what
+the already-shipped authenticated `GET /theory/:lang` returns, for a case that
+provably does not occur. The *public* route instead drops subtitle-less rows in
+TypeScript and counts them into its own `console.warn`, so the index degrades
+rather than 500ing and the authenticated response stays bit-identical.
+
+`PUBLIC_LEVELS_BY_LANGUAGE` currently lives in `packages/api-client`, which the
+Lambda does not depend on. It moves to `packages/shared` (api-client re-exports it
+for back-compat) so both sides read one source rather than the level list being
+duplicated server-side.
 
 ```ts
 
