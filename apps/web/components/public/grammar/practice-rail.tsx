@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import type { PublicLanguage, PublicLevel } from '@language-drill/shared';
-import { tryFormsHref } from '../../../lib/public-paths';
+import type { PublicLanguage } from '@language-drill/shared';
+import { publicLevelFor, tryFormsHref } from '../../../lib/public-paths';
 
 /**
  * The drill card renders only when the point genuinely has a public
@@ -23,14 +23,20 @@ export function PracticeRail({
   grammarPointKey: string;
   hasConjugationDrill: boolean;
 }) {
+  // `cefr` is a plain string from content_json — narrowed via `publicLevelFor`
+  // rather than asserted, so an out-of-range level omits the link instead of
+  // building a `tryFormsHref` that 400s. In practice `hasConjugationDrill` is
+  // already false whenever the level is out of range, so this changes no
+  // current behaviour; it just stops relying on that coincidence.
+  const level = publicLevelFor(lang, cefr);
   return (
     <aside aria-label="Practise" className="flex flex-col gap-s-3">
       <div className="t-mono text-[11px] tracking-[1.6px] text-ink-mute uppercase">
         Practise this topic
       </div>
-      {hasConjugationDrill && (
+      {hasConjugationDrill && level && (
         <Link
-          href={tryFormsHref(lang, cefr as PublicLevel, grammarPointKey)}
+          href={tryFormsHref(lang, level, grammarPointKey)}
           className="flex flex-col gap-s-2 rounded-lg border border-rule bg-card p-s-4 no-underline"
         >
           <span className="t-mono text-[11px] text-accent-2">free · unlimited</span>

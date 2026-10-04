@@ -2,13 +2,20 @@ import Link from 'next/link';
 import { Language, type LearningLanguage, type PublicLanguage } from '@language-drill/shared';
 import type { PublicTopicSummary } from '@language-drill/api-client';
 import { fetchPublicTopic, fetchPublicTopicList } from '../../../lib/public-theory';
-import { grammarIndexHref, grammarTopicHref, LANGUAGE_LABEL } from '../../../lib/public-paths';
+import {
+  grammarIndexHref,
+  grammarTopicHref,
+  LANGUAGE_LABEL,
+  publicLevelFor,
+  tryFormsHref,
+} from '../../../lib/public-paths';
 import { PublicHeader } from '../public-header';
 import { AppFooter } from '../../shell/app-footer';
 import { TheorySections } from '../../theory/theory-sections';
 import { TopicBreadcrumbs } from './topic-breadcrumbs';
 import { TopicToc } from './topic-toc';
 import { PracticeRail } from './practice-rail';
+import { QuickCheck } from './quick-check';
 import { RelatedTopicsGrid } from './related-topics-grid';
 
 /**
@@ -123,6 +130,10 @@ export async function GrammarTopic({
 
   const { previous, next } = pagerNeighbours(topics, { id: topicId, cefr: topic.cefr });
   const tocSections = topic.sections.map((s) => ({ id: s.id, title: s.title }));
+  // `topic.cefr` is a plain string from content_json — narrowed via
+  // `publicLevelFor` rather than asserted, so an out-of-range level omits the
+  // quick check's drill link instead of building a `tryFormsHref` that 400s.
+  const drillLevel = publicLevelFor(lang, topic.cefr);
 
   return (
     <div className="mx-auto flex max-w-[1080px] flex-col px-s-4 py-s-6">
@@ -147,6 +158,14 @@ export async function GrammarTopic({
               topic={topic}
               language={LEARNING_LANGUAGE[lang]}
               onSwitchTopic={() => undefined}
+            />
+            <QuickCheck
+              items={envelope.quickCheck}
+              drillHref={
+                envelope.hasConjugationDrill && drillLevel
+                  ? tryFormsHref(lang, drillLevel, topic.id)
+                  : null
+              }
             />
           </article>
           <aside aria-label="Topic navigation" className="flex flex-col gap-s-5">

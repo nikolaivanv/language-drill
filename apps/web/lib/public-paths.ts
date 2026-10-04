@@ -1,6 +1,7 @@
 import {
   LANGUAGE_NAMES,
   Language,
+  PUBLIC_LEVELS_BY_LANGUAGE,
   type PublicLanguage,
   type PublicLevel,
 } from '@language-drill/shared';
@@ -42,6 +43,19 @@ export function grammarIndexHref(lang: PublicLanguage): string {
 
 export function grammarTopicHref(lang: PublicLanguage, topicId: string): string {
   return `${grammarIndexHref(lang)}/${encodeURIComponent(topicId)}`;
+}
+
+/**
+ * `cefr` on a topic/point comes from `content_json` as a plain string, not a
+ * validated `PublicLevel` — narrowed here rather than asserted with `as
+ * PublicLevel`, because a level the public drill does not offer for this
+ * language (e.g. a stray "C1") would otherwise produce a `tryFormsHref` link
+ * that falls back to a different level while still carrying `point=`, which
+ * the API rejects with a 400 — a reader lands on an empty drill.
+ */
+export function publicLevelFor(lang: PublicLanguage, cefr: string): PublicLevel | null {
+  const levels = PUBLIC_LEVELS_BY_LANGUAGE[lang] as string[];
+  return levels.includes(cefr) ? (cefr as PublicLevel) : null;
 }
 
 export function tryFormsHref(
