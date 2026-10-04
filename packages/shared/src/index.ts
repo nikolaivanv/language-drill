@@ -683,3 +683,10 @@ export {
 } from './cell-targets';
 export type { CellTargetInput } from './cell-targets';
 export { grammarPointFingerprint } from "./grammar-point-fingerprint";
+
+// ---------------------------------------------------------------------------
+// Public levels — moved from @language-drill/api-client so the Lambda (which
+// does not depend on api-client) can read the same per-language level list.
+// ---------------------------------------------------------------------------
+
+export * from "./public-levels";
