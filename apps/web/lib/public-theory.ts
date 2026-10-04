@@ -46,9 +46,16 @@ async function getJson(path: string, onNotFound: 'notFound' | 'throw'): Promise<
   const url = `${apiBase()}${path}`;
   const res = await fetch(url, { next: { revalidate: REVALIDATE_SECONDS } });
 
-  if (res.status === 404) {
+  // A 404 is a genuine "this topic does not exist." A 400 VALIDATION_ERROR
+  // means the topicId failed the API's slug-shape check — reachable from a
+  // mistyped, capitalised or scanner-generated path — and for the topic
+  // fetch that is the SAME outcome a reader should see: not found, not a
+  // 500. The list fetch is excluded (onNotFound === 'throw' for it): its
+  // `lang` comes from the route folder, not user input, so a 400 there is a
+  // real bug and must keep throwing.
+  if (res.status === 404 || (res.status === 400 && onNotFound === 'notFound')) {
     if (onNotFound === 'notFound') notFound();
-    throw new Error(`public theory: ${url} returned 404`);
+    throw new Error(`public theory: ${url} returned ${res.status}`);
   }
   if (!res.ok) {
     throw new Error(`public theory: ${url} returned ${res.status}`);

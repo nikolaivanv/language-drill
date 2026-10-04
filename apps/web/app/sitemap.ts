@@ -22,9 +22,15 @@ import { grammarIndexHref, grammarTopicHref } from '../lib/public-paths';
  */
 const SITE = 'https://www.langdrill.app';
 
-// Matches `REVALIDATE_SECONDS` in `lib/public-theory.ts` — this route's own
-// cache window should not outlive the data it is built from.
-export const revalidate = 3600;
+// `next build` must not call the live API — see F2 in the final-fix findings.
+// Previously this carried `export const revalidate = 3600` (matching
+// `REVALIDATE_SECONDS` in `lib/public-theory.ts`), which let `next build`
+// prerender the whole sitemap by fetching every language's topic list at
+// build time. `force-dynamic` forces every fetch here to `{ cache: 'no-store' }`
+// instead, which supersedes — and would make misleading — a `revalidate`
+// export, so that is intentionally gone: a crawler sweep now costs one live
+// API call per language per request, not a cached document.
+export const dynamic = 'force-dynamic';
 
 const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
 

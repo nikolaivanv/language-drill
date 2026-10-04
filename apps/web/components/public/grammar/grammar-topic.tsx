@@ -101,6 +101,15 @@ export function TopicPager({
  * The hub list is fetched alongside the topic (not after) purely to compute
  * the pager — nothing else on this page needs it, so there is no reason to
  * wait for it serially.
+ *
+ * The two fetches intentionally carry OPPOSITE error policies. `fetchPublicTopic`
+ * is the article — the page IS the content — so its throw-on-failure policy
+ * (see `lib/public-theory.ts`) is left untouched: a 500 there must surface as a
+ * 500, not a lie. `fetchPublicTopicList` here is used for nothing but the
+ * prev/next pager, a two-link enhancement, so a list-endpoint outage must not
+ * take out all 312 topic pages for the sake of it — it is caught and
+ * degraded to no pager, the same reasoning `language-landing.tsx` applies to
+ * its points list.
  */
 export async function GrammarTopic({
   lang,
@@ -111,10 +120,12 @@ export async function GrammarTopic({
 }) {
   const [{ topic, envelope, readingMinutes }, topics] = await Promise.all([
     fetchPublicTopic(lang, topicId),
-    fetchPublicTopicList(lang),
+    fetchPublicTopicList(lang).catch(() => null),
   ]);
 
-  const { previous, next } = pagerNeighbours(topics, { id: topicId, cefr: topic.cefr });
+  const { previous, next } = topics
+    ? pagerNeighbours(topics, { id: topicId, cefr: topic.cefr })
+    : { previous: null, next: null };
   const tocSections = topic.sections.map((s) => ({ id: s.id, title: s.title }));
   // `topic.cefr` is a plain string from content_json — narrowed via
   // `publicLevelFor` rather than asserted, so an out-of-range level omits the

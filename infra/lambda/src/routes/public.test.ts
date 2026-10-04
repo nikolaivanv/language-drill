@@ -140,7 +140,15 @@ function row(id: string, lemma: string, targetForm: string) {
 let app: Hono;
 
 beforeEach(async () => {
-  vi.clearAllMocks();
+  // resetAllMocks (not clearAllMocks): a prior test's `.mockResolvedValue(...)`
+  // / `.mockRejectedValue(...)` override is an IMPLEMENTATION, and clearAllMocks
+  // only clears call history — it does not undo that override, so it can bleed
+  // into whatever test runs next (this repo has a prior incident where exactly
+  // this shifted results across 22 tests). resetAllMocks restores a vi.fn(impl)
+  // to its original factory implementation (verified against the installed
+  // @vitest/spy@4.1.11), so the vi.mock factory defaults above
+  // (fetchConjugationDrillKeys, filterApprovedRelated) survive.
+  vi.resetAllMocks();
   for (const k of Object.keys(state)) delete state[k];
   for (const k of Object.keys(captured)) delete captured[k];
   const mod = await import('./public');
@@ -496,7 +504,7 @@ describe('GET /public/theory/:lang/:topicId', () => {
   });
 
   it('returns the article plus related, drill flag and quick check', async () => {
-    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON });
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON, grammarPointKey: 'es-a2-ser-vs-estar' });
     vi.mocked(fetchConjugationDrillKeys).mockResolvedValue(new Set(['es-a2-ser-vs-estar']));
     vi.mocked(fetchQuickCheck).mockResolvedValue([
       { sentence: 'Ayer ___ aquí.', instructions: 'Type it.', correctAnswer: 'estuve', acceptableAnswers: [] },
@@ -517,15 +525,41 @@ describe('GET /public/theory/:lang/:topicId', () => {
   it('500s rather than 404s when content_json cannot be parsed', async () => {
     // A 404 here would teach a crawler the page is gone; a parse failure is a
     // data bug on our side and must read as one.
-    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: { title: 'no sections' } });
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: { title: 'no sections' }, grammarPointKey: 'es-a2-ser-vs-estar' });
     const res = await app.request('/public/theory/ES/a2-ser-vs-estar');
     expect(res.status).toBe(500);
     expect(((await res.json()) as AnyJson).code).toBe('INTERNAL_ERROR');
   });
 
   it('asks for the quick check with the full grammar-point key', async () => {
-    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON });
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({ id: 'row-uuid', contentJson: TOPIC_JSON, grammarPointKey: 'es-a2-ser-vs-estar' });
     await app.request('/public/theory/ES/a2-ser-vs-estar');
     expect(vi.mocked(fetchQuickCheck)).toHaveBeenCalledWith('ES', 'es-a2-ser-vs-estar');
+  });
+
+  // Reproduces the one production row where the two id spaces disagree:
+  // `b1-comparatives-superlatives`'s column is `es-a2-comparatives-superlatives`
+  // but its stale `content_json.id` is `es-b1-comparatives-superlatives`. All
+  // 64 approved exercises for that point are keyed under the COLUMN value, so
+  // the column must win for both the drill flag and the quick check.
+  it('uses the grammar_point_key COLUMN over a stale content_json.id', async () => {
+    vi.mocked(fetchApprovedTopicContent).mockResolvedValue({
+      id: 'row-uuid',
+      contentJson: { ...TOPIC_JSON, id: 'es-b1-comparatives-superlatives' },
+      grammarPointKey: 'es-a2-comparatives-superlatives',
+    });
+    vi.mocked(fetchConjugationDrillKeys).mockResolvedValue(
+      new Set(['es-a2-comparatives-superlatives']),
+    );
+
+    const res = await app.request('/public/theory/ES/b1-comparatives-superlatives');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    // Would be false if the route still keyed on content_json.id.
+    expect(body.hasConjugationDrill).toBe(true);
+    expect(vi.mocked(fetchQuickCheck)).toHaveBeenCalledWith(
+      'ES',
+      'es-a2-comparatives-superlatives',
+    );
   });
 });

@@ -34,7 +34,6 @@ export const QuickCheckItemSchema = z.object({
   instructions: z.string().min(1),
   correctAnswer: z.string().min(1),
   acceptableAnswers: z.array(z.string()),
-  topicHint: z.string().optional(),
 });
 
 export const PublicTopicEnvelopeSchema = z

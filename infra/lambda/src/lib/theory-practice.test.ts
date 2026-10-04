@@ -107,13 +107,15 @@ describe('fetchQuickCheck', () => {
       'correctAnswer',
       'instructions',
       'sentence',
-      'topicHint',
     ]);
     // glossEn is the field `audit:gloss` polices for stating a rule's trigger
     // or outcome — on a self-graded public check it would hand over the answer.
     expect(JSON.stringify(items)).not.toContain('glossEn');
     expect(JSON.stringify(items)).not.toContain('_dedupKey');
     expect(JSON.stringify(items)).not.toContain('seedWord');
+    // topicHint is writer-only generator metadata (a diversity label like
+    // "mixed" or "nature") and is rendered nowhere on this surface.
+    expect(JSON.stringify(items)).not.toContain('topicHint');
   });
 
   it('returns [] unless all three items are available', async () => {

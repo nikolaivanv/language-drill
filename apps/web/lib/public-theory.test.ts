@@ -62,6 +62,15 @@ describe('fetchPublicTopic', () => {
     expect(notFound).toHaveBeenCalled();
   });
 
+  it('calls notFound() on a 400 (a bad-shape slug), not a 500', async () => {
+    // The API returns 400 VALIDATION_ERROR for a topicId outside
+    // /^[a-z0-9-]+$/ — a mistyped, capitalised or scanner-generated path.
+    // That must read as "not found", the same as a real 404, never a 500.
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: 'VALIDATION_ERROR' }, 400));
+    await expect(fetchPublicTopic('ES', 'A2-Ser-Vs-Estar')).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(notFound).toHaveBeenCalled();
+  });
+
   it('THROWS on a 500 instead of 404ing', async () => {
     // A transient outage must not teach Google that 312 URLs are gone.
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: 'INTERNAL_ERROR' }, 500));
@@ -111,6 +120,12 @@ describe('fetchPublicTopicList', () => {
   it('throws on a 500 so the hub does not render as empty', async () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: 'INTERNAL_ERROR' }, 500));
     await expect(fetchPublicTopicList('ES')).rejects.toThrow(/500/);
+  });
+
+  it('throws (not notFound()) on a 400 — lang comes from the route folder, not user input', async () => {
+    vi.mocked(fetch).mockResolvedValue(jsonResponse({ code: 'VALIDATION_ERROR' }, 400));
+    await expect(fetchPublicTopicList('ES')).rejects.toThrow(/400/);
+    expect(notFound).not.toHaveBeenCalled();
   });
 });
 

@@ -67,7 +67,24 @@ describe('PublicTopicEnvelopeSchema', () => {
       ],
     });
     expect(parsed.related.buildsOn[0].topicId).toBe('a1-noun-gender');
-    expect(parsed.quickCheck[0].topicHint).toBeUndefined();
+  });
+
+  it('strips an unrecognised field (e.g. writer-only topicHint) from a quick-check item', () => {
+    const parsed = PublicTopicEnvelopeSchema.parse({
+      id: 'x', title: 'T', subtitle: 's', cefr: 'A2', sections: [],
+      related: { buildsOn: [], leadsTo: [], siblings: [] },
+      hasConjugationDrill: false,
+      quickCheck: [
+        {
+          sentence: 'a ___ b',
+          instructions: 'Type it.',
+          correctAnswer: 'x',
+          acceptableAnswers: [],
+          topicHint: 'mixed',
+        },
+      ],
+    });
+    expect(parsed.quickCheck[0]).not.toHaveProperty('topicHint');
   });
 
   it('rejects a quick-check item with no correct answer', () => {

@@ -11,7 +11,10 @@ import type { RelatedTheoryTopics, RelatedTopicRef } from './theory-related';
  */
 export const APPROVED_THEORY_STATUSES = ['auto-approved', 'manual-approved'] as const;
 
-export const THEORY_TOPIC_ID_REGEX = /^[a-z0-9-]+$/;
+// Bounded to 80 chars — comfortably above the longest real slug — because this
+// is now internet-facing and an unbounded `+` lets an arbitrarily long path
+// reach the query layer.
+export const THEORY_TOPIC_ID_REGEX = /^[a-z0-9-]{1,80}$/;
 
 export type TheoryListRow = {
   id: string;
@@ -82,9 +85,13 @@ export async function fetchApprovedTopicList(
 export async function fetchApprovedTopicContent(
   lang: string,
   topicId: string,
-): Promise<{ id: string; contentJson: unknown } | null> {
+): Promise<{ id: string; contentJson: unknown; grammarPointKey: string | null } | null> {
   const rows = await db
-    .select({ id: theoryTopics.id, contentJson: theoryTopics.contentJson })
+    .select({
+      id: theoryTopics.id,
+      contentJson: theoryTopics.contentJson,
+      grammarPointKey: theoryTopics.grammarPointKey,
+    })
     .from(theoryTopics)
     .where(
       and(

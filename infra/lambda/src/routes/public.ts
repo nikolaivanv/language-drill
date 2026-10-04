@@ -35,7 +35,7 @@ import { fetchConjugationDrillKeys, fetchQuickCheck } from '../lib/theory-practi
 // here is deliberate, and the corresponding API Gateway route is registered
 // without a JWT authorizer in `infra/lib/constructs/api-gateway.ts`.
 //
-// Two constraints keep that safe and MUST NOT be relaxed:
+// Three constraints keep that safe and MUST NOT be relaxed:
 //   1. `type` is a server constant, never a request parameter. `contentJson`
 //      is returned wholesale (answers included), so an overridable type would
 //      expose the whole ~30k-row pool.
@@ -379,7 +379,7 @@ publicRoutes.get('/public/theory/:lang/:topicId', async (c) => {
     return c.json({ error: 'Invalid topicId', code: 'VALIDATION_ERROR' }, 400);
   }
 
-  let row: { id: string; contentJson: unknown } | null;
+  let row: { id: string; contentJson: unknown; grammarPointKey: string | null } | null;
   try {
     row = await fetchApprovedTopicContent(lang, topicId);
   } catch (dbError) {
@@ -406,7 +406,13 @@ publicRoutes.get('/public/theory/:lang/:topicId', async (c) => {
   // `content_json.id` carries the FULL grammar-point key (`es-a2-ser-vs-estar`),
   // while the URL slug is that key minus the language prefix. The drill lookup
   // and the quick check both key on the full one.
-  const grammarPointKey = parsed.id;
+  //
+  // The COLUMN (`theory_topics.grammar_point_key`) is authoritative, not
+  // `content_json.id` — the list route already keys on the column, and the two
+  // can disagree when a point is re-levelled after generation (generator
+  // output goes stale; the column is kept current). `parsed.id` is a
+  // belt-and-braces fallback for the case the column is ever empty.
+  const grammarPointKey = row.grammarPointKey || parsed.id;
 
   const [related, drillKeys, quickCheck] = await Promise.all([
     filterApprovedRelated(lang, deriveRelatedGrammarPoints(lang, topicId)),

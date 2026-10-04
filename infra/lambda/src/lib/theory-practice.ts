@@ -12,7 +12,6 @@ export type QuickCheckItem = {
   instructions: string;
   correctAnswer: string;
   acceptableAnswers: string[];
-  topicHint?: string;
 };
 
 /**
@@ -120,7 +119,10 @@ export async function fetchQuickCheck(
  * present on only a minority of rows and it is exactly the field `audit:gloss`
  * exists to police for stating a rule's trigger or outcome, which on a check the
  * reader grades themselves would hand over the answer. `_dedupKey` / `seedWord`
- * are writer metadata and cannot be reached by this pick at all.
+ * are writer metadata and cannot be reached by this pick at all. `topicHint` is
+ * also writer-only — a generator diversity label like "mixed" or "nature" (see
+ * `topic-domains.ts`) — and is rendered nowhere on this surface, so it is
+ * excluded the same way.
  */
 function toQuickCheckItem(contentJson: unknown): QuickCheckItem | null {
   if (contentJson === null || typeof contentJson !== 'object' || Array.isArray(contentJson)) {
@@ -143,6 +145,5 @@ function toQuickCheckItem(contentJson: unknown): QuickCheckItem | null {
     instructions: typeof c.instructions === 'string' ? c.instructions : 'Type the missing form.',
     correctAnswer: c.correctAnswer,
     acceptableAnswers: acceptable,
-    ...(typeof c.topicHint === 'string' ? { topicHint: c.topicHint } : {}),
   };
 }

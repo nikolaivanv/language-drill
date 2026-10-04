@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
 import { GrammarIndex } from '../../../components/public/grammar/grammar-index';
 
-export const revalidate = 3600;
+// `next build` must not call the live API — see `GrammarIndex` / F2 in the
+// final-fix findings. `force-dynamic` forces every fetch in this page to
+// `{ cache: 'no-store' }`, which supersedes (and makes misleading) a
+// page-level `revalidate` export, so that is intentionally absent here: the
+// per-fetch `next: { revalidate: 3600 }` in `lib/public-theory.ts` is dead
+// under this setting, not a second cache layer.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Turkish grammar explained — every topic, A1 to B2',

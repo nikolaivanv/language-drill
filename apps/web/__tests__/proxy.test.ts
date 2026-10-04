@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
-import { readdirSync, existsSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isPublicRoute } from '../proxy';
@@ -60,13 +60,65 @@ describe('isPublicRoute', () => {
 
   // Derived from the app tree rather than a hand-kept list: the failure mode this
   // guards is a new public page silently 307ing to sign-in, which no build or type
-  // check can see. Route groups in parens are layout-only and contribute no URL
-  // segment, so only top-level non-group directories are candidates.
+  // check can see.
+  //
+  // Unlike the earlier version of this test, candidates are not limited to a
+  // directory with a DIRECT `page.tsx` one level under `app/` — that silently
+  // dropped `/try` (only `try/forms/page.tsx` exists) and `/invite` (only
+  // `invite/[code]/page.tsx` exists), and excluded route-group directories
+  // (`(admin)`, `(dashboard)`, `(legal)`) wholesale, so a future
+  // `app/(public)/blog/page.tsx` would not be checked either. Instead this
+  // walks the WHOLE tree and derives one URL candidate per `page.tsx` found at
+  // any depth: a route-group segment (`(admin)`) contributes no URL segment
+  // (Next.js strips it), and a dynamic segment (`[code]`, `[[...sign-in]]`) is
+  // skipped rather than embedded literally, since there is no single concrete
+  // string that is "the" value for it.
+  //
+  // `PRIVATE_BY_DESIGN` is keyed by the derived URL's FIRST segment (not the
+  // directory name — a nested route group's own name never appears in the
+  // URL). Every genuinely protected first segment the widened walk surfaces
+  // is listed here; this is the one list this test cannot derive for itself,
+  // because "should this be public" is a product decision, not a filesystem
+  // fact.
   const PRIVATE_BY_DESIGN = new Set([
     'onboarding', 'sign-in', 'sign-up', 'api', 'ingest',
+    // The authenticated dashboard (route group `(dashboard)`) and the admin
+    // panel (route group `(admin)`) — every page beneath either requires an
+    // account, so their first URL segments are protected by design.
+    'admin', 'drill', 'fluency', 'home', 'practice', 'progress', 'read',
+    'review', 'settings', 'theory', 'vocab',
   ]);
 
-  it('treats every top-level public app directory as public', () => {
+  function isRouteGroup(name: string): boolean {
+    return name.startsWith('(') && name.endsWith(')');
+  }
+
+  function isDynamicSegment(name: string): boolean {
+    return name.startsWith('[') && name.endsWith(']');
+  }
+
+  /**
+   * Collects one URL candidate per `page.tsx` found anywhere beneath `dir`,
+   * skipping `_`-prefixed directories (Next.js private folders, never
+   * routable) and deriving the URL path from the directory chain per the
+   * group/dynamic rules above.
+   */
+  function collectPageUrls(dir: string, segments: string[], out: Set<string>): void {
+    const entries = readdirSync(dir, { withFileTypes: true });
+    if (entries.some((e) => e.isFile() && e.name === 'page.tsx')) {
+      out.add(segments.length === 0 ? '/' : `/${segments.join('/')}`);
+    }
+    for (const e of entries) {
+      if (!e.isDirectory() || e.name.startsWith('_')) continue;
+      if (isRouteGroup(e.name) || isDynamicSegment(e.name)) {
+        collectPageUrls(join(dir, e.name), segments, out);
+      } else {
+        collectPageUrls(join(dir, e.name), [...segments, e.name], out);
+      }
+    }
+  }
+
+  it('treats every public app page as public, walking the whole tree', () => {
     // __dirname is a CommonJS global that Vitest's ESM transform does not
     // guarantee; import.meta.url always resolves in an ESM test module. See
     // task-6-rulings.md R4. `import.meta.url` is read into a variable before
@@ -77,21 +129,21 @@ describe('isPublicRoute', () => {
     // through a variable defeats that static match.
     const metaUrl = import.meta.url;
     const appDir = fileURLToPath(new URL('../app', metaUrl));
-    const entries = readdirSync(appDir, { withFileTypes: true });
+
+    const urls = new Set<string>();
+    collectPageUrls(appDir, [], urls);
     // Guards a wrong path silently passing: without this, a mis-resolved
     // appDir yields an empty candidate list, `missing` is `[]`, and the test
     // passes while checking nothing — the precise failure mode this test
     // exists to prevent.
-    expect(entries.length).toBeGreaterThan(0);
+    expect(urls.size).toBeGreaterThan(0);
 
-    const candidates = entries
-      .filter((e) => e.isDirectory())
-      .map((e) => e.name)
-      .filter((name) => !name.startsWith('(') && !name.startsWith('_') && !name.startsWith('['))
-      .filter((name) => !PRIVATE_BY_DESIGN.has(name))
-      .filter((name) => existsSync(join(appDir, name, 'page.tsx')));
+    const candidates = [...urls].filter((url) => {
+      const firstSegment = url.split('/')[1] ?? '';
+      return !PRIVATE_BY_DESIGN.has(firstSegment);
+    });
 
-    const missing = candidates.filter((name) => !isPublicRoute(req(`/${name}`)));
+    const missing = candidates.filter((url) => !isPublicRoute(req(url)));
     expect(missing).toEqual([]);
   });
 });
