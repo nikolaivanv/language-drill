@@ -14,6 +14,51 @@ import type { QuickCheckItem } from '@language-drill/api-client';
  * `toLowerCase() === ` comparison here would silently disagree with the rest of
  * the product on diacritics and on Turkish İ/I.
  */
+/**
+ * The card both states share. It carries the weight that stops this block
+ * reading as one more paragraph: a rule and a wide top margin to break it off
+ * the prose, an eyebrow naming what it is, and a raised surface.
+ */
+function QuickCheckShell({ children }: { children: React.ReactNode }) {
+  return (
+    <section
+      aria-label="Quick check"
+      className="mt-s-6 border-t border-rule pt-s-6"
+      data-quick-check
+    >
+      <div className="t-mono mb-s-2 text-[11px] tracking-[1.6px] text-accent-2 uppercase">
+        Quick check
+      </div>
+      <p className="t-small mt-0 mb-s-3 text-ink-mute">
+        Three sentences, graded here. Nothing is saved and no account is needed.
+      </p>
+      <div className="rounded-lg border border-rule bg-card p-s-5 shadow-[var(--shadow-2)]">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+/** ✓ / ✗ as inline SVG — no icon dependency, inherits the verdict colour. */
+function VerdictIcon({ correct }: { correct: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      width="22"
+      height="22"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0"
+    >
+      {correct ? <path d="M4 10.5l4 4 8-8.5" /> : <path d="M5 5l10 10M15 5L5 15" />}
+    </svg>
+  );
+}
+
 export function QuickCheck({
   items,
   drillHref,
@@ -70,14 +115,14 @@ export function QuickCheck({
   if (done) {
     const correct = results.filter(Boolean).length;
     return (
-      <section aria-label="Quick check" className="rounded-lg border border-rule bg-card p-s-4">
+      <QuickCheckShell>
         <p className="t-display-s m-0 text-ink">{correct} of {items.length} right.</p>
         <p className="t-small text-ink-soft">
           {correct === items.length
             ? 'Solid. Lock it in with a longer set.'
             : 'Worth another round.'}
         </p>
-        <div className="flex flex-wrap gap-s-3">
+        <div className="flex flex-wrap items-center gap-s-3">
           {drillHref && (
             <Link href={drillHref} className="link-arrow">
               Continue in the conjugation drill
@@ -101,14 +146,14 @@ export function QuickCheck({
             Try again
           </button>
         </div>
-      </section>
+      </QuickCheckShell>
     );
   }
 
   const lastResult = results[results.length - 1];
 
   return (
-    <section aria-label="Quick check" className="rounded-lg border border-rule bg-card p-s-4">
+    <QuickCheckShell>
       <div className="t-mono text-[11px] text-ink-mute">{index + 1} / {items.length}</div>
       <p className="t-display-s m-0 text-ink">{item!.sentence}</p>
       <p className="t-small text-ink-mute">{item!.instructions}</p>
@@ -135,14 +180,45 @@ export function QuickCheck({
           </button>
         </div>
       ) : (
-        <div className={lastResult ? 'text-ok' : 'text-accent-2'}>
-          <p className="t-body m-0">{lastResult ? 'Right.' : 'Not quite.'}</p>
-          {!lastResult && <p className="t-body m-0 text-ink">{item!.correctAnswer}</p>}
-          <button type="button" onClick={advance} className="link-arrow mt-s-3">
+        <div>
+          {/*
+            The verdict reads at a glance: icon plus heading in the verdict
+            colour. Below it, BOTH answers are always named — without echoing
+            what the reader typed, a wrong verdict showed only the correct form
+            and left them to remember what they had written.
+          */}
+          <div
+            className={`flex items-center gap-s-2 ${lastResult ? 'text-ok' : 'text-accent-2'}`}
+            role="status"
+          >
+            <VerdictIcon correct={lastResult} />
+            <span className="t-display-s">{lastResult ? 'Right' : 'Not quite'}</span>
+          </div>
+
+          <dl className="mt-s-3 mb-0 grid grid-cols-[auto_1fr] gap-x-s-3 gap-y-[4px]">
+            <dt className="t-mono text-[11px] tracking-[1px] text-ink-mute uppercase">
+              You wrote
+            </dt>
+            <dd
+              className={`t-body m-0 font-medium ${lastResult ? 'text-ink' : 'text-accent-2'}`}
+            >
+              {typed.trim()}
+            </dd>
+            {!lastResult && (
+              <>
+                <dt className="t-mono text-[11px] tracking-[1px] text-ink-mute uppercase">
+                  Correct
+                </dt>
+                <dd className="t-body m-0 font-medium text-ok">{item!.correctAnswer}</dd>
+              </>
+            )}
+          </dl>
+
+          <button type="button" onClick={advance} className="link-arrow mt-s-4">
             {index === items.length - 1 ? 'See result' : 'Next'}
           </button>
         </div>
       )}
-    </section>
+    </QuickCheckShell>
   );
 }
