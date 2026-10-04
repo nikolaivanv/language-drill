@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { gradeFluencyAnswer, type ExerciseContent } from '@language-drill/shared';
 import type { QuickCheckItem } from '@language-drill/api-client';
@@ -25,6 +25,13 @@ export function QuickCheck({
   const [typed, setTyped] = useState('');
   const [results, setResults] = useState<boolean[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
+  // `setShowFeedback(true)` only takes effect on the next render, which is
+  // exactly the window a held Enter key (or Enter racing a click on Check)
+  // lives in: both handlers can call `check()` against the same `item` and
+  // `typed` before React re-renders, double-appending to `results`. A ref
+  // flips synchronously, inside the same tick as the first call, so the
+  // second call is rejected before it reads anything.
+  const submittingRef = useRef(false);
 
   // 97 of 312 topics have no usable quick-check rows (72 with no option-free
   // cloze rows at all, 25 with only one or two) — the section must be absent
@@ -35,7 +42,11 @@ export function QuickCheck({
   const item = done ? null : items[index];
 
   function check() {
+    // First line, before any other guard: synchronous and effective within
+    // the same tick, unlike `showFeedback` (see the ref's declaration above).
+    if (submittingRef.current) return;
     if (!item || !typed.trim()) return;
+    submittingRef.current = true;
     // Minimal object carrying only the two fields the cloze branch of
     // `gradeFluencyAnswer` reads (`content.type` is the dispatch field it
     // switches on; `correctAnswer`/`acceptableAnswers` are what that branch
@@ -50,6 +61,7 @@ export function QuickCheck({
   }
 
   function advance() {
+    submittingRef.current = false; // released only once the next item is shown
     setShowFeedback(false);
     setTyped('');
     setIndex((i) => i + 1);
@@ -73,7 +85,17 @@ export function QuickCheck({
           )}
           <button
             type="button"
-            onClick={() => { setIndex(0); setResults([]); setTyped(''); setShowFeedback(false); }}
+            onClick={() => {
+              // Defensive: every path that reaches this "done" screen already
+              // ran through `advance()`, which releases the ref — but resetting
+              // it explicitly here means a second sitting can never start
+              // frozen even if that invariant changes later.
+              submittingRef.current = false;
+              setIndex(0);
+              setResults([]);
+              setTyped('');
+              setShowFeedback(false);
+            }}
             className="t-small text-ink-mute underline underline-offset-2"
           >
             Try again

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QuickCheck } from '../quick-check';
 import type { QuickCheckItem } from '@language-drill/api-client';
@@ -74,5 +74,38 @@ describe('QuickCheck', () => {
   it('ignores a submit with an empty field', async () => {
     render(<QuickCheck items={items} drillHref={null} />);
     expect(screen.getByRole('button', { name: /check/i })).toBeDisabled();
+  });
+
+  it('records one result when two submits land in the same tick', async () => {
+    // Regression test: `advance()` always increments the index by exactly one
+    // per click no matter how many results got pushed, so an assertion on the
+    // item counter alone cannot distinguish a double-push from the real
+    // (single) one — it was tried first here and verified NOT to fail against
+    // the pre-fix component (see task-8-report.md fix section). The final
+    // score is what a duplicate push actually corrupts: a race that
+    // double-counts item 1's correct answer inflates "1 of 3" to "2 of 3".
+    render(<QuickCheck items={items} drillHref={null} />);
+    const input = screen.getByRole('textbox');
+    await userEvent.type(input, 'comí'); // correct for item 1
+
+    // Both handlers run against the same state, which is the real race: a held
+    // Enter key, or Enter racing a click on Check. `setShowFeedback(true)`
+    // does not take effect until the next render, so a state flag alone would
+    // not stop the second call inside this same tick.
+    act(() => {
+      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.keyDown(input, { key: 'Enter' });
+    });
+    await userEvent.click(screen.getByRole('button', { name: /next|see result/i }));
+
+    // Items 2 and 3, both deliberately wrong.
+    await userEvent.type(screen.getByRole('textbox'), 'wrong');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    await userEvent.click(screen.getByRole('button', { name: /next|see result/i }));
+    await userEvent.type(screen.getByRole('textbox'), 'wrong');
+    await userEvent.click(screen.getByRole('button', { name: /check/i }));
+    await userEvent.click(screen.getByRole('button', { name: /next|see result/i }));
+
+    expect(screen.getByText(/1 of 3/i)).toBeInTheDocument();
   });
 });

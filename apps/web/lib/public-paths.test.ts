@@ -4,6 +4,7 @@ import {
   LANGUAGE_LABEL,
   grammarIndexHref,
   grammarTopicHref,
+  publicLevelFor,
   tryFormsHref,
 } from './public-paths';
 
@@ -32,5 +33,22 @@ describe('public paths', () => {
     expect(LANGUAGE_LABEL.ES).toBe('Spanish');
     expect(LANGUAGE_LABEL.DE).toBe('German');
     expect(LANGUAGE_LABEL.TR).toBe('Turkish');
+  });
+
+  describe('publicLevelFor', () => {
+    it('narrows a level the public drill offers for that language', () => {
+      expect(publicLevelFor('ES', 'A2')).toBe('A2');
+      expect(publicLevelFor('TR', 'B2')).toBe('B2'); // TR offers B2; ES/DE do not
+    });
+
+    it('returns null for a level that language does not offer', () => {
+      expect(publicLevelFor('ES', 'B2')).toBeNull(); // ES pool has no approved B2 conjugation rows
+      expect(publicLevelFor('DE', 'B2')).toBeNull();
+    });
+
+    it('returns null for a CEFR value outside the public set entirely', () => {
+      expect(publicLevelFor('ES', 'C1')).toBeNull();
+      expect(publicLevelFor('ES', '')).toBeNull();
+    });
   });
 });
