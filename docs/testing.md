@@ -133,6 +133,29 @@ It does **not** target the preview URL: the web specs mock every API call with
 `mobile-responsive.spec.ts` are gated on `E2E_FULL_STACK` (unset in CI) and
 **skip**; run them against a preview deploy or local full stack when needed.
 
+`public-grammar.spec.ts` carries the same gate, but for a reason worth knowing:
+the public grammar pages fetch their content in a **server** component, so the
+request leaves the Next server rather than the browser and `page.route` cannot
+stub it — the very property that makes those articles crawlable. With nothing
+listening on `NEXT_PUBLIC_API_URL`, the server fetch throws by design (a 5xx
+must not degrade to a 404 on an indexable page), so the route 500s. The
+regression those pages most need guarded — that Clerk's middleware keeps every
+public grammar URL public — is asserted on every PR by
+`apps/web/__tests__/proxy.test.ts`, which needs no server at all.
+
+Running it locally takes **more than `E2E_FULL_STACK=1`**: Playwright starts the
+web server with `apps/web`'s own `dev` script, which does not carry the root
+`pnpm dev:web`'s inline API-URL override, so it reads the placeholder
+`NEXT_PUBLIC_API_URL` from `apps/web/.env` and the server fetch fails even with
+a local API running. Pass it explicitly:
+
+```bash
+pnpm dev:api          # another shell — port 3001
+E2E_FULL_STACK=1 NEXT_PUBLIC_API_URL=http://localhost:3001 \
+  pnpm --filter @language-drill/web exec playwright test \
+  --project=unauthenticated --grep grammar
+```
+
 The four Clerk vars come from GitHub Actions secrets that must point at the
 **dev** Clerk instance (`pk_test_`/`sk_test_` — the suite refuses `pk_live_`):
 
