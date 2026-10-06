@@ -60,6 +60,7 @@ import {
   type GenCellArmExecutorParams,
   type GenEvalRunResult,
   type LangfusePromptFetcher,
+  type PoolContextLoader,
   type ResolvedGenerationPromptSource,
 } from "./eval-gen-run";
 
@@ -314,6 +315,7 @@ describe("parseEvalGenArgs", () => {
       allowProd: true,
       limit: 3,
       maxCostUsd: 1.5,
+      poolHistory: false,
     });
   });
 
@@ -1242,5 +1244,161 @@ describe("eval-gen construction-variant seeding", () => {
     const md = renderMarkdownSummary(computeGenDiff(sampleRun()));
     expect(md).toContain("## Construction variants");
     expect(md).toContain("_(none)_");
+  });
+});
+
+describe("parseEvalGenArgs — --pool-history", () => {
+  it("defaults poolHistory to false and sets it with the flag", () => {
+    const base = ["--candidate", "repo", "--dataset-file", "cells.json"];
+    expect(parseEvalGenArgs(base).poolHistory).toBe(false);
+    expect(parseEvalGenArgs([...base, "--pool-history"]).poolHistory).toBe(true);
+  });
+});
+
+describe("runGenEval — --pool-history", () => {
+  const STEM = "Mi hermana ___ en casa.";
+  const loaderReturning = (seedWords: readonly (string | null)[] | undefined): PoolContextLoader =>
+    vi.fn(async () => ({ stems: [STEM], seedWords }));
+
+  it("gives both arms the loader's seeds and only the candidate the history", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+    const result = await runGenEval({
+      ...runOpts({ executor, dataset: [cellEntry("tr-a1-locative")], args: { poolHistory: true } }),
+      poolContextLoader: loaderReturning(["ev", null]),
+    });
+
+    expect(seen).toHaveLength(2);
+    const [base, cand] = seen;
+    expect(base.explicitSeeds).toEqual({ seedWords: ["ev", null] });
+    expect(cand.explicitSeeds).toEqual({ seedWords: ["ev", null] });
+    expect(cand.systemPromptOverride).toContain(`  - ${STEM}`);
+    expect(cand.systemPromptOverride).toContain("## Already in this cell");
+    expect(base.systemPromptOverride).not.toContain(STEM);
+    expect(result.cells[0].poolStems).toEqual([STEM]);
+  });
+
+  it("records a non-sentence cell as a per-cell error without loading or generating", async () => {
+    const executor: GenCellArmExecutor = vi.fn(async () => armResult());
+    const loader = loaderReturning(undefined);
+    const result = await runGenEval({
+      ...runOpts({
+        executor,
+        dataset: [cellEntry("tr-a1-present-continuous", "TR", "A1", "vocab_recall")],
+        args: { poolHistory: true },
+      }),
+      poolContextLoader: loader,
+    });
+    expect(executor).not.toHaveBeenCalled();
+    expect(loader).not.toHaveBeenCalled();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].error).toMatch(/--pool-history supports cloze, translation and sentence_construction only/);
+  });
+
+  it("throws up front when --pool-history is set without a loader", async () => {
+    const executor: GenCellArmExecutor = vi.fn(async () => armResult());
+    await expect(
+      runGenEval(runOpts({ executor, dataset: [cellEntry("tr-a1-locative")], args: { poolHistory: true } })),
+    ).rejects.toThrow(/pool context loader/);
+  });
+
+  it("leaves non-pool runs untouched: no explicitSeeds, no poolStems", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+    const result = await runGenEval(runOpts({ executor, dataset: [cellEntry("tr-a1-locative")] }));
+    expect(seen.every((p) => p.explicitSeeds === undefined)).toBe(true);
+    expect(result.cells[0].poolStems).toBeUndefined();
+  });
+});
+
+describe("makeRealArmExecutor — explicit seeds and stems", () => {
+  beforeEach(() => {
+    mockGenerateBatch.mockReset();
+    mockValidateDraft.mockReset();
+  });
+
+  it("uses explicitSeeds verbatim, stamps variantId only for variant ids, and records each draft's stem", async () => {
+    const grammarPoint = getGrammarPoint("tr-a1-locative");
+    if (!grammarPoint) throw new Error("fixture key missing");
+    const cell: CellDescriptor = {
+      language: Language.TR,
+      cefrLevel: CefrLevel.A1,
+      exerciseType: ExerciseType.CLOZE,
+      grammarPointKey: "tr-a1-locative",
+    };
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [
+        { id: "d1", contentJson: { type: ExerciseType.CLOZE, instructions: "x", sentence: "Kedi ___ uyuyor.", correctAnswer: "evde" } },
+        { id: "d2" },
+      ] as ExerciseDraft[],
+      tokenUsage: ZERO_USAGE,
+      malformedDrafts: [],
+    } satisfies GenerateBatchResult);
+    mockValidateDraft.mockResolvedValue({ result: approveResult(), tokenUsage: ZERO_USAGE });
+
+    const arm = await makeRealArmExecutor({} as never)({
+      cell,
+      grammarPoint,
+      systemPromptOverride: "SYSTEM",
+      draftsPerCell: 2,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: true,
+      explicitSeeds: { seedWords: ["ev", null] },
+    });
+
+    expect(mockGenerateBatch.mock.calls[0][1].seedWords).toEqual(["ev", null]);
+    // "ev" is a frequency seed, not one of the point's variant ids.
+    expect(arm.outcomes.map((o) => o.variantId)).toEqual([undefined, undefined]);
+    expect(arm.outcomes[0].stem).toBe("Kedi ___ uyuyor.");
+    expect(arm.outcomes[1].stem).toBeUndefined();
+  });
+});
+
+describe("computeGenDiff + renderMarkdownSummary — pool reuse", () => {
+  const POOL = ["Mi hermana ___ en casa.", "Mi hermana ___ médica.", "Mi hermana ___ aquí.", "El tren ___ tarde."];
+  const outcome = (stem: string): DraftOutcome => ({ bucket: "auto-approved", reasons: [], stem });
+  const run = (poolStems?: readonly string[]): GenEvalRunResult => ({
+    runName: "pool-run",
+    baseline: { source: "repo", sha: "aaaa1111" },
+    candidate: { source: "repo", sha: "aaaa1111" },
+    datasetName: "cells.json",
+    startedAt: "2026-10-07T00:00:00.000Z",
+    draftsPerCell: 2,
+    costCapped: false,
+    cells: [
+      {
+        cellKey: "ES:B1:cloze:es-b1-nominalizers",
+        baseline: { outcomes: [outcome("Tu hermana ___ cansada."), outcome("Mi hermana ___ lista.")], usage: ZERO_USAGE },
+        candidate: { outcomes: [outcome("El vecino ___ ruidoso."), outcome("La jefa ___ ocupada.")], usage: ZERO_USAGE },
+        ...(poolStems ? { poolStems } : {}),
+      },
+    ],
+    errors: [],
+  });
+
+  it("computes per-arm reuse and the verdict when cells carry poolStems", () => {
+    const summary = computeGenDiff(run(POOL));
+    expect(summary.poolReuse?.baseline.hotReuseRate).toBe(1);
+    expect(summary.poolReuse?.candidate.hotReuseRate).toBe(0);
+    expect(summary.poolReuse?.verdict).toBe("ship-ready");
+    expect(summary.poolReuse?.perCell[0].hot.map((h) => h.token)).toEqual(["herma"]);
+
+    const md = renderMarkdownSummary(summary);
+    expect(md).toContain("## Pool reuse (--pool-history)");
+    expect(md).toMatch(/\| hot-token reuse rate \| 100\.0% \| 0\.0% \|/);
+    expect(md).toContain("**Verdict:** ship-ready");
+    expect(md).toContain("herma (75%)");
+  });
+
+  it("omits poolReuse and its section for ordinary runs", () => {
+    const summary = computeGenDiff(run());
+    expect(summary.poolReuse).toBeUndefined();
+    expect(renderMarkdownSummary(summary)).not.toContain("Pool reuse");
   });
 });

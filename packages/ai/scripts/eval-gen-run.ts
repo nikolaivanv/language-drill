@@ -36,15 +36,26 @@ import {
   pickVariantSeeds,
   variantsForType,
 } from "@language-drill/shared";
-import type { GrammarPoint } from "@language-drill/shared";
+import type {
+  CurriculumCefrLevel,
+  GrammarPoint,
+  LearningLanguage,
+} from "@language-drill/shared";
 import {
   buildCellKey,
+  buildCellSeedWords,
+  createDb,
+  fetchPriorStems,
   getGrammarPoint,
+  requireEnv,
   routeValidationResult,
+  type Cell,
+  type Db,
 } from "@language-drill/db";
 
 import {
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
+  HISTORY_STEM_TYPES,
   ZERO_USAGE,
   addUsage,
   applyTemplate,
@@ -52,6 +63,7 @@ import {
   estimateCostUsd,
   generateBatch,
   getLangfuse,
+  historyStem,
   validateDraft,
   type ClaudeUsageBreakdown,
   type GenerationPromptInputs,
@@ -69,6 +81,15 @@ import {
   type EvalRunSummary,
   type LangfusePromptFetcher,
 } from "./eval-run.js";
+import {
+  cellReuse,
+  foldReuse,
+  hotTokens,
+  reuseVerdict,
+  type HotToken,
+  type ReuseFold,
+  type ReuseVerdict,
+} from "./pool-reuse-metrics.js";
 
 // ---------------------------------------------------------------------------
 // Dataset descriptor — one row of the `--dataset-file` JSON array.
@@ -224,6 +245,8 @@ export type DraftOutcome = {
   bucket: DraftBucket;
   reasons: string[];
   variantId?: string;
+  /** `historyStem` of the draft (cloze/translation/SC); read by the --pool-history reuse metrics. Absent for parser failures and drafts with no stem. */
+  stem?: string;
 };
 
 /**
@@ -294,6 +317,18 @@ export type GenEvalSummary = {
   costUsd: { baseline: number; candidate: number };
   errors: Array<{ cellKey: string; error: string }>;
   perCell?: Array<{ cellKey: string; baseline: ArmStats; candidate: ArmStats }>;
+  /** `--pool-history` runs only: lexical reuse vs. each cell's pool + the spec's decision rule. */
+  poolReuse?: {
+    baseline: ReuseFold;
+    candidate: ReuseFold;
+    verdict: ReuseVerdict;
+    perCell: Array<{
+      cellKey: string;
+      hot: HotToken[];
+      baseline: ReuseFold;
+      candidate: ReuseFold;
+    }>;
+  };
 };
 
 // ---------------------------------------------------------------------------
@@ -315,6 +350,8 @@ export type EvalGenArgs = {
   allowProd: boolean;
   /** Hard cost ceiling (USD); checked at each cell boundary. */
   maxCostUsd?: number;
+  /** `--pool-history`: candidate sees the cell's approved stems; both arms get prod's seeds. */
+  poolHistory?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -460,6 +497,14 @@ export type GenCellArmExecutorParams = {
    */
   seedConstructionVariants: boolean;
   /**
+   * `--pool-history` only: the per-ordinal seeds BOTH arms share (prod's
+   * `buildCellSeedWords`). When set it replaces `seedWordsForArm`, removing the
+   * baseline-unseeded/candidate-seeded asymmetry so the history section is the
+   * only difference between arms. The wrapper distinguishes "explicitly
+   * unseeded" (`{ seedWords: undefined }`) from "not in pool mode" (absent).
+   */
+  explicitSeeds?: { seedWords: readonly (string | null)[] | undefined };
+  /**
    * The system prompt body already rendered for this cell + arm — passed
    * through to `GenerationSpec.systemPromptOverride` so the resolved prompt
    * source drives generation without a Langfuse fetch.
@@ -517,17 +562,29 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
     cell,
     grammarPoint,
     seedConstructionVariants,
+    explicitSeeds,
     systemPromptOverride,
     draftsPerCell,
     batchSeed,
     signal,
   }: GenCellArmExecutorParams): Promise<ArmResult> => {
-    const variantSeeds = seedWordsForArm(
-      grammarPoint,
-      cell.exerciseType,
-      draftsPerCell,
-      seedConstructionVariants,
+    const seedWords = explicitSeeds
+      ? explicitSeeds.seedWords
+      : seedWordsForArm(
+          grammarPoint,
+          cell.exerciseType,
+          draftsPerCell,
+          seedConstructionVariants,
+        );
+    // Explicit (prod) seeds mix frequency lemmas with variant ids; only the
+    // latter belong in `variantCounts`.
+    const variantIds = new Set(
+      variantsForType(grammarPoint, cell.exerciseType).map((v) => v.id),
     );
+    const variantFor = (o: number): string | undefined => {
+      const seed = seedWords?.[o];
+      return seed != null && variantIds.has(seed) ? seed : undefined;
+    };
     const spec: GenerationSpec = {
       // EN is rejected at `resolveCell`, so this narrowing cast is safe; the
       // generator also guards EN at runtime.
@@ -539,7 +596,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       count: draftsPerCell,
       batchSeed,
       systemPromptOverride,
-      seedWords: variantSeeds,
+      seedWords,
     };
 
     const batch = await generateBatch(client, spec, signal);
@@ -574,6 +631,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       );
       usage = addUsage(usage, tokenUsage);
       const { reviewStatus, flaggedReasons } = routeValidationResult(result);
+      const stem = historyStem(draft.contentJson);
       outcomes.push({
         bucket: bucketForReviewStatus(reviewStatus),
         // Key the distribution on the canonical `code` only — never the
@@ -583,7 +641,8 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
         // The variant this draft was seeded with, if any (undefined for an
         // unseeded arm/draft) — keyed on the true ordinal, not the compacted
         // array index.
-        variantId: variantSeeds?.[ordinal],
+        variantId: variantFor(ordinal),
+        ...(stem !== null ? { stem } : {}),
       });
       ordinal++;
     }
@@ -597,7 +656,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       outcomes.push({
         bucket: "parser-failure",
         reasons: ["parser-failure"],
-        variantId: variantSeeds?.[malformed.ordinal],
+        variantId: variantFor(malformed.ordinal),
       });
     }
 
@@ -614,7 +673,22 @@ export type GenCellRecord = {
   cellKey: string;
   baseline: ArmResult;
   candidate: ArmResult;
+  /** --pool-history only: the cell's approved stems fed to the candidate. */
+  poolStems?: readonly string[];
 };
+
+/** What `--pool-history` loads per cell from the database. */
+export type PoolContext = {
+  stems: readonly string[];
+  seedWords: readonly (string | null)[] | undefined;
+};
+
+/** Port so tests can stub the database. See `makeDbPoolContextLoader`. */
+export type PoolContextLoader = (
+  resolved: ResolvedCell,
+  draftsPerCell: number,
+  batchSeed: string,
+) => Promise<PoolContext>;
 
 /** Raw orchestration output, rolled up into a `GenEvalSummary` by `computeGenDiff`. */
 export type GenEvalRunResult = {
@@ -664,6 +738,7 @@ export async function runGenEval(opts: {
   signal?: AbortSignal;
   now?: () => Date;
   log?: (...args: unknown[]) => void;
+  poolContextLoader?: PoolContextLoader;
 }): Promise<GenEvalRunResult> {
   const {
     executor,
@@ -677,7 +752,14 @@ export async function runGenEval(opts: {
     signal,
     now = () => new Date(),
     log = (...a: unknown[]) => console.log(...a),
+    poolContextLoader,
   } = opts;
+
+  if (args.poolHistory && !poolContextLoader) {
+    throw new Error(
+      "[eval-gen] --pool-history requires a pool context loader (DATABASE_URL)",
+    );
+  }
 
   const startedAt = now().toISOString();
   const entries =
@@ -688,6 +770,12 @@ export async function runGenEval(opts: {
       `draftsPerCell=${args.draftsPerCell} runName=${runName} ` +
       `baseline=${baseline.sha} candidate=${candidate.sha}`,
   );
+
+  if (args.poolHistory) {
+    log(
+      "[eval-gen] --pool-history: candidate sees each cell's approved stems; both arms share prod seeds",
+    );
+  }
 
   const cells: GenCellRecord[] = [];
   const errors: Array<{ cellKey: string; error: string }> = [];
@@ -712,6 +800,17 @@ export async function runGenEval(opts: {
         exerciseType: cell.exerciseType,
         grammarPoint,
       };
+
+      let pool: PoolContext | undefined;
+      if (args.poolHistory) {
+        if (!HISTORY_STEM_TYPES.has(cell.exerciseType)) {
+          throw new Error(
+            `--pool-history supports cloze, translation and sentence_construction only (got ${cell.exerciseType})`,
+          );
+        }
+        pool = await poolContextLoader!(resolution, args.draftsPerCell, batchSeed);
+      }
+      const explicitSeeds = pool ? { seedWords: pool.seedWords } : undefined;
 
       // Dictation cells flow against the in-repo dictation generation prompt,
       // NOT a rendered cloze `systemPromptOverride`. Both prompt sources
@@ -741,7 +840,10 @@ export async function runGenEval(opts: {
         : renderSystemPrompt(baseline.templateBody, inputs);
       const candidatePrompt = isDictation
         ? undefined
-        : renderSystemPrompt(candidate.templateBody, inputs);
+        : renderSystemPrompt(
+            candidate.templateBody,
+            pool ? { ...inputs, priorPoolSurfaces: pool.stems } : inputs,
+          );
 
       const baselineResult = await executor({
         cell,
@@ -749,6 +851,7 @@ export async function runGenEval(opts: {
         // Baseline stays unseeded — it must reproduce today's real behaviour
         // so the candidate's seeding is the only variable under test.
         seedConstructionVariants: false,
+        explicitSeeds,
         systemPromptOverride: baselinePrompt,
         draftsPerCell: args.draftsPerCell,
         batchSeed,
@@ -760,13 +863,19 @@ export async function runGenEval(opts: {
         // Candidate seeds the point's declared construction variants —
         // the change this eval exists to measure (Task 7).
         seedConstructionVariants: true,
+        explicitSeeds,
         systemPromptOverride: candidatePrompt,
         draftsPerCell: args.draftsPerCell,
         batchSeed,
         signal,
       });
 
-      cells.push({ cellKey, baseline: baselineResult, candidate: candidateResult });
+      cells.push({
+        cellKey,
+        baseline: baselineResult,
+        candidate: candidateResult,
+        ...(pool ? { poolStems: pool.stems } : {}),
+      });
       accumulatedUsage = addUsage(
         addUsage(accumulatedUsage, baselineResult.usage),
         candidateResult.usage,
@@ -912,6 +1021,33 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
   const baselineStats = computeArmStats(run.cells.map((c) => c.baseline));
   const candidateStats = computeArmStats(run.cells.map((c) => c.candidate));
 
+  const stemsOf = (arm: ArmResult): string[] =>
+    arm.outcomes.flatMap((o) => (o.stem !== undefined ? [o.stem] : []));
+  const pooled = run.cells.filter((c) => c.poolStems !== undefined);
+  const approvalRateDelta = candidateStats.approvalRate - baselineStats.approvalRate;
+  let poolReuse: GenEvalSummary["poolReuse"];
+  if (pooled.length > 0) {
+    const per = pooled.map((c) => ({
+      cellKey: c.cellKey,
+      hot: hotTokens(c.poolStems!),
+      baseline: cellReuse(stemsOf(c.baseline), c.poolStems!),
+      candidate: cellReuse(stemsOf(c.candidate), c.poolStems!),
+    }));
+    const baselineFold = foldReuse(per.map((p) => p.baseline));
+    const candidateFold = foldReuse(per.map((p) => p.candidate));
+    poolReuse = {
+      baseline: baselineFold,
+      candidate: candidateFold,
+      verdict: reuseVerdict(baselineFold, candidateFold, approvalRateDelta),
+      perCell: per.map((p) => ({
+        cellKey: p.cellKey,
+        hot: p.hot,
+        baseline: foldReuse([p.baseline]),
+        candidate: foldReuse([p.candidate]),
+      })),
+    };
+  }
+
   return {
     runName: run.runName,
     baseline: run.baseline,
@@ -923,7 +1059,7 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
     costCapped: run.costCapped,
     baselineStats,
     candidateStats,
-    approvalRateDelta: candidateStats.approvalRate - baselineStats.approvalRate,
+    approvalRateDelta,
     reasonDeltas: buildDeltas(
       baselineStats.rejectionReasonCounts,
       candidateStats.rejectionReasonCounts,
@@ -946,6 +1082,7 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
       baseline: computeArmStats([c.baseline]),
       candidate: computeArmStats([c.candidate]),
     })),
+    ...(poolReuse ? { poolReuse } : {}),
   };
 }
 
@@ -1024,6 +1161,33 @@ export function renderMarkdownSummary(summary: GenEvalSummary): string {
   // diversified the pool without opening the JSON.
   deltaTable("Construction variants", summary.variantDeltas, "variant");
 
+  if (summary.poolReuse) {
+    const pr = summary.poolReuse;
+    lines.push("");
+    lines.push("## Pool reuse (--pool-history)");
+    lines.push("");
+    lines.push("| Metric | Baseline | Candidate |");
+    lines.push("|---|---|---|");
+    lines.push(`| hot-token reuse rate | ${pct(pr.baseline.hotReuseRate)} | ${pct(pr.candidate.hotReuseRate)} |`);
+    lines.push(`| mean max-Jaccard vs pool | ${pr.baseline.meanMaxJaccard.toFixed(3)} | ${pr.candidate.meanMaxJaccard.toFixed(3)} |`);
+    lines.push(`| drafts with a stem | ${pr.baseline.drafts} | ${pr.candidate.drafts} |`);
+    lines.push("");
+    lines.push(
+      `**Verdict:** ${pr.verdict} — ship-ready iff candidate hot-reuse ≤ 0.7 × baseline and approval Δ ≥ −5pp; inconclusive if the baseline shows no hot reuse.`,
+    );
+    lines.push("");
+    lines.push("| cell | hot tokens | reuse (b → c) | max-Jaccard (b → c) |");
+    lines.push("|---|---|---|---|");
+    for (const c of pr.perCell) {
+      const hot =
+        c.hot.map((h) => `${h.token} (${Math.round(h.share * 100)}%)`).join(", ") || "_(none)_";
+      lines.push(
+        `| ${c.cellKey} | ${hot} | ${pct(c.baseline.hotReuseRate)} → ${pct(c.candidate.hotReuseRate)} | ` +
+          `${c.baseline.meanMaxJaccard.toFixed(3)} → ${c.candidate.meanMaxJaccard.toFixed(3)} |`,
+      );
+    }
+  }
+
   deltaTable("Rejection reasons", summary.reasonDeltas, "reason");
   deltaTable("Flag tags", summary.flagDeltas, "tag");
 
@@ -1092,6 +1256,7 @@ export function parseEvalGenArgs(
       limit: { type: "string" },
       "run-name": { type: "string" },
       "allow-prod": { type: "boolean", default: false },
+      "pool-history": { type: "boolean", default: false },
       "max-cost-usd": { type: "string" },
       help: { type: "boolean", default: false },
     },
@@ -1165,6 +1330,7 @@ export function parseEvalGenArgs(
     runName: parsed.values["run-name"],
     allowProd: parsed.values["allow-prod"] ?? false,
     maxCostUsd,
+    poolHistory: parsed.values["pool-history"] ?? false,
   };
 }
 
@@ -1174,7 +1340,7 @@ function printGenUsage(): void {
       "Usage: pnpm eval:gen --candidate <source> --dataset-file <path>",
       "                    [--baseline <source>] [--drafts-per-cell <n>]",
       "                    [--limit <n>] [--run-name <name>] [--allow-prod]",
-      "                    [--max-cost-usd <n>]",
+      "                    [--max-cost-usd <n>] [--pool-history]",
       "",
       "Compares two generation-prompt sources over a dataset of cells,",
       "reporting approval-rate / rejection-reason / flag-tag deltas. Writes a",
@@ -1188,6 +1354,8 @@ function printGenUsage(): void {
       "  --run-name <name>        Optional. Defaults to candidate-<sha8>-<iso>.",
       "  --allow-prod             Required if LANGFUSE_ENV=prod (safety guard).",
       "  --max-cost-usd <n>       Hard cost ceiling; stops at a cell boundary.",
+      "  --pool-history           Candidate sees each cell's approved stems (reads DATABASE_URL);",
+      "                           both arms get prod's seeds. cloze/translation/SC cells only.",
       "  --help                   Show this message.",
     ].join("\n"),
   );
@@ -1196,6 +1364,24 @@ function printGenUsage(): void {
 // ---------------------------------------------------------------------------
 // CLI entry — only runs when invoked directly via `tsx scripts/eval-gen-run.ts`
 // ---------------------------------------------------------------------------
+
+/** Real `--pool-history` loader: the cell's approved stems + prod's seeds, read-only. */
+export function makeDbPoolContextLoader(db: Db): PoolContextLoader {
+  return async ({ cell, grammarPoint }, draftsPerCell, batchSeed) => {
+    const dbCell: Cell = {
+      language: cell.language as LearningLanguage,
+      cefrLevel: cell.cefrLevel as CurriculumCefrLevel,
+      exerciseType: cell.exerciseType,
+      grammarPoint,
+      cellKey: buildCellKey(cell),
+    };
+    const [stems, seedWords] = await Promise.all([
+      fetchPriorStems(db, dbCell),
+      buildCellSeedWords(db, dbCell, draftsPerCell, batchSeed),
+    ]);
+    return { stems, seedWords };
+  };
+}
 
 async function main(): Promise<void> {
   const args = parseEvalGenArgs();
@@ -1224,7 +1410,18 @@ async function main(): Promise<void> {
   const datasetName = path.basename(args.datasetFile);
   const runName = deriveRunName(candidate.sha, args.runName, new Date());
 
+  let poolContextLoader: PoolContextLoader | undefined;
+  if (args.poolHistory) {
+    const dbUrl = requireEnv("DATABASE_URL");
+    // `--allow-prod` guards LANGFUSE_ENV, not the database: say which pool is read.
+    console.log(
+      `[eval-gen] --pool-history reading the pool (read-only) from ${new URL(dbUrl).host}`,
+    );
+    poolContextLoader = makeDbPoolContextLoader(createDb(dbUrl));
+  }
+
   const result = await runGenEval({
+    poolContextLoader,
     executor: makeRealArmExecutor(createClaudeClient(apiKey)),
     dataset,
     baseline,
