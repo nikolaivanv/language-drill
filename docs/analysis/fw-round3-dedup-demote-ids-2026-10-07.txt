@@ -1,0 +1,157 @@
+# Free-writing near-duplicate demotion, round 3 (all languages/levels except ES B2) — 2026-10-07
+# reason: duplicate. All rows were auto-approved, demotion_reason NULL before the run.
+# ES A1 cell: es-a1-fw-a-day (before 5, demote 2)
+#   angle: Whole typical day: morning/afternoon/evening + bedtime — kept d8a4edd5-7a2b-597d-9717-a14190c8ccb4
+0d35724c-d6d5-5af4-8dfd-09a8c389a9b5
+fa509dba-56ae-5f9e-ab3f-c082f93e2b57
+# ES A1 cell: es-a1-fw-my-family (before 5, demote 2)
+#   angle: Two members' routine at a time + who you're with — kept d9d93490-c5be-5ab8-8477-48c43d06a3e9
+dbd937b6-c7f8-5642-8677-4bfe3f3fdf8b
+#   angle: Introduce two members, one fact each — kept e9195ed3-d760-577f-8147-ad13438711ce
+c87bd12a-4bcc-565e-a70e-28a22bc864c7
+# ES A1 cell: es-a1-fw-my-home (before 5, demote 2)
+#   angle: Two rooms + favourite — kept b9a60797-6181-5aeb-826e-a2f7c41a48f2
+bba60abd-5f47-5f61-806e-9fbdc1e10d50
+cd036e23-2813-54bf-a6ce-5063fbdfd53e
+# ES A2 cell: es-a2-fw-best-friend (before 5, demote 2)
+#   angle: A moment your friend helped you — kept 206008ea-07db-5c04-adb1-5bf8b1d97049
+1f600757-8b31-5553-b0b1-60cf32f60e1a
+#   angle: Two traits with examples + how you met — kept 66a27668-03e0-5092-aa5c-67ae9e969027
+21600a7d-88f8-59c9-aeb1-5d9530bcd278
+# ES A2 cell: es-a2-fw-last-vacation (before 5, demote 1)
+#   angle: Most memorable day — kept 14fca37a-d3a1-5a1c-b9e4-46607dd9fcd9
+12fca054-d5da-55a6-bbe4-499a8013387b
+# ES A2 cell: es-a2-fw-my-neighborhood (before 5, demote 2)
+#   angle: Favourite place + recommend — kept 08cddaf1-6fe8-5805-aa0d-ca998a999ca4
+0ccde13d-745b-5f19-a60d-c42586272560
+#   angle: Saturday around the neighbourhood — kept 09cddc84-f577-5cde-a70d-c5c2097cfed3
+0bcddfaa-f33e-5154-a50d-c2880743c331
+# ES B1 cell: es-b1-fw-a-trip (before 8, demote 5)
+#   angle: Surprising moment on a trip — kept 8aea9098-b4a8-55f2-928d-9b1e0aadecb7
+8cea93be-b26f-5a68-908d-97e40874b115
+0f0cdc6a-a2da-574c-9f41-df10054098b1
+a0891727-002b-530b-8b25-22d7201ad982
+#   angle: Unexpected problem on a trip — kept c94927b3-420b-5751-8270-f28d178605b4
+8bea922b-35c5-53b7-938d-9cbb89914ee6
+8dea9551-338b-582d-918d-998187581344
+# ES B1 cell: es-b1-fw-daily-routine (before 6, demote 5)
+#   angle: Weekday in three moments + one change — kept fa251f9a-4189-5448-bfd4-49b4ba877ebd
+fb25212d-c2a5-520d-80d4-4b51396ae0ec
+f8251c74-43c2-5fd2-81d4-4ceebcc0ba5f
+f9251e07-c4df-5d97-82d4-4e8b3ba41c8e
+f7251ae1-c718-5921-bcd4-44dd34f869a8
+f2251302-38a4-5620-87d4-569cb1a29035
+# ES B1 cell: es-b1-fw-favorite-meal (before 8, demote 4)
+#   angle: Favourite dish: why, when, with whom — kept f265a2b9-48f2-5623-a3a0-f3df40d5aa8e
+f665a905-4480-5f0f-a7a0-fa533c63334a
+70d72bb7-d240-527f-aa4b-2fd3d37ee5de
+df5af0fa-9366-5b40-bbcd-a30cb8a4a50d
+4ddeb63d-c417-5b55-8a6e-2ff99dca643c
+# ES B1 cell: es-b1-fw-free-time (before 8, demote 7)
+#   angle: Two activities, frequency, why + one to try — kept 311998a8-0bde-5704-b40f-aed8276930ed
+3719a21a-09a5-5b7a-ba0f-b886252ff54b
+3619a087-8888-5db5-b90f-b6e9a1da1bd8
+35199ef4-076c-5ff0-b80f-b54c22f6b9a9
+33199bce-0e18-528e-b60f-b21229a26c8f
+32199a3b-8cfb-54c9-b50f-b075a64c931c
+9f432dcf-95a6-53cf-8b5b-7103beb7216e
+c995de6a-ad4a-522a-ac6e-5eb6beed984b
+# ES B1 cell: es-b1-fw-ideal-weekend (before 6, demote 3)
+#   angle: Saturday + Sunday activity — kept e890e84c-37ca-5bda-ae6e-61c63e689b8f
+eb90ed05-b6ad-5e15-ad6e-6029bb12c21c
+3095136e-3d48-5e54-b15f-6b386317cd29
+bf96e52b-28e7-5c93-9fdc-f7ff7df20dfa
+# ES B1 cell: es-b1-fw-my-town (before 5, demote 2)
+#   angle: Foreign friend visiting: two places — kept 48b527c9-fff9-5a9d-b8a6-08c145f5863c
+cbe4b7b2-3681-5a1c-ba2c-d1d0021bb089
+dae752ef-e70b-5edb-a8aa-5e971cf5f15a
+# EN B1 cell: (none) (before 1, demote 1)
+#   angle: Stub seed (one-line), EN is source-only — kept none
+4d81fb7c-4df1-5c68-a89a-2c14a05a8e61
+# TR A1 cell: tr-a1-fw-my-day (before 5, demote 2)
+#   angle: Morning routine — kept 90cf8541-0c94-5485-a7df-cc49905142fc
+8ecf821b-0ecd-500f-a9df-cf83928a7e9e
+8fcf83ae-8b77-56c0-a6df-caac116de0cd
+# TR A1 cell: tr-a1-fw-my-family (before 5, demote 4)
+#   angle: Introduce 2+ members, age/job, one like — kept c8c0b7a2-bc02-5ef6-8d5b-806a3506e4e7
+c7c0b60f-3ae5-5131-8c5b-7ecdb1b10b74
+c9c0b935-3d1e-5cbb-8e5b-8207b3ea4716
+39bee5e5-0b2a-538b-9bfc-0d571a2ca416
+38bee452-8a0d-55c6-9afc-0bba9b4941e7
+# TR A1 cell: tr-a1-fw-my-weekend (before 5, demote 2)
+#   angle: Usual weekend place — kept bf3448fb-3328-583f-91cd-551311873a16
+c2344db4-b67e-518e-8ccd-4d028e3160a3
+c3344f47-379a-5f53-8dcd-4e9f0d14c2d2
+# TR A2 cell: tr-a2-fw-a-trip (before 6, demote 2)
+#   angle: Getting lost — kept fc381434-17c1-5346-a42d-01aaaef6e7fb
+ff3818ed-96a5-5581-a32d-000d2ba10e88
+#   angle: A memento recalls a moment — kept 4c08b2eb-6a2c-576d-856b-6521f5eb26d8
+fd3815c7-98de-510b-a52d-03472dda4a2a
+# TR A2 cell: tr-a2-fw-free-time (before 5, demote 3)
+#   angle: Two hobbies, frequency, why — kept d3d21a10-77a8-5fa4-baa0-b97855545165
+d4d21ba3-f8c5-5d69-bba0-bb15d437b394
+d6d21ec9-fafe-58f3-bda0-be4fd670ef36
+5ebe2aa0-8087-59c2-8ca0-f2de8e46c71f
+# TR A2 cell: tr-a2-fw-my-city (before 5, demote 2)
+#   angle: Favourite place — kept 1ca6620e-bbaf-514a-a5a1-697662ae4073
+20a6685a-c022-585e-a1a1-63026720b7b7
+#   angle: City seen each morning — kept 21a669ed-413e-5623-a2a1-649fe60419e6
+1fa666c7-3f05-5a99-a0a1-6165e3cade44
+# TR B1 cell: (none) (before 1, demote 1)
+#   angle: Stub seed (one-line): technology & daily life — kept none
+44d6e79a-8663-5fb4-8819-a27835ce77f1
+# TR B1 cell: tr-b1-fw-a-past-experience (before 5, demote 2)
+#   angle: Unforgettable moment — kept a18e7808-dec1-54f0-bc75-bf4c82dd9381
+a28e799b-5fdd-52b5-bd75-c0e901c0f5b0
+a68e7fe7-6450-59c9-b975-ba7506336cf4
+# TR B1 cell: tr-b1-fw-a-plan-or-hope (before 5, demote 1)
+#   angle: Personal plan/dream and why — kept c5651152-46ff-5c60-999b-cbac5f144a3d
+c1650b06-4b71-5374-959b-c5385aa1d2f9
+# TR B2 cell: tr-b2-fw-a-review (before 5, demote 1)
+#   angle: Review an app — kept c783bf9a-1cfa-5360-a6a4-ae4cbe4f1a9d
+c583bc74-1f34-5eea-a8a4-b186c088563f
+# DE A1 cell: de-a1-fw-a-day (before 4, demote 1)
+#   angle: Whole typical day — kept 203c4ed7-d2e2-5445-bd08-6b99340576a8
+b2b88b27-04d6-5d75-af67-11c968d12ea8
+# DE A1 cell: de-a1-fw-my-family (before 5, demote 2)
+#   angle: Introduce two members — kept 9fe2e1d0-8f17-5dd8-9a4a-6cd472c3fba9
+b3a0f3b9-b2e3-5b85-a055-65b9bcf700e4
+a0e2e363-1034-5b9d-9b4a-6e71f1a75dd8
+# DE A2 cell: de-a2-fw-best-friend (before 4, demote 1)
+#   angle: How we met + traits — kept 42e81b59-7ae8-551b-86b1-12a74d84c8e6
+40e81833-78ae-5991-84b1-0f6d4b4b8d44
+# DE A2 cell: de-a2-fw-my-neighborhood (before 2, demote 1)
+#   angle: Two places + what's missing — kept e583c6de-fc84-59c6-a693-a3ba5a0ed3cf
+54078c21-2d35-59db-b534-ff27a4267dfe
+# DE B1 cell: (none) (before 1, demote 1)
+#   angle: Stub seed (one-line): Stadt oder Land — kept none
+3d4907bf-796c-5b5b-abc5-8807a9f9735a
+# DE B1 cell: de-b1-fw-complaint (before 5, demote 3)
+#   angle: Wrong product delivered — kept 70c5bd09-f010-5203-b5ac-231f02cd6e36
+6ec5b9e3-edd6-5679-b3ac-1fe500943294
+#   angle: Damaged/missing items — kept 5e48b739-9fa4-5453-834d-7cefce01b636
+6dc5b850-6cba-58b4-b2ac-1e4881b0d065
+5d48b5a6-1e87-568e-824d-7b524f1e5407
+# DE B1 cell: de-b1-fw-email-invitation (before 5, demote 2)
+#   angle: Why this guest matters — kept 49c87e0c-5cf8-5452-8d65-c05efa887b7f
+a1676871-83f3-5451-bac4-5e7da99083c8
+#   angle: Event invitation — kept 45c877c0-616b-5b66-8965-b9eaf616043b
+47c87ae6-5f31-5fdc-8765-b6b0f3dcc899
+# DE B1 cell: de-b1-fw-future-plan (before 5, demote 2)
+#   angle: Shared goal — kept 6170114d-7b08-560f-a294-22d3ea8324c2
+f0ec48e4-d66d-5cf0-91f2-c42c9e323ef1
+#   angle: Personal goal/skill — kept 60700fba-f9eb-584a-a194-21366b9fc293
+f3ec4d9d-59c2-563f-94f2-c9031f4edcc2
+# DE B1 cell: de-b1-fw-past-experience (before 4, demote 1)
+#   angle: Special memory via a photo — kept 0132d60c-e4b6-536c-8cde-ab504472ae4d
+0232d79f-65d3-5131-8dde-acedc356107c
+# DE B2 cell: de-b2-fw-environment (before 5, demote 2)
+#   angle: Eco habit I changed — kept e5acb1f9-f1e5-5fb3-a30f-d96f9cb87f6e
+2a0ebd28-415b-5af4-b72b-c72881de3e9d
+e3acaed3-efac-5429-a10f-d6359a7f43cc
+# DE B2 cell: de-b2-fw-social-media (before 4, demote 1)
+#   angle: Own use + change noticed — kept c3972edc-fe41-5cf4-96d5-9a1867d6b50d
+bf972890-f9ce-55e0-9ad5-a08c63643dc9
+# DE B2 cell: de-b2-fw-work-life-balance (before 5, demote 1)
+#   angle: How my week is split — kept bf6436a1-192f-5be1-bfa6-637d702a3dc8
+abe72f3e-6ade-52ac-9328-d9f057893899

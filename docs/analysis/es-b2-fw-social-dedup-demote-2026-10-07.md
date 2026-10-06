@@ -80,3 +80,20 @@ WHERE id IN (
   '6b5d7247-c48f-5321-908e-121d334bf91c'
 );
 ```
+
+## Round 3 — every other language and level (same day)
+
+Three read-only reviewer agents (DE all levels; ES A1–B1; TR all levels + EN)
+clustered each cell's prompts by distinct question under the same rule
+(duplicate = a learner would write essentially the same essay; at A1/A2,
+different required content counts as distinct), keeping one per question. The
+two whole-cell collapses (ES B1 free-time 8→1, daily-routine 6→1) and TR A1
+my-family 5→1 / DE B1 complaint 5→2 were spot-checked against the full task
+text. **76 rows** demoted (): 73 across 32 cells via
+, plus 3 cell-less one-line stub seeds (EN B1, TR B1,
+DE B1) by guarded direct UPDATE. Per-cell clusters with the kept row and angle:
+; ids: .
+
+**Round 3 rollback** (prod, branch ):
+
+
