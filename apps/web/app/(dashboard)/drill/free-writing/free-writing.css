@@ -81,7 +81,16 @@
 .fw-prose { font-family: var(--font-display); font-size: 19px; line-height: 1.85; color: var(--color-ink); }
 .fw-prose p { margin: 0 0 14px; }
 .fw-prose p:last-child { margin-bottom: 0; }
-.fw-err { white-space: nowrap; border-radius: 3px; padding: 0 1px; cursor: pointer; }
+/* Error spans wrap like ordinary text. A correction can be a whole struck
+   clause plus its rewrite — far wider than the column — and a nowrap unit
+   that size forced the grid column (and the page) to scroll sideways. The
+   `.new` + `.mk` spans abut with no whitespace, so a badge never breaks away
+   from its fix. `clone` gives every line fragment its own padding, radius
+   and active-highlight ring instead of one box split open across lines. */
+.fw-err {
+  border-radius: 3px; padding: 0 1px; cursor: pointer;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
 .fw-err .old { color: var(--color-ink-mute); text-decoration: line-through; text-decoration-color: var(--color-accent); text-decoration-thickness: 1.5px; }
 .fw-err .new { color: var(--color-ok); font-weight: 500; margin-left: 5px; }
 .fw-err .mk {
@@ -197,11 +206,6 @@
 
   /* Compare view: stack "your text" above "improved" instead of side-by-side. */
   .fw-compare { grid-template-columns: 1fr; }
-
-  /* Let the struck original → green fix pair wrap rather than force a single
-     nowrap unit that overflows the phone (desktop keeps nowrap — it has the
-     horizontal room to hold each pair together). */
-  .fw-err { white-space: normal; }
 
   /* Action rows that are a nowrap flex row on desktop become full-width stacked
      buttons so a long label can't overflow a narrow viewport. */

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MarkedProse, ImprovedProse } from './fw-prose';
@@ -51,5 +53,23 @@ describe('ImprovedProse', () => {
   it('renders when upgrades is undefined', () => {
     render(<ImprovedProse improved={{ text: 'texto simple' }} />);
     expect(screen.getByText('texto simple')).toBeInTheDocument();
+  });
+});
+
+// jsdom does not lay out text, so the wrap behaviour is pinned at the source.
+// A correction can be a whole struck clause plus its rewrite; as a nowrap unit
+// it widened the column past the card and the corrections view scrolled
+// sideways on desktop.
+describe('free-writing error span wrapping', () => {
+  const css = readFileSync(join(__dirname, '..', 'free-writing.css'), 'utf8');
+  const errRule = css.match(/\.fw-err\s*\{[^}]*\}/)?.[0] ?? '';
+
+  it('lets error spans wrap like ordinary text', () => {
+    expect(errRule).not.toBe('');
+    expect(errRule).not.toMatch(/white-space:\s*nowrap/);
+  });
+
+  it('clones the box per line so a wrapped active highlight stays closed', () => {
+    expect(errRule).toMatch(/(?<!-)box-decoration-break:\s*clone/);
   });
 });
