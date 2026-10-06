@@ -179,6 +179,42 @@ function str(v: unknown, fallback = ""): string {
   return typeof v === "string" ? v : fallback;
 }
 
+/**
+ * Tool-use sometimes delivers a nested value as a JSON-ENCODED STRING instead
+ * of the array/object the schema declares — the model dodges nested-quote
+ * escaping by stringifying the whole value. Observed for the generator's
+ * `requiredElements` (#721) and, on 2026-10-06, for this evaluator's
+ * `improved` (`"[{\"text\": …}]"`), which the object-only parse silently
+ * reduced to an empty rewrite. Decode one layer; anything that does not parse
+ * is returned unchanged so the caller's own type check still applies.
+ */
+function decodeJsonString(v: unknown): unknown {
+  if (typeof v !== "string") return v;
+  const trimmed = v.trim();
+  if (!trimmed.startsWith("[") && !trimmed.startsWith("{")) return v;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return v;
+  }
+}
+
+/**
+ * Normalizes `improved` to an object. Beyond a JSON-encoded string, the model
+ * has wrapped it in a one-element array; a plain (non-JSON) string is taken as
+ * the rewritten text itself rather than discarded.
+ */
+function improvedObject(v: unknown): Record<string, unknown> {
+  let decoded = decodeJsonString(v);
+  if (Array.isArray(decoded)) {
+    decoded = decoded.find((el) => typeof el === "object" && el !== null) ?? decoded[0];
+  }
+  if (typeof decoded === "string") return { text: decoded };
+  return typeof decoded === "object" && decoded !== null
+    ? (decoded as Record<string, unknown>)
+    : {};
+}
+
 export function parseFreeWritingEvaluation(
   input: unknown,
   validKeys?: ReadonlySet<string>,
@@ -187,12 +223,13 @@ export function parseFreeWritingEvaluation(
     throw new Error("Free writing evaluation must be an object");
   }
   const raw = input as Record<string, unknown>;
+  const criteriaRaw = decodeJsonString(raw.criteria);
 
-  if (!Array.isArray(raw.criteria) || raw.criteria.length !== 4) {
+  if (!Array.isArray(criteriaRaw) || criteriaRaw.length !== 4) {
     throw new Error(`Expected exactly 4 criteria, got ${JSON.stringify(raw.criteria)}`);
   }
 
-  const criteria: FreeWritingCriterion[] = (raw.criteria as unknown[]).map((c, i) => {
+  const criteria: FreeWritingCriterion[] = (criteriaRaw as unknown[]).map((c, i) => {
     const o = (typeof c === "object" && c !== null ? c : {}) as Record<string, unknown>;
     const id = CRITERION_IDS.includes(o.id as FreeWritingCriterionId)
       ? (o.id as FreeWritingCriterionId)
@@ -206,7 +243,8 @@ export function parseFreeWritingEvaluation(
     };
   });
 
-  const errorsRaw = Array.isArray(raw.errors) ? (raw.errors as unknown[]) : [];
+  const errorsDecoded = decodeJsonString(raw.errors);
+  const errorsRaw = Array.isArray(errorsDecoded) ? (errorsDecoded as unknown[]) : [];
   const errors: FreeWritingError[] = [];
   errorsRaw.forEach((e, i) => {
     if (typeof e !== "object" || e === null) return;
@@ -231,18 +269,17 @@ export function parseFreeWritingEvaluation(
     });
   });
 
-  const goodSpans = Array.isArray(raw.goodSpans)
-    ? (raw.goodSpans as unknown[]).filter((s): s is string => typeof s === "string")
+  const goodSpansRaw = decodeJsonString(raw.goodSpans);
+  const goodSpans = Array.isArray(goodSpansRaw)
+    ? (goodSpansRaw as unknown[]).filter((s): s is string => typeof s === "string")
     : [];
 
-  const improvedRaw =
-    typeof raw.improved === "object" && raw.improved !== null
-      ? (raw.improved as Record<string, unknown>)
-      : {};
+  const improvedRaw = improvedObject(raw.improved);
+  const upgradesRaw = decodeJsonString(improvedRaw.upgrades);
   const improved = {
     text: str(improvedRaw.text),
-    upgrades: Array.isArray(improvedRaw.upgrades)
-      ? (improvedRaw.upgrades as unknown[]).filter((s): s is string => typeof s === "string")
+    upgrades: Array.isArray(upgradesRaw)
+      ? (upgradesRaw as unknown[]).filter((s): s is string => typeof s === "string")
       : undefined,
   };
 

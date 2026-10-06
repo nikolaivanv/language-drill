@@ -128,6 +128,60 @@ describe('parseFreeWritingEvaluation', () => {
   it('throws when criteria count is not four', () => {
     expect(() => parseFreeWritingEvaluation({ ...valid, criteria: valid.criteria.slice(0, 3) })).toThrow();
   });
+
+  // Observed in prod 2026-10-06 (claude-sonnet-4-6, trace 781d0071): the tool
+  // call delivered `improved` as a JSON-ENCODED STRING wrapping a one-element
+  // ARRAY. The object-only parse dropped it to `{ text: '' }`, so the compare
+  // screen showed "185 words" over an empty panel. Same encoding dodge as the
+  // generator's requiredElements (#721).
+  describe('improved — encoding tolerance', () => {
+    const rewrite = { text: 'En mi opinión, las redes sociales…', upgrades: ['en términos generales'] };
+
+    it('decodes a JSON-encoded array wrapping the improved object', () => {
+      const r = parseFreeWritingEvaluation({
+        ...valid,
+        improved: JSON.stringify([rewrite], null, 2),
+      });
+      expect(r.improved).toEqual(rewrite);
+    });
+
+    it('decodes a JSON-encoded improved object', () => {
+      const r = parseFreeWritingEvaluation({ ...valid, improved: JSON.stringify(rewrite) });
+      expect(r.improved).toEqual(rewrite);
+    });
+
+    it('unwraps a bare one-element array', () => {
+      const r = parseFreeWritingEvaluation({ ...valid, improved: [rewrite] });
+      expect(r.improved).toEqual(rewrite);
+    });
+
+    it('treats a plain non-JSON string as the improved text itself', () => {
+      const r = parseFreeWritingEvaluation({ ...valid, improved: 'Texto mejorado.' });
+      expect(r.improved).toEqual({ text: 'Texto mejorado.', upgrades: undefined });
+    });
+
+    it('decodes JSON-encoded upgrades inside the improved object', () => {
+      const r = parseFreeWritingEvaluation({
+        ...valid,
+        improved: { text: rewrite.text, upgrades: JSON.stringify(rewrite.upgrades) },
+      });
+      expect(r.improved.upgrades).toEqual(rewrite.upgrades);
+    });
+  });
+
+  // The same dodge can hit the other nested values; without decoding, errors
+  // and goodSpans silently become [] and criteria throws on a correct response.
+  it('decodes JSON-encoded criteria, errors and goodSpans', () => {
+    const r = parseFreeWritingEvaluation({
+      ...valid,
+      criteria: JSON.stringify(valid.criteria),
+      errors: JSON.stringify(valid.errors),
+      goodSpans: JSON.stringify(valid.goodSpans),
+    });
+    expect(r.criteria).toHaveLength(4);
+    expect(r.errors[0].correction).toBe('tuviera');
+    expect(r.goodSpans).toEqual(['Sin embargo']);
+  });
 });
 
 describe('evaluateFreeWriting', () => {
