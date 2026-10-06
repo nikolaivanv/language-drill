@@ -1,0 +1,21 @@
+# ES B2 free_writing near-duplicate demotion — 2026-10-07 (reason: duplicate)
+# All rows were review_status=auto-approved, demotion_reason=NULL before the run.
+# es-b2-fw-social-media — angle "useful tool or distraction" (kept 8443ad62)
+d0e75fbd-5b84-5495-a631-4e392f86f5c4
+cee75c97-5dbd-501f-a831-517331c03166
+c9e754b8-e113-596e-a331-4962ae6a57f3
+# es-b2-fw-social-media — angle "idealized image / distorted mirror" (kept c8e75325)
+cbe757de-ded9-5de4-a131-4628ac311c51
+cae7564b-622f-5733-a431-4aff2d4dba22
+633922ee-2fe2-5a60-ac88-b17cd223bab5
+cfe75e2a-da67-56d0-a531-4c9cb0a39395
+cce75971-5ff6-5ba9-a231-47c52b147e80
+# es-b2-fw-technology-relationships — angle "bridge or barrier between people" (kept 92b71a59)
+94b71d7f-65c0-55df-b0d9-e213c7c47eee
+91b718c6-e6dc-53a4-a9d9-d6c8423569d9
+95b71f12-e26a-5c90-add9-dd3c46a7e11d
+97b72238-f1fa-5d56-a3d9-cd1a3b89b6f3
+a31c06e9-ae2e-583b-a4a5-8b076698e4fe
+90b71733-6a32-5cf3-acd9-db9fc35207aa
+677d4898-c28e-59fc-b627-2fc04bbea42d
+96b720a5-6386-5a55-aed9-ded9c58b434c
