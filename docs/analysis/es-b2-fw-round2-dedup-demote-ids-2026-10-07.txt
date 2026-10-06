@@ -1,0 +1,36 @@
+# ES B2 free_writing near-duplicate demotion, round 2 — 2026-10-07 (reason: duplicate)
+# All rows were review_status=auto-approved, demotion_reason=NULL before the run.
+# cell: es-b2-fw-environment (kept 08ffb577)
+09ffb70a-b520-577c-89e4-aca06f19b7a1
+05ffb0be-b0ad-5068-8de4-b314738c2ee5
+d7863762-25bb-5f20-a37b-7d8c07a30e05
+4609fca5-0332-5635-b21c-0a79ecc8cd34
+0a6b3e54-a594-53ca-80bd-65e63b52eea7
+07ffb3e4-b759-5306-8be4-afda7152f343
+e697b12f-94d0-5a1b-9a86-0b475678b272
+# cell: es-b2-fw-remote-work (kept ba4e3a76 team culture, bb4e3c09 self-discipline)
+dcebeaed-843e-50ed-b7ee-e031a19398cc
+d9ebe634-055b-5eb2-b8ee-e1ce24e9723f
+ae1f1eec-825c-58e8-9ec1-4de4a1173129
+# cell: es-b2-fw-study-abroad (kept 0ad88d45)
+75afdcf7-a0b6-5cff-b3fe-8bd310cdeace
+6dafd05f-a99b-5b27-abfe-7eeb07e8fc46
+bc5bb5e2-812b-518c-a7af-3770e62de5b9
+74afdb64-1f99-5f3a-b2fe-8a3691ea889f
+ef40bcd4-8f53-58b6-878b-68ca1be2675b
+77afe01d-9e7c-5175-b1fe-88990e94af2c
+2adf7b25-b1dc-51a1-b8ea-0d5dcd5845e8
+6cafcecc-287e-5d62-aafe-7d4e89059a17
+70afd518-240c-564e-aefe-83c28d78115b
+# cell: es-b2-fw-work-life-balance (kept 34f2a159)
+c76edda9-7e51-5f9b-bd3d-2be7f33cd216
+c46ed8f0-fafc-564c-ba3d-271072203445
+c56eda83-7c18-5411-bb3d-28adf1039674
+2fbabe92-8d2b-50ba-a02c-62b6e2c93dc3
+c66edc16-fd35-51d6-bc3d-2a4a74596fe7
+ca6ee262-f8c2-5ac2-803d-30be6fe6f8a3
+8b86d648-55a0-5fd2-a1af-b83e84cd7cd7
+# cell: NONE (grammar_point_key IS NULL) — 2026-06-14 stub seed duplicating
+# remote-work; unreachable by demote:pool, demoted by a guarded direct UPDATE
+# that writes the same two columns the CLI writes.
+6b5d7247-c48f-5321-908e-121d334bf91c
