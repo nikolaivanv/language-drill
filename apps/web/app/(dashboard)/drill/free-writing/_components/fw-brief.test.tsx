@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FwBrief } from './fw-brief';
@@ -53,5 +55,20 @@ describe('FwBrief', () => {
     expect(screen.queryByText('elementos obligatorios')).toBeNull();
     expect(screen.queryByText(/palabras/)).toBeNull();
     expect(screen.queryByText(/dirígete/)).toBeNull();
+  });
+});
+
+// jsdom does not cascade stylesheets, so the primary-hover contrast is pinned
+// at the source: each `.btn.primary:hover` rule must restate its text colour,
+// or the base `.btn:hover { color: ink }` wins and the CTA reads ink-on-ink.
+describe('free-writing primary button hover', () => {
+  const css = readFileSync(join(__dirname, '..', 'free-writing.css'), 'utf8');
+  it('keeps paper text on the light-theme hover fill', () => {
+    expect(css).toMatch(
+      /(?<!\.dark )\.btn\.primary:hover:not\(:disabled\)\s*\{[^}]*color:\s*var\(--color-paper\)/,
+    );
+  });
+  it('keeps white text on the dark-theme hover fill', () => {
+    expect(css).toMatch(/\.dark \.btn\.primary:hover:not\(:disabled\)\s*\{[^}]*color:\s*#fff/);
   });
 });
