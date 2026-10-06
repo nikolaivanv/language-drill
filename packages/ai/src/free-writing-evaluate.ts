@@ -28,12 +28,17 @@ import { ContentRejectedError } from "./content-rejected-error.js";
 
 export const FREE_WRITING_EVAL_TOOL_NAME = "submit_free_writing_evaluation";
 
-// Same interactive fail-fast posture as evaluate.ts, but a larger token budget:
-// the FW output (4 criteria + errors + a rewritten paragraph) is much bigger
-// than a cloze evaluation.
+// A far larger budget than evaluate.ts: the FW output (4 criteria + every
+// located error + a rewritten paragraph) is big. Measured 2026-10-06 on a
+// 186-word B2 essay: 3,321 output tokens in 51.5s (~64 tok/s) — so 4096 left
+// too little headroom (a messier essay would truncate the tool call), and the
+// call is too slow for API Gateway's 30s cap. It is served from the eval-submit
+// Function URL instead, whose Lambda timeout (EVAL_SUBMIT_TIMEOUT_SECONDS in
+// infra) must stay >= REQUEST_TIMEOUT × (1 + MAX_RETRIES) plus DB work.
+// 8192 tokens at ~64 tok/s ≈ 128s, hence the 135s request timeout.
 const MODEL = "claude-sonnet-4-6" as const;
-const MAX_TOKENS = 4096;
-export const FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS = 45_000;
+const MAX_TOKENS = 8192;
+export const FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS = 135_000;
 export const FREE_WRITING_EVAL_MAX_RETRIES = 1;
 
 const CRITERION_IDS: readonly FreeWritingCriterionId[] = ["task", "coherence", "lexis", "grammar"];

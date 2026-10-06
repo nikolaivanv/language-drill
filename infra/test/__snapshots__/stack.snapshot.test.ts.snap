@@ -52,6 +52,15 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         "Ref": "EmailQueue43AF118C",
       },
     },
+    "EvalSubmitUrl": {
+      "Description": "Function URL for long-running POST /exercises/:id/submit (free writing) — beyond API Gateway's 30s cap",
+      "Value": {
+        "Fn::GetAtt": [
+          "EvalSubmitUrl508BFB60",
+          "FunctionUrl",
+        ],
+      },
+    },
     "GenerationQueueUrl": {
       "Description": "SQS queue for generation jobs (Phase 4). Set GENERATION_QUEUE_URL to this for the CLI --queue flag.",
       "Value": {
@@ -2316,6 +2325,464 @@ exports[`LanguageDrillStack (prod) CFN snapshot > matches the locked CFN templat
         ],
       },
       "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "EvalSubmitErrorsAlarm62B71CBA": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Eval-submit Lambda errored (timeout or uncaught throw) — a learner's submit failed. Check the EvalSubmit log group.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "EvalSubmitHandlerB142B49C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Errors",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EvalSubmitEvalSubmitAiFailureAlarmCCD63683": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Eval-submit Lambda: >= 5 caught Claude evaluation failures (502 AI_UNAVAILABLE) in 5 minutes — Anthropic outage, usage-limit, or a systemic prompt/parse bug. These do not move the Lambda Errors metric.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "EvaluationPeriods": 1,
+        "MetricName": "eval-submit-ai-failure",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 5,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EvalSubmitEvalSubmitAiFailureAlarmFilter045B6EB5A": {
+      "Properties": {
+        "FilterPattern": ""Claude evaluation failed:"",
+        "LogGroupName": {
+          "Ref": "EvalSubmitLogGroupE749E47B",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "eval-submit-ai-failure",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "EvalSubmitEvalSubmitPromptFallbackAlarm5FC10B5F": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Langfuse prompt registry served the in-repo fallback for a non-keys_unset reason (timeout / fetch_error) at least twice within 30 min — the live prompt may have vanished or Langfuse is unreachable. A single isolated fallback (transient cold-fetch timeout) is tolerated by design. See CLAUDE.md §Prompt Editing.",
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "DatapointsToAlarm": 2,
+        "EvaluationPeriods": 6,
+        "MetricName": "eval-submit-prompt-fallback",
+        "Namespace": "LanguageDrill/prod",
+        "Period": 300,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 1,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EvalSubmitEvalSubmitPromptFallbackAlarmFilter82EF7549": {
+      "Properties": {
+        "FilterPattern": ""[prompts-registry] prompt fallback (reason="",
+        "LogGroupName": {
+          "Ref": "EvalSubmitLogGroupE749E47B",
+        },
+        "MetricTransformations": [
+          {
+            "DefaultValue": 0,
+            "MetricName": "eval-submit-prompt-fallback",
+            "MetricNamespace": "LanguageDrill/prod",
+            "MetricValue": "1",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::MetricFilter",
+    },
+    "EvalSubmitHandlerB142B49C": {
+      "DependsOn": [
+        "EvalSubmitHandlerServiceRoleDefaultPolicy9483C02F",
+        "EvalSubmitHandlerServiceRole1157421D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": "cdk-hnb659fds-assets-123456789012-us-east-1",
+          "S3Key": "<asset-hash>.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "ADMIN_USER_IDS": "",
+            "AI_GLOBAL_DAILY_CAP": "",
+            "AI_KILL_SWITCH": "",
+            "ALLOWED_ORIGINS": "https://*.vercel.app,https://langdrill.app,https://www.langdrill.app",
+            "ANTHROPIC_API_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "CLERK_SECRET_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "DATABASE_URL": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL:SecretString:::}}",
+                ],
+              ],
+            },
+            "LANGFUSE_ENV": "prod",
+            "LANGFUSE_PUBLIC_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_PUBLIC_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+            "LANGFUSE_SECRET_KEY": {
+              "Fn::Join": [
+                "",
+                [
+                  "{{resolve:secretsmanager:arn:",
+                  {
+                    "Ref": "AWS::Partition",
+                  },
+                  ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY:SecretString:::}}",
+                ],
+              ],
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "LoggingConfig": {
+          "LogGroup": {
+            "Ref": "EvalSubmitLogGroupE749E47B",
+          },
+        },
+        "MemorySize": 512,
+        "ReservedConcurrentExecutions": 10,
+        "Role": {
+          "Fn::GetAtt": [
+            "EvalSubmitHandlerServiceRole1157421D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs22.x",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Timeout": 300,
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "EvalSubmitHandlerServiceRole1157421D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "EvalSubmitHandlerServiceRoleDefaultPolicy9483C02F": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/DATABASE_URL-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/CLERK_SECRET_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/ANTHROPIC_API_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_PUBLIC_KEY-??????",
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":secretsmanager:us-east-1:123456789012:secret:language-drill/LANGFUSE_SECRET_KEY-??????",
+                  ],
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "EvalSubmitHandlerServiceRoleDefaultPolicy9483C02F",
+        "Roles": [
+          {
+            "Ref": "EvalSubmitHandlerServiceRole1157421D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "EvalSubmitHandlerinvokefunction15370E69": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "EvalSubmitHandlerB142B49C",
+            "Arn",
+          ],
+        },
+        "InvokedViaFunctionUrl": true,
+        "Principal": "*",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "EvalSubmitHandlerinvokefunctionurl7E094BC5": {
+      "Properties": {
+        "Action": "lambda:InvokeFunctionUrl",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "EvalSubmitHandlerB142B49C",
+            "Arn",
+          ],
+        },
+        "FunctionUrlAuthType": "NONE",
+        "Principal": "*",
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "EvalSubmitInvocationFloodAlarm73B6DC20": {
+      "Properties": {
+        "AlarmActions": [
+          {
+            "Ref": "AlertsAlertsTopic96BD0900",
+          },
+        ],
+        "AlarmDescription": "Eval-submit Function URL invoked >300 times in an hour — possible flood of the unauthenticated URL.",
+        "ComparisonOperator": "GreaterThanThreshold",
+        "Dimensions": [
+          {
+            "Name": "FunctionName",
+            "Value": {
+              "Ref": "EvalSubmitHandlerB142B49C",
+            },
+          },
+        ],
+        "EvaluationPeriods": 1,
+        "MetricName": "Invocations",
+        "Namespace": "AWS/Lambda",
+        "Period": 3600,
+        "Statistic": "Sum",
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+        "Threshold": 300,
+        "TreatMissingData": "notBreaching",
+      },
+      "Type": "AWS::CloudWatch::Alarm",
+    },
+    "EvalSubmitLogGroupE749E47B": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "RetentionInDays": 30,
+        "Tags": [
+          {
+            "Key": "env",
+            "Value": "prod",
+          },
+        ],
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "EvalSubmitUrl508BFB60": {
+      "Properties": {
+        "AuthType": "NONE",
+        "InvokeMode": "BUFFERED",
+        "TargetFunctionArn": {
+          "Fn::GetAtt": [
+            "EvalSubmitHandlerB142B49C",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Url",
     },
     "GenerationLambdaWrapGenerationCellFailuresAlarm2ECCA199": {
       "Properties": {

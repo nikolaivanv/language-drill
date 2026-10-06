@@ -12,6 +12,7 @@ import { DictationAudioQueueConstruct } from "./constructs/dictation-audio-queue
 import { DictationAudioLambdaConstruct } from "./constructs/dictation-audio-lambda";
 import { SchedulerLambdaConstruct } from "./constructs/scheduler-lambda";
 import { AnnotateStreamLambdaConstruct } from "./constructs/annotate-stream-lambda";
+import { EvalSubmitLambdaConstruct } from "./constructs/eval-submit-lambda";
 import { TheoryGenerationQueueConstruct } from "./constructs/theory-generation-queue";
 import { TheoryGenerationLambdaConstruct } from "./constructs/theory-generation-lambda";
 import { TheorySchedulerLambdaConstruct } from "./constructs/theory-scheduler-lambda";
@@ -192,6 +193,20 @@ export class LanguageDrillStack extends Stack {
       },
     );
 
+    // Long-running answer evaluation (free writing) on its own Function URL.
+    // Grading an essay takes ~50s; API Gateway caps integrations at 30s, so
+    // the web sends free-writing submits here instead of to the API.
+    const evalSubmit = new EvalSubmitLambdaConstruct(this, "EvalSubmit", {
+      secretsPrefix: props.secretsPrefix,
+      alarmTopic: alerts.topic,
+      additionalEnv: {
+        ALLOWED_ORIGINS: props.allowedOrigins.join(","),
+        ADMIN_USER_IDS: props.adminUserIds ?? "",
+        AI_KILL_SWITCH: props.aiKillSwitch ?? "",
+        AI_GLOBAL_DAILY_CAP: props.aiGlobalDailyCap ?? "",
+      },
+    });
+
     // Phase 4 (theory) — parallel theory generation pipeline. Independent
     // queue + DLQ + reserved-concurrency budget from the exercise pipeline.
     // Cron gating stays on `enableScheduledJobs`; the exercise pipeline above
@@ -259,6 +274,11 @@ export class LanguageDrillStack extends Stack {
       value: annotateStream.functionUrl,
       description:
         "Function URL for the SSE read endpoints: /read/annotate (skim) and /read/annotate-span (deep card)",
+    });
+    new CfnOutput(this, "EvalSubmitUrl", {
+      value: evalSubmit.functionUrl,
+      description:
+        "Function URL for long-running POST /exercises/:id/submit (free writing) — beyond API Gateway's 30s cap",
     });
     new CfnOutput(this, "DictationAudioQueueUrl", {
       value: dictationAudioQueue.queue.queueUrl,

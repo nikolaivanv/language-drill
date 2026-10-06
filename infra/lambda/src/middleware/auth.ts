@@ -12,6 +12,23 @@ export type Bindings = {
   event: LambdaEvent;
 };
 
+/**
+ * Ensure the user row exists — fallback for missed/delayed Clerk webhooks.
+ * Never throws: a failed upsert is logged and the request proceeds. Shared
+ * with entry points that verify the JWT themselves (eval-submit Function URL)
+ * and therefore pre-set `userId`, which makes `authMiddleware` skip this.
+ */
+export async function ensureUserRow(userId: string): Promise<void> {
+  try {
+    await db
+      .insert(users)
+      .values({ id: userId, email: PLACEHOLDER_EMAIL })
+      .onConflictDoNothing({ target: users.id });
+  } catch (err) {
+    console.error('Failed to ensure user row:', err);
+  }
+}
+
 export async function authMiddleware(
   c: Context<{ Bindings: Bindings; Variables: Variables }>,
   next: Next
@@ -41,15 +58,7 @@ export async function authMiddleware(
     return c.json({ error: 'Unauthorized', code: 'MISSING_SUB' }, 401);
   }
 
-  // Ensure user row exists — fallback for missed/delayed Clerk webhooks
-  try {
-    await db
-      .insert(users)
-      .values({ id: sub, email: PLACEHOLDER_EMAIL })
-      .onConflictDoNothing({ target: users.id });
-  } catch (err) {
-    console.error('Failed to ensure user row:', err);
-  }
+  await ensureUserRow(sub);
 
   c.set('userId', sub);
   await next();

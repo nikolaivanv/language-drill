@@ -150,6 +150,35 @@ jobs:
           ENV_TARGET: production
         run: .github/scripts/sync-vercel-env.sh
 
+      # Free-writing submits go to the eval-submit Function URL (an essay
+      # evaluation outlives API Gateway's 30s cap). Same read+sync pattern.
+      - name: Read EvalSubmitUrl from prod CFN outputs
+        id: prod_eval_submit_url
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name LanguageDrillStack \
+            --query "Stacks[0].Outputs[?OutputKey=='EvalSubmitUrl'].OutputValue" \
+            --output text)
+          if [ -z "$URL" ] || [ "$URL" = "None" ]; then
+            echo "::error::EvalSubmitUrl output not found on LanguageDrillStack"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Sync NEXT_PUBLIC_EVAL_SUBMIT_URL to Vercel production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          ENV_KEY: NEXT_PUBLIC_EVAL_SUBMIT_URL
+          ENV_VALUE: ${{ steps.prod_eval_submit_url.outputs.url }}
+          ENV_TARGET: production
+        run: .github/scripts/sync-vercel-env.sh
+
       - name: Deploy to Vercel Production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -250,5 +279,34 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           ENV_KEY: NEXT_PUBLIC_ANNOTATE_STREAM_URL
           ENV_VALUE: ${{ steps.dev_stream_url.outputs.url }}
+          ENV_TARGET: preview
+        run: .github/scripts/sync-vercel-env.sh
+
+      # Free-writing submits go to the eval-submit Function URL (an essay
+      # evaluation outlives API Gateway's 30s cap). Same read+sync pattern.
+      - name: Read EvalSubmitUrl from dev CFN outputs
+        id: dev_eval_submit_url
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          URL=$(aws cloudformation describe-stacks \
+            --stack-name LanguageDrillStack-dev \
+            --query "Stacks[0].Outputs[?OutputKey=='EvalSubmitUrl'].OutputValue" \
+            --output text)
+          if [ -z "$URL" ] || [ "$URL" = "None" ]; then
+            echo "::error::EvalSubmitUrl output not found on LanguageDrillStack-dev"
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Sync NEXT_PUBLIC_EVAL_SUBMIT_URL to Vercel preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          ENV_KEY: NEXT_PUBLIC_EVAL_SUBMIT_URL
+          ENV_VALUE: ${{ steps.dev_eval_submit_url.outputs.url }}
           ENV_TARGET: preview
         run: .github/scripts/sync-vercel-env.sh

@@ -79,7 +79,18 @@ async function buildResponseError(response: Response): Promise<Error> {
  */
 export function createAuthenticatedFetch(
   getToken: (options?: { template?: string }) => Promise<string | null>,
+  options?: {
+    /**
+     * Override the API origin for this fetcher. Used to send free-writing
+     * submits to the eval-submit Function URL (no 30s API Gateway cap). An
+     * empty/undefined value falls back to `NEXT_PUBLIC_API_URL`, so local dev
+     * and an unset env var keep working against the regular API. A trailing
+     * slash (Function URLs carry one) is stripped.
+     */
+    baseUrl?: string;
+  },
 ): AuthenticatedFetch {
+  const baseUrl = options?.baseUrl ? options.baseUrl.replace(/\/+$/, '') : BASE_URL;
   return async (path: string, init?: RequestInit): Promise<Response> => {
     const token = await getToken({ template: 'api' });
 
@@ -96,7 +107,7 @@ export function createAuthenticatedFetch(
       Authorization: `Bearer ${token}`,
     };
 
-    const response = await fetch(`${BASE_URL}${path}`, {
+    const response = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers,
     });
