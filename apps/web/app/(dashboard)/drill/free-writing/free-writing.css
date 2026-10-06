@@ -163,13 +163,17 @@
 
 /* Primary CTA. Light: ink fill, lightens (ink-hover) on hover + shadow lift.
    Dark: the ink token flips to cream, so the fill goes terracotta (accent) with
-   white text and a darker terracotta hover — matching the shared primary. */
+   white text and a darker terracotta hover — matching the shared primary.
+   Both hover rules restate the text colour: the base `.btn:hover` sets
+   `color: ink`, which otherwise outranks `.btn.primary`'s paper text and leaves
+   ink-on-ink-hover (unreadable) in light mode. */
 .btn.primary { background: var(--color-ink); color: var(--color-paper); border-color: var(--color-ink); }
 .btn.primary:hover:not(:disabled) {
-  background: var(--color-ink-hover); border-color: var(--color-ink-hover); box-shadow: var(--shadow-2);
+  background: var(--color-ink-hover); border-color: var(--color-ink-hover); color: var(--color-paper);
+  box-shadow: var(--shadow-2);
 }
 .dark .btn.primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
-.dark .btn.primary:hover:not(:disabled) { background: #b15535; border-color: #b15535; }
+.dark .btn.primary:hover:not(:disabled) { background: #b15535; border-color: #b15535; color: #fff; }
 
 /* Borderless quiet action (back / cancel / "write another"). Same hover tokens
    as the bordered secondary, without the frame. */
