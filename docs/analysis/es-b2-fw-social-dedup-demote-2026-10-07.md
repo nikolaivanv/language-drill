@@ -87,13 +87,59 @@ Three read-only reviewer agents (DE all levels; ES A1–B1; TR all levels + EN)
 clustered each cell's prompts by distinct question under the same rule
 (duplicate = a learner would write essentially the same essay; at A1/A2,
 different required content counts as distinct), keeping one per question. The
-two whole-cell collapses (ES B1 free-time 8→1, daily-routine 6→1) and TR A1
-my-family 5→1 / DE B1 complaint 5→2 were spot-checked against the full task
-text. **76 rows** demoted (): 73 across 32 cells via
-, plus 3 cell-less one-line stub seeds (EN B1, TR B1,
-DE B1) by guarded direct UPDATE. Per-cell clusters with the kept row and angle:
-; ids: .
+whole-cell collapses (ES B1 free-time 8→1, daily-routine 6→1, TR A1 my-family
+5→1) and DE B1 complaint 5→2 were spot-checked against the full task text.
 
-**Round 3 rollback** (prod, branch ):
+**76 rows** demoted (`duplicate`): 73 across 32 cells via
+`demote:pool --ids-file`, plus 3 cell-less one-line stub seeds (EN B1, TR B1,
+DE B1) by guarded direct `UPDATE` writing the same two columns the CLI writes.
+Per-cell clusters with the kept row and angle:
+`fw-round3-dedup-proposals-2026-10-07.json`; ids:
+`fw-round3-dedup-demote-ids-2026-10-07.txt`.
 
+**Round 3 rollback** (prod, branch `br-green-waterfall-ancrvpr5`):
 
+```sql
+UPDATE exercises
+SET review_status = 'auto-approved', demotion_reason = NULL
+WHERE id IN (
+  '0d35724c-d6d5-5af4-8dfd-09a8c389a9b5', 'fa509dba-56ae-5f9e-ab3f-c082f93e2b57',
+  'dbd937b6-c7f8-5642-8677-4bfe3f3fdf8b', 'c87bd12a-4bcc-565e-a70e-28a22bc864c7',
+  'bba60abd-5f47-5f61-806e-9fbdc1e10d50', 'cd036e23-2813-54bf-a6ce-5063fbdfd53e',
+  '1f600757-8b31-5553-b0b1-60cf32f60e1a', '21600a7d-88f8-59c9-aeb1-5d9530bcd278',
+  '12fca054-d5da-55a6-bbe4-499a8013387b', '0ccde13d-745b-5f19-a60d-c42586272560',
+  '0bcddfaa-f33e-5154-a50d-c2880743c331', '8cea93be-b26f-5a68-908d-97e40874b115',
+  '0f0cdc6a-a2da-574c-9f41-df10054098b1', 'a0891727-002b-530b-8b25-22d7201ad982',
+  '8bea922b-35c5-53b7-938d-9cbb89914ee6', '8dea9551-338b-582d-918d-998187581344',
+  'fb25212d-c2a5-520d-80d4-4b51396ae0ec', 'f8251c74-43c2-5fd2-81d4-4ceebcc0ba5f',
+  'f9251e07-c4df-5d97-82d4-4e8b3ba41c8e', 'f7251ae1-c718-5921-bcd4-44dd34f869a8',
+  'f2251302-38a4-5620-87d4-569cb1a29035', 'f665a905-4480-5f0f-a7a0-fa533c63334a',
+  '70d72bb7-d240-527f-aa4b-2fd3d37ee5de', 'df5af0fa-9366-5b40-bbcd-a30cb8a4a50d',
+  '4ddeb63d-c417-5b55-8a6e-2ff99dca643c', '3719a21a-09a5-5b7a-ba0f-b886252ff54b',
+  '3619a087-8888-5db5-b90f-b6e9a1da1bd8', '35199ef4-076c-5ff0-b80f-b54c22f6b9a9',
+  '33199bce-0e18-528e-b60f-b21229a26c8f', '32199a3b-8cfb-54c9-b50f-b075a64c931c',
+  '9f432dcf-95a6-53cf-8b5b-7103beb7216e', 'c995de6a-ad4a-522a-ac6e-5eb6beed984b',
+  'eb90ed05-b6ad-5e15-ad6e-6029bb12c21c', '3095136e-3d48-5e54-b15f-6b386317cd29',
+  'bf96e52b-28e7-5c93-9fdc-f7ff7df20dfa', 'cbe4b7b2-3681-5a1c-ba2c-d1d0021bb089',
+  'dae752ef-e70b-5edb-a8aa-5e971cf5f15a', '4d81fb7c-4df1-5c68-a89a-2c14a05a8e61',
+  '8ecf821b-0ecd-500f-a9df-cf83928a7e9e', '8fcf83ae-8b77-56c0-a6df-caac116de0cd',
+  'c7c0b60f-3ae5-5131-8c5b-7ecdb1b10b74', 'c9c0b935-3d1e-5cbb-8e5b-8207b3ea4716',
+  '39bee5e5-0b2a-538b-9bfc-0d571a2ca416', '38bee452-8a0d-55c6-9afc-0bba9b4941e7',
+  'c2344db4-b67e-518e-8ccd-4d028e3160a3', 'c3344f47-379a-5f53-8dcd-4e9f0d14c2d2',
+  'ff3818ed-96a5-5581-a32d-000d2ba10e88', 'fd3815c7-98de-510b-a52d-03472dda4a2a',
+  'd4d21ba3-f8c5-5d69-bba0-bb15d437b394', 'd6d21ec9-fafe-58f3-bda0-be4fd670ef36',
+  '5ebe2aa0-8087-59c2-8ca0-f2de8e46c71f', '20a6685a-c022-585e-a1a1-63026720b7b7',
+  '1fa666c7-3f05-5a99-a0a1-6165e3cade44', '44d6e79a-8663-5fb4-8819-a27835ce77f1',
+  'a28e799b-5fdd-52b5-bd75-c0e901c0f5b0', 'a68e7fe7-6450-59c9-b975-ba7506336cf4',
+  'c1650b06-4b71-5374-959b-c5385aa1d2f9', 'c583bc74-1f34-5eea-a8a4-b186c088563f',
+  'b2b88b27-04d6-5d75-af67-11c968d12ea8', 'b3a0f3b9-b2e3-5b85-a055-65b9bcf700e4',
+  'a0e2e363-1034-5b9d-9b4a-6e71f1a75dd8', '40e81833-78ae-5991-84b1-0f6d4b4b8d44',
+  '54078c21-2d35-59db-b534-ff27a4267dfe', '3d4907bf-796c-5b5b-abc5-8807a9f9735a',
+  '6ec5b9e3-edd6-5679-b3ac-1fe500943294', '6dc5b850-6cba-58b4-b2ac-1e4881b0d065',
+  '5d48b5a6-1e87-568e-824d-7b524f1e5407', 'a1676871-83f3-5451-bac4-5e7da99083c8',
+  '47c87ae6-5f31-5fdc-8765-b6b0f3dcc899', 'f0ec48e4-d66d-5cf0-91f2-c42c9e323ef1',
+  'f3ec4d9d-59c2-563f-94f2-c9031f4edcc2', '0232d79f-65d3-5131-8dde-acedc356107c',
+  '2a0ebd28-415b-5af4-b72b-c72881de3e9d', 'e3acaed3-efac-5429-a10f-d6359a7f43cc',
+  'bf972890-f9ce-55e0-9ad5-a08c63643dc9', 'abe72f3e-6ade-52ac-9328-d9f057893899'
+);
+```
