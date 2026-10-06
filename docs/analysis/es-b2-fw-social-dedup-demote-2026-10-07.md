@@ -38,3 +38,45 @@ WHERE id IN (
   '677d4898-c28e-59fc-b627-2fc04bbea42d','96b720a5-6386-5a55-aed9-ded9c58b434c'
 );
 ```
+
+## Round 2 — the other ES B2 cells (same day)
+
+Same defect everywhere: each topic cell realized one or two prompts, reworded
+5–10 times. 27 rows demoted (`duplicate`), one kept per distinct question. Ids:
+`es-b2-fw-round2-dedup-demote-ids-2026-10-07.txt`.
+
+| Cell | Distinct questions | Before → kept |
+|---|---|---|
+| `es-b2-fw-environment` | 1 — can individual choices protect the environment vs governments/industry | 8 → `08ffb577` |
+| `es-b2-fw-remote-work` | 2 — remote work vs team culture; losing the office routine vs self-discipline | 5 → `ba4e3a76`, `bb4e3c09` |
+| `es-b2-fw-study-abroad` | 1 — friend choosing home vs abroad: 2 advantages each + recommendation | 10 → `0ad88d45` |
+| `es-b2-fw-work-life-balance` | 1 — two strategies to protect personal time + an obstacle | 8 → `34f2a159` |
+| *(no cell)* | 2026-06-14 stub seed "El teletrabajo: ¿avance o aislamiento?" (task is one line) | 1 → 0 |
+
+After both rounds the ES B2 free-writing pool holds **9** approved prompts across
+6 cells (52 before), every one a different question. Each cell is now below the
+target of 5, so a resumed generation run will request 30 more; the generator
+dedups on title only, which is exactly how these near-duplicates got in.
+
+**Round 2 rollback** (prod, branch `br-green-waterfall-ancrvpr5`):
+
+```sql
+UPDATE exercises
+SET review_status = 'auto-approved', demotion_reason = NULL
+WHERE id IN (
+  '09ffb70a-b520-577c-89e4-aca06f19b7a1', '05ffb0be-b0ad-5068-8de4-b314738c2ee5',
+  'd7863762-25bb-5f20-a37b-7d8c07a30e05', '4609fca5-0332-5635-b21c-0a79ecc8cd34',
+  '0a6b3e54-a594-53ca-80bd-65e63b52eea7', '07ffb3e4-b759-5306-8be4-afda7152f343',
+  'e697b12f-94d0-5a1b-9a86-0b475678b272', 'dcebeaed-843e-50ed-b7ee-e031a19398cc',
+  'd9ebe634-055b-5eb2-b8ee-e1ce24e9723f', 'ae1f1eec-825c-58e8-9ec1-4de4a1173129',
+  '75afdcf7-a0b6-5cff-b3fe-8bd310cdeace', '6dafd05f-a99b-5b27-abfe-7eeb07e8fc46',
+  'bc5bb5e2-812b-518c-a7af-3770e62de5b9', '74afdb64-1f99-5f3a-b2fe-8a3691ea889f',
+  'ef40bcd4-8f53-58b6-878b-68ca1be2675b', '77afe01d-9e7c-5175-b1fe-88990e94af2c',
+  '2adf7b25-b1dc-51a1-b8ea-0d5dcd5845e8', '6cafcecc-287e-5d62-aafe-7d4e89059a17',
+  '70afd518-240c-564e-aefe-83c28d78115b', 'c76edda9-7e51-5f9b-bd3d-2be7f33cd216',
+  'c46ed8f0-fafc-564c-ba3d-271072203445', 'c56eda83-7c18-5411-bb3d-28adf1039674',
+  '2fbabe92-8d2b-50ba-a02c-62b6e2c93dc3', 'c66edc16-fd35-51d6-bc3d-2a4a74596fe7',
+  'ca6ee262-f8c2-5ac2-803d-30be6fe6f8a3', '8b86d648-55a0-5fd2-a1af-b83e84cd7cd7',
+  '6b5d7247-c48f-5321-908e-121d334bf91c'
+);
+```
