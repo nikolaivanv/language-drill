@@ -27,6 +27,8 @@ import {
   addUsage,
   cefrRankWindow,
   estimateCostUsd,
+  HISTORY_STEM_TYPES,
+  historyStem,
   type ClaudeUsageBreakdown,
   type GenerationSpec,
 } from '@language-drill/ai';
@@ -490,6 +492,40 @@ export async function fetchPriorParaphraseSurfaces(
     .filter((s): s is string => typeof s === 'string' && s.length > 0);
 }
 
+/** Cap on approved stems fed into the generation prompt as cell history. */
+export const MAX_PRIOR_STEMS = 60;
+
+/**
+ * The cell's approved stems (`historyStem`: cloze sentence, translation source,
+ * SC prompt → first model answer), fed into the generation system prompt as a
+ * diversity signal so drafts stop reusing the pool's people, places, objects
+ * and scenes across batches. Flagged rows are deliberately excluded (unlike the
+ * dedup fetchers above): they are evidence limbo and may be demoted, so steering
+ * away from them is wasted signal. Ordered by `id` — a fixed, time-unbiased
+ * sample — and capped so the system-prompt bytes are identical across every
+ * ordinal in the batch and the cache prefix hits. Rows whose content yields no
+ * stem are skipped.
+ */
+export async function fetchPriorStems(db: Db, cell: Cell): Promise<readonly string[]> {
+  const rows = await db
+    .select({ contentJson: exercises.contentJson })
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.language, cell.language),
+        eq(exercises.difficulty, cell.cefrLevel),
+        eq(exercises.type, cell.exerciseType),
+        eq(exercises.grammarPointKey, cell.grammarPoint.key),
+        inArray(exercises.reviewStatus, ['auto-approved', 'manual-approved']),
+      ),
+    )
+    .orderBy(exercises.id)
+    .limit(MAX_PRIOR_STEMS);
+  return rows
+    .map((r) => historyStem(r.contentJson))
+    .filter((x): x is string => x !== null);
+}
+
 /**
  * Pulls the frequency (or curated elicitation-values) seeds already anchored
  * in this cell's live pool (R5.3), read from the writer-only
@@ -790,6 +826,49 @@ export async function buildSeedWords(
 }
 
 /**
+ * The full per-cell seeding step `runOneCell` performs: pick the seed kind,
+ * fetch that kind's prior-seed exclude set, and build the per-ordinal seeds.
+ * Exported so `eval:gen --pool-history` gives both arms exactly prod's seeds.
+ */
+export async function buildCellSeedWords(
+  db: Db,
+  cell: Cell,
+  count: number,
+  batchSeed: string,
+  coverageTargets?: readonly CoverageTarget[],
+): Promise<readonly (string | null)[] | undefined> {
+  // Seed cloze/translation with at-level content words, verb conjugation with
+  // at-or-below-level verbs (keyed on (lemma, person)), and nominal-inflection
+  // conjugation with at-or-below-level nouns (keyed on lemma alone). Other types
+  // stay unseeded. The prior-seed exclude set is fetched per kind — keyed the same
+  // way the matching picker excludes — and only for the seeded types to avoid a
+  // needless query.
+  const seedKind = seedKindFor(cell);
+  const priorSeeds: ReadonlySet<string> =
+    seedKind === 'frequency' ||
+    seedKind === 'elicitation-values' ||
+    seedKind === 'vocab-target'
+      ? // The frequency band, the curated elicitation-values pool, and the
+        // vocab-target pool all key the live-pool exclude on the bare
+        // `content_json.seedWord` (validate-and-insert.ts persists it
+        // identically for all three), so they share `fetchPriorSeeds`.
+        // Without this, a re-run of a below-target flagged cell never sees
+        // its own live pool and keeps re-picking values already anchored —
+        // the bounded-pool termination (`pickSeeds`/`pickTargetSeeds`
+        // returning nulls once the pool is covered) never engages.
+        new Set(await fetchPriorSeeds(db, cell))
+      : // Both noun and predicate-nominal cells key the live-pool exclude on the
+        // bare lemma/seedWord (the noun/predicate is the diversity axis), so they
+        // share `fetchPriorNounSeeds`.
+        seedKind === 'noun' || seedKind === 'predicate-nominal'
+        ? new Set(await fetchPriorNounSeeds(db, cell))
+        : seedKind === 'verb'
+          ? await fetchPriorConjugationSeeds(db, cell)
+          : new Set<string>();
+  return buildSeedWords(db, cell, count, batchSeed, priorSeeds, coverageTargets);
+}
+
+/**
  * Build the per-axis `coverage_outcome` tally for a batch (Phase 2). `requested`
  * counts each draft's targeted value per axis; `approved` counts approved drafts
  * by their REALIZED value per axis (so a draft targeted at `2pl` but realized as
@@ -960,11 +1039,13 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   try {
     if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
 
-    // Pull the existing vocab inventory for this cell so the generator can
-    // avoid re-proposing words that `exercises_dedup_idx` would reject on
-    // insert. Limited to vocab_recall because cloze/translation have an
-    // effectively unbounded surface space — listing all prior sentences
-    // would bloat the prompt without payback.
+    // Pull the cell's existing inventory into the generator's system prompt.
+    // vocab_recall / free_writing / contextual_paraphrase get a dedup
+    // avoid-list. cloze / translation / SC get the cell's approved stems as a
+    // diversity signal: cells are capped at 20–50 rows, so the whole history
+    // is ~1–2k tokens written to the cache once per batch — the old "surface
+    // space is unbounded" reason for excluding them no longer holds, and
+    // without it lexical fillers collapse across batches (#727's "my sister").
     const priorPoolSurfaces =
       cell.exerciseType === ExerciseType.VOCAB_RECALL
         ? await fetchPriorVocabRecallSurfaces(db, cell)
@@ -972,42 +1053,15 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
           ? await fetchPriorFreeWritingTitles(db, cell)
           : cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
             ? await fetchPriorParaphraseSurfaces(db, cell)
-            : undefined;
+            : HISTORY_STEM_TYPES.has(cell.exerciseType)
+              ? await fetchPriorStems(db, cell)
+              : undefined;
 
-    // Seed cloze/translation with at-level content words, verb conjugation with
-    // at-or-below-level verbs (keyed on (lemma, person)), and nominal-inflection
-    // conjugation with at-or-below-level nouns (keyed on lemma alone). Other types
-    // stay unseeded. The prior-seed exclude set is fetched per kind — keyed the same
-    // way the matching picker excludes — and only for the seeded types to avoid a
-    // needless query.
-    const seedKind = seedKindFor(cell);
-    const priorSeeds: ReadonlySet<string> =
-      seedKind === 'frequency' ||
-      seedKind === 'elicitation-values' ||
-      seedKind === 'vocab-target'
-        ? // The frequency band, the curated elicitation-values pool, and the
-          // vocab-target pool all key the live-pool exclude on the bare
-          // `content_json.seedWord` (validate-and-insert.ts persists it
-          // identically for all three), so they share `fetchPriorSeeds`.
-          // Without this, a re-run of a below-target flagged cell never sees
-          // its own live pool and keeps re-picking values already anchored —
-          // the bounded-pool termination (`pickSeeds`/`pickTargetSeeds`
-          // returning nulls once the pool is covered) never engages.
-          new Set(await fetchPriorSeeds(db, cell))
-        : // Both noun and predicate-nominal cells key the live-pool exclude on the
-          // bare lemma/seedWord (the noun/predicate is the diversity axis), so they
-          // share `fetchPriorNounSeeds`.
-          seedKind === 'noun' || seedKind === 'predicate-nominal'
-          ? new Set(await fetchPriorNounSeeds(db, cell))
-          : seedKind === 'verb'
-            ? await fetchPriorConjugationSeeds(db, cell)
-            : new Set<string>();
-    const seedWords = await buildSeedWords(
+    const seedWords = await buildCellSeedWords(
       db,
       cell,
       args.count,
       args.batchSeed,
-      priorSeeds,
       args.coverageTargets,
     );
     seedWordsUsed = seedWords;

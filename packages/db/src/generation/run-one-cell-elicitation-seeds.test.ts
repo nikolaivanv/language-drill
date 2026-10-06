@@ -161,6 +161,9 @@ function makeStubDb(): Db {
       where: () =>
         Object.assign(Promise.resolve([{ seed: 'birinci' }] as unknown[]), {
           limit: () => Promise.resolve([{ id: 'skill-topic-stub' }]),
+          // `fetchPriorStems` (cloze cell history) ends in `.orderBy().limit()`;
+          // an empty history is all this test needs.
+          orderBy: () => ({ limit: () => Promise.resolve([]) }),
         }),
     }),
   };

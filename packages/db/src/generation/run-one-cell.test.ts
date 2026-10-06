@@ -57,8 +57,11 @@ import { createMockAnthropicClient } from '../../scripts/generate-exercises-mock
 
 import type { Cell } from './cells';
 import {
+  buildCellSeedWords,
   buildSeedWords,
+  fetchPriorStems,
   fetchPriorVocabRecallSurfaces,
+  MAX_PRIOR_STEMS,
   loadVariantCoverage,
   runOneCell,
   seedKindFor,
@@ -1919,6 +1922,29 @@ describe('buildSeedWords — contextual_paraphrase (curated pool, no DB)', () =>
   });
 });
 
+describe('buildCellSeedWords — unseeded kind (no DB)', () => {
+  const throwingDb = new Proxy(
+    {},
+    {
+      get() {
+        throw new Error('buildCellSeedWords queried the DB for an unseeded cell');
+      },
+    },
+  ) as unknown as Db;
+
+  it('returns undefined without touching the DB when the cell has no seed kind', async () => {
+    const clozeCell = buildTestCell();
+    const cell: Cell = {
+      ...clozeCell,
+      exerciseType: ExerciseType.CONJUGATION,
+      grammarPoint: { ...clozeCell.grammarPoint, conjugationSeedKind: 'none' },
+      cellKey: 'es:b1:conjugation:es-unseeded-test',
+    };
+    expect(seedKindFor(cell)).toBeNull();
+    await expect(buildCellSeedWords(throwingDb, cell, 3, 'seed-none')).resolves.toBeUndefined();
+  });
+});
+
 // ---------------------------------------------------------------------------
 // fetchPriorVocabRecallSurfaces — R6.5 at-cap avoid-set. Under the `word::cue`
 // dedup key a word may carry up to VOCAB_MAX_PER_WORD exercises, so the
@@ -2022,6 +2048,79 @@ describe.skipIf(!process.env['TEST_DATABASE_URL'])(
   },
 );
 
+const STEMS_GP_KEY = 'es-b1-prior-stems-test';
+
+const stemsCell: Cell = {
+  language: Language.ES as LearningLanguage,
+  cefrLevel: CefrLevel.B1 as CurriculumCefrLevel,
+  exerciseType: ExerciseType.CLOZE,
+  grammarPoint: { key: STEMS_GP_KEY } as unknown as Cell['grammarPoint'],
+  cellKey: `es:b1:cloze:${STEMS_GP_KEY}`,
+};
+
+async function seedClozeRow(
+  db: Db,
+  sentence: string,
+  reviewStatus: 'auto-approved' | 'manual-approved' | 'flagged',
+): Promise<void> {
+  const content = { type: ExerciseType.CLOZE, instructions: 'x', sentence, correctAnswer: 'está' };
+  await db.insert(exercises).values({
+    id: randomUUID(),
+    type: ExerciseType.CLOZE,
+    language: Language.ES,
+    difficulty: 'B1',
+    contentJson: { ...content, _dedupKey: canonicalSurface(content as Parameters<typeof canonicalSurface>[0]) },
+    grammarPointKey: STEMS_GP_KEY,
+    generationSource: 'claude-realtime',
+    modelId: 'claude-sonnet-4-5',
+    reviewStatus,
+    generatedAt: new Date('2026-04-01T00:00:00Z'),
+  });
+}
+
+async function cleanStemRows(db: Db): Promise<void> {
+  const rows = await db.select({ id: exercises.id }).from(exercises).where(eq(exercises.grammarPointKey, STEMS_GP_KEY));
+  for (const row of rows) {
+    await db.delete(exerciseTags).where(eq(exerciseTags.exerciseId, row.id));
+    await db.delete(exercises).where(eq(exercises.id, row.id));
+  }
+}
+
+describe.skipIf(!process.env['TEST_DATABASE_URL'])('fetchPriorStems — approved cell history', () => {
+  let db: Db;
+  beforeAll(() => {
+    db = createDb(process.env['TEST_DATABASE_URL']!);
+  });
+  beforeEach(async () => {
+    await cleanStemRows(db);
+  });
+  afterEach(async () => {
+    await cleanStemRows(db);
+  });
+
+  it('returns approved stems and excludes flagged rows', async () => {
+    await seedClozeRow(db, 'Mi hermana ___ en casa.', 'auto-approved');
+    await seedClozeRow(db, 'El café ___ cerrado.', 'manual-approved');
+    await seedClozeRow(db, 'El perro ___ fuera.', 'flagged');
+    const stems = await fetchPriorStems(db, stemsCell);
+    expect([...stems].sort()).toEqual(['El café ___ cerrado.', 'Mi hermana ___ en casa.']);
+  });
+
+  it('caps at MAX_PRIOR_STEMS and is deterministic', async () => {
+    for (let i = 0; i < MAX_PRIOR_STEMS + 3; i++) {
+      await seedClozeRow(db, `Frase número ${i} ___ aquí.`, 'auto-approved');
+    }
+    const a = await fetchPriorStems(db, stemsCell);
+    const b = await fetchPriorStems(db, stemsCell);
+    expect(a).toHaveLength(MAX_PRIOR_STEMS);
+    expect(a).toEqual(b);
+  });
+
+  it('returns [] for an empty cell', async () => {
+    await expect(fetchPriorStems(db, stemsCell)).resolves.toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // approvedDictationIds — pure (pool-mocked) coverage of the PR 2 collection
 // logic. The three Claude pools are spied with a call-through default (so the
@@ -2042,8 +2141,10 @@ describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
    *  other selects resolve to that same single-row array (harmless for the
    *  seed/prior-pool queries, which only run on seedable/vocab cells anyway);
    *  insert/update are no-op spies. */
-  function makeMockDb(): { db: Db } {
-    const selectResult = Promise.resolve([{ id: 'skill-topic-row' }]);
+  function makeMockDb(
+    rows: ReadonlyArray<Record<string, unknown>> = [{ id: 'skill-topic-row' }],
+  ): { db: Db } {
+    const selectResult = Promise.resolve(rows);
     const selectChain = {
       from: () => selectChain,
       where: () => selectChain,
@@ -2181,6 +2282,43 @@ describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
     expect(result.status).toBe('succeeded');
     expect(result.insertedCount).toBe(3);
     expect(result.approvedDictationIds).toEqual([]);
+  });
+  it.each([
+    [
+      ExerciseType.CLOZE,
+      { type: ExerciseType.CLOZE, instructions: 'x', sentence: 'Mi hermana ___ en casa.', correctAnswer: 'está' },
+      'Mi hermana ___ en casa.',
+    ],
+    [
+      ExerciseType.SENTENCE_CONSTRUCTION,
+      { type: ExerciseType.SENTENCE_CONSTRUCTION, instructions: 'x', promptMode: 'situation', prompt: 'Describe a café.', modelAnswers: ['El café es pequeño.'] },
+      'Describe a café. → El café es pequeño.',
+    ],
+  ])('passes the cell history to the generator for a %s cell', async (exerciseType, contentJson, stem) => {
+    const { db } = makeMockDb([{ id: 'skill-topic-row', contentJson }]);
+    await runOneCell({
+      db,
+      client: {} as never,
+      cell: buildCell(exerciseType),
+      args: { count: 3, batchSeed: `history-${exerciseType}`, topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(),
+      trigger: 'scheduled',
+    });
+    const spec = vi.mocked(runGeneratorPool).mock.calls[0][0].spec;
+    expect(spec.priorPoolSurfaces).toEqual([stem]);
+  });
+
+  it('passes no cell history for a dictation cell', async () => {
+    const { db } = makeMockDb();
+    await runOneCell({
+      db,
+      client: {} as never,
+      cell: buildCell(ExerciseType.DICTATION),
+      args: { count: 3, batchSeed: 'history-dictation', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(),
+      trigger: 'scheduled',
+    });
+    expect(vi.mocked(runGeneratorPool).mock.calls[0][0].spec.priorPoolSurfaces).toBeUndefined();
   });
 });
 
