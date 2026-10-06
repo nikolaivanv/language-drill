@@ -112,8 +112,9 @@ describe("LanguageDrillStack-dev", () => {
     const lambdas = devTemplate.findResources("AWS::Lambda::Function");
     const fns = Object.values(lambdas) as LambdaResource[];
 
-    // The dev stack runs ten application Lambdas: API, Generation (consumer),
-    // Scheduler (exercise), AnnotateStream (SSE Function URL), TheoryGeneration
+    // The dev stack runs eleven application Lambdas: API, Generation (consumer),
+    // Scheduler (exercise), AnnotateStream (SSE Function URL), EvalSubmit
+    // (long-running free-writing submit Function URL), TheoryGeneration
     // (consumer), TheoryScheduler, DictationAudio (Phase 2 audio-synth
     // consumer — has DATABASE_URL but no Anthropic/Langfuse secrets),
     // EmailDispatcher, EmailSender, and MasteryRebuild (nightly
@@ -125,14 +126,15 @@ describe("LanguageDrillStack-dev", () => {
     const appFns = fns.filter(
       (f) => !!f.Properties.Environment?.Variables?.DATABASE_URL,
     );
-    expect(appFns).toHaveLength(10);
+    expect(appFns).toHaveLength(11);
 
-    // The API Lambda is the only one with CLERK_SECRET_KEY in its env — the
-    // generation pipeline Lambdas have a strict minimum-privilege secrets set.
+    // The API Lambda is the only one with CLERK_WEBHOOK_SECRET in its env
+    // (annotate-stream and eval-submit also verify Clerk JWTs, so
+    // CLERK_SECRET_KEY no longer identifies it).
     const apiFn = appFns.find(
       (f) =>
         !!f.Properties.Environment?.Variables &&
-        "CLERK_SECRET_KEY" in f.Properties.Environment.Variables,
+        "CLERK_WEBHOOK_SECRET" in f.Properties.Environment.Variables,
     );
     expect(apiFn).toBeDefined();
 
@@ -141,6 +143,18 @@ describe("LanguageDrillStack-dev", () => {
     expect(apiVars.ALLOWED_ORIGINS).toBe(
       "https://*.vercel.app,http://localhost:3000",
     );
+
+    // The eval-submit Function URL answers CORS itself (Hono), so it must
+    // carry the exact same origin list or browser submits would be blocked.
+    const corsFns = appFns.filter(
+      (f) => f.Properties.Environment?.Variables?.ALLOWED_ORIGINS !== undefined,
+    );
+    expect(corsFns).toHaveLength(2);
+    for (const f of corsFns) {
+      expect(f.Properties.Environment!.Variables!.ALLOWED_ORIGINS).toBe(
+        apiVars.ALLOWED_ORIGINS,
+      );
+    }
   });
 
   // Dev stays at 0 EventBridge rules regardless of how many prod gets.
@@ -214,10 +228,10 @@ describe("LanguageDrillStack-dev", () => {
       )
       .filter((vars): vars is Record<string, string> => !!vars && "AI_GLOBAL_DAILY_CAP" in vars);
 
-    // API handler + annotate-stream. If this count changes, a new AI-spending
+    // API handler + annotate-stream + eval-submit. If this count changes, a new AI-spending
     // Lambda was added and must be checked for the cap rather than silently
     // shifting the expectation.
-    expect(capped).toHaveLength(2);
+    expect(capped).toHaveLength(3);
     for (const vars of capped) {
       expect(vars.AI_GLOBAL_DAILY_CAP).toBe("1500");
     }
@@ -237,7 +251,7 @@ describe("LanguageDrillStack-dev", () => {
       .filter((vars): vars is Record<string, string> => !!vars && "AI_GLOBAL_DAILY_CAP" in vars)
       .map((vars) => vars.AI_GLOBAL_DAILY_CAP);
 
-    expect(values).toHaveLength(2);
+    expect(values).toHaveLength(3);
     expect(new Set(values)).toEqual(new Set([""]));
   });
   // Regression: GET /public/{proxy+} has no JWT authorizer and no per-user rate

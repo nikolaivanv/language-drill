@@ -209,7 +209,7 @@ vi.mock('@language-drill/ai', () => ({
   EVAL_REQUEST_TIMEOUT_MS: 18_000,
   EVAL_MAX_RETRIES: 1,
   FREE_WRITING_EVAL_PROMPT_VERSION: 'free-writing-eval@test',
-  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS: 45_000,
+  FREE_WRITING_EVAL_REQUEST_TIMEOUT_MS: 135_000,
   FREE_WRITING_EVAL_MAX_RETRIES: 1,
   ContentRejectedError: class ContentRejectedError extends Error {
     constructor(

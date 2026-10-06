@@ -59,4 +59,32 @@ describe('createAuthenticatedFetch', () => {
     >;
     expect(headers['Authorization']).toBe('Bearer tok_123');
   });
+
+  it('sends to an overridden base URL, stripping its trailing slash', async () => {
+    // Function URLs are emitted with a trailing slash; joining it naively
+    // with `/exercises/...` would produce `//exercises/...` and a 404.
+    mockFetch.mockResolvedValue(jsonResponse({}));
+    const authFetch = createAuthenticatedFetch(async () => 'tok_123', {
+      baseUrl: 'https://abc.lambda-url.eu-central-1.on.aws/',
+    });
+
+    await authFetch('/exercises/ex-1/submit', { method: 'POST' });
+
+    expect(mockFetch.mock.calls[0]![0]).toBe(
+      'https://abc.lambda-url.eu-central-1.on.aws/exercises/ex-1/submit',
+    );
+  });
+
+  it('falls back to the default API base when the override is empty', async () => {
+    // An unset NEXT_PUBLIC_EVAL_SUBMIT_URL arrives as '' — it must not turn
+    // every submit into a same-origin request to the Next.js host.
+    mockFetch.mockResolvedValue(jsonResponse({}));
+    const defaultFetch = createAuthenticatedFetch(async () => 'tok_123');
+    const emptyOverride = createAuthenticatedFetch(async () => 'tok_123', { baseUrl: '' });
+
+    await defaultFetch('/exercises/ex-1/submit');
+    await emptyOverride('/exercises/ex-1/submit');
+
+    expect(mockFetch.mock.calls[1]![0]).toBe(mockFetch.mock.calls[0]![0]);
+  });
 });

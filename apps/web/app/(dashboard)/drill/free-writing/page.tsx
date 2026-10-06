@@ -24,6 +24,15 @@ type Stage = 'brief' | 'composer' | 'results' | 'corrections' | 'compare';
 export default function FreeWritingPage() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
+  // Grading an essay takes ~50s — past API Gateway's 30s cap — so the submit
+  // goes to the eval-submit Function URL. Unset (local dev) → regular API.
+  const submitFetchFn = useMemo(
+    () =>
+      createAuthenticatedFetch(getToken, {
+        baseUrl: process.env.NEXT_PUBLIC_EVAL_SUBMIT_URL,
+      }),
+    [getToken],
+  );
   const { activeLanguage } = useActiveLanguage();
 
   // Resolve difficulty from the user's profile for the active language,
@@ -51,7 +60,7 @@ export default function FreeWritingPage() {
     fetchFn,
   });
 
-  const submit = useSubmitFreeWriting({ fetchFn });
+  const submit = useSubmitFreeWriting({ fetchFn: submitFetchFn });
 
   if (!exercise) {
     return (
