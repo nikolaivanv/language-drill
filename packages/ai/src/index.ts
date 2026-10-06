@@ -200,6 +200,8 @@ export {
   buildGenerationSystemPrompt,
   buildGenerationUserPrompt,
   canonicalSurface,
+  historyStem,
+  HISTORY_STEM_TYPES,
   tailRecentStems,
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,

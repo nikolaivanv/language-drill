@@ -17,6 +17,8 @@ import { CEFR_LEVEL_DESCRIPTORS, EVALUATION_SYSTEM_PROMPT } from "./prompts.js";
 import {
   GENERATION_PROMPT_VERSION,
   GENERATION_SYSTEM_PROMPT_TEMPLATE,
+  HISTORY_STEM_TYPES,
+  historyStem,
   MAX_PRIOR_POOL_SURFACES_IN_PROMPT,
   MAX_RECENT_STEMS_IN_PROMPT,
   buildGenerationSystemPrompt,
@@ -357,7 +359,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-22");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-07");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -531,7 +533,7 @@ describe("buildGenerationSystemPrompt", () => {
   it("bumps the generation prompt version to 2026-09-22", () => {
     // 2026-08-18: anti-bypass rule for translation sources on contrasts English
     // leaves optional. Template edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-09-22");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-07");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
@@ -633,6 +635,7 @@ describe("buildGenerationSystemPrompt", () => {
   it("omits the 'Already in the pool' section when priorPoolSurfaces is undefined", async () => {
     const prompt = await buildGenerationSystemPrompt(baseInputs, []);
     expect(prompt).not.toContain("Already in the pool");
+    expect(prompt).not.toContain("Already in this cell");
   });
 
   it("omits the 'Already in the pool' section when priorPoolSurfaces is empty", async () => {
@@ -641,6 +644,7 @@ describe("buildGenerationSystemPrompt", () => {
       [],
     );
     expect(prompt).not.toContain("Already in the pool");
+    expect(prompt).not.toContain("Already in this cell");
   });
 
   it("uses vocab-specific wording for VOCAB_RECALL and renders each prior word", async () => {
@@ -661,19 +665,48 @@ describe("buildGenerationSystemPrompt", () => {
     }
   });
 
-  it("uses sentence-surface wording for non-VOCAB_RECALL types", async () => {
+  it("keeps the sentence-surface dedup wording for CONTEXTUAL_PARAPHRASE (byte-identical)", async () => {
     const prompt = await buildGenerationSystemPrompt(
       {
         ...baseInputs,
-        exerciseType: ExerciseType.CLOZE,
+        exerciseType: ExerciseType.CONTEXTUAL_PARAPHRASE,
         priorPoolSurfaces: ["yo hablo espanol."],
       },
       [],
     );
     expect(prompt).toContain(
-      "## Already in the pool — do NOT propose any exercise whose surface matches these",
+      "## Already in the pool — do NOT propose any exercise whose surface matches these\n\n  - yo hablo espanol.\n\n",
     );
-    expect(prompt).toContain("- yo hablo espanol.");
+    expect(prompt).not.toContain("Already in this cell");
+  });
+
+  it.each([
+    ExerciseType.CLOZE,
+    ExerciseType.TRANSLATION,
+    ExerciseType.SENTENCE_CONSTRUCTION,
+  ])("renders the cell-history diversity section for %s", async (exerciseType) => {
+    const prompt = await buildGenerationSystemPrompt(
+      {
+        ...baseInputs,
+        exerciseType,
+        priorPoolSurfaces: ["Mi hermana ___ en casa.", "El café ___ cerrado."],
+      },
+      [],
+    );
+    expect(prompt).toContain("## Already in this cell — write something different");
+    expect(prompt).toContain("reusing the tested form is expected");
+    expect(prompt).toContain(
+      "Do not reuse their people, relationships, places, objects or situations",
+    );
+    expect(prompt).toContain("takes precedence over this list");
+    expect(prompt).toContain("  - Mi hermana ___ en casa.\n  - El café ___ cerrado.\n\n");
+    expect(prompt).not.toContain("do NOT propose any exercise whose surface matches");
+  });
+
+  it("HISTORY_STEM_TYPES is exactly cloze, translation and sentence_construction", () => {
+    expect([...HISTORY_STEM_TYPES].sort()).toEqual(
+      [ExerciseType.CLOZE, ExerciseType.SENTENCE_CONSTRUCTION, ExerciseType.TRANSLATION].sort(),
+    );
   });
 
   it("caps priorPoolSurfaces at MAX_PRIOR_POOL_SURFACES_IN_PROMPT", async () => {
@@ -1832,5 +1865,44 @@ describe("renderConjugationSection", () => {
     expect(section()).toMatch(/`breakdown`/);
     expect(section()).toMatch(/reasoning|deliberation|self-correction/i);
     expect(section()).toMatch(/wait/i);
+  });
+});
+
+describe("historyStem", () => {
+  it("returns the cloze sentence", () => {
+    expect(
+      historyStem({ type: ExerciseType.CLOZE, instructions: "x", sentence: "Mi hermana ___ aquí.", correctAnswer: "está" }),
+    ).toBe("Mi hermana ___ aquí.");
+  });
+
+  it("returns the translation source text", () => {
+    expect(
+      historyStem({ type: ExerciseType.TRANSLATION, instructions: "x", sourceText: "My sister is at home.", referenceTranslation: "Mi hermana está en casa." }),
+    ).toBe("My sister is at home.");
+  });
+
+  it("joins the SC prompt with its first model answer", () => {
+    expect(
+      historyStem({ type: ExerciseType.SENTENCE_CONSTRUCTION, instructions: "x", promptMode: "situation", prompt: "Describe your favourite café.", modelAnswers: ["El café donde trabajo es pequeño.", "otra"] }),
+    ).toBe("Describe your favourite café. → El café donde trabajo es pequeño.");
+  });
+
+  it("falls back to the SC prompt when there is no usable model answer", () => {
+    expect(historyStem({ type: ExerciseType.SENTENCE_CONSTRUCTION, prompt: "Describe a café.", modelAnswers: [] })).toBe("Describe a café.");
+    expect(historyStem({ type: ExerciseType.SENTENCE_CONSTRUCTION, prompt: "Describe a café.", modelAnswers: [42] })).toBe("Describe a café.");
+  });
+
+  it("collapses newlines and whitespace runs to single spaces", () => {
+    expect(historyStem({ type: ExerciseType.CLOZE, sentence: "  Mi hermana\n___   aquí.\t" })).toBe("Mi hermana ___ aquí.");
+  });
+
+  it("returns null for malformed or out-of-scope content", () => {
+    expect(historyStem(undefined)).toBeNull();
+    expect(historyStem(null)).toBeNull();
+    expect(historyStem("cloze")).toBeNull();
+    expect(historyStem({ type: ExerciseType.CLOZE })).toBeNull();
+    expect(historyStem({ type: ExerciseType.CLOZE, sentence: "   " })).toBeNull();
+    expect(historyStem({ type: ExerciseType.SENTENCE_CONSTRUCTION, prompt: 7, modelAnswers: ["x"] })).toBeNull();
+    expect(historyStem({ type: ExerciseType.VOCAB_RECALL, prompt: "x", expectedWord: "casa" })).toBeNull();
   });
 });
