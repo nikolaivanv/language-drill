@@ -109,6 +109,20 @@ export function cellReuse(draftStems: readonly string[], poolStems: readonly str
   return { drafts: draftStems.length, hotHits, jaccardSum };
 }
 
+/**
+ * The part of a stem the reuse metrics measure. An SC stem is
+ * `prompt → modelAnswers[0]` (`historyStem`), and the prompt is the English
+ * task the learner reads ("Write a sentence using these four words…"). That
+ * boilerplate repeats across every row, so measuring it pinned all SC cells at
+ * 100% reuse in both arms of the 2026-10-07 run. Measure the answer only;
+ * cloze, translation and answer-less SC stems have no " → " and pass through.
+ * (Revised after that run — a post-hoc change to the metric, not the rule.)
+ */
+export function measuredPart(stem: string): string {
+  const i = stem.lastIndexOf(" → ");
+  return i === -1 ? stem : stem.slice(i + " → ".length);
+}
+
 /** Pools drafts across cells (a 30-draft cell weighs 3× a 10-draft cell). */
 export function foldReuse(cells: readonly CellReuse[]): ReuseFold {
   let drafts = 0;
