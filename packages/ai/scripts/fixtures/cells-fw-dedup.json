@@ -1,0 +1,10 @@
+[
+  { "language": "ES", "cefrLevel": "B2", "grammarPointKey": "es-b2-fw-study-abroad" },
+  { "language": "ES", "cefrLevel": "B2", "grammarPointKey": "es-b2-fw-social-media" },
+  { "language": "ES", "cefrLevel": "B2", "grammarPointKey": "es-b2-fw-technology-relationships" },
+  { "language": "ES", "cefrLevel": "B1", "grammarPointKey": "es-b1-fw-daily-routine" },
+  { "language": "ES", "cefrLevel": "B1", "grammarPointKey": "es-b1-fw-free-time" },
+  { "language": "ES", "cefrLevel": "B2", "grammarPointKey": "es-b2-fw-environment" },
+  { "language": "TR", "cefrLevel": "A1", "grammarPointKey": "tr-a1-fw-my-family" },
+  { "language": "DE", "cefrLevel": "B1", "grammarPointKey": "de-b1-fw-complaint" }
+]
