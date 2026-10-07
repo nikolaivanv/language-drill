@@ -83,13 +83,25 @@ describe('checkFreeWritingDuplicate', () => {
     expect(calls.n).toBe(2);
   });
 
-  it('is unavailable (never distinct) when the judge throws', async () => {
+  it('is unavailable on an out-of-range verdict index', async () => {
     // An out-of-range verdict index throws inside the check (the real judge throws on it
     // too; a throwing mock is reported as a test error by vitest 4 even when caught).
     mockJudge.mockResolvedValue({ result: { duplicateOf: 7, reason: 'bad index' }, tokenUsage: USAGE });
     const out = await checkFreeWritingDuplicate(makeDb([{ contentJson: fw('A', 'Task A.') }]), client, cell, fw('B', 'b'));
     expect(out.status).toBe('unavailable');
-    expect(out.detail).toBeTruthy();
+    expect(typeof out.detail).toBe('string');
+    expect(out.detail.length).toBeGreaterThan(0);
+  });
+
+  it('is unavailable when the pool read throws, without calling the judge', async () => {
+    const db = {
+      select: () => {
+        throw new Error('db down');
+      },
+    } as unknown as Db;
+    const out = await checkFreeWritingDuplicate(db, client, cell, fw('B', 'b'));
+    expect(out.status).toBe('unavailable');
+    expect(mockJudge).not.toHaveBeenCalled();
   });
 
   it('is unavailable for a candidate with no title/task, without calling the judge', async () => {

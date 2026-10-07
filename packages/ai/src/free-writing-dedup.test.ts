@@ -104,8 +104,9 @@ describe("parseFreeWritingDedupVerdict", () => {
     });
   });
 
-  it("treats a missing duplicateOf as null and a missing reason as empty", () => {
-    expect(parseFreeWritingDedupVerdict({}, 2)).toEqual({ duplicateOf: null, reason: "" });
+  it("throws on a missing duplicateOf; explicit null is distinct with an empty reason", () => {
+    expect(() => parseFreeWritingDedupVerdict({}, 2)).toThrow();
+    expect(parseFreeWritingDedupVerdict({ duplicateOf: null }, 2)).toEqual({ duplicateOf: null, reason: "" });
   });
 
   it("throws on an out-of-range or non-integer index", () => {

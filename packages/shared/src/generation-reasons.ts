@@ -102,13 +102,13 @@ export enum GenerationReasonCode {
    * has to guess which verb the author meant. `detail` names the answer.
    */
   MissingLexemeHint = "missing-lexeme-hint",
-  /** Free-form validator `flaggedReasons` note. `detail` holds the prose. */
   /**
    * The free-writing duplicate judge could not run (API or parse error). The
    * draft is inserted FLAGGED rather than approved, so a judge outage costs a
    * manual review, never a duplicate reaching learners. `detail` holds the error.
    */
   DedupCheckUnavailable = "dedup-check-unavailable",
+  /** Free-form validator `flaggedReasons` note. `detail` holds the prose. */
   ValidatorNote = "validator-note",
 
   // -- Read-only ------------------------------------------------------------

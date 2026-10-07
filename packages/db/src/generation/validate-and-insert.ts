@@ -334,15 +334,20 @@ export async function validateAndInsertWithRetry(
   const isFreeWriting = opts.cell.exerciseType === ExerciseType.FREE_WRITING;
   // A free-writing retry must see prompts inserted since the batch started
   // (including this batch's siblings), not the frozen batch-start history.
-  const retrySpec = async (): Promise<GenerationSpec> =>
-    isFreeWriting
-      ? {
-          ...opts.spec,
-          priorPoolSurfaces: (await fetchFreeWritingPromptSummaries(opts.db, opts.cell)).map(
-            freeWritingHistoryLine,
-          ),
-        }
-      : opts.spec;
+  const retrySpec = async (): Promise<GenerationSpec> => {
+    if (!isFreeWriting) return opts.spec;
+    try {
+      return {
+        ...opts.spec,
+        priorPoolSurfaces: (await fetchFreeWritingPromptSummaries(opts.db, opts.cell)).map(
+          freeWritingHistoryLine,
+        ),
+      };
+    } catch {
+      // Stale-but-safe history beats failing the ordinal on a transient DB error.
+      return opts.spec;
+    }
+  };
 
   for (let attempt = 0; attempt <= MAX_DEDUP_RETRIES; attempt++) {
     if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
@@ -498,6 +503,8 @@ export async function validateAndInsertWithRetry(
       !capReached && isFreeWriting
         ? await checkFreeWritingDuplicate(opts.db, opts.client, opts.cell, currentDraft.contentJson, opts.signal)
         : null;
+    // An abort mid-judge surfaces as 'unavailable'; do not insert a flagged row.
+    if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
     if (fwCheck) extraUsage = addUsage(extraUsage, fwCheck.usage);
     const semanticDuplicate = fwCheck?.status === 'duplicate';
     // A judge outage inserts FLAGGED (not served) rather than approving blind.
@@ -572,7 +579,8 @@ export async function validateAndInsertWithRetry(
     }
 
     // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell,
-    // OR the R6 per-word cap was reached (skipped INSERT). Either way the slot
+    // the R6 per-word cap was reached (skipped INSERT), OR the free-writing
+    // semantic duplicate judge matched an existing prompt. Either way the slot
     // is exhausted for this draft — regenerate with a bumped seed.
     firstAttemptDeduped = true;
     if (attempt < MAX_DEDUP_RETRIES) {

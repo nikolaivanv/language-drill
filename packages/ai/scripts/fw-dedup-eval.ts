@@ -71,6 +71,8 @@ export type ArmMetrics = {
   accepted: number;
   duplicates: number;
   duplicateRate: number;
+  /** Accepted drafts minus distinct questions (within-arm pairs counted once). */
+  redundant: number;
   underfillRate: number;
   approvalRate: number;
   costUsd: number;
@@ -85,7 +87,25 @@ export function normalizeTitle(t: string): string {
   return t.toLowerCase().normalize("NFKD").replace(/\p{Diacritic}+/gu, "").replace(/\s+/gu, " ").trim();
 }
 
-export function armMetrics(outcomes: readonly ArmOutcome[], duplicateFlags: readonly boolean[][]): ArmMetrics {
+/**
+ * Greedy collapse of row-level duplicate flags: a flagged draft is redundant iff
+ * it matched an existing prompt, or an earlier draft in the arm exists (so the
+ * first member of a within-arm pair is not counted when no existing prompt matched).
+ */
+export function redundantCount(flags: readonly boolean[], duplicateOfIsExisting: readonly boolean[]): number {
+  let n = 0;
+  flags.forEach((f, i) => {
+    if (f && (duplicateOfIsExisting[i] === true || i > 0)) n++;
+  });
+  return n;
+}
+
+export function armMetrics(
+  outcomes: readonly ArmOutcome[],
+  duplicateFlags: readonly boolean[][],
+  existingMatchFlags: readonly boolean[][] = [],
+): ArmMetrics {
+  let redundant = 0;
   let requested = 0, accepted = 0, duplicates = 0, validations = 0, autoApproved = 0;
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
   outcomes.forEach((o, i) => {
@@ -95,9 +115,10 @@ export function armMetrics(outcomes: readonly ArmOutcome[], duplicateFlags: read
     autoApproved += o.autoApproved;
     usage = addUsage(usage, o.usage);
     duplicates += (duplicateFlags[i] ?? []).filter(Boolean).length;
+    redundant += redundantCount(duplicateFlags[i] ?? [], existingMatchFlags[i] ?? []);
   });
   return {
-    requested, accepted, duplicates,
+    requested, accepted, duplicates, redundant,
     duplicateRate: accepted === 0 ? 0 : duplicates / accepted,
     underfillRate: requested === 0 ? 0 : (requested - accepted) / requested,
     approvalRate: validations === 0 ? 0 : autoApproved / validations,
@@ -211,8 +232,9 @@ async function runCandidate(client: Anthropic, c: EvalCell): Promise<ArmOutcome>
   return out;
 }
 
-async function scoreArm(client: Anthropic, c: EvalCell, arm: ArmOutcome): Promise<{ flags: boolean[]; usage: ClaudeUsageBreakdown; errors: number }> {
+async function scoreArm(client: Anthropic, c: EvalCell, arm: ArmOutcome): Promise<{ flags: boolean[]; existingMatch: boolean[]; usage: ClaudeUsageBreakdown; errors: number }> {
   const flags: boolean[] = [];
+  const existingMatch: boolean[] = [];
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
   let errors = 0;
   for (let i = 0; i < arm.accepted.length; i++) {
@@ -225,12 +247,14 @@ async function scoreArm(client: Anthropic, c: EvalCell, arm: ArmOutcome): Promis
       );
       usage = addUsage(usage, j.tokenUsage);
       flags.push(j.result.duplicateOf !== null);
+      existingMatch.push(j.result.duplicateOf !== null && j.result.duplicateOf < c.existing.length);
     } catch {
       errors++;
       flags.push(false);
+      existingMatch.push(false);
     }
   }
-  return { flags, usage, errors };
+  return { flags, existingMatch, usage, errors };
 }
 
 async function loadCell(db: Db, d: { language: string; cefrLevel: string; grammarPointKey: string }): Promise<EvalCell> {
@@ -283,6 +307,7 @@ async function main(): Promise<void> {
   const perCell: Array<Record<string, unknown>> = [];
   const base: ArmOutcome[] = [], cand: ArmOutcome[] = [];
   const baseFlags: boolean[][] = [], candFlags: boolean[][] = [];
+  const baseExisting: boolean[][] = [], candExisting: boolean[][] = [];
   let scoringUsage: ClaudeUsageBreakdown = ZERO_USAGE;
   let scoringErrors = 0;
   let capped = false;
@@ -298,6 +323,7 @@ async function main(): Promise<void> {
     scoringUsage = addUsage(addUsage(scoringUsage, bs.usage), ks.usage);
     scoringErrors += bs.errors + ks.errors;
     base.push(b); cand.push(k); baseFlags.push(bs.flags); candFlags.push(ks.flags);
+    baseExisting.push(bs.existingMatch); candExisting.push(ks.existingMatch);
     perCell.push({
       cellKey: c.cell.cellKey, requested: c.requested, existing: c.existing,
       baseline: { accepted: b.accepted, duplicateFlags: bs.flags },
@@ -306,8 +332,8 @@ async function main(): Promise<void> {
     console.log(`[fw-dedup] ${c.cell.cellKey}: requested ${c.requested}; baseline ${b.accepted.length} (${bs.flags.filter(Boolean).length} dup), candidate ${k.accepted.length} (${ks.flags.filter(Boolean).length} dup)`);
   }
 
-  const baseline = armMetrics(base, baseFlags);
-  const candidate = armMetrics(cand, candFlags);
+  const baseline = armMetrics(base, baseFlags, baseExisting);
+  const candidate = armMetrics(cand, candFlags, candExisting);
   const verdict = capped ? "inspect" : fwDedupVerdict({ judgePassed, baseline, candidate });
   const report = {
     runName: values.out, startedAt: new Date().toISOString(), judgePassed, costCapped: capped,
@@ -323,6 +349,7 @@ async function main(): Promise<void> {
   console.log(`| requested | ${baseline.requested} | ${candidate.requested} |`);
   console.log(`| accepted | ${baseline.accepted} | ${candidate.accepted} |`);
   console.log(`| duplicate rate | ${pct(baseline.duplicateRate)} | ${pct(candidate.duplicateRate)} |`);
+  console.log(`| redundant rows | ${baseline.redundant} | ${candidate.redundant} |`);
   console.log(`| underfill | ${pct(baseline.underfillRate)} | ${pct(candidate.underfillRate)} |`);
   console.log(`| approval | ${pct(baseline.approvalRate)} | ${pct(candidate.approvalRate)} |`);
   console.log(`| cost | $${baseline.costUsd.toFixed(2)} | $${candidate.costUsd.toFixed(2)} |`);

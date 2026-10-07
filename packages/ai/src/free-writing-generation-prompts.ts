@@ -30,8 +30,8 @@ export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@202
 
 /**
  * Cap on how many already-used `title — task` lines appear in the system prompt's
- * avoid-list. The dedup surface for free_writing is the title, so the generator
- * gravitates to the topic name and collides; feeding the full lines already in
+ * avoid-list. Entries are `title — task` lines; the title remains the unique-index
+ * key, but duplicates are now judged semantically at insert time. Feeding the full lines already in
  * the pool (frozen for the batch, like `priorPoolSurfaces` for vocab_recall)
  * steers it to fresh angles on the same question. A cell's distinct-title space
  * is small, so this bound is generous.

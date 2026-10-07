@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ZERO_USAGE } from "../src/index.js";
-import { armMetrics, fwDedupVerdict, normalizeTitle, type ArmMetrics, type ArmOutcome } from "./fw-dedup-eval";
+import { armMetrics, fwDedupVerdict, normalizeTitle, redundantCount, type ArmMetrics, type ArmOutcome } from "./fw-dedup-eval";
 
 const acc = (title: string, status: "auto-approved" | "flagged" = "auto-approved") => ({
   summary: { title, task: "t", requiredElements: [] },
@@ -15,6 +15,18 @@ describe("normalizeTitle", () => {
   });
 });
 
+describe("redundantCount", () => {
+  it("counts a within-arm pair once", () => {
+    expect(redundantCount([true, true], [false, false])).toBe(1);
+  });
+  it("counts a draft flagged against an existing prompt", () => {
+    expect(redundantCount([true], [true])).toBe(1);
+  });
+  it("is zero with no flags", () => {
+    expect(redundantCount([false, false], [false, false])).toBe(0);
+  });
+});
+
 describe("armMetrics", () => {
   it("pools across cells", () => {
     const outcomes: ArmOutcome[] = [
@@ -23,21 +35,21 @@ describe("armMetrics", () => {
     ];
     const m = armMetrics(outcomes, [[true, false], [false]]);
     expect(m).toEqual({
-      requested: 6, accepted: 3, duplicates: 1, duplicateRate: 1 / 3,
+      requested: 6, accepted: 3, duplicates: 1, duplicateRate: 1 / 3, redundant: 0,
       underfillRate: 3 / 6, approvalRate: 4 / 6, costUsd: 0,
     });
   });
 
   it("is all zeros with nothing requested", () => {
     expect(armMetrics([], [])).toEqual({
-      requested: 0, accepted: 0, duplicates: 0, duplicateRate: 0, underfillRate: 0, approvalRate: 0, costUsd: 0,
+      requested: 0, accepted: 0, duplicates: 0, duplicateRate: 0, redundant: 0, underfillRate: 0, approvalRate: 0, costUsd: 0,
     });
   });
 });
 
 describe("fwDedupVerdict", () => {
   const m = (duplicateRate: number, approvalRate = 0.9): ArmMetrics => ({
-    requested: 20, accepted: 20, duplicates: 0, duplicateRate, underfillRate: 0, approvalRate, costUsd: 0,
+    requested: 20, accepted: 20, duplicates: 0, duplicateRate, redundant: 0, underfillRate: 0, approvalRate, costUsd: 0,
   });
 
   it("is ship-ready when the judge passed, baseline duplicates, candidate does not, approval holds", () => {

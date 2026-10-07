@@ -1060,13 +1060,16 @@ const NO_USAGE = { inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0,
 describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
   it('inserts a distinct free-writing draft', async () => {
     mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
-    mockFwCheck.mockResolvedValue({ status: 'distinct', detail: 'new', usage: NO_USAGE });
+    const JUDGE_USAGE = { inputTokens: 40, outputTokens: 4, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
+    mockFwCheck.mockResolvedValue({ status: 'distinct', detail: 'new', usage: JUDGE_USAGE });
     const capture: { exercise?: Record<string, unknown> } = {};
     const outcome = await validateAndInsertWithRetry({
       db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
       ordinal: 0, cell: fwCell, args, generatedAt,
     });
     expect(outcome.terminalStatus).toBe('inserted-approved');
+    // validation usage (10) + judge usage (40)
+    expect(outcome.extraUsage.inputTokens).toBeGreaterThanOrEqual(50);
     expect(mockFwCheck).toHaveBeenCalledTimes(1);
     expect(mockGenerateBatch).not.toHaveBeenCalled();
   });
@@ -1104,6 +1107,62 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
     expect(capture.exercise?.flaggedReasons).toEqual([
       { code: GenerationReasonCode.DedupCheckUnavailable, detail: 'timeout' },
     ]);
+  });
+
+  it('keeps an earlier flag reason first and appends dedup-check-unavailable', async () => {
+    mockValidateDraft.mockResolvedValue({
+      ...PASSING_VALIDATION,
+      result: { ...PASSING_VALIDATION.result, qualityScore: 0.6 },
+    });
+    mockFwCheck.mockResolvedValue({ status: 'unavailable', detail: 'timeout', usage: NO_USAGE });
+    const capture: { exercise?: Record<string, unknown> } = {};
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+    expect(outcome.terminalStatus).toBe('inserted-flagged');
+    const reasons = capture.exercise?.flaggedReasons as Array<{ code: string; detail?: string }>;
+    expect(reasons.length).toBeGreaterThanOrEqual(2);
+    expect(reasons[0].code).not.toBe(GenerationReasonCode.DedupCheckUnavailable);
+    expect(reasons[reasons.length - 1]).toEqual({
+      code: GenerationReasonCode.DedupCheckUnavailable,
+      detail: 'timeout',
+    });
+  });
+
+  it('throws on abort during the judge call and inserts nothing', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const controller = new AbortController();
+    mockFwCheck.mockImplementation(async () => {
+      controller.abort();
+      return { status: 'unavailable', detail: 'aborted', usage: NO_USAGE };
+    });
+    const capture: { exercise?: Record<string, unknown> } = {};
+    await expect(
+      validateAndInsertWithRetry({
+        db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+        ordinal: 0, cell: fwCell, args, generatedAt, signal: controller.signal,
+      }),
+    ).rejects.toThrow(/Aborted/);
+    expect(capture.exercise).toBeUndefined();
+  });
+
+  it('keeps the original history when the retry-history refresh fails', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockFwCheck.mockResolvedValue({ status: 'duplicate', detail: 'duplicate of "X"', usage: NO_USAGE });
+    mockFwSummaries.mockImplementation(() => {
+      throw new Error('db down');
+    });
+    mockGenerateBatch.mockResolvedValue({ drafts: [makeFwDraft('fw-retry')], malformedDrafts: [], tokenUsage: NO_USAGE } satisfies GenerateBatchResult);
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb({}), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+    expect(outcome.terminalStatus).toBe('dedup-given-up');
+    expect(mockGenerateBatch).toHaveBeenCalled();
+    for (const call of mockGenerateBatch.mock.calls) {
+      expect(call[1].priorPoolSurfaces).toEqual(['Old — stale']);
+    }
   });
 
   it('never calls the judge for non-free-writing cells', async () => {

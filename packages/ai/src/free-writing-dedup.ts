@@ -39,7 +39,8 @@ export function parseFreeWritingDedupVerdict(input: unknown, existingCount: numb
   const r = input as Record<string, unknown>;
   const reason = typeof r.reason === "string" ? r.reason : "";
   const d = r.duplicateOf;
-  if (d === null || d === undefined) return { duplicateOf: null, reason };
+  if (d === undefined) throw new Error("dedup verdict is missing duplicateOf");
+  if (d === null) return { duplicateOf: null, reason };
   if (typeof d !== "number" || !Number.isInteger(d) || d < 0 || d >= existingCount) {
     throw new Error(`dedup verdict index out of range: ${String(d)} (existing=${existingCount})`);
   }
