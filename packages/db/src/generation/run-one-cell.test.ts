@@ -2320,6 +2320,24 @@ describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
     });
     expect(vi.mocked(runGeneratorPool).mock.calls[0][0].spec.priorPoolSurfaces).toBeUndefined();
   });
+
+  it('runs free-writing outcomes serially and other types at full concurrency', async () => {
+    const { db } = makeMockDb();
+    await runOneCell({
+      db, client: {} as never, cell: buildCell(ExerciseType.FREE_WRITING),
+      args: { count: 3, batchSeed: 'fw-serial', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(), trigger: 'scheduled',
+    });
+    expect(vi.mocked(runOutcomePool).mock.calls[0][0].concurrency).toBe(1);
+
+    vi.mocked(runOutcomePool).mockClear();
+    await runOneCell({
+      db, client: {} as never, cell: buildCell(ExerciseType.CLOZE),
+      args: { count: 3, batchSeed: 'cloze-par', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(), trigger: 'scheduled',
+    });
+    expect(vi.mocked(runOutcomePool).mock.calls[0][0].concurrency).toBeGreaterThan(1);
+  });
 });
 
 // ---------------------------------------------------------------------------

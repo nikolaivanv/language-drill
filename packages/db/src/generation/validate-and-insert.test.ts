@@ -54,6 +54,11 @@ vi.mock('@language-drill/ai', async () => {
   };
 });
 
+vi.mock('./free-writing-dedup', () => ({
+  checkFreeWritingDuplicate: vi.fn(),
+  fetchFreeWritingPromptSummaries: vi.fn(),
+}));
+
 import {
   generateBatch,
   getCurrentLlmTraceContext,
@@ -66,6 +71,9 @@ import {
   VOCAB_MAX_PER_WORD,
   validateAndInsertWithRetry,
 } from './validate-and-insert';
+import { checkFreeWritingDuplicate, fetchFreeWritingPromptSummaries } from './free-writing-dedup';
+const mockFwCheck = vi.mocked(checkFreeWritingDuplicate);
+const mockFwSummaries = vi.mocked(fetchFreeWritingPromptSummaries);
 
 const mockValidateDraft = vi.mocked(validateDraft);
 const mockGenerateBatch = vi.mocked(generateBatch);
@@ -216,6 +224,8 @@ function makeDedupAlwaysCollidesDb(): Db {
 beforeEach(() => {
   mockValidateDraft.mockReset();
   mockGenerateBatch.mockReset();
+  mockFwCheck.mockReset();
+  mockFwSummaries.mockReset();
 });
 
 describe('validateAndInsertWithRetry — R5 malformed-retry recovery', () => {
@@ -1010,5 +1020,98 @@ describe('validateAndInsertWithRetry — per-ordinal exerciseId trace scope', ()
     expect(outcome.terminalStatus).toBe('inserted-approved');
     expect(seen).toHaveLength(1);
     expect(seen[0]).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Free-writing semantic dedup: the judge pre-empts the INSERT like the vocab
+// per-word cap, retries see refreshed history, a judge outage inserts flagged.
+// ---------------------------------------------------------------------------
+
+const fwCell: Cell = {
+  language: Language.ES,
+  cefrLevel: CefrLevel.B2,
+  exerciseType: ExerciseType.FREE_WRITING,
+  grammarPoint,
+  cellKey: 'es:b2:free_writing:es-b1-test',
+};
+const fwSpec: GenerationSpec = { ...spec, cefrLevel: CefrLevel.B2, exerciseType: ExerciseType.FREE_WRITING, priorPoolSurfaces: ['Old — stale'] };
+
+function makeFwDraft(id = 'fw-draft-0'): ExerciseDraft {
+  return {
+    id,
+    contentJson: {
+      type: ExerciseType.FREE_WRITING,
+      instructions: 'Write.',
+      title: 'El teletrabajo',
+      task: 'Explica si el teletrabajo aísla.',
+      domain: 'opinión',
+      register: 'neutral',
+      minWords: 120,
+      maxWords: 180,
+      requiredElements: [{ id: 'a', label: 'Opina' }],
+    } as unknown as ExerciseDraft['contentJson'],
+    metadata: makeDraft().metadata,
+  };
+}
+
+const NO_USAGE = { inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
+
+describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
+  it('inserts a distinct free-writing draft', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockFwCheck.mockResolvedValue({ status: 'distinct', detail: 'new', usage: NO_USAGE });
+    const capture: { exercise?: Record<string, unknown> } = {};
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+    expect(outcome.terminalStatus).toBe('inserted-approved');
+    expect(mockFwCheck).toHaveBeenCalledTimes(1);
+    expect(mockGenerateBatch).not.toHaveBeenCalled();
+  });
+
+  it('routes a semantic duplicate through retries to dedup-given-up, with refreshed history each retry', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockFwCheck.mockResolvedValue({ status: 'duplicate', detail: 'duplicate of "X"', usage: NO_USAGE });
+    mockFwSummaries.mockResolvedValue([{ title: 'Fresh', task: 'Just inserted.', requiredElements: [] }]);
+    mockGenerateBatch.mockResolvedValue({ drafts: [makeFwDraft('fw-retry')], malformedDrafts: [], tokenUsage: NO_USAGE } satisfies GenerateBatchResult);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb({}), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('dedup-given-up');
+    expect(outcome.insertedExerciseId).toBeUndefined();
+    expect(mockGenerateBatch).toHaveBeenCalledTimes(3);
+    for (const call of mockGenerateBatch.mock.calls) {
+      expect(call[1].priorPoolSurfaces).toEqual(['Fresh — Just inserted.']);
+    }
+  });
+
+  it('inserts flagged with dedup-check-unavailable when the judge is unavailable', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockFwCheck.mockResolvedValue({ status: 'unavailable', detail: 'timeout', usage: NO_USAGE });
+    const capture: { exercise?: Record<string, unknown> } = {};
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+    expect(outcome.terminalStatus).toBe('inserted-flagged');
+    expect(outcome.terminalReviewStatus).toBe('flagged');
+    expect(capture.exercise?.reviewStatus).toBe('flagged');
+    expect(capture.exercise?.flaggedReasons).toEqual([
+      { code: GenerationReasonCode.DedupCheckUnavailable, detail: 'timeout' },
+    ]);
+  });
+
+  it('never calls the judge for non-free-writing cells', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb({}), client: mockClient, spec, draft: makeDraft(),
+      ordinal: 0, cell, args, generatedAt,
+    });
+    expect(mockFwCheck).not.toHaveBeenCalled();
   });
 });
