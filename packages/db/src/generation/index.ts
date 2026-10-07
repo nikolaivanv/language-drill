@@ -36,6 +36,9 @@ export {
 
 export {
   runOneCell,
+  buildCellSeedWords,
+  fetchPriorStems,
+  MAX_PRIOR_STEMS,
   type CellResult,
   type RunOneCellInput,
 } from './run-one-cell';

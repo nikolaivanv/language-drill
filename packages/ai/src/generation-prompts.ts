@@ -328,7 +328,24 @@ function renderRecentStems(recentStems: readonly string[]): string {
 // rule demands it rather than an anchor. Mirrored by validate@2026-09-22; the
 // two must land together or the fix is nullified. Template edit -> Langfuse
 // push per env.
-export const GENERATION_PROMPT_VERSION = "generate@2026-09-22";
+// Bumped 2026-10-07 (generate@2026-10-07): cloze/translation/SC cells render
+// their approved stems as a diversity section (not a dedup list).
+export const GENERATION_PROMPT_VERSION = "generate@2026-10-07";
+
+/**
+ * Exercise types whose `priorPoolSurfaces` is the cell's approved stems — a
+ * DIVERSITY signal ("don't reuse these people/places/scenes"), not a dedup
+ * avoid-list. Each draft is its own call and cells fill over many batches, so
+ * without this no draft ever sees what the cell already holds; lexical fillers
+ * and scenes collapse onto the model's prototype ("my sister" 15/38 in #727,
+ * "café" 41/46 in es-b1-relative-clauses SC). The other types keep their
+ * byte-identical dedup wording.
+ */
+export const HISTORY_STEM_TYPES: ReadonlySet<ExerciseType> = new Set([
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
+]);
 
 /**
  * Wording differs per type so Claude reads it the way the cell is constrained:
@@ -343,6 +360,18 @@ function renderPriorPoolSection(
   if (!priorPoolSurfaces || priorPoolSurfaces.length === 0) return "";
   const capped = capPriorPoolSurfaces(priorPoolSurfaces);
   const bullets = capped.map((surface) => `  - ${surface}`).join("\n");
+  if (HISTORY_STEM_TYPES.has(exerciseType)) {
+    // Phrased per draft ("invent your own"), never "vary across drafts": each
+    // draft is a separate call, so cross-draft instructions are inert (#727).
+    return (
+      "## Already in this cell — write something different\n\n" +
+      "These exercises are already in the pool for this cell. They test the same grammar as yours, so reusing the tested form is expected. " +
+      "Do not reuse their characters, relationships, places, objects or situations, and do not mirror any sentence's template. " +
+      "Invent your own rather than reusing these. " +
+      "If this exercise has an assigned seed word, sub-construction, or coverage target (grammatical person, case, number), that assignment takes precedence over this list.\n\n" +
+      `${bullets}\n\n`
+    );
+  }
   const heading =
     exerciseType === ExerciseType.VOCAB_RECALL
       ? "## Already in the pool — do NOT propose any of these target words"
@@ -972,6 +1001,39 @@ function normaliseSurface(text: string): string {
     .replace(/\p{Diacritic}+/gu, "")
     .replace(/\s+/gu, " ")
     .trim();
+}
+
+/**
+ * The line a stored or drafted exercise contributes to its cell's history
+ * (`HISTORY_STEM_TYPES` only): cloze → `sentence`, translation → `sourceText`,
+ * sentence_construction → `prompt → modelAnswers[0]` (the café collapse lived
+ * in the model answers). Takes `unknown` because callers pass raw
+ * `content_json`; anything malformed or out of scope returns `null` so it is
+ * skipped rather than rendered as "undefined". Whitespace is collapsed so a
+ * stem is always exactly one bullet line.
+ */
+export function historyStem(content: unknown): string | null {
+  if (typeof content !== "object" || content === null) return null;
+  const c = content as Record<string, unknown>;
+  const text = (v: unknown): string | null => {
+    if (typeof v !== "string") return null;
+    const collapsed = v.replace(/\s+/gu, " ").trim();
+    return collapsed.length > 0 ? collapsed : null;
+  };
+  switch (c.type) {
+    case ExerciseType.CLOZE:
+      return text(c.sentence);
+    case ExerciseType.TRANSLATION:
+      return text(c.sourceText);
+    case ExerciseType.SENTENCE_CONSTRUCTION: {
+      const prompt = text(c.prompt);
+      if (prompt === null) return null;
+      const answer = Array.isArray(c.modelAnswers) ? text(c.modelAnswers[0]) : null;
+      return answer === null ? prompt : `${prompt} → ${answer}`;
+    }
+    default:
+      return null;
+  }
 }
 
 export function canonicalSurface(content: ExerciseContent): string {

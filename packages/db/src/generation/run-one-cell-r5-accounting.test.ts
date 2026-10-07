@@ -169,8 +169,8 @@ function makeStubDb(): Db {
   const selectChain = {
     // `where()` is a thenable resolving to `[]` (fetchPriorSeeds awaits it
     // directly) that also carries `.limit()` for the skill-topic precheck and
-    // `.orderBy()` for both the vocab-priors query (unused for CLOZE, via
-    // `.orderBy().limit()`) and `loadFrequencyBand` (awaited directly → `[]`).
+    // `.orderBy()` for both the `.orderBy().limit()` chain (CLOZE uses it for
+    // `fetchPriorStems`, the cell-history query) and `loadFrequencyBand` (awaited directly → `[]`).
     from: () => ({
       where: () =>
         Object.assign(Promise.resolve([] as unknown[]), {
