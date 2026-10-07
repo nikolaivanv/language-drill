@@ -13,6 +13,12 @@ import { PostHogProvider } from '../components/analytics/posthog-provider';
 import './globals.css';
 
 export const metadata: Metadata = {
+  // Resolves every page's relative `alternates.canonical` (and OG URLs) against
+  // the www host. Without it Next emits the canonical as a bare path, and the
+  // apex `langdrill.app` — which redirects to www — leaves Google picking the
+  // canonical itself ("Duplicate without user-selected canonical"). Do NOT add
+  // a canonical here: it would be inherited by every page that lacks its own.
+  metadataBase: new URL('https://www.langdrill.app'),
   title: 'Language Drill',
   description: 'AI-powered language learning for active production practice',
 };

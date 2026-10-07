@@ -8,12 +8,44 @@
 
 import { Fragment } from 'react';
 import Link from 'next/link';
+import type { PublicLanguage } from '@language-drill/shared';
 import { D_LANGS, type Token, type DeepCard } from './landing-data';
+import { LANDING_PATH, LANGUAGE_LABEL, grammarIndexHref } from '../../lib/public-paths';
 
 export interface BankWord {
   w: string;
   lang: string;
   gloss: string;
+}
+
+/** `D_LANGS` ids are the lowercase tags; the public routes key by PublicLanguage. */
+export function publicLangFor(id: string): PublicLanguage {
+  return id.toUpperCase() as PublicLanguage;
+}
+
+/**
+ * Crawlable links from the landing to every public surface. The language
+ * landings, grammar libraries and the forms drill are otherwise reachable
+ * only from the sitemap, and Search Console reports sitemap-only URLs as
+ * "Discovered – currently not indexed" with no referring page — the home page
+ * is the site's strongest page, so it has to link to them in plain `<a>`s.
+ */
+export function PublicResourceLinks({ className }: { className?: string }) {
+  return (
+    <nav aria-label="Free practice and grammar" className={'landing-resources ' + (className ?? '')}>
+      <span className="lbl">Free, no signup</span>
+      {D_LANGS.map((l) => {
+        const lang = publicLangFor(l.id);
+        return (
+          <Fragment key={l.id}>
+            <Link href={LANDING_PATH[lang]}>{LANGUAGE_LABEL[lang]} forms practice</Link>
+            <Link href={grammarIndexHref(lang)}>{LANGUAGE_LABEL[lang]} grammar</Link>
+          </Fragment>
+        );
+      })}
+      <Link href="/try/forms">Try the forms drill</Link>
+    </nav>
+  );
 }
 
 export function DBrand() {

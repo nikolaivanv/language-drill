@@ -15,6 +15,7 @@ export const metadata: Metadata = {
     'Practise producing Spanish, German and Turkish forms — verb tenses, cases, ' +
     'adjective endings — typed, not tapped, and graded the moment you press enter. ' +
     'No signup.',
+  alternates: { canonical: '/try/forms' },
 };
 
 const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];

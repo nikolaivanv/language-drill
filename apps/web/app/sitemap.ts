@@ -48,12 +48,11 @@ const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
  * unaffected. Losing one language's topic URLs for an hour is strictly
  * better than losing all 322.
  */
-async function grammarEntries(now: Date): Promise<MetadataRoute.Sitemap> {
+async function grammarEntries(): Promise<MetadataRoute.Sitemap> {
   const perLanguage = await Promise.all(
     LANGS.map(async (lang) => {
       const hub = {
         url: `${SITE}${grammarIndexHref(lang)}`,
-        lastModified: now,
         changeFrequency: 'weekly' as const,
         priority: 0.8,
       };
@@ -63,8 +62,7 @@ async function grammarEntries(now: Date): Promise<MetadataRoute.Sitemap> {
           hub,
           ...topics.map((t) => ({
             url: `${SITE}${grammarTopicHref(lang, t.id)}`,
-            lastModified: now,
-            changeFrequency: 'monthly' as const,
+                changeFrequency: 'monthly' as const,
             priority: 0.6,
           })),
         ];
@@ -77,15 +75,18 @@ async function grammarEntries(now: Date): Promise<MetadataRoute.Sitemap> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  // No `lastModified`: this document is force-dynamic, so `new Date()` would
+  // stamp every URL as changed on every fetch. Google ignores a lastmod that is
+  // never accurate, so omitting it is the honest signal until pages carry a
+  // real content timestamp.
   return [
-    { url: `${SITE}/`, lastModified: now, changeFrequency: 'monthly', priority: 1 },
-    { url: `${SITE}/spanish`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE}/german`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE}/turkish`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE}/try/forms`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
-    { url: `${SITE}/why-not-chatgpt`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE}/academic-rigour`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    ...(await grammarEntries(now)),
+    { url: `${SITE}/`, changeFrequency: 'monthly', priority: 1 },
+    { url: `${SITE}/spanish`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${SITE}/german`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${SITE}/turkish`, changeFrequency: 'weekly', priority: 0.9 },
+    { url: `${SITE}/try/forms`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE}/why-not-chatgpt`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE}/academic-rigour`, changeFrequency: 'monthly', priority: 0.5 },
+    ...(await grammarEntries()),
   ];
 }

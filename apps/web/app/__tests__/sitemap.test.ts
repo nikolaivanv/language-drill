@@ -47,4 +47,9 @@ describe('sitemap', () => {
     const urls = (await sitemap()).map((e) => e.url);
     expect(new Set(urls).size).toBe(urls.length);
   });
+
+  it('carries no lastModified, since a per-request timestamp would be false', async () => {
+    vi.mocked(fetchPublicTopicList).mockResolvedValue([topic('a2-x')]);
+    for (const entry of await sitemap()) expect(entry.lastModified).toBeUndefined();
+  });
 });

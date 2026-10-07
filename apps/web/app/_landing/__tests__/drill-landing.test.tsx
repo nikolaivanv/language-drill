@@ -41,3 +41,25 @@ describe('DrillLanding — academic-rigour tweaks', () => {
     expect(screen.getByText('On the floor now')).toBeInTheDocument();
   });
 });
+
+describe('DrillLanding — crawl paths to the public surfaces', () => {
+  it.each([
+    ['Spanish forms practice', '/spanish'],
+    ['Spanish grammar', '/spanish/grammar'],
+    ['German forms practice', '/german'],
+    ['German grammar', '/german/grammar'],
+    ['Turkish forms practice', '/turkish'],
+    ['Turkish grammar', '/turkish/grammar'],
+    ['Try the forms drill', '/try/forms'],
+  ])('links "%s" to %s', (name, href) => {
+    render(<DrillLanding />);
+    expect(screen.getByRole('link', { name })).toHaveAttribute('href', href);
+  });
+
+  it('links each language card to its landing page', () => {
+    render(<DrillLanding />);
+    expect(screen.getByRole('link', { name: /Español/ })).toHaveAttribute('href', '/spanish');
+    expect(screen.getByRole('link', { name: /Deutsch/ })).toHaveAttribute('href', '/german');
+    expect(screen.getByRole('link', { name: /Türkçe/ })).toHaveAttribute('href', '/turkish');
+  });
+});

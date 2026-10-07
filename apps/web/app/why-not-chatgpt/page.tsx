@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'drill — why not just ChatGPT?',
   description:
     'ChatGPT can write and grade exercises — that’s what inspired drill. But daily practice in a chat drifts off your level, repeats itself and forgets your mistakes. Here’s the point-by-point comparison.',
+  alternates: { canonical: '/why-not-chatgpt' },
 };
 
 // Standalone marketing deep-dive linked from the landing's "Why not ChatGPT?"
