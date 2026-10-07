@@ -14,7 +14,7 @@ Two prompts are DUPLICATES when a learner answering them would write essentially
 
 Two prompts are DISTINCT when they ask for a genuinely different essay: a different question, a different situation, a different text type (for example a letter versus an opinion piece), or a clearly different focus within the topic.
 
-At CEFR A1 and A2, where prompts are short and concrete, two prompts that require clearly different content are DISTINCT even when they share the topic — for example describing a place versus narrating an event.
+At CEFR A1 and A2, where prompts are short and concrete, two prompts that require clearly different content are DISTINCT even when they share the topic.
 
 The prompts may be written in any language. Judge the meaning, not the wording.
 

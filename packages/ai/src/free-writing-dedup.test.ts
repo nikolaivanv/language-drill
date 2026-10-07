@@ -155,4 +155,38 @@ describe("judgeFreeWritingDuplicate", () => {
       judgeFreeWritingDuplicate(client, { candidate, existing: [{ title: "E", task: "T.", requiredElements: [] }], cefrLevel: "B1" }),
     ).rejects.toThrow();
   });
+
+  describe("per-model request shaping", () => {
+    const run = async (model?: string) => {
+      const create = vi.fn().mockResolvedValue({
+        stop_reason: "tool_use",
+        usage: { input_tokens: 1, output_tokens: 1 },
+        content: [{ type: "tool_use", name: FREE_WRITING_DEDUP_TOOL_NAME, input: { duplicateOf: null, reason: "" } }],
+      });
+      const client = { messages: { create } } as unknown as Anthropic;
+      await judgeFreeWritingDuplicate(
+        client,
+        { candidate, existing: [{ title: "E", task: "T.", requiredElements: [] }], cefrLevel: "B1" },
+        model ? { model } : {},
+      );
+      return create.mock.calls[0][0] as Record<string, unknown>;
+    };
+
+    it("default model sends temperature 0 and no thinking", async () => {
+      const req = await run();
+      expect(req.temperature).toBe(0);
+      expect("thinking" in req).toBe(false);
+    });
+
+    it("opus-4-8 omits temperature", async () => {
+      const req = await run("claude-opus-4-8");
+      expect("temperature" in req).toBe(false);
+    });
+
+    it("sonnet-5-5 omits temperature and disables thinking", async () => {
+      const req = await run("claude-sonnet-5-5");
+      expect("temperature" in req).toBe(false);
+      expect(req.thinking).toEqual({ type: "disabled" });
+    });
+  });
 });
