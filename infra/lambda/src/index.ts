@@ -19,6 +19,7 @@ import invites from './routes/invites';
 import me from './routes/me';
 import admin from './routes/admin';
 import exerciseFlags from './routes/exercise-flags';
+import freeWritingHistory from './routes/free-writing-history';
 import emailRoutes from './routes/email';
 import webhooks from './routes/webhooks/clerk';
 
@@ -54,6 +55,7 @@ app.route('/', invites);
 app.route('/', me);
 app.route('/', admin);
 app.route('/', exerciseFlags);
+app.route('/', freeWritingHistory);
 app.route('/', emailRoutes);
 app.route('/', webhooks);
 

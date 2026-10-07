@@ -28,6 +28,26 @@ describe('FwBrief', () => {
     expect(screen.getByText('Usa dos condicionales')).toBeInTheDocument();
   });
 
+  it('links to past attempts only when given a history href', () => {
+    const { rerender } = render(
+      <FwBrief content={content} examMode={false} onToggleExam={() => {}} onBegin={() => {}} />,
+    );
+    expect(screen.queryByRole('link', { name: /past attempts/i })).toBeNull();
+    rerender(
+      <FwBrief
+        content={content}
+        examMode={false}
+        onToggleExam={() => {}}
+        onBegin={() => {}}
+        historyHref="/drill/free-writing/history"
+      />,
+    );
+    expect(screen.getByRole('link', { name: /past attempts/i })).toHaveAttribute(
+      'href',
+      '/drill/free-writing/history',
+    );
+  });
+
   it('begins on click', () => {
     const onBegin = vi.fn();
     render(

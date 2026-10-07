@@ -157,6 +157,22 @@ export {
   type SubmitFreeWritingParams,
   type UseSubmitFreeWritingOptions,
 } from './hooks/useSubmitFreeWriting';
+export {
+  useFreeWritingHistory,
+  useFreeWritingAttempt,
+  FREE_WRITING_HISTORY_QUERY_KEY,
+  type UseFreeWritingHistoryParams,
+  type UseFreeWritingAttemptParams,
+} from './hooks/useFreeWritingHistory';
+export {
+  FreeWritingHistoryItemSchema,
+  type FreeWritingHistoryItem,
+  FreeWritingHistoryPageSchema,
+  type FreeWritingHistoryPage,
+  FreeWritingAttemptSchema,
+  type FreeWritingAttempt,
+  parseStoredFreeWritingEvaluation,
+} from './schemas/free-writing-history';
 export { useWordHints, type UseWordHintsOptions } from './hooks/useWordHints';
 export {
   useExplainSubmission,

@@ -4,6 +4,7 @@ import {
   type FreeWritingEvaluationResponse,
 } from '../schemas/exercise';
 import type { AuthenticatedFetch } from '../fetchClient';
+import { FREE_WRITING_HISTORY_QUERY_KEY } from './useFreeWritingHistory';
 
 export type SubmitFreeWritingParams = {
   exerciseId: string;
@@ -27,6 +28,8 @@ export function useSubmitFreeWriting({ fetchFn }: UseSubmitFreeWritingOptions) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise'] });
+      // The just-graded attempt is now the newest history row.
+      queryClient.invalidateQueries({ queryKey: [FREE_WRITING_HISTORY_QUERY_KEY] });
     },
   });
 }

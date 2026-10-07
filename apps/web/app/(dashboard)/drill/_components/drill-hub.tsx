@@ -163,6 +163,12 @@ export function DrillHub({
           />
         </Link>
       </div>
+      <Link
+        href="/drill/free-writing/history"
+        className="t-mono mt-s-3 inline-block text-[13px] text-ink-soft hover:text-ink"
+      >
+        past free-writing attempts <span className="lk-arr" aria-hidden="true">→</span>
+      </Link>
 
       {/* Work on these */}
       {themes.length > 0 && (
