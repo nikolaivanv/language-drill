@@ -26,14 +26,15 @@ import type { GenerationPromptInputs } from "./generation-prompts.js";
 import { getPromptWithVarsOrFallback } from "./prompts-registry.js";
 
 // Bump in the same commit as any semantic edit to the template below.
-export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-09-07";
+export const FREE_WRITING_GENERATION_PROMPT_VERSION = "free-writing-generate@2026-10-07";
 
 /**
- * Cap on how many already-used titles appear in the system prompt's avoid-list.
- * The dedup surface for free_writing is the title, so the generator gravitates to
- * the topic name and collides; feeding the titles already in the pool (frozen for
- * the batch, like `priorPoolSurfaces` for vocab_recall) steers it to fresh angles.
- * A cell's distinct-title space is small, so this bound is generous.
+ * Cap on how many already-used `title — task` lines appear in the system prompt's
+ * avoid-list. The dedup surface for free_writing is the title, so the generator
+ * gravitates to the topic name and collides; feeding the full lines already in
+ * the pool (frozen for the batch, like `priorPoolSurfaces` for vocab_recall)
+ * steers it to fresh angles on the same question. A cell's distinct-title space
+ * is small, so this bound is generous.
  */
 export const MAX_PRIOR_FW_TITLES_IN_PROMPT = 60;
 
@@ -76,11 +77,11 @@ function renderBulletList(items: readonly string[]): string {
 }
 
 /**
- * Builds the "titles already in the pool" avoid-list block from the cell's prior
- * approved/flagged titles. Returns "" when there are none (e.g. a cell's first
- * run) so the section is omitted and the cached prompt prefix stays stable. The
- * trailing `\n\n` lets the template splice `{{priorTitlesSection}}## Hard…`
- * cleanly when present.
+ * Builds the "prompts already in the pool" avoid-list block from the cell's
+ * prior approved/flagged `title — task` lines. Returns "" when there are none
+ * (e.g. a cell's first run) so the section is omitted and the cached prompt
+ * prefix stays stable. The trailing `\n\n` lets the template splice
+ * `{{priorTitlesSection}}## Hard…` cleanly when present.
  */
 function renderPriorTitlesSection(
   priorTitles: readonly string[] | undefined,
@@ -88,7 +89,10 @@ function renderPriorTitlesSection(
   if (!priorTitles || priorTitles.length === 0) return "";
   const capped = priorTitles.slice(0, MAX_PRIOR_FW_TITLES_IN_PROMPT);
   const bullets = capped.map((t) => `  - ${t}`).join("\n");
-  return `## Titles already in the pool — do NOT reuse or closely paraphrase any of these\n\nPick a clearly different angle and a distinct title:\n\n${bullets}\n\n`;
+  // Each line is `title — task` (freeWritingHistoryLine). Titles alone let a
+  // batch reword one question 5–10× under new titles (#757), so the list names
+  // the question itself.
+  return `## Prompts already in this cell — do NOT ask the same question in other words\n\nA new title or a new angle label on the same question is still the same question. Write a prompt that asks for a genuinely different essay:\n\n${bullets}\n\n`;
 }
 
 /**

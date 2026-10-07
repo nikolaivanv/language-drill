@@ -104,13 +104,25 @@ describe("free-writing generation prompt", () => {
     expect(computeFreeWritingGenerationPromptVars(INPUTS).priorTitlesSection).toBe("");
   });
 
-  it("renders prior titles as an avoid-list when present", () => {
+  it("renders prior prompts as a same-question avoid-list", () => {
     const vars = computeFreeWritingGenerationPromptVars({
       ...INPUTS,
-      priorPoolSurfaces: ["el teletrabajo: ¿avance o aislamiento?", "teletrabajo y soledad"],
+      priorPoolSurfaces: [
+        "El teletrabajo: ¿avance o aislamiento? — Explica si trabajar desde casa aísla a las personas.",
+        "Teletrabajo y soledad — Describe cómo te sientes trabajando solo.",
+      ],
     });
-    expect(vars.priorTitlesSection).toContain("do NOT reuse");
-    expect(vars.priorTitlesSection).toContain("teletrabajo y soledad");
+    expect(vars.priorTitlesSection).toContain(
+      "## Prompts already in this cell — do NOT ask the same question in other words",
+    );
+    expect(vars.priorTitlesSection).toContain(
+      "A new title or a new angle label on the same question is still the same question.",
+    );
+    expect(vars.priorTitlesSection).toContain("  - Teletrabajo y soledad — Describe cómo te sientes trabajando solo.");
+  });
+
+  it("bumps the free-writing generation prompt version", () => {
+    expect(FREE_WRITING_GENERATION_PROMPT_VERSION).toBe("free-writing-generate@2026-10-07");
   });
 
   it("rotates B1/B2 ordinals through the full analytical angle pool", () => {
