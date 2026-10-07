@@ -15,6 +15,7 @@
     "eval": "tsx scripts/eval-run.ts",
     "eval:gen:export": "tsx scripts/eval-gen-export.ts",
     "eval:gen": "tsx scripts/eval-gen-run.ts",
+    "eval:fw-dedup-judge": "tsx scripts/fw-dedup-judge-eval.ts",
     "propose:coverage-spec": "tsx scripts/propose-coverage-spec.ts",
     "propose:book-coverage": "tsx scripts/propose-book-coverage.ts",
     "qa:sample": "tsx scripts/qa-sample-run.ts",

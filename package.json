@@ -38,6 +38,7 @@
     "eval": "dotenv -e .env -- pnpm --filter @language-drill/ai eval",
     "eval:gen:export": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen:export",
     "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen",
+    "eval:fw-dedup-judge": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:fw-dedup-judge",
     "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample",
     "audit:collapse": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:collapse",
     "audit:gloss": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:gloss",
