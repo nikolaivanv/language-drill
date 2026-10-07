@@ -85,6 +85,7 @@ import {
   cellReuse,
   foldReuse,
   hotTokens,
+  measuredPart,
   reuseVerdict,
   type HotToken,
   type ReuseFold,
@@ -248,7 +249,14 @@ export type DraftOutcome = {
   variantId?: string;
   /** `historyStem` of the draft (cloze/translation/SC); read by the --pool-history reuse metrics. Absent for parser failures and drafts with no stem. */
   stem?: string;
+  /** The draft's `contentJson` as generated — kept so a `--pool-history` run can be read draft by draft (no generation trace exists elsewhere). */
+  content?: unknown;
+  /** Validator reasons as `code: detail` (or bare `code`) — the free-form text `reasons` deliberately drops. */
+  details?: string[];
 };
+
+/** One draft as recorded in `poolReuse.perCell[].drafts` (JSON only, never rendered). */
+export type PoolDraftRecord = Pick<DraftOutcome, "bucket" | "reasons" | "details" | "content">;
 
 /**
  * The result of running one arm (baseline or candidate) over a single cell:
@@ -328,6 +336,8 @@ export type GenEvalSummary = {
       hot: HotToken[];
       baseline: ReuseFold;
       candidate: ReuseFold;
+      /** Every draft of both arms, for reading the run draft by draft. */
+      drafts: { baseline: PoolDraftRecord[]; candidate: PoolDraftRecord[] };
     }>;
   };
 };
@@ -644,6 +654,8 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
         // array index.
         variantId: variantFor(ordinal),
         ...(stem !== null ? { stem } : {}),
+        content: draft.contentJson,
+        details: flaggedReasons.map((r) => (r.detail ? `${r.code}: ${r.detail}` : r.code)),
       });
       ordinal++;
     }
@@ -1024,18 +1036,25 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
   const baselineStats = computeArmStats(run.cells.map((c) => c.baseline));
   const candidateStats = computeArmStats(run.cells.map((c) => c.candidate));
 
+  // `measuredPart` drops an SC stem's English task prompt (see its doc).
   const stemsOf = (arm: ArmResult): string[] =>
-    arm.outcomes.flatMap((o) => (o.stem !== undefined ? [o.stem] : []));
+    arm.outcomes.flatMap((o) => (o.stem !== undefined ? [measuredPart(o.stem)] : []));
+  const recordsOf = (arm: ArmResult): PoolDraftRecord[] =>
+    arm.outcomes.map(({ bucket, reasons, details, content }) => ({ bucket, reasons, details, content }));
   const pooled = run.cells.filter((c) => c.poolStems !== undefined);
   const approvalRateDelta = candidateStats.approvalRate - baselineStats.approvalRate;
   let poolReuse: GenEvalSummary["poolReuse"];
   if (pooled.length > 0) {
-    const per = pooled.map((c) => ({
-      cellKey: c.cellKey,
-      hot: hotTokens(c.poolStems!),
-      baseline: cellReuse(stemsOf(c.baseline), c.poolStems!),
-      candidate: cellReuse(stemsOf(c.candidate), c.poolStems!),
-    }));
+    const per = pooled.map((c) => {
+      const pool = c.poolStems!.map(measuredPart);
+      return {
+        cellKey: c.cellKey,
+        hot: hotTokens(pool),
+        baseline: cellReuse(stemsOf(c.baseline), pool),
+        candidate: cellReuse(stemsOf(c.candidate), pool),
+        drafts: { baseline: recordsOf(c.baseline), candidate: recordsOf(c.candidate) },
+      };
+    });
     const baselineFold = foldReuse(per.map((p) => p.baseline));
     const candidateFold = foldReuse(per.map((p) => p.candidate));
     poolReuse = {
@@ -1047,6 +1066,7 @@ export function computeGenDiff(run: GenEvalRunResult): GenEvalSummary {
         hot: p.hot,
         baseline: foldReuse([p.baseline]),
         candidate: foldReuse([p.candidate]),
+        drafts: p.drafts,
       })),
     };
   }

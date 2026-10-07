@@ -1356,6 +1356,13 @@ describe("makeRealArmExecutor — explicit seeds and stems", () => {
     // "ev" is a frequency seed, not one of the point's variant ids.
     expect(arm.outcomes.map((o) => o.variantId)).toEqual([undefined, undefined]);
     expect(arm.outcomes[0].stem).toBe("Kedi ___ uyuyor.");
+    expect(arm.outcomes[0].content).toEqual({
+      type: ExerciseType.CLOZE,
+      instructions: "x",
+      sentence: "Kedi ___ uyuyor.",
+      correctAnswer: "evde",
+    });
+    expect(arm.outcomes[0].details).toEqual([]);
     expect(arm.outcomes[1].stem).toBeUndefined();
   });
 });
@@ -1394,6 +1401,74 @@ describe("computeGenDiff + renderMarkdownSummary — pool reuse", () => {
     expect(md).toMatch(/\| hot-token reuse rate \| 100\.0% \| 0\.0% \|/);
     expect(md).toContain("**Verdict:** ship-ready");
     expect(md).toContain("herma (75%)");
+  });
+
+  it("measures SC cells on the model answer only, so task-prompt boilerplate is not reuse", () => {
+    // Task prompts vary across rows (as in the 2026-10-07 run, 30–76% shares),
+    // so their words sit below the 80% structural cutoff and WOULD be hot if
+    // the prompt were measured.
+    const PROMPT = "Write a sentence using four words below about your friend.";
+    const OTHER = "Describe your morning.";
+    const scPool = [
+      `${PROMPT} → Ich habe Brot gekauft.`,
+      `${PROMPT} → Wir haben Tee getrunken.`,
+      `${PROMPT} → Sie hat Musik gehört.`,
+      `${OTHER} → Er hat Brot gegessen.`,
+      `${OTHER} → Du hast Brot gebacken.`,
+    ];
+    const summary = computeGenDiff({
+      ...run(),
+      cells: [
+        {
+          cellKey: "DE:A2:sentence_construction:de-a2-perfekt-with-haben",
+          baseline: { outcomes: [outcome(`${PROMPT} → Ich habe Brot geholt.`)], usage: ZERO_USAGE },
+          candidate: { outcomes: [outcome(`${PROMPT} → Wir haben Fußball gespielt.`)], usage: ZERO_USAGE },
+          poolStems: scPool,
+        },
+      ],
+    });
+    const cell = summary.poolReuse!.perCell[0];
+    // "brot" is in 3 of 5 answers (60%); none of the prompt words are hot.
+    expect(cell.hot.map((h) => h.token)).toEqual(["brot"]);
+    expect(cell.baseline.hotReuseRate).toBe(1);
+    expect(cell.candidate.hotReuseRate).toBe(0);
+  });
+
+  it("keeps each draft's content, bucket and validator details per cell for inspection", () => {
+    const content = { type: "cloze", sentence: "Tu hermana ___ cansada.", correctAnswer: "está" };
+    const summary = computeGenDiff({
+      ...run(POOL),
+      cells: [
+        {
+          cellKey: "ES:B1:cloze:es-b1-nominalizers",
+          baseline: {
+            outcomes: [
+              {
+                bucket: "rejected",
+                reasons: ["low-quality-reject"],
+                details: ["low-quality-reject: two answers fit"],
+                stem: "Tu hermana ___ cansada.",
+                content,
+              },
+            ],
+            usage: ZERO_USAGE,
+          },
+          candidate: { outcomes: [outcome("El vecino ___ ruidoso.")], usage: ZERO_USAGE },
+          poolStems: POOL,
+        },
+      ],
+    });
+    const drafts = summary.poolReuse!.perCell[0].drafts;
+    expect(drafts.baseline).toEqual([
+      {
+        bucket: "rejected",
+        reasons: ["low-quality-reject"],
+        details: ["low-quality-reject: two answers fit"],
+        content,
+      },
+    ]);
+    expect(drafts.candidate).toHaveLength(1);
+    expect(renderMarkdownSummary(summary)).not.toContain("two answers fit");
   });
 
   it("omits poolReuse and its section for ordinary runs", () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   cellReuse,
+  measuredPart,
   contentTokens,
   foldReuse,
   hotTokens,
@@ -142,5 +143,28 @@ describe("reuseVerdict", () => {
   it("is inconclusive when the baseline has no hot reuse or no drafts", () => {
     expect(reuseVerdict(fold(0), fold(0), 0)).toBe("inconclusive");
     expect(reuseVerdict(fold(0.5, 0), fold(0.1), 0)).toBe("inconclusive");
+  });
+});
+
+describe("measuredPart", () => {
+  it("keeps only the model answer of an SC stem, dropping the English task prompt", () => {
+    expect(measuredPart("Write a sentence using four words below. → El café donde trabajo es pequeño.")).toBe(
+      "El café donde trabajo es pequeño.",
+    );
+  });
+
+  it("leaves cloze, translation and answer-less SC stems unchanged", () => {
+    expect(measuredPart("Mi hermana ___ en casa.")).toBe("Mi hermana ___ en casa.");
+    expect(measuredPart("Describe a café.")).toBe("Describe a café.");
+  });
+
+  it("stops task-prompt boilerplate from becoming hot tokens", () => {
+    const pool = [
+      "Write using four words: friend. → Ich habe Brot gekauft.",
+      "Write using four words: friend. → Wir haben Tee getrunken.",
+      "Write using four words: friend. → Sie hat Musik gehört.",
+      "Write using four words: friend. → Er hat Brot gegessen.",
+    ].map(measuredPart);
+    expect(hotTokens(pool).map((h) => h.token)).toEqual([]);
   });
 });
