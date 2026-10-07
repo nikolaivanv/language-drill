@@ -7,12 +7,20 @@
  * to compare two arms over the same cells in ES/DE/TR/EN, not a linguistic
  * measure), and stopwords are one union list because translation sources are
  * English while cloze stems are target-language. The hot-token list is printed
- * per cell so a reader can tell the tested form (`donde`) from filler
- * (`herma…`, `cafe`) — the metric does not try to.
+ * per cell so a reader can see what was counted. Tokens in >= HOT_MAX_SHARE of a
+ * cell's stems are excluded as structural (the tested form, e.g. `donde`, or a
+ * repeated prompt framing), so only filler (`herma…`, `cafe`) counts as reuse.
  */
 
 export const HOT_MIN_SHARE = 0.15;
 export const HOT_MIN_ROWS = 3;
+/**
+ * Tokens present in >= 80% of a cell's pool stems are structural — the tested
+ * form or a repeated prompt framing (e.g. `donde` in every es-b1-relative-clauses
+ * row). Every draft is expected to contain them, so counting them as reuse pins
+ * that cell near 100% in both arms and biases the pooled verdict toward `inspect`.
+ */
+export const HOT_MAX_SHARE = 0.8;
 export const MIN_TOKEN_LEN = 4;
 export const PREFIX_LEN = 5;
 /** Ship-ready iff candidate hot-reuse ≤ SHIP_REUSE_RATIO × baseline … */
@@ -70,7 +78,7 @@ export function hotTokens(poolStems: readonly string[]): HotToken[] {
   const out: HotToken[] = [];
   for (const [token, n] of rows) {
     const share = n / poolStems.length;
-    if (n >= HOT_MIN_ROWS && share >= HOT_MIN_SHARE) out.push({ token, rows: n, share });
+    if (n >= HOT_MIN_ROWS && share >= HOT_MIN_SHARE && share < HOT_MAX_SHARE) out.push({ token, rows: n, share });
   }
   return out.sort((a, b) => b.rows - a.rows || a.token.localeCompare(b.token));
 }

@@ -237,7 +237,8 @@ export type DraftBucket =
  * strings from `routeValidationResult` (the bounded `code`, not the free-form
  * `detail`); a malformed draft carries `["parser-failure"]`. `variantId` is
  * the construction-variant id this draft was seeded with (from
- * `seedWordsForArm`) — `undefined` for an unseeded arm/draft (baseline, or a
+ * `seedWordsForArm`, or, under `--pool-history`, from `explicitSeeds` filtered
+ * to the point's variant ids) — `undefined` for an unseeded arm/draft (baseline, or a
  * point without `constructionVariants`), and for parser-failure outcomes
  * (the seed never reaches a validated draft).
  */
@@ -849,7 +850,8 @@ export async function runGenEval(opts: {
         cell,
         grammarPoint,
         // Baseline stays unseeded — it must reproduce today's real behaviour
-        // so the candidate's seeding is the only variable under test.
+        // so the candidate's seeding is the only variable under test. Under
+        // `--pool-history` both arms instead share `explicitSeeds`.
         seedConstructionVariants: false,
         explicitSeeds,
         systemPromptOverride: baselinePrompt,
@@ -861,7 +863,8 @@ export async function runGenEval(opts: {
         cell,
         grammarPoint,
         // Candidate seeds the point's declared construction variants —
-        // the change this eval exists to measure (Task 7).
+        // the change this eval exists to measure (Task 7). Under
+        // `--pool-history`, `explicitSeeds` overrides this for both arms.
         seedConstructionVariants: true,
         explicitSeeds,
         systemPromptOverride: candidatePrompt,

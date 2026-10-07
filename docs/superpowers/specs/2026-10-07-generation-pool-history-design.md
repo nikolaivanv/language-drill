@@ -138,7 +138,7 @@ Two existing eval:gen properties would confound a history A/B:
 - **Content tokens:** lowercased letter runs of ≥4 characters, minus a small
   per-language stopword list, truncated to a 5-character prefix as a rough stem.
 - **Hot tokens (per cell):** tokens present in ≥15% of the cell's pool stems
-  **and** ≥3 rows. Listed per cell in the markdown, so a reader can tell the
+  **and** ≥3 rows, and in fewer than 80% of them — a token in ≥80% is structural (the tested form or a repeated prompt framing) and is excluded, so it cannot pin a cell's reuse near 100% in both arms. (Amended 2026-10-07 after final review, before any eval run.) Listed per cell in the markdown, so a reader can tell the
   tested form (e.g. `donde`) from filler (`herma…`, `café`).
 - **Hot-reuse rate (per arm):** share of drafts whose stem contains any hot
   token. Lower is better.

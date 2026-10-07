@@ -366,9 +366,9 @@ function renderPriorPoolSection(
     return (
       "## Already in this cell — write something different\n\n" +
       "These exercises are already in the pool for this cell. They test the same grammar as yours, so reusing the tested form is expected. " +
-      "Do not reuse their people, relationships, places, objects or situations, and do not mirror any sentence's template. " +
+      "Do not reuse their characters, relationships, places, objects or situations, and do not mirror any sentence's template. " +
       "Invent your own rather than reusing these. " +
-      "If this exercise has an assigned seed word or sub-construction, that assignment takes precedence over this list.\n\n" +
+      "If this exercise has an assigned seed word, sub-construction, or coverage target (grammatical person, case, number), that assignment takes precedence over this list.\n\n" +
       `${bullets}\n\n`
     );
   }

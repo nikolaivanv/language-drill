@@ -73,8 +73,9 @@ export function seedKindFor(
     // complement.
     //
     // Without this an SC cell has NO diversity mechanism whatsoever:
-    // `priorPoolSurfaces` is supplied only for vocab_recall / free_writing /
-    // contextual_paraphrase, so SC gets an identical prompt every batch.
+    // SC now also gets the cell-history section (its approved stems), but that
+    // section is frozen per batch and does not vary drafts WITHIN a batch, so
+    // per-ordinal seeding is still needed.
     // Measured on prod 2026-08-14, `es-b1-relative-clauses` SC ran to 46/46
     // rows containing `donde` and 41/46 mentioning a café (78% of model answers
     // opening "el café"), while the SAME POINT's cloze cell — which is

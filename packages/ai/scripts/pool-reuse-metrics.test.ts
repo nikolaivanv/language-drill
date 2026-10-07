@@ -47,6 +47,26 @@ describe("hotTokens", () => {
     expect(hotTokens(["Mi hermana ___.", "Mi hermana ___ aquí."])).toEqual([]);
   });
 
+  it("excludes a structural token present in every stem", () => {
+    const stems = [
+      "Es el lugar donde vive la hermana ___.",
+      "Es la casa donde vive la hermana ___.",
+      "Es el pueblo donde trabaja la hermana ___.",
+      "Es el parque donde juega el tren ___.",
+      "Es la tienda donde compra la mesa ___.",
+    ];
+    // "hermana" is in 3/5 stems (hot filler); "donde" is in 5/5 (structural).
+    expect(hotTokens(stems)).toEqual([{ token: "herma", rows: 3, share: 0.6 }]);
+    expect(hotTokens(stems).map((h) => h.token)).not.toContain("donde");
+  });
+
+  it("uses the 15% share, not the 3-row floor, as the binding threshold", () => {
+    const filler = (n: number): string[] =>
+      Array.from({ length: 30 }, (_, i) => (i < n ? `Caso${i} zorro ___ w${i}x.` : `Caso${i} otra cosa${i} ___.`));
+    expect(hotTokens(filler(3)).map((h) => h.token)).not.toContain("zorro");
+    expect(hotTokens(filler(5)).map((h) => h.token)).toContain("zorro");
+  });
+
   it("counts a token once per stem", () => {
     expect(hotTokens(["hermana hermana hermana ___", "otra frase ___", "más cosas ___"])).toEqual([]);
   });
@@ -73,6 +93,18 @@ describe("cellReuse + foldReuse", () => {
     expect(r.drafts).toBe(2);
     expect(r.hotHits).toBe(1);
     expect(r.jaccardSum).toBeGreaterThan(0);
+  });
+
+  it("does not count a draft containing only a structural token", () => {
+    const stems = [
+      "Es el lugar donde vive la hermana ___.",
+      "Es la casa donde vive la hermana ___.",
+      "Es el pueblo donde trabaja la hermana ___.",
+      "Es el parque donde juega el tren ___.",
+      "Es la tienda donde compra la mesa ___.",
+    ];
+    const r = cellReuse(["Es el sitio donde duerme el gato ___."], stems);
+    expect(r.hotHits).toBe(0);
   });
 
   it("folds cells by pooling drafts, not averaging rates", () => {

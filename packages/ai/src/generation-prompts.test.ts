@@ -530,9 +530,9 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("accusative doubling is not free");
   });
 
-  it("bumps the generation prompt version to 2026-09-22", () => {
-    // 2026-08-18: anti-bypass rule for translation sources on contrasts English
-    // leaves optional. Template edit → Langfuse push per env.
+  it("bumps the generation prompt version to 2026-10-07", () => {
+    // 2026-10-07: cell-history ("Already in this cell") prompt section for
+    // cloze / translation / sentence_construction. Prompt edit → Langfuse push per env.
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-07");
   });
 
@@ -696,9 +696,11 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("## Already in this cell — write something different");
     expect(prompt).toContain("reusing the tested form is expected");
     expect(prompt).toContain(
-      "Do not reuse their people, relationships, places, objects or situations",
+      "Do not reuse their characters, relationships, places, objects or situations",
     );
-    expect(prompt).toContain("takes precedence over this list");
+    expect(prompt).toContain(
+      "assigned seed word, sub-construction, or coverage target (grammatical person, case, number), that assignment takes precedence over this list",
+    );
     expect(prompt).toContain("  - Mi hermana ___ en casa.\n  - El café ___ cerrado.\n\n");
     expect(prompt).not.toContain("do NOT propose any exercise whose surface matches");
   });
