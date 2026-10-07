@@ -257,6 +257,17 @@
 .df-footlink { font-size: 12px; color: var(--accent); text-decoration: none; transition: color .15s ease; }
 .df-footlink:hover { color: #f0a78c; }
 
+/* Language cards on the landing link to their public landing page. */
+.df-card-link { display: block; text-decoration: none; transition: border-color .15s ease; }
+.df-card-link:hover { border-color: var(--accent); }
+
+/* Footer row of links to the public practice + grammar pages (crawl paths). */
+.landing-resources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; font-size: 12px; }
+.landing-resources .lbl { font-family: var(--t-mono); font-size: 11px; letter-spacing: 1.6px;
+  text-transform: uppercase; color: var(--df-mute); }
+.landing-resources a { color: var(--df-mute); text-decoration: none; transition: color .15s ease; }
+.landing-resources a:hover { color: var(--df-ink); }
+
 /* full comparison table (standalone /why-not-chatgpt page) */
 .wn-table { border: 1px solid var(--df-line); border-radius: var(--r-lg); overflow: hidden; }
 .wn-thead { display: grid; grid-template-columns: 200px 1fr 1fr; background: #1b1610;

@@ -10,7 +10,14 @@
 import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import './landing.css';
-import { DBrand, DeepAnnotationCard, type BankWord } from './landing-chrome';
+import {
+  DBrand,
+  DeepAnnotationCard,
+  PublicResourceLinks,
+  publicLangFor,
+  type BankWord,
+} from './landing-chrome';
+import { LANDING_PATH } from '../../lib/public-paths';
 import { PracticeCarousel } from './practice-carousel';
 import { ChatGPTCompare } from './chatgpt-compare';
 import {
@@ -625,7 +632,7 @@ function DLangBand() {
           className="loop-grid"
         >
           {D_LANGS.map((l: LandingLang) => (
-            <div key={l.id} className="df-card">
+            <Link key={l.id} href={LANDING_PATH[publicLangFor(l.id)]} className="df-card df-card-link">
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <div style={{ fontFamily: 'var(--t-display)', fontSize: 26, color: 'var(--df-ink)' }}>
                   {l.label}
@@ -644,7 +651,7 @@ function DLangBand() {
               >
                 {l.cefr} · {D_CLOZE[l.id].skill}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
         <div
@@ -775,6 +782,7 @@ function DFooter() {
         </Link>
       </div>
       <div className="df-wrap">
+        <PublicResourceLinks className="mt-s-4" />
         <LegalLinks className="mt-s-4 landing-legal-links" />
       </div>
     </footer>

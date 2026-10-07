@@ -15,7 +15,16 @@ import { Fragment, useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import './landing.css';
 import { ProductionDemo } from './drill-landing';
-import { DBrand, DLangRail, DeepAnnotationCard, ReadingNote, type BankWord } from './landing-chrome';
+import {
+  DBrand,
+  DLangRail,
+  DeepAnnotationCard,
+  PublicResourceLinks,
+  ReadingNote,
+  publicLangFor,
+  type BankWord,
+} from './landing-chrome';
+import { LANDING_PATH } from '../../lib/public-paths';
 import { MChatGPT } from './chatgpt-compare-mobile';
 import {
   D_CLOZE,
@@ -739,7 +748,7 @@ function MLangBand() {
       <h2 className="dfm-h2">Three on the floor. More on the way.</h2>
       <div className="dfm-stack">
         {D_LANGS.map((l) => (
-          <div key={l.id} className="dfm-card">
+          <Link key={l.id} href={LANDING_PATH[publicLangFor(l.id)]} className="dfm-card df-card-link">
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <div style={{ fontFamily: 'var(--t-display)', fontSize: 23, color: 'var(--df-ink)' }}>
                 {l.label}
@@ -758,7 +767,7 @@ function MLangBand() {
             >
               {l.cefr} · {D_CLOZE[l.id].skill}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
       <div className="dfm-soon">
@@ -807,6 +816,7 @@ function MFooter() {
       <DBrand />
       <div className="meta">© 2026 drill · type it, don’t tap it</div>
       <Link href="/sign-in">Sign in →</Link>
+      <PublicResourceLinks />
       <LegalLinks className="mt-s-3 landing-legal-links" />
     </footer>
   );

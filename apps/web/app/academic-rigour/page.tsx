@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'drill — academic rigour',
   description:
     'How drill builds its material and keeps it honest — grounded in official curricula and comprehensive grammars, calibrated to your CEFR level, and rewritten the moment the data says an item fell short.',
+  alternates: { canonical: '/academic-rigour' },
 };
 
 // Public marketing deep-dive on how the exercise material is made. Unlike the
