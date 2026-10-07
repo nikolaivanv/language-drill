@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { FreeWritingContent } from '@language-drill/shared';
 import { FwIcon } from './fw-atoms';
 
@@ -8,6 +9,8 @@ export interface FwBriefProps {
   examMode: boolean;
   onToggleExam: () => void;
   onBegin: () => void;
+  /** Link to the learner's past attempts; omitted → no link. */
+  historyHref?: string;
 }
 
 // ── SpecRow: a labelled row in the spec card ─────────────────────────────────
@@ -48,14 +51,27 @@ function SpecRow({
 // ── FwBrief ──────────────────────────────────────────────────────────────────
 // Surface B: displays the writing brief, spec, exam toggle, grading criteria.
 // Pure presentational — all state lives in the parent (free-writing page).
-export function FwBrief({ content, examMode, onToggleExam, onBegin }: FwBriefProps) {
+export function FwBrief({ content, examMode, onToggleExam, onBegin, historyHref }: FwBriefProps) {
   const minutes = content.suggestedMinutes ?? 20;
 
   return (
     <div>
       {/* Header microcopy */}
-      <div className="t-micro" style={{ marginTop: 6 }}>
-        free writing · your prompt
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          gap: 12,
+          marginTop: 6,
+        }}
+      >
+        <div className="t-micro">free writing · your prompt</div>
+        {historyHref && (
+          <Link href={historyHref} className="t-mono text-[13px] text-ink-soft hover:text-ink">
+            past attempts <span className="lk-arr" aria-hidden="true">→</span>
+          </Link>
+        )}
       </div>
 
       {/* Two-column layout: brief (left) + right rail */}

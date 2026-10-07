@@ -34,6 +34,7 @@ import admin from './routes/admin';
 // mounted it; only this dev server was missing it.
 import me from './routes/me';
 import emailRoutes from './routes/email';
+import freeWritingHistory from './routes/free-writing-history';
 
 const DEV_USER_ID = process.env['DEV_USER_ID'] ?? 'dev_user_001';
 const DEV_USER_EMAIL = process.env['DEV_USER_EMAIL'] ?? `${DEV_USER_ID}@local.dev`;
@@ -92,6 +93,7 @@ app.route('/', theory);
 app.route('/', admin);
 app.route('/', me);
 app.route('/', emailRoutes);
+app.route('/', freeWritingHistory);
 
 ensureDevUser()
   .then(() => {

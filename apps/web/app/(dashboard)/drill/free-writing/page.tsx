@@ -14,12 +14,10 @@ import {
 import { useActiveLanguage } from '../../../../components/shell';
 import { FwBrief } from './_components/fw-brief';
 import { FwComposer } from './_components/fw-composer';
-import { FwResults } from './_components/fw-results';
-import { FwCorrections } from './_components/fw-corrections';
-import { FwCompare } from './_components/fw-compare';
+import { FwGraded } from './_components/fw-graded';
 import './free-writing.css';
 
-type Stage = 'brief' | 'composer' | 'results' | 'corrections' | 'compare';
+type Stage = 'brief' | 'composer' | 'results';
 
 export default function FreeWritingPage() {
   const { getToken } = useAuth();
@@ -44,10 +42,6 @@ export default function FreeWritingPage() {
     CefrLevel.B1;
 
   const [stage, setStage] = useState<Stage>('brief');
-  // History of surfaces visited within a single graded result, so the deep
-  // surfaces (corrections/compare) can return to wherever they were reached
-  // from — compare is reachable from both results and corrections.
-  const [, setHistory] = useState<Stage[]>([]);
   const [examMode, setExamMode] = useState(false);
   const [text, setText] = useState('');
   const [submittedText, setSubmittedText] = useState('');
@@ -72,22 +66,6 @@ export default function FreeWritingPage() {
 
   const content = exercise.contentJson as FreeWritingContent;
 
-  // Navigate forward to `next`, remembering the current surface so `back` can
-  // return to it.
-  const go = (next: Stage) => {
-    setHistory((h) => [...h, stage]);
-    setStage(next);
-  };
-
-  // Pop back to the previously visited surface.
-  const back = () => {
-    setHistory((h) => {
-      const prev = h[h.length - 1];
-      if (prev) setStage(prev);
-      return h.slice(0, -1);
-    });
-  };
-
   const onGrade = async () => {
     const answer = text;
     try {
@@ -97,9 +75,6 @@ export default function FreeWritingPage() {
       // never the still-editable live draft.
       setSubmittedText(answer);
       setEvaluation(result);
-      // Fresh history per graded result: back from a deep surface must never
-      // land on the already-graded composer.
-      setHistory([]);
       setStage('results');
     } catch (err) {
       // Stay on the composer — the user can try again.
@@ -111,7 +86,6 @@ export default function FreeWritingPage() {
     setText('');
     setSubmittedText('');
     setEvaluation(null);
-    setHistory([]);
     setStage('brief');
   };
 
@@ -123,6 +97,7 @@ export default function FreeWritingPage() {
           examMode={examMode}
           onToggleExam={() => setExamMode((v) => !v)}
           onBegin={() => setStage('composer')}
+          historyHref="/drill/free-writing/history"
         />
       );
     case 'composer':
@@ -140,26 +115,15 @@ export default function FreeWritingPage() {
         />
       );
     case 'results':
+      // FwGraded owns the results → corrections → compare back stack; keyed per
+      // result so a new essay starts on its scorecard, never on a deep surface.
       return evaluation ? (
-        <FwResults
-          evaluation={evaluation}
-          onCorrections={() => go('corrections')}
-          onCompare={() => go('compare')}
-          onAnother={reset}
-        />
-      ) : null;
-    case 'corrections':
-      return evaluation ? (
-        <FwCorrections
+        <FwGraded
+          key={evaluation.submissionId ?? submittedText}
           evaluation={evaluation}
           original={submittedText}
-          onCompare={() => go('compare')}
-          onBack={back}
+          onAnother={reset}
         />
-      ) : null;
-    case 'compare':
-      return evaluation ? (
-        <FwCompare evaluation={evaluation} original={submittedText} onBack={back} />
       ) : null;
   }
 }

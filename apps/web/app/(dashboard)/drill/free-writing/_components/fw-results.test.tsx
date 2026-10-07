@@ -27,4 +27,25 @@ describe('FwResults', () => {
     fireEvent.click(screen.getByRole('button', { name: /corrections/i }));
     expect(onCorrections).toHaveBeenCalled();
   });
+  it('defaults the exit button to "write another" and accepts a custom label and eyebrow', () => {
+    const onAnother = vi.fn();
+    const { rerender } = render(
+      <FwResults evaluation={evaluation} onCorrections={() => {}} onCompare={() => {}} onAnother={onAnother} />,
+    );
+    expect(screen.getByRole('button', { name: 'write another' })).toBeInTheDocument();
+    expect(screen.getByText('free writing · graded')).toBeInTheDocument();
+    rerender(
+      <FwResults
+        evaluation={evaluation}
+        onCorrections={() => {}}
+        onCompare={() => {}}
+        onAnother={onAnother}
+        anotherLabel="back to past attempts"
+        eyebrow="free writing · graded 3 Oct 2026"
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'back to past attempts' }));
+    expect(onAnother).toHaveBeenCalled();
+    expect(screen.getByText('free writing · graded 3 Oct 2026')).toBeInTheDocument();
+  });
 });

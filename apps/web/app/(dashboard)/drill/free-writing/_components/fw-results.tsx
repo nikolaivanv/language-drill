@@ -8,6 +8,10 @@ export interface FwResultsProps {
   onCorrections: () => void;
   onCompare: () => void;
   onAnother: () => void;
+  /** Exit-button label — "write another" in the live flow, a back link in history. */
+  anotherLabel?: string;
+  /** Header microcopy. */
+  eyebrow?: string;
 }
 
 const WHAT_THIS_FEEDS = [
@@ -18,7 +22,14 @@ const WHAT_THIS_FEEDS = [
   'IELTS / DELE readiness',
 ];
 
-export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: FwResultsProps) {
+export function FwResults({
+  evaluation,
+  onCorrections,
+  onCompare,
+  onAnother,
+  anotherLabel = 'write another',
+  eyebrow = 'free writing · graded',
+}: FwResultsProps) {
   const avg =
     evaluation.criteria.reduce((s, c) => s + c.score, 0) / evaluation.criteria.length;
 
@@ -33,7 +44,7 @@ export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: F
           marginBottom: 14,
         }}
       >
-        <div className="t-micro">free writing · graded</div>
+        <div className="t-micro">{eyebrow}</div>
       </div>
 
       {/* Two-column layout */}
@@ -98,7 +109,7 @@ export function FwResults({ evaluation, onCorrections, onCompare, onAnother }: F
               compare improved version
             </button>
             <button className="btn ghost lg" style={{ marginLeft: 'auto' }} onClick={onAnother}>
-              write another
+              {anotherLabel}
             </button>
           </div>
         </div>
