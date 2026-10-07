@@ -365,9 +365,13 @@ function renderPriorPoolSection(
     // draft is a separate call, so cross-draft instructions are inert (#727).
     return (
       "## Already in this cell — write something different\n\n" +
-      "These exercises are already in the pool for this cell. They test the same grammar as yours, so reusing the tested form is expected. " +
-      "Do not reuse their characters, relationships, places, objects or situations, and do not mirror any sentence's template. " +
-      "Invent your own rather than reusing these. " +
+      // No example phrases here on purpose: directive examples get copied (#727).
+      // The fixed-expression allowance is for closed-inventory points, where the
+      // natural forms are few and already pooled — the 2026-10-07 A/B showed a
+      // blanket "don't reuse" pushing those into contrived phrasings.
+      "These exercises are already in the pool for this cell. They test the same grammar as yours, so reusing the tested form is expected, and so is a fixed expression the construction is commonly realized with. " +
+      "What must be new is the scene: do not reuse their characters, relationships, places, objects or situations, and do not mirror any sentence's template. " +
+      "Invent your own scene rather than reusing these, but never trade a natural, idiomatic sentence for a contrived one just to avoid this list. " +
       "If this exercise has an assigned seed word, sub-construction, or coverage target (grammatical person, case, number), that assignment takes precedence over this list.\n\n" +
       `${bullets}\n\n`
     );

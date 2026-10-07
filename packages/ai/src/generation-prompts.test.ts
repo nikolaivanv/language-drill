@@ -695,8 +695,17 @@ describe("buildGenerationSystemPrompt", () => {
     );
     expect(prompt).toContain("## Already in this cell — write something different");
     expect(prompt).toContain("reusing the tested form is expected");
+    // Closed-inventory points (2026-10-07 A/B, tr-b2-participle-aorist): the
+    // natural fixed expressions are few and already in the pool, so a blanket
+    // "don't reuse" forced contrived phrasings the validator flagged.
     expect(prompt).toContain(
-      "Do not reuse their characters, relationships, places, objects or situations",
+      "so is a fixed expression the construction is commonly realized with",
+    );
+    expect(prompt).toContain(
+      "What must be new is the scene: do not reuse their characters, relationships, places, objects or situations",
+    );
+    expect(prompt).toContain(
+      "never trade a natural, idiomatic sentence for a contrived one just to avoid this list",
     );
     expect(prompt).toContain(
       "assigned seed word, sub-construction, or coverage target (grammatical person, case, number), that assignment takes precedence over this list",
