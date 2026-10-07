@@ -120,4 +120,10 @@ describe('normalizeFlaggedReasons', () => {
       { code: GenerationReasonCode.Ambiguous },
     ]);
   });
+
+  it("labels the dedup-check-unavailable code", () => {
+    expect(GenerationReasonCode.DedupCheckUnavailable).toBe("dedup-check-unavailable");
+    expect(REASON_LABELS[GenerationReasonCode.DedupCheckUnavailable]).toBe("Duplicate check unavailable");
+    expect(REJECTED_BRANCH_CODES).not.toContain(GenerationReasonCode.DedupCheckUnavailable);
+  });
 });

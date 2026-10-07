@@ -103,6 +103,12 @@ export enum GenerationReasonCode {
    */
   MissingLexemeHint = "missing-lexeme-hint",
   /** Free-form validator `flaggedReasons` note. `detail` holds the prose. */
+  /**
+   * The free-writing duplicate judge could not run (API or parse error). The
+   * draft is inserted FLAGGED rather than approved, so a judge outage costs a
+   * manual review, never a duplicate reaching learners. `detail` holds the error.
+   */
+  DedupCheckUnavailable = "dedup-check-unavailable",
   ValidatorNote = "validator-note",
 
   // -- Read-only ------------------------------------------------------------
@@ -153,6 +159,7 @@ export const REASON_LABELS: Record<GenerationReasonCode, string> = {
   [GenerationReasonCode.MalformedSurfaceForm]: "Suspected malformed surface form",
   [GenerationReasonCode.MissingLexemeHint]:
     "Missing verb hint (blank swallows the verb)",
+  [GenerationReasonCode.DedupCheckUnavailable]: "Duplicate check unavailable",
   [GenerationReasonCode.ValidatorNote]: "Validator note",
   [GenerationReasonCode.LegacyUncoded]: "Legacy (uncoded)",
 };
