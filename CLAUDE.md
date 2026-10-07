@@ -166,6 +166,7 @@ each prompt and are re-exported from `packages/ai/src/index.ts`:
 | `free-writing-prompts.ts` | `FREE_WRITING_EVAL_PROMPT_VERSION` |
 | `free-writing-generation-prompts.ts` | `FREE_WRITING_GENERATION_PROMPT_VERSION` |
 | `free-writing-validation-prompts.ts` | `FREE_WRITING_GENERATION_VALIDATION_PROMPT_VERSION` |
+| `free-writing-dedup-prompts.ts` | `FREE_WRITING_DEDUP_PROMPT_VERSION` |
 | `writing-helper-prompts.ts` | `BRAINSTORM_PROMPT_VERSION` |
 | `writing-helper-prompts.ts` | `VOCAB_BOOST_PROMPT_VERSION` |
 | `writing-helper-prompts.ts` | `START_MY_PARAGRAPH_PROMPT_VERSION` |

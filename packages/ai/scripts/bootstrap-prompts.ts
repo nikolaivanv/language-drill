@@ -54,6 +54,8 @@ import {
   FREE_WRITING_GENERATION_VALIDATION_PROMPT_VERSION,
   EVALUATION_SYSTEM_PROMPT,
   EVALUATION_SYSTEM_PROMPT_VERSION,
+  FREE_WRITING_DEDUP_PROMPT_VERSION,
+  FREE_WRITING_DEDUP_SYSTEM_PROMPT,
   FREE_WRITING_EVAL_PROMPT_VERSION,
   FREE_WRITING_EVAL_SYSTEM_PROMPT,
   VOCAB_BOOST_SYSTEM_PROMPT,
@@ -115,6 +117,14 @@ export const PROMPTS: readonly PromptManifestEntry[] = [
     text: FREE_WRITING_EVAL_SYSTEM_PROMPT,
     version: FREE_WRITING_EVAL_PROMPT_VERSION,
     surface: "free-writing-eval",
+  },
+  {
+    // Runtime fetches this via getPromptOrFallback("free-writing-dedup-system-prompt", …)
+    // in free-writing-dedup.ts — the name MUST match that registry key.
+    name: "free-writing-dedup-system-prompt",
+    text: FREE_WRITING_DEDUP_SYSTEM_PROMPT,
+    version: FREE_WRITING_DEDUP_PROMPT_VERSION,
+    surface: "free-writing-dedup",
   },
   {
     name: "free-writing-brainstorm-system-prompt",
