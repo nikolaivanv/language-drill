@@ -545,3 +545,22 @@ export type {
   CellAnalysis,
   MechanismProposal,
 } from './construction-coverage.js';
+
+export {
+  freeWritingSummary,
+  freeWritingHistoryLine,
+  type FreeWritingPromptSummary,
+} from "./free-writing-summary.js";
+export {
+  FREE_WRITING_DEDUP_PROMPT_VERSION,
+  FREE_WRITING_DEDUP_SYSTEM_PROMPT,
+  FREE_WRITING_DEDUP_TOOL_NAME,
+  buildFreeWritingDedupUserPrompt,
+  type FreeWritingDedupInput,
+} from "./free-writing-dedup-prompts.js";
+export {
+  FREE_WRITING_DEDUP_TOOL,
+  judgeFreeWritingDuplicate,
+  parseFreeWritingDedupVerdict,
+  type FreeWritingDedupVerdict,
+} from "./free-writing-dedup.js";

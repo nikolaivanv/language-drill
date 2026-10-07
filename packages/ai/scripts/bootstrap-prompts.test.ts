@@ -115,10 +115,10 @@ function baseOpts(
 // ---------------------------------------------------------------------------
 
 describe("PROMPTS manifest", () => {
-  it("contains exactly nineteen entries — one per registered Langfuse prompt", () => {
+  it("contains exactly twenty entries — one per registered Langfuse prompt", () => {
     // Bumps here are intentional: adding/removing a prompt should be a
     // PR-level conversation, not silently slip past the test gate.
-    expect(PROMPTS).toHaveLength(19);
+    expect(PROMPTS).toHaveLength(20);
   });
 
   it("registers every surface listed in design Component 4", () => {
@@ -132,6 +132,7 @@ describe("PROMPTS manifest", () => {
         "free-writing-start-my-paragraph",
         "free-writing-generate",
         "free-writing-validate",
+        "free-writing-dedup",
         "annotate",
         "generate",
         "validate",
@@ -146,6 +147,12 @@ describe("PROMPTS manifest", () => {
         "word-hint",
       ]),
     );
+  });
+
+  it("registers the free-writing dedup prompt", () => {
+    const entry = PROMPTS.find((p) => p.name === "free-writing-dedup-system-prompt");
+    expect(entry?.surface).toBe("free-writing-dedup");
+    expect(entry?.version).toMatch(/^free-writing-dedup@/);
   });
 
   it("includes the vocab-target generation prompt", () => {

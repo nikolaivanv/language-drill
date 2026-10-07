@@ -56,3 +56,9 @@ export {
 } from './routing';
 
 export { applicableCoverageTags } from './coverage-tags';
+export {
+  MAX_FW_PROMPTS_FOR_DEDUP,
+  checkFreeWritingDuplicate,
+  fetchFreeWritingPromptSummaries,
+  type FreeWritingDuplicateCheck,
+} from './free-writing-dedup';

@@ -32,6 +32,7 @@ import {
   ZERO_USAGE,
   addUsage,
   canonicalSurface,
+  freeWritingHistoryLine,
   generateBatch,
   getCurrentLlmTraceContext,
   loadFrequency,
@@ -52,6 +53,7 @@ import { exerciseTags, exercises } from '../schema/index';
 import type { Cell } from './cells';
 import { applicableCoverageTags } from './coverage-tags';
 import { applyDeterministicChecks } from './deterministic-checks';
+import { checkFreeWritingDuplicate, fetchFreeWritingPromptSummaries } from './free-writing-dedup';
 import { routeValidationResult } from './routing';
 import { vocabSeedMismatch } from './vocab-seed-check';
 
@@ -329,6 +331,24 @@ export async function validateAndInsertWithRetry(
   let currentDraft: ExerciseDraft = opts.draft;
   let firstAttemptDeduped = false;
 
+  const isFreeWriting = opts.cell.exerciseType === ExerciseType.FREE_WRITING;
+  // A free-writing retry must see prompts inserted since the batch started
+  // (including this batch's siblings), not the frozen batch-start history.
+  const retrySpec = async (): Promise<GenerationSpec> => {
+    if (!isFreeWriting) return opts.spec;
+    try {
+      return {
+        ...opts.spec,
+        priorPoolSurfaces: (await fetchFreeWritingPromptSummaries(opts.db, opts.cell)).map(
+          freeWritingHistoryLine,
+        ),
+      };
+    } catch {
+      // Stale-but-safe history beats failing the ordinal on a transient DB error.
+      return opts.spec;
+    }
+  };
+
   for (let attempt = 0; attempt <= MAX_DEDUP_RETRIES; attempt++) {
     if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
 
@@ -385,7 +405,7 @@ export async function validateAndInsertWithRetry(
       if (firstAttemptDeduped && attempt < MAX_DEDUP_RETRIES) {
         const retry = await runRetryGeneration(
           opts.client,
-          opts.spec,
+          await retrySpec(),
           attempt + 1,
           opts.signal,
         );
@@ -476,7 +496,30 @@ export async function validateAndInsertWithRetry(
         currentDraft.contentJson.expectedWord,
       )) >= VOCAB_MAX_PER_WORD;
 
-    const inserted = capReached
+    // Free-writing semantic dedup (#757): pre-empts the INSERT exactly like the
+    // vocab cap, so a duplicate takes the dedup-retry path. Re-reads the pool
+    // per attempt; outcomes run serially for free-writing cells (run-one-cell).
+    const fwCheck =
+      !capReached && isFreeWriting
+        ? await checkFreeWritingDuplicate(opts.db, opts.client, opts.cell, currentDraft.contentJson, opts.signal)
+        : null;
+    // An abort mid-judge surfaces as 'unavailable'; do not insert a flagged row.
+    if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+    if (fwCheck) extraUsage = addUsage(extraUsage, fwCheck.usage);
+    const semanticDuplicate = fwCheck?.status === 'duplicate';
+    // A judge outage inserts FLAGGED (not served) rather than approving blind.
+    const insertDecision =
+      fwCheck?.status === 'unavailable'
+        ? {
+            reviewStatus: 'flagged' as const,
+            flaggedReasons: [
+              ...gatedDecision.flaggedReasons,
+              { code: GenerationReasonCode.DedupCheckUnavailable, detail: fwCheck.detail },
+            ],
+          }
+        : gatedDecision;
+
+    const inserted = capReached || semanticDuplicate
       ? []
       : await opts.db
           .insert(exercises)
@@ -490,11 +533,11 @@ export async function validateAndInsertWithRetry(
             topicDomain: opts.args.topicDomain,
             generationSource: 'claude-realtime' as const,
             modelId: GENERATION_MODEL,
-            reviewStatus: gatedDecision.reviewStatus,
+            reviewStatus: insertDecision.reviewStatus,
             qualityScore: result.qualityScore,
             flaggedReasons:
-              gatedDecision.flaggedReasons.length > 0
-                ? gatedDecision.flaggedReasons
+              insertDecision.flaggedReasons.length > 0
+                ? insertDecision.flaggedReasons
                 : null,
             coverageTags: applicableCoverageTags(opts.cell, result.coverage),
             generatedAt: opts.generatedAt,
@@ -514,7 +557,7 @@ export async function validateAndInsertWithRetry(
 
       const terminalStatus = firstAttemptDeduped
         ? ('first-attempt-dedup-then-success' as const)
-        : gatedDecision.reviewStatus === 'auto-approved'
+        : insertDecision.reviewStatus === 'auto-approved'
           ? ('inserted-approved' as const)
           : ('inserted-flagged' as const);
 
@@ -523,7 +566,7 @@ export async function validateAndInsertWithRetry(
         // Safe narrow: `routeValidationResult` never returns 'manual-approved'
         // (only the review CLI's `tryApprove` sets that). The 'rejected' case
         // is already handled by the early return above.
-        terminalReviewStatus: gatedDecision.reviewStatus as 'auto-approved' | 'flagged',
+        terminalReviewStatus: insertDecision.reviewStatus as 'auto-approved' | 'flagged',
         realizedCoverage: result.coverage,
         // The id just inserted (== opts.draft.id on attempt 0, or the retry id
         // after a dedup retry). Lets the generation handler enqueue audio synth
@@ -536,13 +579,14 @@ export async function validateAndInsertWithRetry(
     }
 
     // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell,
-    // OR the R6 per-word cap was reached (skipped INSERT). Either way the slot
+    // the R6 per-word cap was reached (skipped INSERT), OR the free-writing
+    // semantic duplicate judge matched an existing prompt. Either way the slot
     // is exhausted for this draft — regenerate with a bumped seed.
     firstAttemptDeduped = true;
     if (attempt < MAX_DEDUP_RETRIES) {
       const retry = await runRetryGeneration(
         opts.client,
-        opts.spec,
+        await retrySpec(),
         attempt + 1,
         opts.signal,
       );

@@ -28,6 +28,7 @@ import { THEORY_TOOL_NAME } from "./theory-generate.js";
 import { THEORY_VALIDATION_TOOL_NAME } from "./theory-validate.js";
 import { VALIDATION_TOOL_NAME } from "./validate.js";
 import { WORD_HINT_TOOL_NAME } from "./word-hint.js";
+import { FREE_WRITING_DEDUP_TOOL_NAME } from "./free-writing-dedup-prompts.js";
 import {
   __resetForTests,
   createObservedClaudeClient,
@@ -1357,6 +1358,7 @@ describe("TOOL_NAME_TO_FEATURE", () => {
     [TOOL_NAME_BY_TYPE.translation, "generate"],
     [TOOL_NAME_BY_TYPE.vocab_recall, "generate"],
     [VALIDATION_TOOL_NAME, "validate"],
+    [FREE_WRITING_DEDUP_TOOL_NAME, "validate"],
     [THEORY_TOOL_NAME, "generate-theory"],
     [THEORY_VALIDATION_TOOL_NAME, "validate-theory"],
     [WORD_HINT_TOOL_NAME, "word-hint"],

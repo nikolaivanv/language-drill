@@ -27,6 +27,7 @@ import {
   addUsage,
   cefrRankWindow,
   estimateCostUsd,
+  freeWritingHistoryLine,
   HISTORY_STEM_TYPES,
   historyStem,
   type ClaudeUsageBreakdown,
@@ -66,6 +67,7 @@ import {
 } from '../schema/index';
 
 import type { Cell } from './cells';
+import { fetchFreeWritingPromptSummaries } from './free-writing-dedup';
 import { runGeneratorPool } from './generator-pool';
 import { runOutcomePool } from './outcome-pool';
 import { pickConjugationSeeds, pickSeeds } from './seed-picker';
@@ -420,40 +422,17 @@ export async function loadVariantCoverage(
 }
 
 /**
- * Distinct free_writing titles already approved/flagged in this cell, fed into
- * the generation prompt as an avoid-list (cross-run dedup). The dedup surface
- * for free_writing is the title, so without this the generator re-proposes the
- * topic name every run and `exercises_dedup_idx` rejects it. Distinct titles,
- * deterministically ordered, capped so the prompt stays bounded. Returns `[]`
- * (not undefined) when the cell is empty so the renderer omits the section.
+ * The cell's free-writing prompts as `title — task` lines for the generator's
+ * avoid-list (`renderPriorTitlesSection`). Titles alone let one question be
+ * reworded 5–10× under new titles (#757). Same review-status set and cap as
+ * the dedup judge's pool; deterministic order keeps the system prompt
+ * byte-identical across the batch.
  */
-export async function fetchPriorFreeWritingTitles(
+export async function fetchPriorFreeWritingPrompts(
   db: Db,
   cell: Cell,
 ): Promise<readonly string[]> {
-  const rows = await db
-    .select({ title: sql<string>`content_json->>'title'` })
-    .from(exercises)
-    .where(
-      and(
-        eq(exercises.language, cell.language),
-        eq(exercises.difficulty, cell.cefrLevel),
-        eq(exercises.type, cell.exerciseType),
-        eq(exercises.grammarPointKey, cell.grammarPoint.key),
-        inArray(exercises.reviewStatus, [
-          'auto-approved',
-          'manual-approved',
-          'flagged',
-        ]),
-        sql`content_json ? 'title'`,
-      ),
-    )
-    .groupBy(sql`content_json->>'title'`)
-    .orderBy(sql`content_json->>'title'`)
-    .limit(60);
-  return rows
-    .map((r) => r.title)
-    .filter((s): s is string => typeof s === 'string' && s.length > 0);
+  return (await fetchFreeWritingPromptSummaries(db, cell)).map(freeWritingHistoryLine);
 }
 
 /**
@@ -1050,7 +1029,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       cell.exerciseType === ExerciseType.VOCAB_RECALL
         ? await fetchPriorVocabRecallSurfaces(db, cell)
         : cell.exerciseType === ExerciseType.FREE_WRITING
-          ? await fetchPriorFreeWritingTitles(db, cell)
+          ? await fetchPriorFreeWritingPrompts(db, cell)
           : cell.exerciseType === ExerciseType.CONTEXTUAL_PARAPHRASE
             ? await fetchPriorParaphraseSurfaces(db, cell)
             : HISTORY_STEM_TYPES.has(cell.exerciseType)
@@ -1147,7 +1126,10 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       generatedAt,
       firstValidations,
       signal,
-      concurrency: MAX_OUTCOME_CONCURRENCY,
+      // Free-writing outcomes run serially so each duplicate check sees the
+      // previous ordinal's insert; two parallel checks could both pass.
+      concurrency:
+        cell.exerciseType === ExerciseType.FREE_WRITING ? 1 : MAX_OUTCOME_CONCURRENCY,
     });
     const outcomes = poolResult.results;
     // R4.2/R4.3 — record whether the dedup circuit breaker tripped. The counts

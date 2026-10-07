@@ -174,6 +174,7 @@ export const TOOL_NAME_TO_FEATURE: ReadonlyMap<string, LlmFeature> = new Map([
   ["submit_translation_exercise", "generate"],
   ["submit_vocab_recall_exercise", "generate"],
   ["submit_validation_result", "validate"],
+  ["submit_dedup_verdict", "validate"],
   ["submit_theory_topic", "generate-theory"],
   ["submit_theory_validation_result", "validate-theory"],
   ["submit_word_hints", "word-hint"],
