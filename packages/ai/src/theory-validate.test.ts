@@ -287,6 +287,25 @@ describe("validateTheoryDraft", () => {
     expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  it("options.model claude-opus-5-5 shapes auto + strict", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "t", name: THEORY_VALIDATION_TOOL_NAME, input: validValidationInput }],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 },
+    });
+    await validateTheoryDraft(mockClient, makeDraft(), baseSpec, { model: "claude-opus-5-5" });
+    expect(mockCreate.mock.calls[0][0].tool_choice).toEqual({ type: "auto" });
+  });
+
+  it("throws on a refusal reply", async () => {
+    mockCreate.mockResolvedValue({
+      content: [],
+      stop_reason: "refusal",
+      usage: { input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 },
+    });
+    await expect(validateTheoryDraft(mockClient, makeDraft(), baseSpec)).rejects.toThrow();
+  });
+
   it("calls Claude with the right params and returns the parsed result + tokenUsage", async () => {
     mockCreate.mockResolvedValue({
       content: [

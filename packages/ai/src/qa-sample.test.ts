@@ -293,6 +293,31 @@ describe("craftProbeAnswers", () => {
     expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  it("model claude-sonnet-5-5 shapes auto + strict with between_tools", async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      content: [{
+        type: "tool_use",
+        name: QA_CRAFTER_TOOL_NAME,
+        input: { correct: "x", correctConfidence: 0.9, wrong: "y", alt: null, ambiguous: false, ambiguityNote: "" },
+      }],
+      usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await craftProbeAnswers(client, { learnerView: "x", language: "TR", cefrLevel: "A1", exerciseType: "cloze", model: "claude-sonnet-5-5" });
+    const req = create.mock.calls[0][0];
+    expect(req.tool_choice).toEqual({ type: "auto" });
+    expect(req.thinking).toEqual({ type: "between_tools" });
+  });
+
+  it("throws on a refusal reply", async () => {
+    const create = vi.fn().mockResolvedValue({ stop_reason: "refusal", content: [], usage: null });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(
+      craftProbeAnswers(client, { learnerView: "x", language: "TR", cefrLevel: "A1", exerciseType: "cloze" }),
+    ).rejects.toThrow();
+  });
+
   it("throws when no tool_use block is returned", async () => {
     const create = vi.fn().mockResolvedValue({ stop_reason: "end_turn", content: [], usage: null });
     const client = { messages: { create } } as unknown as Anthropic;

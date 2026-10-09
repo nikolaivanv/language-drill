@@ -202,6 +202,25 @@ describe("judgeFreeWritingDuplicate", () => {
     expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  it("model claude-opus-5-5 shapes auto + strict, effort low, no temperature", async () => {
+    const create = vi.fn().mockResolvedValue(toolReply({ duplicateOf: null, reason: "distinct" }));
+    const client = { messages: { create } } as unknown as Anthropic;
+    await judgeFreeWritingDuplicate(client, { candidate, existing: oneExisting, cefrLevel: "B1" }, { model: "claude-opus-5-5" });
+    const req = create.mock.calls[0][0];
+    expect(req.tool_choice).toEqual({ type: "auto" });
+    expect(req.output_config).toEqual({ effort: "low" });
+    expect(req.temperature).toBeUndefined();
+  });
+
+  it("treats a refusal as no tool call: retries once, then throws", async () => {
+    const create = vi.fn().mockResolvedValue({ stop_reason: "refusal", usage, content: [] });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(
+      judgeFreeWritingDuplicate(client, { candidate, existing: oneExisting, cefrLevel: "B1" }),
+    ).rejects.toThrow();
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
   describe("per-model request shaping", () => {
     const run = async (model?: string) => {
       const create = vi.fn().mockResolvedValue({
@@ -237,10 +256,10 @@ describe("judgeFreeWritingDuplicate", () => {
       expect("temperature" in req).toBe(false);
     });
 
-    it("sonnet-5-5 omits temperature and disables thinking", async () => {
+    it("sonnet-5-5 omits temperature and shapes thinking via the shared shaper", async () => {
       const req = await run("claude-sonnet-5-5");
       expect("temperature" in req).toBe(false);
-      expect(req.thinking).toEqual({ type: "disabled" });
+      expect(req.thinking).toEqual({ type: "between_tools" });
     });
   });
 });

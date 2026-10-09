@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { ExerciseType } from "@language-drill/shared";
 import type { ExerciseContent } from "@language-drill/shared";
+import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 
 /**
@@ -236,38 +237,32 @@ export async function craftProbeAnswers(
     cefrLevel: string;
     exerciseType: string;
     model?: string;
+    effort?: Effort;
   },
   signal?: AbortSignal,
 ): Promise<{ probe: QaProbe; usage: ClaudeUsageBreakdown }> {
   const effectiveModel = params.model ?? QA_CRAFTER_MODEL;
-  // Same per-model guard as validate.ts:591-593 (kept in sync manually — no
-  // shared constant, see that file's comment for the full rationale): Sonnet
-  // 5 (and Opus 5 / Fable) run ADAPTIVE thinking when `thinking` is omitted,
-  // unlike this function's default (Opus 4.8), where omitting it means no
-  // thinking at all. Without this guard, a caller that pins `model` to
-  // Sonnet 5 (e.g. eval-validator-run.ts's blind-solver arm, which must match
-  // the sighted arms' explicit `thinking: disabled`) would silently run WITH
-  // adaptive thinking — a capability confound, and a smaller `max_tokens`
-  // budget shared between thinking and the tool_use output.
-  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(effectiveModel);
-  const request: Anthropic.MessageCreateParamsNonStreaming = {
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: QA_CRAFTER_TOOL,
+    thinking: "off",
+    effort: params.effort,
+  });
+  const request = {
     model: effectiveModel,
     max_tokens: QA_CRAFTER_MAX_TOKENS,
     system: [
       { type: "text" as const, text: QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE, cache_control: { type: "ephemeral" as const } },
+      ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
     ],
     messages: [{ role: "user" as const, content: buildQaCrafterUserPrompt(params) }],
-    tools: [QA_CRAFTER_TOOL],
-    tool_choice: { type: "tool" as const, name: QA_CRAFTER_TOOL_NAME },
-  };
-  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
+    tools: shaped.tools,
+    tool_choice: shaped.tool_choice,
+    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
+    ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
+    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
+  } as Anthropic.MessageCreateParamsNonStreaming;
   const response = await client.messages.create(request, { signal });
   const usage = response.usage ? readUsage(response) : ZERO_USAGE;
-  const toolUse = response.content.find(
-    (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
-  );
-  if (!toolUse) {
-    throw new Error(`qa-craft: no tool_use block (stop_reason ${response.stop_reason})`);
-  }
-  return { probe: parseProbe(toolUse.input), usage };
+  const toolInput = extractToolUse(response, QA_CRAFTER_TOOL_NAME, { label: "qa-craft" });
+  return { probe: parseProbe(toolInput), usage };
 }

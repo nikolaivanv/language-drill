@@ -285,6 +285,25 @@ describe("theory-generate / generateTheoryTopic", () => {
     expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  it("opts.model claude-sonnet-5-5 shapes auto + strict and metadata.modelId follows it", async () => {
+    const client = makeStubClient(subjunctiveFixture);
+    const { draft } = await generateTheoryTopic(client, baseSpec, { model: "claude-sonnet-5-5" });
+    const create = client.messages.create as unknown as { mock: { calls: any[][] } };
+    expect(create.mock.calls[0][0].tool_choice).toEqual({ type: "auto" });
+    expect(draft.metadata.modelId).toBe("claude-sonnet-5-5");
+  });
+
+  it("a refusal reply is a malformed draft and is retried", async () => {
+    const create = vi.fn(async () => ({
+      content: [],
+      usage: { input_tokens: 1, output_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+      stop_reason: "refusal",
+    }));
+    const client = { messages: { create } } as unknown as Anthropic;
+    await expect(generateTheoryTopic(client, baseSpec, { maxRetries: 1 })).rejects.toThrow(/malformed/);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
   // -------------------------------------------------------------------------
   // EN reject (Req 8.1.g)
   // -------------------------------------------------------------------------
@@ -328,7 +347,7 @@ describe("theory-generate / generateTheoryTopic", () => {
   it("throws when the response has no tool_use block (Req 8.1.h)", async () => {
     const client = makeNoToolUseStubClient();
     await expect(generateTheoryTopic(client, baseSpec)).rejects.toThrow(
-      "Theory draft malformed: no tool_use block returned (stop_reason=max_tokens)",
+      /Theory draft malformed: .*did not return a tool use block.*max_tokens/,
     );
   });
 
@@ -341,7 +360,7 @@ describe("theory-generate / generateTheoryTopic", () => {
       toolName: "submit_other_thing",
     });
     await expect(generateTheoryTopic(client, baseSpec)).rejects.toThrow(
-      /expected tool 'submit_theory_topic', got 'submit_other_thing'/,
+      /expected "submit_theory_topic", got "submit_other_thing"/,
     );
   });
 
