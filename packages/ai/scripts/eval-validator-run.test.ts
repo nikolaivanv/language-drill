@@ -24,6 +24,7 @@ import type { ClozeContent } from "@language-drill/shared";
 import { getGrammarPoint } from "@language-drill/db";
 
 import {
+  NoToolCallError,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
   VALIDATION_TOOL_NAME,
   type GenerationSpec,
@@ -33,6 +34,7 @@ import { SELF_INCONSISTENT_REASON } from "../src/validate.js";
 import {
   ARMS,
   PRIOR_TEMPLATE,
+  armEffort,
   blindSolverVerdict,
   computeArmMetrics,
   computeCostCapWarning,
@@ -44,6 +46,7 @@ import {
   renderValidatorMarkdownSummary,
   renderValidatorSystemPrompt,
   runValidatorEval,
+  selectArms,
   writeValidatorSummaryJson,
   type ValidatorAmbiguityCase,
   type ValidatorArm,
@@ -1296,3 +1299,76 @@ describe("--model / --effort and resolveArmModel (Task 6)", () => {
     expect(resolveArmModel(arm, { dryRun: false })).toBeUndefined();
   });
 });
+
+describe("--arms, candidate-only effort, error kinds (A/B prep)", () => {
+  const byName = (n: string) => ARMS.find((a) => a.name === n)!;
+
+  it("parses --arms as a trimmed comma list", () => {
+    expect(parseEvalValidatorArgs(["--arms", "prompt-only, both"]).arms).toEqual(["prompt-only", "both"]);
+    expect(parseEvalValidatorArgs([]).arms).toBeUndefined();
+  });
+
+  it("selectArms keeps ARMS order, returns all when unset, and rejects unknown names", () => {
+    expect(selectArms(["both", "prompt-only"]).map((a) => a.name)).toEqual(["prompt-only", "both"]);
+    expect(selectArms(undefined)).toBe(ARMS);
+    expect(() => selectArms(["both", "nope"])).toThrow(/unknown --arms nope/);
+    expect(() => selectArms([])).toThrow(/no arms/);
+  });
+
+  it("applies --effort only to arms without a pinned model, so prompt-only stays the production request", () => {
+    const args = { effort: "low" as const };
+    expect(armEffort(byName("both"), args)).toBe("low");
+    expect(armEffort(byName("model-only"), args)).toBe("low");
+    expect(armEffort(byName("prompt-only"), args)).toBeUndefined();
+    expect(armEffort(byName("baseline"), args)).toBeUndefined();
+    expect(armEffort(byName("blind-solver"), args)).toBeUndefined();
+  });
+
+  it("counts errors by kind and reports the model each arm ran on", () => {
+    const cases = [makeCase("c1", "ambiguous"), makeCase("c2", "clean"), makeCase("c3", "clean")];
+    const run: ValidatorEvalRunResult = {
+      runName: "r1",
+      datasetName: "test.json",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      caseCount: 3,
+      costCapped: false,
+      arms: [
+        {
+          arm: byName("both"),
+          usage: { inputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, outputTokens: 0 },
+          records: [
+            { caseId: "c1", label: "ambiguous", error: "x", errorKind: "no_tool_call:max_tokens" },
+            { caseId: "c2", label: "clean", error: "y", errorKind: "no_tool_call:end_turn" },
+            { caseId: "c3", label: "clean", error: "z" },
+          ],
+        },
+      ],
+    };
+    const summary = computeValidatorSummary(run, cases, { model: "claude-sonnet-5-5" });
+    expect(summary.arms[0].model).toBe("claude-sonnet-5-5");
+    expect(summary.arms[0].errorKinds).toEqual({
+      "no_tool_call:max_tokens": 1,
+      "no_tool_call:end_turn": 1,
+      other: 1,
+    });
+    const md = renderValidatorMarkdownSummary(summary);
+    expect(md).toContain("| both | claude-sonnet-5-5 |");
+    expect(md).toContain("**both** by kind: no_tool_call:max_tokens 1, no_tool_call:end_turn 1, other 1");
+  });
+
+  it("runValidatorEval records the error kind of a thrown executor failure", async () => {
+    const executor: ValidatorCaseExecutor = () => {
+      throw new NoToolCallError("no tool", "max_tokens");
+    };
+    const run = await runValidatorEval({
+      executor,
+      cases: [makeCase("c1", "ambiguous")],
+      arms: [byName("both")],
+      runName: "r",
+      datasetName: "d",
+      log: () => {},
+    });
+    expect(run.arms[0].records[0].errorKind).toBe("no_tool_call:max_tokens");
+  });
+});
+

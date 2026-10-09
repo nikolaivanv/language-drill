@@ -113,6 +113,7 @@ import {
   VALIDATION_MODEL,
   buildValidationTool,
   estimateCostUsdFor,
+  modelErrorKind,
   renderLearnerView,
   validateDraft,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
@@ -330,6 +331,44 @@ export function resolveArmModel(
   return arm.modelOverride ?? args.model;
 }
 
+/**
+ * The effort an arm runs at: `--effort` applies ONLY to the arms that follow
+ * `--model` (no pinned `modelOverride`). Pinned arms are fixed reference
+ * configurations — `prompt-only` IS the production validator request — so an
+ * effort sweep must never move them.
+ */
+export function armEffort(
+  arm: ValidatorArm,
+  args: { effort?: Effort },
+): Effort | undefined {
+  return arm.modelOverride === undefined ? args.effort : undefined;
+}
+
+/**
+ * The arms named by `--arms` (comma-separated), in `ARMS` order; every arm
+ * when `names` is undefined. Throws on an unknown or empty selection.
+ * For a model A/B, `--arms prompt-only,both --model <candidate>` runs the
+ * production validator (prompt-only = current prompt on VALIDATION_MODEL)
+ * next to the candidate on the same prompt.
+ */
+export function selectArms(
+  names: string[] | undefined,
+  arms: ValidatorArm[] = ARMS,
+): ValidatorArm[] {
+  if (names === undefined) return arms;
+  const known = new Set(arms.map((a) => a.name));
+  const unknown = names.filter((n) => !known.has(n));
+  if (unknown.length > 0) {
+    throw new Error(
+      `[eval-validator] unknown --arms ${unknown.join(", ")}; known: ${[...known].join(", ")}`,
+    );
+  }
+  const wanted = new Set(names);
+  const selected = arms.filter((a) => wanted.has(a.name));
+  if (selected.length === 0) throw new Error("[eval-validator] --arms selected no arms");
+  return selected;
+}
+
 /** Per-arm USD cost, priced for the model the arm actually ran on. */
 function armCostUsd(
   arm: ValidatorArm,
@@ -519,7 +558,7 @@ export function makeRealValidatorExecutor(
           cefrLevel: c.cefrLevel,
           exerciseType: "cloze",
           model: arm.modelOverride,
-          effort: args.effort,
+          effort: armEffort(arm, args),
         },
         signal,
       );
@@ -570,7 +609,7 @@ export function makeRealValidatorExecutor(
 
     const { result, tokenUsage } = await validateDraft(client, draft, spec, signal, {
       modelOverride: resolveArmModel(arm, args),
-      effort: args.effort,
+      effort: armEffort(arm, args),
       systemPromptOverride,
     });
     return { result, usage: tokenUsage };
@@ -587,6 +626,8 @@ export type ValidatorCaseRecord = {
   label: "ambiguous" | "clean";
   result?: ValidationResult | SolverCaseResult;
   error?: string;
+  /** `modelErrorKind` of the failure — `refusal`, `no_tool_call:<stop_reason>`, or `other`. */
+  errorKind?: string;
 };
 
 export type ValidatorArmRunResult = {
@@ -707,6 +748,7 @@ export async function runValidatorEval(opts: {
           caseId: c.id,
           label: c.label,
           error: (e as Error).message,
+          errorKind: modelErrorKind(e),
         });
       }
     }
@@ -754,8 +796,13 @@ export type ValidatorArmSummary = {
   metrics: Omit<ArmMetrics, "selfInconsistentRate"> & {
     selfInconsistentRate: number | null;
   };
+  /** The model this arm actually ran on (pinned, `--model`, or VALIDATION_MODEL). */
+  model: string;
   costUsd: number;
   errors: Array<{ caseId: string; error: string }>;
+  /** Error counts by `modelErrorKind` — separates `no_tool_call:max_tokens`
+   *  (truncation) from `no_tool_call:end_turn` (a genuine tool skip). */
+  errorKinds: Record<string, number>;
 };
 
 export type ValidatorEvalSummary = {
@@ -811,6 +858,12 @@ export function computeValidatorSummary(
     const errors = armResult.records
       .filter((r) => r.error !== undefined)
       .map((r) => ({ caseId: r.caseId, error: r.error! }));
+    const errorKinds: Record<string, number> = {};
+    for (const r of armResult.records) {
+      if (r.error === undefined) continue;
+      const kind = r.errorKind ?? "other";
+      errorKinds[kind] = (errorKinds[kind] ?? 0) + 1;
+    }
     const arm = armResult.arm;
     return {
       arm: arm.name,
@@ -826,8 +879,10 @@ export function computeValidatorSummary(
         // `ValidatorArmSummary.metrics`'s docstring.
         selfInconsistentRate: arm.kind === "solver" ? null : rawMetrics.selfInconsistentRate,
       },
+      model: resolveArmModel(arm, args) ?? VALIDATION_MODEL,
       costUsd: armCostUsd(arm, armResult.usage, args),
       errors,
+      errorKinds,
     };
   });
 
@@ -886,7 +941,7 @@ export function renderValidatorMarkdownSummary(
     const promptCell = a.promptSource ? `repo:${a.promptSource}` : "n/a (blind)";
     const templateCell = a.templateSha ?? "n/a";
     lines.push(
-      `| ${a.arm} | ${a.modelOverride ?? "production"} | ${promptCell} | ${templateCell} | ` +
+      `| ${a.arm} | ${a.model} | ${promptCell} | ${templateCell} | ` +
         `${pct(a.metrics.recallOnAmbiguous)} | ${pct(a.metrics.falseFlagRateOnClean)} | ` +
         `${pctOrNA(a.metrics.selfInconsistentRate)} | ${a.metrics.n} | ${usd(a.costUsd)} |`,
     );
@@ -911,6 +966,13 @@ export function renderValidatorMarkdownSummary(
   lines.push("");
   lines.push(`## Errors (${errCount})`);
   lines.push("");
+  for (const a of summary.arms) {
+    const kinds = Object.entries(a.errorKinds ?? {});
+    if (kinds.length === 0) continue;
+    lines.push(
+      `- **${a.arm}** by kind: ${kinds.map(([k, n]) => `${k} ${n}`).join(", ")}`,
+    );
+  }
   if (errCount === 0) {
     lines.push("_(none)_");
   } else {
@@ -996,6 +1058,8 @@ export type EvalValidatorArgs = {
   /** Model for arms with no pinned `modelOverride` (`model-only`, `both`). */
   model?: string;
   effort?: Effort;
+  /** `--arms a,b` — arm names to run (all when absent). */
+  arms?: string[];
 };
 
 export function parseEvalValidatorArgs(
@@ -1010,6 +1074,7 @@ export function parseEvalValidatorArgs(
       "run-name": { type: "string" },
       model: { type: "string" },
       effort: { type: "string" },
+      arms: { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -1050,6 +1115,10 @@ export function parseEvalValidatorArgs(
     runName: parsed.values["run-name"],
     model: parsed.values.model === "" ? undefined : parsed.values.model,
     effort: parseEffort(parsed.values.effort),
+    arms:
+      parsed.values.arms === undefined || parsed.values.arms === ""
+        ? undefined
+        : parsed.values.arms.split(",").map((s) => s.trim()).filter((s) => s !== ""),
   };
 }
 
@@ -1058,7 +1127,7 @@ function printUsage(): void {
     [
       "Usage: pnpm eval:validator [--limit <n>] [--max-cost-usd <n>]",
       "                           [--dry-run] [--run-name <name>]",
-      "                           [--model <id>] [--effort <level>]",
+      "                           [--model <id>] [--effort <level>] [--arms <a,b>]",
       "",
       "Replays the validator-ambiguity-cases.json fixture through 5 arms:",
       "four sighted validator arms (baseline / prompt-only / model-only / both)",
@@ -1072,7 +1141,9 @@ function printUsage(): void {
       "  --dry-run            Print the arm matrix + case counts; zero Anthropic calls.",
       "  --run-name <name>    Optional. Defaults to run-<ISO timestamp>.",
       "  --model <id>         Model for the arms with no pinned model (model-only, both).",
-      "  --effort <level>     low|medium|high|xhigh|max. Applied to every arm.",
+      "  --effort <level>     low|medium|high|xhigh|max. Applied only to arms with no pinned model.",
+      "  --arms <a,b>         Run only these arms (baseline, prompt-only, model-only, both, blind-solver).",
+      "                       Model A/B: --arms prompt-only,both --model <id> (prompt-only = production).",
       "  --help               Show this message.",
       "",
       "NOTE: invoke as `pnpm eval:validator --flag`, NOT `pnpm eval:validator -- --flag`",
@@ -1101,6 +1172,7 @@ async function main(): Promise<void> {
   const allCases = loadValidatorCases(readFileSync(fixturePath, "utf8"));
   const cases = args.limit !== undefined ? allCases.slice(0, args.limit) : allCases;
   const runName = deriveValidatorRunName(args.runName, new Date());
+  const arms = selectArms(args.arms);
 
   const ambiguousCount = cases.filter((c) => c.label === "ambiguous").length;
   const cleanCount = cases.filter((c) => c.label === "clean").length;
@@ -1117,7 +1189,7 @@ async function main(): Promise<void> {
       "the prompt arm's effect (Fix Round 1).",
   );
   console.log("[eval-validator] arms:");
-  for (const arm of ARMS) {
+  for (const arm of arms) {
     if (arm.kind === "solver") {
       console.log(
         `  - ${arm.name}: model=${arm.modelOverride} (blind — judges from the ` +
@@ -1127,13 +1199,13 @@ async function main(): Promise<void> {
     }
     const templateSha = sha8(PROMPT_TEMPLATES[arm.promptSource]);
     console.log(
-      `  - ${arm.name}: model=${arm.modelOverride ?? "production default"}, ` +
+      `  - ${arm.name}: model=${resolveArmModel(arm, args) ?? `${VALIDATION_MODEL} (production)`}, ` +
         `prompt=repo:${arm.promptSource} (sha ${templateSha}, rendered locally)`,
     );
   }
 
   const requestMode: Record<string, string> = {};
-  for (const arm of ARMS) {
+  for (const arm of arms) {
     requestMode[arm.name] = requestModeFor(
       resolveArmModel(arm, args) ?? VALIDATION_MODEL,
       arm.kind === "solver"
@@ -1144,7 +1216,7 @@ async function main(): Promise<void> {
           }
         : buildValidationTool(ExerciseType.CLOZE),
       "off",
-      args.effort,
+      armEffort(arm, args),
     );
     console.log(`[eval-validator] request mode ${arm.name}: ${requestMode[arm.name]}`);
   }
@@ -1158,16 +1230,16 @@ async function main(): Promise<void> {
   const effectiveMaxCostUsd = args.maxCostUsd ?? DEFAULT_MAX_COST_USD;
   const costCapWarning = computeCostCapWarning(
     cases.length,
-    ARMS.length,
+    arms.length,
     effectiveMaxCostUsd,
   );
   if (costCapWarning) console.warn(costCapWarning);
 
   if (args.dryRun) {
-    const estTotal = cases.length * ARMS.length * ROUGH_PER_CALL_USD;
+    const estTotal = cases.length * arms.length * ROUGH_PER_CALL_USD;
     console.log(
       `[eval-validator] DRY RUN — no Claude calls. Rough cost estimate for a full run: ` +
-        `$${estTotal.toFixed(2)} (${cases.length} cases x ${ARMS.length} arms x ~$${ROUGH_PER_CALL_USD}/call). ` +
+        `$${estTotal.toFixed(2)} (${cases.length} cases x ${arms.length} arms x ~$${ROUGH_PER_CALL_USD}/call, Sonnet-4.6-sized). ` +
         `--max-cost-usd default is $${DEFAULT_MAX_COST_USD}.`,
     );
     return;
@@ -1193,7 +1265,7 @@ async function main(): Promise<void> {
   const result = await runValidatorEval({
     executor: makeRealValidatorExecutor(client, args),
     cases,
-    arms: ARMS,
+    arms,
     runName,
     datasetName,
     maxCostUsd: args.maxCostUsd,

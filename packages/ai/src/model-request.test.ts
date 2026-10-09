@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 
 import { ContentRejectedError } from "./content-rejected-error";
 import {
+  modelErrorKind,
   NoToolCallError,
   applyShaped,
   capabilityFor,
@@ -143,6 +144,17 @@ describe("strictToolSchema", () => {
     const before = JSON.stringify(TOOL.input_schema);
     strictToolSchema(TOOL.input_schema);
     expect(JSON.stringify(TOOL.input_schema)).toBe(before);
+  });
+});
+
+describe("modelErrorKind", () => {
+  it("labels refusals, tool skips by stop reason, and everything else", () => {
+    expect(modelErrorKind(new ContentRejectedError("no", "refusal"))).toBe("refusal");
+    expect(modelErrorKind(new NoToolCallError("x", "max_tokens"))).toBe("no_tool_call:max_tokens");
+    expect(modelErrorKind(new NoToolCallError("x", "end_turn"))).toBe("no_tool_call:end_turn");
+    expect(modelErrorKind(new NoToolCallError("x", null))).toBe("no_tool_call:unknown");
+    expect(modelErrorKind(new Error("parse"))).toBe("other");
+    expect(modelErrorKind("string")).toBe("other");
   });
 });
 

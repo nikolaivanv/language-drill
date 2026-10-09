@@ -198,6 +198,18 @@ export class NoToolCallError extends Error {
   }
 }
 
+/**
+ * Bounded-cardinality label for a failed model call, for eval reports:
+ * `refusal`, `no_tool_call:<stop_reason>` (e.g. `no_tool_call:max_tokens` is a
+ * truncated reply, `no_tool_call:end_turn` a genuine tool skip under
+ * `tool_choice: auto`), or `other` (parse/validation/API errors).
+ */
+export function modelErrorKind(err: unknown): string {
+  if (err instanceof ContentRejectedError) return "refusal";
+  if (err instanceof NoToolCallError) return `no_tool_call:${err.stopReason ?? "unknown"}`;
+  return "other";
+}
+
 /** Returns the named tool's input, or throws ContentRejectedError (refusal) / NoToolCallError. */
 export function extractToolUse(
   response: { content: ReadonlyArray<{ type: string; name?: string; input?: unknown }>; stop_reason?: string | null },
