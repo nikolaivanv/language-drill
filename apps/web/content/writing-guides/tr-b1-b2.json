@@ -1,7 +1,7 @@
 {
   "id": "tr-b1-b2",
   "title": "Writing a paragraph in Turkish",
-  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -198,6 +198,109 @@
             {
               "kind": "text",
               "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The same three-part shape works for every kind of prompt. What changes is the job of the opening sentence:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Opinion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states your position."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparison"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — names the two things and the point (or points) you will compare them on."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Personal story or description"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — sets the scene: when, where and who."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Advice"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states the problem and your main recommendation."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The supporting points and the closing sentence follow the same pattern: in a comparison, each point compares the two options on one feature, and the closing says which suits whom; in a story, the points are what happened, in order, and the closing says how it ended or what you learned; in advice, each point is a reason or a concrete step."
             }
           ]
         },
@@ -527,6 +630,316 @@
               "text": "). See the next section."
             }
           ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph for a comparison prompt, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Şehirde yaşamak mı daha iyi, köyde yaşamak mı?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is it better to live in a city or in a village?), one sentence at a time. It is 103 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Şehirde yaşamakla köyde yaşamak arasında özellikle iş imkânları, hayat pahalılığı ve sosyal hayat açısından önemli farklar vardır."
+            }
+          ],
+          "en": "There are important differences between living in a city and living in a village, especially in terms of job opportunities, the cost of living and social life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: names the two options and the three points of comparison ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "açısından"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = in terms of)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Şehirde iş bulmak genellikle daha kolaydır ve maaşlar daha yüksektir; "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "oysa"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " köyde iş imkânları oldukça sınırlıdır."
+            }
+          ],
+          "en": "Finding a job is usually easier in the city and salaries are higher, whereas in the village job opportunities are quite limited.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 1 (work). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "oysa"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " opens the second half and sets it against the first."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " şehirde kiralar köye "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " çok daha yüksektir, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bu yüzden"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " maaşın büyük bir kısmı kiraya gider."
+            }
+          ],
+          "en": "However, rents in the city are much higher than in the village, so a large part of your salary goes on rent.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 2 (cost of living). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "köye göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = compared with the village: the dative "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-e"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " plus "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Bugün şehirlerde olduğu "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "gibi"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " birçok köyde "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "de"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " hızlı internet var; bu sayede köydekiler de büyük şirketler için uzaktan çalışabiliyor."
+            }
+          ],
+          "en": "Today, as in the cities, many villages have fast internet too; thanks to this, people in the village can also work remotely for big companies.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 3: a similarity, not only differences ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-de olduğu gibi"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = as is the case in …)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bununla birlikte"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", köyde sinema ve tiyatro gibi kültürel etkinlikler oldukça azdır; "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bu nedenle"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " gençler çoğu zaman sıkılır."
+            }
+          ],
+          "en": "Nevertheless, cultural activities such as cinema and theatre are quite rare in the village; for this reason, young people often get bored.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 4 (social life) turns the balance back towards the city."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Kısacası"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", bence kariyer yapmak isteyenler için şehir, sakin ve ucuz bir hayat arayanlar için ise köy daha uygundur."
+            }
+          ],
+          "en": "In short, in my view the city is more suitable for those who want to build a career, and the village for those looking for a quiet, cheap life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+            }
+          ]
         }
       ]
     },
@@ -765,6 +1178,84 @@
                   }
                 ],
                 "en": "Although the rent is very high, I prefer living in the city centre."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparing"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "oysa"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-e göre"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gibi"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Şehirde hayat çok hızlıdır; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "oysa"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " köyde insanlar daha sakin yaşar."
+                  }
+                ],
+                "en": "Life in the city is very fast, whereas in the village people live more calmly."
               }
             ],
             [
@@ -1338,6 +1829,215 @@
                 {
                   "kind": "text",
                   "text": " — even if (a possibility)."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-e göre"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (compared with) also works in two pieces."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " The noun takes the dative ending (-e or -a by vowel harmony, with a -y- after a vowel), and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " follows: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "köye göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "kasabaya göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "İstanbul'a göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — note that "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehir"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " loses a vowel: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehre göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". It usually comes with "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "daha"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Şehir köye göre daha pahalıdır."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " After a pronoun it means according to: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "bana göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (in my opinion). "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (like, as) follows a noun with no ending — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehir gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — but a pronoun takes the genitive: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "benim gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "onun gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "oysa"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " opens the second half of a contrast, usually after a semicolon or a comma."
                 }
               ]
             }
@@ -2077,7 +2777,20 @@
                   },
                   {
                     "kind": "text",
-                    "text": " ideas."
+                    "text": " ideas — and, for a comparison prompt, "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that compares"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
                   }
                 ]
               }

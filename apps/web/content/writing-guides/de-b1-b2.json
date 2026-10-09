@@ -1,7 +1,7 @@
 {
   "id": "de-b1-b2",
   "title": "Writing a paragraph in German",
-  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -198,6 +198,109 @@
             {
               "kind": "text",
               "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The same three-part shape works for every kind of prompt. What changes is the job of the opening sentence:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Opinion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states your position."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparison"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — names the two things and the point (or points) you will compare them on."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Personal story or description"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — sets the scene: when, where and who."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Advice"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states the problem and your main recommendation."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The supporting points and the closing sentence follow the same pattern: in a comparison, each point compares the two options on one feature, and the closing says which suits whom; in a story, the points are what happened, in order, and the closing says how it ended or what you learned; in advice, each point is a reason or a concrete step."
             }
           ]
         },
@@ -505,6 +608,299 @@
               "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. They also drive German word order — see the next section."
             }
           ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph for a comparison prompt, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Ist ein Online-Sprachkurs besser als ein Kurs vor Ort?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is an online language course better than an in-person course?), one sentence at a time. It is 116 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ein Online-Sprachkurs und ein Kurs vor Ort unterscheiden sich vor allem in drei Punkten: Flexibilität, Kosten und Kontakt zu anderen Lernenden."
+            }
+          ],
+          "en": "An online language course and an in-person course differ above all in three respects: flexibility, cost and contact with other learners.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: names the two options and the three points of comparison."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Online kann man lernen, wann und wo man will, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ein Kurs vor Ort zu festen Zeiten stattfindet."
+            }
+          ],
+          "en": "Online you can study whenever and wherever you like, whereas an in-person course takes place at fixed times.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 1 (flexibility). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sends "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "stattfindet"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Außerdem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sind Online-Kurse oft billiger, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " die Sprachschule keine Räume mieten muss."
+            }
+          ],
+          "en": "Moreover, online courses are often cheaper, because the language school does not have to rent rooms.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 2 (cost), with a reason."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Im Gegensatz zum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " Online-Unterricht bietet ein Kurs vor Ort echten Kontakt: Man spricht in der Pause mit anderen Teilnehmern und übt dabei ganz natürlich."
+            }
+          ],
+          "en": "Unlike online lessons, an in-person course offers real contact: you talk to other participants during the break and practise quite naturally as you do so.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 3 (contact). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zu dem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (dative); the whole phrase fills position 1, so the verb "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bietet"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " comes next."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Genauso wie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " im Kursraum kann man online zwar Fragen stellen, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " spontane Gespräche sind am Bildschirm viel seltener."
+            }
+          ],
+          "en": "Just as in the classroom, you can ask questions online, but spontaneous conversations are much rarer on screen.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 4: a similarity, with a limit ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zwar … aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Zusammenfassend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ist ein Online-Kurs ideal für Menschen mit wenig Zeit, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ein Kurs vor Ort besser für alle ist, die viel sprechen wollen."
+            }
+          ],
+          "en": "In summary, an online course is ideal for people with little time, whereas an in-person course is better for anyone who wants to speak a lot.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+            }
+          ]
         }
       ]
     },
@@ -726,6 +1122,80 @@
                   }
                 ],
                 "en": "Although the rent is high, I like living in the city."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparing"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "während"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "im Gegensatz zu"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "genauso wie"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Während"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " in der Stadt immer viel los ist, ist es auf dem Land oft sehr ruhig."
+                  }
+                ],
+                "en": "While there is always a lot going on in the city, it is often very quiet in the countryside."
               }
             ],
             [
@@ -1349,6 +1819,189 @@
                     {
                       "kind": "text",
                       "text": "Obwohl die Miete hoch ist, wohne ich gern in der Stadt."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Comparing connectors have their own rules."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "während"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " as a conjunction (whereas, while) sends the verb to the end: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, während ein Kurs vor Ort zu festen Zeiten stattfindet"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". As a preposition it means during and takes the genitive: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "während des Kurses"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zu"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " always takes the dative — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zum Online-Kurs"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zum"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " = "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zu dem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zur Stadt"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zur"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " = "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zu der"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") — and at the start of a sentence the whole phrase is the first element, so the verb comes next: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Im Gegensatz zur Stadt ist das Dorf ruhig."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "genauso wie"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " compares two equal things, often around an adjective: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Ein Online-Kurs ist genauso effektiv wie ein Kurs vor Ort."
                     }
                   ]
                 }
@@ -2042,7 +2695,20 @@
                   },
                   {
                     "kind": "text",
-                    "text": " ideas."
+                    "text": " ideas — and, for a comparison prompt, "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that compares"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
                   }
                 ]
               }

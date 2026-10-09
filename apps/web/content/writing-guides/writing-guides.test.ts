@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { CefrLevel, Language, parseTheoryTopicJson, type LearningLanguage } from '@language-drill/shared';
+import {
+  CefrLevel,
+  Language,
+  parseTheoryTopicJson,
+  type LearningLanguage,
+  type TheoryInlineJson,
+} from '@language-drill/shared';
 import {
   WRITING_GUIDE_BANDS,
   WRITING_GUIDE_SECTION_IDS,
@@ -39,6 +45,38 @@ describe('writing guides', () => {
         });
       });
     }
+  }
+});
+
+// B1–B2 prompts include comparison angles, not only opinions: each guide must
+// teach the comparing connectors and model a comparison paragraph that uses one.
+const COMPARING: Record<LearningLanguage, { connectors: string[]; inModel: string }> = {
+  [Language.ES]: { connectors: ['mientras que', 'en cambio', 'al igual que'], inModel: 'mientras que' },
+  [Language.DE]: { connectors: ['während', 'im Gegensatz zu', 'genauso wie'], inModel: 'während' },
+  [Language.TR]: { connectors: ['oysa', '-e göre', 'gibi'], inModel: 'oysa' },
+};
+
+function inlineText(inlines: TheoryInlineJson[]): string {
+  return inlines.map((i) => ('text' in i ? i.text : inlineText(i.children))).join('');
+}
+
+describe('b1-b2 comparison coverage', () => {
+  for (const language of LANGUAGES) {
+    const guide = getWritingGuide(language, 'b1-b2');
+    const section = (id: string) => guide.sections.find((s) => s.id === id)!;
+    const { connectors, inModel } = COMPARING[language];
+
+    it(`${language}: the connectors section teaches the three comparing connectors`, () => {
+      const json = JSON.stringify(section('connectors').body);
+      for (const c of connectors) expect(json.includes(`"text":"${c}"`), c).toBe(true);
+    });
+
+    it(`${language}: the paragraph-shape section models a comparison using "${inModel}"`, () => {
+      const targets = section('paragraph-shape')
+        .body.filter((b) => b.kind === 'example')
+        .map((b) => inlineText(b.target).toLowerCase());
+      expect(targets.some((t) => t.includes(inModel.toLowerCase()))).toBe(true);
+    });
   }
 });
 

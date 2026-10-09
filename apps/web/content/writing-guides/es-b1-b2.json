@@ -1,7 +1,7 @@
 {
   "id": "es-b1-b2",
   "title": "Writing a paragraph in Spanish",
-  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -198,6 +198,109 @@
             {
               "kind": "text",
               "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The same three-part shape works for every kind of prompt. What changes is the job of the opening sentence:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Opinion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states your position."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparison"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — names the two things and the point (or points) you will compare them on."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Personal story or description"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — sets the scene: when, where and who."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Advice"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states the problem and your main recommendation."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The supporting points and the closing sentence follow the same pattern: in a comparison, each point compares the two options on one feature, and the closing says which suits whom; in a story, the points are what happened, in order, and the closing says how it ended or what you learned; in advice, each point is a reason or a concrete step."
             }
           ]
         },
@@ -475,6 +578,208 @@
               "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side."
             }
           ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph for a comparison prompt, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"¿Es mejor vivir en una ciudad o en un pueblo?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is it better to live in a city or a village?), one sentence at a time. It is 119 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Vivir en una ciudad y vivir en un pueblo son experiencias muy distintas en tres aspectos: el trabajo, la vivienda y el ocio."
+            }
+          ],
+          "en": "Living in a city and living in a village are very different experiences, in three respects: work, housing and things to do.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: names the two options and the three points of comparison."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "En la ciudad es fácil encontrar empleo, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "mientras que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " en muchos pueblos hay poco trabajo."
+            }
+          ],
+          "en": "In the city it is easy to find a job, whereas in many villages there is little work.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 1 (work). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "mientras que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sets the two sides against each other in one sentence."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "En cambio"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", la vivienda es mucho más barata en un pueblo: por el precio de un piso pequeño en Madrid, se alquila una casa con jardín."
+            }
+          ],
+          "en": "On the other hand, housing is much cheaper in a village: for the price of a small flat in Madrid, you can rent a house with a garden.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 2 (housing), with a concrete example after the colon."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Al igual que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " en la ciudad, en muchos pueblos ya hay buena conexión a internet, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "así que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " se puede teletrabajar."
+            }
+          ],
+          "en": "Just as in the city, many villages now have a good internet connection, so you can work remotely.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 3: a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sin embargo"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", en un pueblo hay pocos cines, teatros o conciertos, y los jóvenes suelen aburrirse."
+            }
+          ],
+          "en": "However, in a village there are few cinemas, theatres or concerts, and young people tend to get bored.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 4 (things to do) turns the balance back towards the city."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "En conclusión"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", la ciudad es mejor para hacer carrera, y el pueblo, para llevar una vida tranquila y barata."
+            }
+          ],
+          "en": "In conclusion, the city is better for building a career, and the village for leading a quiet, cheap life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+            }
+          ]
         }
       ]
     },
@@ -700,6 +1005,84 @@
                   }
                 ],
                 "en": "Social media connects us; however, it can also isolate us."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparing"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "mientras que"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en cambio"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "al igual que"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "En el norte llueve mucho, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "mientras que"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " en el sur casi nunca llueve."
+                  }
+                ],
+                "en": "In the north it rains a lot, whereas in the south it hardly ever rains."
               }
             ],
             [
@@ -1081,6 +1464,89 @@
                 {
                   "kind": "text",
                   "text": " usually start a new sentence or follow a semicolon, with a comma after them."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "mientras que"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (whereas) joins two contrasting facts in one sentence and takes the indicative: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, mientras que en el sur casi nunca llueve"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". Without "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "que"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "mientras"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " usually means while, at the same time as. "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "en cambio"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " works like "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "sin embargo"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": it usually starts a new sentence or follows a semicolon, with a comma after it."
                 }
               ]
             }
@@ -1996,7 +2462,20 @@
                   },
                   {
                     "kind": "text",
-                    "text": " ideas."
+                    "text": " ideas — and, for a comparison prompt, "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that compares"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
                   }
                 ]
               }
