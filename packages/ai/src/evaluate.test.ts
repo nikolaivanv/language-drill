@@ -479,6 +479,34 @@ describe("evaluateAnswer", () => {
     expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  const okResponse = () => ({
+    content: [
+      { type: "tool_use", id: "toolu_123", name: EVALUATION_TOOL_NAME, input: validEvaluationInput },
+    ],
+    stop_reason: "tool_use",
+  });
+  const baseInput = {
+    exercise: clozeContent,
+    userAnswer: "went",
+    language: Language.EN,
+    difficulty: CefrLevel.B1,
+  };
+
+  it("modelOverride claude-sonnet-5-5 shapes auto + strict with between_tools", async () => {
+    mockCreate.mockResolvedValue(okResponse());
+    await evaluateAnswer(mockClient, { ...baseInput, modelOverride: "claude-sonnet-5-5" });
+    const req = mockCreate.mock.calls[0][0];
+    expect(req.tool_choice).toEqual({ type: "auto" });
+    expect(req.thinking).toEqual({ type: "between_tools" });
+    expect(req.system[1].text).toBe(`Respond only by calling the ${req.tools[0].name} tool.`);
+  });
+
+  it("effortOverride is sent as output_config", async () => {
+    mockCreate.mockResolvedValue(okResponse());
+    await evaluateAnswer(mockClient, { ...baseInput, effortOverride: "medium" });
+    expect(mockCreate.mock.calls[0][0].output_config).toEqual({ effort: "medium" });
+  });
+
   it("request shape with adaptive thinking is unchanged (model-request shaping guard)", async () => {
     mockCreate.mockResolvedValue({
       content: [

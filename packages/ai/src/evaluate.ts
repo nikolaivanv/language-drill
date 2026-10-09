@@ -23,7 +23,7 @@ import {
   type AttributionKey,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
-import { ContentRejectedError } from "./content-rejected-error.js";
+import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 
 // ---------------------------------------------------------------------------
 // Tool schema — mirrors EvaluationResult type
@@ -179,6 +179,12 @@ export type EvaluateAnswerInput = {
    * production request path.
    */
   thinkingOverride?: "adaptive";
+  /**
+   * Eval-runner escape hatch: send this effort as `output_config.effort`.
+   * Throws on models without effort support. Never set on the production
+   * request path.
+   */
+  effortOverride?: Effort;
 };
 
 // ---------------------------------------------------------------------------
@@ -360,6 +366,7 @@ export async function evaluateAnswer(
     systemPromptOverride,
     modelOverride,
     thinkingOverride,
+    effortOverride,
   } = input;
 
   const userPrompt = buildUserPrompt(
@@ -397,20 +404,14 @@ export async function evaluateAnswer(
   }
 
   const effectiveModel = modelOverride ?? MODEL;
-  // Per-model request shaping (matters for eval-runner model arms; the
-  // production MODEL takes the plain temperature-0, no-thinking path):
-  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
-  //    (`temperature: 0` → 400), so temperature is only sent to models that
-  //    accept it.
-  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when the `thinking` field
-  //    is omitted — send an explicit `disabled` so an arm matches the
-  //    production no-thinking semantics unless adaptive is requested.
-  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|fable/.test(
-    effectiveModel,
-  );
-  const omittedThinkingMeansAdaptive = /sonnet-5|fable/.test(effectiveModel);
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: buildEvaluationTool(attributionKeys),
+    thinking: thinkingOverride === "adaptive" ? "adaptive" : "off",
+    temperature: 0,
+    effort: effortOverride ?? (thinkingOverride === "adaptive" ? "low" : undefined),
+  });
 
-  const request: Anthropic.MessageCreateParamsNonStreaming = {
+  const response = await client.messages.create({
     model: effectiveModel,
     max_tokens:
       thinkingOverride === "adaptive" ? ADAPTIVE_MAX_TOKENS : MAX_TOKENS,
@@ -420,6 +421,9 @@ export async function evaluateAnswer(
         text: systemPromptText,
         cache_control: { type: "ephemeral" as const },
       },
+      ...(shaped.systemSuffix
+        ? [{ type: "text" as const, text: shaped.systemSuffix }]
+        : []),
     ],
     messages: [
       {
@@ -427,56 +431,24 @@ export async function evaluateAnswer(
         content: userPrompt,
       },
     ],
-    tools: [buildEvaluationTool(attributionKeys)],
-    tool_choice: {
-      type: "tool" as const,
-      name: EVALUATION_TOOL_NAME,
-    },
-  };
-  if (!rejectsSamplingParams) {
-    request.temperature = 0;
-  }
-  if (thinkingOverride === "adaptive") {
-    request.thinking = { type: "adaptive" };
-    request.output_config = { effort: "low" };
-  } else if (omittedThinkingMeansAdaptive) {
-    request.thinking = { type: "disabled" };
-  }
+    tools: shaped.tools,
+    tool_choice: shaped.tool_choice,
+    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
+    ...(shaped.temperature !== undefined
+      ? { temperature: shaped.temperature }
+      : {}),
+    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
+  } as Anthropic.MessageCreateParamsNonStreaming);
 
-  const response = await client.messages.create(request);
-
-  // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
-  // block. Surface it as a distinct, expected outcome (the route maps it to a
-  // user-facing rejection) rather than a generic "no tool block" infra error.
-  if (response.stop_reason === "refusal") {
-    throw new ContentRejectedError(
-      "Claude refused to evaluate this answer.",
-      response.stop_reason,
-    );
-  }
-
-  // Extract tool use block from response
-  const toolUseBlock = response.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-  );
-
-  if (!toolUseBlock) {
-    throw new Error(
-      "Claude did not return a tool use block. " +
-        `Stop reason: ${response.stop_reason}. ` +
-        `Content types: ${response.content.map((b) => b.type).join(", ")}`,
-    );
-  }
-
-  if (toolUseBlock.name !== EVALUATION_TOOL_NAME) {
-    throw new Error(
-      `Unexpected tool name: expected "${EVALUATION_TOOL_NAME}", got "${toolUseBlock.name}"`,
-    );
-  }
+  // A safety refusal throws ContentRejectedError; a missing/wrong tool call
+  // throws NoToolCallError.
+  const toolInput = extractToolUse(response, EVALUATION_TOOL_NAME, {
+    refusalMessage: "Claude refused to evaluate this answer.",
+  });
 
   const validKeys =
     attributionKeys && attributionKeys.length > 0
       ? new Set(attributionKeys.map((k) => k.key))
       : undefined;
-  return parseEvaluationResult(toolUseBlock.input, validKeys);
+  return parseEvaluationResult(toolInput, validKeys);
 }
