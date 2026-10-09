@@ -29,7 +29,16 @@ reference, cached 2026-09-25):
 | `stop_reason: "refusal"` | yes | yes |
 
 Every A/B-candidate surface forces its tool, so none of them can run on a 5.5
-model today. Haiku 4.5 is still the latest Haiku; nothing on Haiku moves.
+model today.
+
+**Haiku 5.5** (`claude-haiku-5-5`, released 2026-10-07, per its migration
+guide) is different again: it **accepts** forced `tool_choice` (the reply then
+starts with the tool call and carries no thinking block), rejects any
+`temperature` other than 1 / `top_p` other than 0.99 / any `top_k`, rejects
+`budget_tokens`, runs adaptive thinking by default, supports effort, and uses
+the 4.7+ tokenizer (~30% more tokens than Haiku 4.5). Price $0.10 / $0.50 per
+MTok for prompts ≤100k tokens, $0.50 / $2.50 above. No surface uses Haiku
+today, but Haiku 5.5 is a cheap candidate arm for the A/Bs.
 
 Cost estimates are also single-price: `cost-model.ts` prices everything at
 Sonnet 4.6 ($3 / $15), and its comment wrongly says Sonnet 5 lists at the same
@@ -53,6 +62,7 @@ throws instead of guessing.
 | Family (match) | Forced tool choice | Thinking "off" | Sampling params | Effort | Price in / out per MTok |
 |---|---|---|---|---|---|
 | Haiku 4.5 (`haiku-4-5`) | yes | omit `thinking` | yes | no | $1 / $5 |
+| Haiku 5.5 (`haiku-5-5`) | yes (forced ⇒ no thinking block) | omit `thinking` | no | yes | $0.10 / $0.50 (≤100k-token prompts) |
 | Sonnet 4.6 (`sonnet-4-6`) | yes | omit `thinking` | yes | yes | $3 / $15 |
 | Opus 4.6 (`opus-4-6`) | yes | omit `thinking` | yes | yes | $5 / $25 |
 | Opus 4.7 / 4.8 (`opus-4-7`, `opus-4-8`) | yes | omit `thinking` (omitting means no thinking on 4.7/4.8; today's Opus 4.8 surfaces send no `thinking` field) | no | yes | $5 / $25 |
@@ -62,7 +72,9 @@ throws instead of guessing.
 | Opus 5.5 (`opus-5-5`) | **no** | impossible → omit `thinking`, effort `low` | no | yes, default `medium` | $4 / $20 |
 
 Fable models are out of scope (no surface uses them). Cache write is 1.25×
-input and cache read 0.1× input for every row.
+input and cache read 0.1× input for every row. Haiku 5.5's long-context tier
+(>100k-token prompts, 5× price) is not modelled: every surface's prompt is far
+below 100k, and aggregated usage cannot tell which tier a call fell in.
 
 ### `shapeToolRequest(model, intent)`
 
@@ -96,7 +108,7 @@ type ShapedToolRequest = {
   requires effort ≤ `high`; a caller effort of `xhigh`/`max` with thinking "off"
   throws.
 - **Effort:** on families that support it, sent only when the caller passes
-  one, except Opus 5.5 with thinking "off" (see above). Never sent to Haiku.
+  one, except Opus 5.5 with thinking "off" (see above). Never sent to Haiku 4.5.
 - **Temperature:** sent only where sampling params are accepted.
 - **Byte-identical rule:** for every model in use today, the shaped fields
   equal what the call site sends now.
@@ -194,7 +206,7 @@ through the shaper and asserts deep equality with that fixture.
 ### `pnpm verify:model-requests`
 
 A CLI (`packages/ai/scripts/verify-model-requests.ts`, ~$0.10 per run) making
-one small real call per family in use or under evaluation: Haiku 4.5,
+one small real call per family in use or under evaluation: Haiku 4.5, Haiku 5.5,
 Sonnet 4.6, Sonnet 5, Sonnet 5.5, Opus 4.8, Opus 5.5. Each call goes through
 `shapeToolRequest` + `extractToolUse` with a tiny tool whose schema includes the
 stripped keywords. It prints pass/fail per family with the `mode` string and

@@ -32,6 +32,7 @@
   | Family | Match | Forced tool | Thinking "off" | Sampling | Effort | $ in / out per MTok |
   |---|---|---|---|---|---|---|
   | `haiku-4-5` | `/haiku-4-5/` | yes | omit | yes | no | 1 / 5 |
+  | `haiku-5-5` | `/haiku-5-5/` | yes | omit | no | yes | 0.10 / 0.50 |
   | `sonnet-4-6` | `/sonnet-4-6/` | yes | omit | yes | yes | 3 / 15 |
   | `opus-4-6` | `/opus-4-6/` | yes | omit | yes | yes | 5 / 25 |
   | `opus-4-7-8` | `/opus-4-[78]/` | yes | omit | no | yes | 5 / 25 |
@@ -40,7 +41,7 @@
   | `opus-5-5` | `/opus-5-5/` | **no** | omit + effort `low` | no | yes | 4 / 20 |
   | `opus-5` | `/opus-5(?!-5)/` | yes | `disabled` | no | yes | 5 / 25 |
 
-  Cache write is 1.25× input and cache read 0.1× input for every family. An unknown model throws `Error("No model capabilities for <model>")`.
+  Cache write is 1.25× input and cache read 0.1× input for every family. Haiku 5.5 prices are its ≤100k-token-prompt tier; the >100k tier (5×) is deliberately not modelled (no surface's prompt comes near it). An unknown model throws `Error("No model capabilities for <model>")`.
 - **Thinking "off" constraints:** `between_tools` (Sonnet 5.5) and `disabled` (Opus 5) are invalid with effort `xhigh`/`max`; throw. Opus 5.5 "off" sets effort `low` unless the caller gave one.
 - **Strict schemas** (families without forced tool choice only):
   - add `additionalProperties: false` to every object;
@@ -57,7 +58,7 @@
 1. **A 5.5 model replies with text and no tool call** under `tool_choice: auto`. Expected: `NoToolCallError` (a reported failure), never a silent empty result or a crash in a parser. Pinned in Task 2 (`extractToolUse`) and in each migration task's "no tool call" test.
 2. **A strict schema loses a constraint a parser relied on** (e.g. `minItems` on `requiredElements`). Expected: the surface's parser still rejects the out-of-range input. Pinned in Task 3 (generation and validation parsers).
 3. **`sonnet-5` vs `sonnet-5-5` (and `opus-5` vs `opus-5-5`) mis-matching**, which would send `disabled` thinking to a 5.5 model. Expected: each id maps to its own family. Pinned in Task 2's lookup tests.
-4. **An override model that supports no effort** (Haiku) combined with an effort flag. Expected: a clear throw naming the model, not a 400 from the API. Pinned in Task 2.
+4. **An override model that supports no effort** (Haiku 4.5) combined with an effort flag. Expected: a clear throw naming the model, not a 400 from the API. Pinned in Task 2.
 5. **The evaluator's adaptive-thinking path** (`thinkingOverride: "adaptive"`). Expected: still `thinking: {type: "adaptive"}` + effort `low` + `ADAPTIVE_MAX_TOKENS`, byte-identical. Pinned by a Task 1 snapshot variant.
 
 ---
@@ -236,6 +237,7 @@ const TOOL: Anthropic.Tool = {
 describe("capabilityFor", () => {
   it.each([
     ["claude-haiku-4-5-20251001", "haiku-4-5"],
+    ["claude-haiku-5-5", "haiku-5-5"],
     ["claude-sonnet-4-6", "sonnet-4-6"],
     ["claude-opus-4-6", "opus-4-6"],
     ["claude-opus-4-7", "opus-4-7-8"],
@@ -313,6 +315,14 @@ describe("shapeToolRequest", () => {
 
   it("Opus 5 thinking off rejects effort max", () => {
     expect(() => shapeToolRequest("claude-opus-5", { tool: TOOL, thinking: "off", effort: "max" })).toThrow(/disabled/);
+  });
+
+  it("Haiku 5.5, thinking off, temperature 0: forced tool, NO temperature, NO thinking", () => {
+    const s = shapeToolRequest("claude-haiku-5-5", { tool: TOOL, thinking: "off", temperature: 0 });
+    expect(s.tool_choice).toEqual({ type: "tool", name: "submit_thing" });
+    expect(s.temperature).toBeUndefined();
+    expect(s.thinking).toBeUndefined();
+    expect(s.systemSuffix).toBeUndefined();
   });
 
   it("an effort on a model without effort support throws naming the model", () => {
@@ -393,6 +403,7 @@ describe("estimateCostUsdFor", () => {
     ["claude-opus-4-8", 30],
     ["claude-opus-5-5", 24],
     ["claude-haiku-4-5-20251001", 6],
+    ["claude-haiku-5-5", 0.6],
   ])("%s → $%d for 1M in + 1M out", (model, dollars) => {
     expect(estimateCostUsdFor(model, usage)).toBe(dollars);
   });
@@ -464,6 +475,9 @@ const price = (inPerMTok: number, outPerMTok: number): Pricing => ({
 // Order matters: 5.5 rows before their 5 siblings.
 const FAMILIES: ReadonlyArray<{ match: RegExp; caps: ModelCapabilities }> = [
   { match: /haiku-4-5/, caps: { family: "haiku-4-5", forcedToolChoice: true, thinkingOff: "omit", samplingParams: true, effort: false, pricing: price(1, 5) } },
+  // Forced tool choice is accepted; the reply starts with the tool call and has no thinking block.
+  // Prices are the <=100k-token-prompt tier (the >100k tier is 5x and not modelled).
+  { match: /haiku-5-5/, caps: { family: "haiku-5-5", forcedToolChoice: true, thinkingOff: "omit", samplingParams: false, effort: true, pricing: price(0.1, 0.5) } },
   { match: /sonnet-4-6/, caps: { family: "sonnet-4-6", forcedToolChoice: true, thinkingOff: "omit", samplingParams: true, effort: true, pricing: price(3, 15) } },
   { match: /opus-4-6/, caps: { family: "opus-4-6", forcedToolChoice: true, thinkingOff: "omit", samplingParams: true, effort: true, pricing: price(5, 25) } },
   { match: /opus-4-[78]/, caps: { family: "opus-4-7-8", forcedToolChoice: true, thinkingOff: "omit", samplingParams: false, effort: true, pricing: price(5, 25) } },
@@ -1135,7 +1149,7 @@ import { VERIFY_MODELS, VERIFY_TOOL } from "./verify-model-requests";
 describe("verify-model-requests", () => {
   it("covers every family in use or under evaluation", () => {
     expect(VERIFY_MODELS.map((m) => capabilityFor(m).family).sort()).toEqual(
-      ["haiku-4-5", "opus-4-7-8", "opus-5-5", "sonnet-4-6", "sonnet-5", "sonnet-5-5"].sort(),
+      ["haiku-4-5", "haiku-5-5", "opus-4-7-8", "opus-5-5", "sonnet-4-6", "sonnet-5", "sonnet-5-5"].sort(),
     );
   });
 
@@ -1181,6 +1195,7 @@ import {
 
 export const VERIFY_MODELS = [
   "claude-haiku-4-5-20251001",
+  "claude-haiku-5-5",
   "claude-sonnet-4-6",
   "claude-sonnet-5",
   "claude-sonnet-5-5",
@@ -1260,7 +1275,7 @@ Add the two `package.json` script entries.
 In `CLAUDE.md`'s "Running Locally" table, add after the `pnpm eval:fw-dedup` row:
 
 ```
-| `pnpm verify:model-requests` | One small real call per model family (Haiku 4.5, Sonnet 4.6 / 5 / 5.5, Opus 4.8 / 5.5) through `shapeToolRequest` + `extractToolUse` (`packages/ai/src/model-request.ts`); prints PASS/FAIL with each family's request mode and exits 1 on any failure. Run before any model A/B or model switch. ~$0.10. |
+| `pnpm verify:model-requests` | One small real call per model family (Haiku 4.5 / 5.5, Sonnet 4.6 / 5 / 5.5, Opus 4.8 / 5.5) through `shapeToolRequest` + `extractToolUse` (`packages/ai/src/model-request.ts`); prints PASS/FAIL with each family's request mode and exits 1 on any failure. Run before any model A/B or model switch. ~$0.10. |
 ```
 
 Then append to the `pnpm eval`, `pnpm eval:gen` and `pnpm eval:fw-dedup-judge` rows, and add an `eval:validator` row (run via `pnpm --filter @language-drill/ai eval:validator`):
@@ -1302,5 +1317,5 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 Costs ~$0.10.
 
-- [ ] **Step 1:** Run `pnpm verify:model-requests` from the worktree. Expected: 6/6 PASS, each line showing its family's mode. Any FAIL means a capability-table row is wrong. Fix the row through a fix round on Task 2 (with a test) and re-run.
+- [ ] **Step 1:** Run `pnpm verify:model-requests` from the worktree. Expected: 7/7 PASS, each line showing its family's mode. Any FAIL means a capability-table row is wrong. Fix the row through a fix round on Task 2 (with a test) and re-run.
 - [ ] **Step 2:** Record the output on the PR. Repeat after merge, from `main`.
