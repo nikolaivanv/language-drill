@@ -11,6 +11,8 @@ export interface FwBriefProps {
   onBegin: () => void;
   /** Link to the learner's past attempts; omitted → no link. */
   historyHref?: string;
+  /** Link to the writing guide for this language and level; omitted → no card. */
+  guideHref?: string;
 }
 
 // ── SpecRow: a labelled row in the spec card ─────────────────────────────────
@@ -51,7 +53,14 @@ function SpecRow({
 // ── FwBrief ──────────────────────────────────────────────────────────────────
 // Surface B: displays the writing brief, spec, exam toggle, grading criteria.
 // Pure presentational — all state lives in the parent (free-writing page).
-export function FwBrief({ content, examMode, onToggleExam, onBegin, historyHref }: FwBriefProps) {
+export function FwBrief({
+  content,
+  examMode,
+  onToggleExam,
+  onBegin,
+  historyHref,
+  guideHref,
+}: FwBriefProps) {
   const minutes = content.suggestedMinutes ?? 20;
 
   return (
@@ -260,6 +269,21 @@ export function FwBrief({ content, examMode, onToggleExam, onBegin, historyHref 
               an improved version is provided to compare.
             </div>
           </div>
+
+          {guideHref && (
+            <div className="card" style={{ padding: 18 }}>
+              <div className="rv-h" style={{ marginBottom: 6 }}>
+                before you write
+              </div>
+              <div className="t-small" style={{ marginBottom: 10 }}>
+                how a good paragraph is built, the connectors and register to use, and the
+                mistakes the grader flags most.
+              </div>
+              <Link href={guideHref} className="t-mono text-[13px] text-ink-soft hover:text-ink">
+                how to write this <span className="lk-arr" aria-hidden="true">→</span>
+              </Link>
+            </div>
+          )}
 
           {/* Feeds card */}
           <div className="card" style={{ padding: 14, background: 'var(--color-paper-2)' }}>

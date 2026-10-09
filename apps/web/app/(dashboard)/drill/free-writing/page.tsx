@@ -98,6 +98,7 @@ export default function FreeWritingPage() {
           onToggleExam={() => setExamMode((v) => !v)}
           onBegin={() => setStage('composer')}
           historyHref="/drill/free-writing/history"
+          guideHref="/drill/free-writing/guide"
         />
       );
     case 'composer':
