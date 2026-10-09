@@ -19,6 +19,8 @@ import './free-writing.css';
 
 type Stage = 'brief' | 'composer' | 'results';
 
+const GUIDE_HREF = '/drill/free-writing/guide';
+
 export default function FreeWritingPage() {
   const { getToken } = useAuth();
   const fetchFn = useMemo(() => createAuthenticatedFetch(getToken), [getToken]);
@@ -94,11 +96,12 @@ export default function FreeWritingPage() {
       return (
         <FwBrief
           content={content}
+          language={activeLanguage}
           examMode={examMode}
           onToggleExam={() => setExamMode((v) => !v)}
           onBegin={() => setStage('composer')}
           historyHref="/drill/free-writing/history"
-          guideHref="/drill/free-writing/guide"
+          guideHref={GUIDE_HREF}
         />
       );
     case 'composer':
@@ -113,6 +116,7 @@ export default function FreeWritingPage() {
           onGrade={onGrade}
           exerciseId={exercise.id}
           fetchFn={fetchFn}
+          guideHref={GUIDE_HREF}
         />
       );
     case 'results':

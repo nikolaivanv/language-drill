@@ -38,6 +38,21 @@ describe('FwComposer', () => {
     expect(screen.queryByRole('button', { name: /brainstorm/i })).not.toBeInTheDocument();
   });
 
+  it('links to the writing guide in a new tab, so the draft survives', () => {
+    render(<FwComposer content={content} language={Language.ES} value="" onChange={() => {}} examMode={false} submitting={false} onGrade={() => {}} exerciseId="fw-1" fetchFn={fetchFn} guideHref="/drill/free-writing/guide" />);
+    const link = screen.getByRole('link', { name: /how to write this/i });
+    expect(link).toHaveAttribute('href', '/drill/free-writing/guide');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
+  });
+
+  it('shows no guide link without a guide href or in exam mode', () => {
+    const { rerender } = render(<FwComposer content={content} language={Language.ES} value="" onChange={() => {}} examMode={false} submitting={false} onGrade={() => {}} exerciseId="fw-1" fetchFn={fetchFn} />);
+    expect(screen.queryByRole('link', { name: /how to write this/i })).toBeNull();
+    rerender(<FwComposer content={content} language={Language.ES} value="" onChange={() => {}} examMode={true} submitting={false} onGrade={() => {}} exerciseId="fw-1" fetchFn={fetchFn} guideHref="/drill/free-writing/guide" />);
+    expect(screen.queryByRole('link', { name: /how to write this/i })).toBeNull();
+  });
+
   describe('accent keyboard', () => {
     it('shows the Spanish special-character keyboard for ES', () => {
       render(<FwComposer content={content} language={Language.ES} value="" onChange={() => {}} examMode={false} submitting={false} onGrade={() => {}} exerciseId="fw-1" fetchFn={fetchFn} />);

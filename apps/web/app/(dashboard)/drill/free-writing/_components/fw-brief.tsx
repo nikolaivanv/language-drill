@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import type { FreeWritingContent } from '@language-drill/shared';
+import { Language, type FreeWritingContent, type LearningLanguage } from '@language-drill/shared';
 import { FwIcon } from './fw-atoms';
 
 export interface FwBriefProps {
   content: FreeWritingContent;
+  /** The language being written in; picks the forms of address in the register note. */
+  language: LearningLanguage;
   examMode: boolean;
   onToggleExam: () => void;
   onBegin: () => void;
@@ -13,6 +15,35 @@ export interface FwBriefProps {
   historyHref?: string;
   /** Link to the writing guide for this language and level; omitted → no card. */
   guideHref?: string;
+}
+
+// How to address the reader in each register, naming the language's own
+// familiar / polite pronoun where the register calls for one.
+const ADDRESS: Record<LearningLanguage, { familiar: string; polite: string }> = {
+  [Language.ES]: { familiar: 'tú', polite: 'usted' },
+  [Language.DE]: { familiar: 'du', polite: 'Sie' },
+  [Language.TR]: { familiar: 'sen', polite: 'siz' },
+};
+
+function registerNote(register: FreeWritingContent['register'], language: LearningLanguage) {
+  const { familiar, polite } = ADDRESS[language];
+  switch (register) {
+    case 'informal':
+      return (
+        <>
+          write as to a friend — use <em>{familiar}</em>; everyday phrasing is fine.
+        </>
+      );
+    case 'formal':
+      return (
+        <>
+          address someone you don&apos;t know or an institution — use <em>{polite}</em>; avoid
+          colloquialisms.
+        </>
+      );
+    case 'neutral':
+      return <>address a general reader; avoid slang.</>;
+  }
 }
 
 // ── SpecRow: a labelled row in the spec card ─────────────────────────────────
@@ -55,6 +86,7 @@ function SpecRow({
 // Pure presentational — all state lives in the parent (free-writing page).
 export function FwBrief({
   content,
+  language,
   examMode,
   onToggleExam,
   onBegin,
@@ -113,7 +145,7 @@ export function FwBrief({
             <SpecRow icon="write" label="register">
               <span style={{ textTransform: 'capitalize' }}>{content.register}</span>
               <span className="t-small" style={{ marginLeft: 8 }}>
-                — address a general reader; avoid colloquialisms.
+                — {registerNote(content.register, language)}
               </span>
             </SpecRow>
             <SpecRow icon="book" label="length">
@@ -175,7 +207,7 @@ export function FwBrief({
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 14, fontWeight: 600 }}>exam simulation</div>
               <div className="t-small" style={{ fontSize: 12 }}>
-                {minutes}-minute countdown · helpers hidden · mirrors DELE Expresión Escrita timing.
+                {minutes}-minute countdown · helpers hidden · write under exam conditions.
               </div>
             </div>
             <button
@@ -296,7 +328,6 @@ export function FwBrief({
                 'grammar radar',
                 'vocab depth',
                 'pragmatics',
-                'IELTS / DELE readiness',
               ].map((t) => (
                 <span key={t} className="chip" style={{ fontSize: 11 }}>
                   {t}

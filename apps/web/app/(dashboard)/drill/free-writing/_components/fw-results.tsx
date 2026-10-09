@@ -19,7 +19,6 @@ const WHAT_THIS_FEEDS = [
   'grammar radar',
   'vocab depth',
   'pragmatics',
-  'IELTS / DELE readiness',
 ];
 
 export function FwResults({

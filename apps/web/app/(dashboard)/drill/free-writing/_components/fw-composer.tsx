@@ -21,6 +21,8 @@ export interface FwComposerProps {
   onGrade: () => void;
   exerciseId: string;
   fetchFn: AuthenticatedFetch;
+  /** Link to the writing guide; omitted → no link. Hidden in exam mode with the other helpers. */
+  guideHref?: string;
 }
 
 // Mirrors the quick-drill exercises: only ES/DE/TR have a special-character
@@ -35,7 +37,7 @@ function formatTime(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export function FwComposer({ content, language, value, onChange, examMode, submitting, onGrade, exerciseId, fetchFn }: FwComposerProps) {
+export function FwComposer({ content, language, value, onChange, examMode, submitting, onGrade, exerciseId, fetchFn, guideHref }: FwComposerProps) {
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const words = value.trim() ? value.trim().split(/\s+/).length : 0;
   const canGrade = words >= content.minWords && !submitting;
@@ -86,6 +88,17 @@ export function FwComposer({ content, language, value, onChange, examMode, submi
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div className="t-micro">free writing</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* New tab: the draft lives only in page state, so navigating away would lose it. */}
+          {guideHref && !examMode && (
+            <a
+              href={guideHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="t-mono text-[12px] text-ink-soft hover:text-ink"
+            >
+              how to write this <span aria-hidden="true">↗</span>
+            </a>
+          )}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: 'var(--color-ink-soft)' }}>
             <FwIcon kind="clock" size={13} />
             <span className="t-mono" style={{ fontSize: 11 }}>

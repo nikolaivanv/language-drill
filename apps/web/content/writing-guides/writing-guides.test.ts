@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { CefrLevel, Language, parseTheoryTopicJson, type LearningLanguage } from '@language-drill/shared';
+import {
+  CefrLevel,
+  Language,
+  parseTheoryTopicJson,
+  type LearningLanguage,
+  type TheoryInlineJson,
+} from '@language-drill/shared';
 import {
   WRITING_GUIDE_BANDS,
   WRITING_GUIDE_SECTION_IDS,
@@ -26,8 +32,8 @@ describe('writing guides', () => {
           expect(guide.cefr).toBe(WRITING_GUIDE_BAND_LABELS[band]);
         });
 
-        it('has exactly the seven guide sections, in order', () => {
-          expect(guide.sections.map((s) => s.id)).toEqual([...WRITING_GUIDE_SECTION_IDS]);
+        it('has exactly the sections for its band, in order', () => {
+          expect(guide.sections.map((s) => s.id)).toEqual([...WRITING_GUIDE_SECTION_IDS[band]]);
         });
 
         it('includes at least one target-language example in the model and mistakes sections', () => {
@@ -39,6 +45,50 @@ describe('writing guides', () => {
         });
       });
     }
+  }
+});
+
+// B1–B2 prompts include comparison angles, not only opinions: each guide must
+// teach the comparing connectors and model a comparison paragraph that uses one.
+const COMPARING: Record<LearningLanguage, { connectors: string[]; inModel: string }> = {
+  [Language.ES]: { connectors: ['mientras que', 'en cambio', 'al igual que'], inModel: 'mientras que' },
+  [Language.DE]: { connectors: ['während', 'im Gegensatz zu', 'genauso wie'], inModel: 'während' },
+  [Language.TR]: { connectors: ['oysa', '-e göre', 'gibi'], inModel: 'oysa' },
+};
+
+function inlineText(inlines: TheoryInlineJson[]): string {
+  return inlines.map((i) => ('text' in i ? i.text : inlineText(i.children))).join('');
+}
+
+describe('b1-b2 comparison coverage', () => {
+  for (const language of LANGUAGES) {
+    const guide = getWritingGuide(language, 'b1-b2');
+    const section = (id: string) => guide.sections.find((s) => s.id === id)!;
+    const { connectors, inModel } = COMPARING[language];
+
+    it(`${language}: the connectors section teaches the three comparing connectors`, () => {
+      const json = JSON.stringify(section('connectors').body);
+      for (const c of connectors) expect(json.includes(`"text":"${c}"`), c).toBe(true);
+    });
+
+    it(`${language}: the paragraph-shape section models a comparison using "${inModel}"`, () => {
+      const targets = section('paragraph-shape')
+        .body.filter((b) => b.kind === 'example')
+        .map((b) => inlineText(b.target).toLowerCase());
+      expect(targets.some((t) => t.includes(inModel.toLowerCase()))).toBe(true);
+    });
+  }
+});
+
+describe('b1-b2 open-question section', () => {
+  for (const language of LANGUAGES) {
+    it(`${language}: has a sample answer and covers both approaches`, () => {
+      const section = getWritingGuide(language, 'b1-b2').sections.find((s) => s.id === 'open-questions')!;
+      expect(section.body.filter((b) => b.kind === 'example').length).toBeGreaterThanOrEqual(8);
+      const json = JSON.stringify(section.body);
+      expect(json).toContain('strong stance');
+      expect(json).toContain('balanced view');
+    });
   }
 });
 

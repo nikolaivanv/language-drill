@@ -1,7 +1,7 @@
 {
   "id": "tr-b1-b2",
   "title": "Writing a paragraph in Turkish",
-  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison, a personal story or advice — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -150,6 +150,1147 @@
       ]
     },
     {
+      "id": "open-questions",
+      "title": "answering an open question",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Many B1–B2 prompts are open questions with no right answer. Before you write a word, decide "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "how"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " you will answer — then build the whole text around that decision."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Choose an approach."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " There are two. The wording of the prompt usually signals the better fit; when either works, pick the one you can argue best:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "A strong stance"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — argue one side and answer the strongest objection to it. Use it when the prompt asks for your view: \"give your opinion\", \"do you agree…?\", \"should…?\"."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "A balanced view"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — weigh both sides fairly, then say where you land. Use it when the prompt asks you to \"discuss the advantages and disadvantages\" or to \"compare\"."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Either way, commit from the first sentence."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " A balanced answer is not a way to avoid answering: it still ends with a clear judgement."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "The four-paragraph blueprint."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " Both approaches use the same four moves:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Introduction"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — restate the question in your own words, then give your position (stance) or say what you will weigh up (balanced)."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body paragraph 1: your primary point"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — one main reason, backed by an example or a consequence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body paragraph 2: the shift"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — with a stance, raise the strongest counter-argument and answer it; with a balanced view, give the other side fairly."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Conclusion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — answer the question directly. No new arguments."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Fitting it to the word range."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " At "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B2"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (150–200 words), write four short paragraphs: an introduction and a conclusion of about 30–40 words each, and two body paragraphs of about 40–55 words each — the primary point usually runs longest. At "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B1"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (80–120 words), the same four moves fit in 6–8 sentences, one or two per move. Put them in one paragraph or in four very short ones: short paragraphs make the structure visible, and either is fine within 80–120 words."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Phrases for each move."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Introduction"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Günümüzde … sıkça tartışılıyor."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (these days … is often debated), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bence …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " / "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bana göre …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in my opinion …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body 1"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Her şeyden önce …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (first of all …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bunun en önemli nedeni … -mAsIdIr"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (the most important reason for this is that …) — e.g. "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bunun en önemli nedeni havanın kirli olmasıdır."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Örneğin …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (for example …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "The shift (stance)"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "… -DIğI doğru, ancak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (it is true that …, but …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bazı insanlar … -DIğInI düşünüyor, ancak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " or "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bazı insanlar «…» diye düşünüyor, ancak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (some people think that …, but …) — e.g. "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bazı insanlar arabaların gerekli olduğunu düşünüyor, ancak …"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "The shift (balanced)"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Öte yandan …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (on the other hand …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Diğer taraftan …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (on the other hand …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Conclusion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sonuç olarak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in conclusion …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Kısacası …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in short …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Tüm bunları göz önünde bulundurursak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (taking all this into account …)"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "… -DIğI doğru"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " turns the whole fact into a noun."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " The verb takes "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIk"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " plus a possessive ending for its subject ("
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIğI"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " for he/she/it, "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIklArI"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " for they), and the subject takes the genitive: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Arabanın rahat olduğu doğru"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (it is true that the car is comfortable), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "bazı insanların arabaya ihtiyaç duyduğu doğru"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (it is true that some people need a car). With a plural subject the ending is often plural too: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "insanların arabaya ihtiyaç duydukları doğru"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "A sample answer."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " The question: "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Şehir merkezlerinde arabalar yasaklanmalı mı?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (should cars be banned in city centres?). This answer takes a strong stance. It is 164 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Introduction"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Günümüzde"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " şehir merkezlerinde arabaların yasaklanması "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sıkça tartışılıyor"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ],
+          "en": "These days, banning cars in city centres is often debated.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Restates the question in your own words."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Bu tartışma, trafik sorunu arttıkça özellikle büyük şehirlerde daha da önem kazanıyor."
+            }
+          ],
+          "en": "As traffic problems grow, this debate is becoming even more important, especially in big cities.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Says why the question matters."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " böyle bir yasak hem çevre hem de insan sağlığı için gerekli, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " dikkatli bir şekilde uygulanmalı."
+            }
+          ],
+          "en": "In my opinion, such a ban is necessary both for the environment and for people's health, but it should be implemented carefully.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Your position, from the first paragraph."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Body 1 — primary point"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Her şeyden önce"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", arabasız bir şehir merkezi herkes için daha sağlıklı ve daha keyiflidir."
+            }
+          ],
+          "en": "First of all, a car-free city centre is healthier and more pleasant for everyone.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "The primary point."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Hava daha temiz olur, gürültü azalır ve insanlar rahatça yürüyebilir ya da bisiklete binebilir."
+            }
+          ],
+          "en": "The air becomes cleaner, the noise goes down and people can walk or cycle comfortably.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "The reason behind it."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ayrıca"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " insanlar daha çok yürüdükleri "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " daha hareketli bir hayat sürer."
+            }
+          ],
+          "en": "Moreover, people lead a more active life because they walk more.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A further benefit that supports the same point."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Örneğin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " İstanbul'daki İstiklal Caddesi yıllardır trafiğe kapalı ve her gün yüz binlerce insan orada özgürce dolaşıyor."
+            }
+          ],
+          "en": "For example, İstiklal Avenue in Istanbul has been closed to traffic for years, and every day hundreds of thousands of people stroll there freely.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A concrete example."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Body 2 — the shift"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Yaşlıların, engellilerin ve şehir dışında yaşayanların arabaya gerçekten ihtiyaç "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "duyduğu doğru"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " bu sorunun da bir çözümü var."
+            }
+          ],
+          "en": "It is true that older people, disabled people and those who live outside the city really need a car, but this problem has a solution too.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Raises the strongest objection and starts to answer it: "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "… -DIğI doğru, ancak …"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Belediyeler toplu taşımayı geliştirebilir, merkezin dışında otoparklar yapabilir ve bu gruplara özel izinler verebilir."
+            }
+          ],
+          "en": "Municipalities can improve public transport, build car parks outside the centre and give special permits to these groups.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Answers the objection with concrete steps."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Böylece"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " kimse mağdur olmadan şehir merkezi yayalara açılabilir."
+            }
+          ],
+          "en": "In this way, the city centre can be opened to pedestrians without anyone losing out."
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Conclusion"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sonuç olarak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", şehir merkezlerinde arabaların yasaklanması hem bugün için hem de gelecek nesiller için doğru bir karardır."
+            }
+          ],
+          "en": "In conclusion, banning cars in city centres is the right decision, both for today and for future generations.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Answers the question directly."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Şehirler arabalar için değil, insanlar için vardır."
+            }
+          ],
+          "en": "Cities exist for people, not for cars.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Sums up the primary point in one line."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " bu değişiklik adım adım ve gerçek alternatiflerle yapılmalı."
+            }
+          ],
+          "en": "But the change must be made step by step and with real alternatives.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Restates the condition from the introduction — no new argument."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "paragraph-shape",
       "title": "the shape of a paragraph",
       "body": [
@@ -198,6 +1339,109 @@
             {
               "kind": "text",
               "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The same three-part shape works for every kind of prompt. What changes is the job of the opening sentence:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Opinion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states your position."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparison"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — names the two things and the point (or points) you will compare them on."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Personal story or description"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — sets the scene: when, where and who."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Advice"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states the problem and your main recommendation."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The supporting points and the closing sentence follow the same pattern: in a comparison, each point compares the two options on one feature, and the closing says which suits whom; in a story, the points are what happened, in order, and the closing says how it ended or what you learned; in advice, each point is a reason or a concrete step."
             }
           ]
         },
@@ -527,6 +1771,316 @@
               "text": "). See the next section."
             }
           ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph for a comparison prompt, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Şehirde yaşamak mı daha iyi, köyde yaşamak mı?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is it better to live in a city or in a village?), one sentence at a time. It is 104 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Şehirde yaşamakla köyde yaşamak arasında özellikle iş imkânları, hayat pahalılığı ve sosyal hayat açısından önemli farklar vardır."
+            }
+          ],
+          "en": "There are important differences between living in a city and living in a village, especially in terms of job opportunities, the cost of living and social life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: names the two options and the three points of comparison ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "açısından"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = in terms of)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Şehirde iş bulmak genellikle daha kolaydır ve maaşlar daha yüksektir; "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "oysa"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " köyde iş imkânları oldukça sınırlıdır."
+            }
+          ],
+          "en": "Finding a job is usually easier in the city and salaries are higher, whereas in the village job opportunities are quite limited.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 1 (work). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "oysa"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " opens the second half and sets it against the first."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " şehirde kiralar köye "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " çok daha yüksektir, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bu yüzden"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " maaşın büyük bir kısmı kiraya gider."
+            }
+          ],
+          "en": "However, rents in the city are much higher than in the village, so a large part of your salary goes on rent.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 2 (cost of living). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "köye göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = compared with the village: the dative "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-e"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " plus "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "göre"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Günümüzde şehirlerde olduğu "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "gibi"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " birçok köyde "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "de"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " hızlı internet vardır; bu sayede köyde yaşayanlar da büyük şirketler için uzaktan çalışabiliyor."
+            }
+          ],
+          "en": "Today, as in the cities, many villages have fast internet too; thanks to this, people who live in a village can also work remotely for big companies.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Back to work, this time a similarity, not only a difference ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "şehirlerde olduğu gibi"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = as is the case in the cities)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bununla birlikte"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", köyde sinema ve tiyatro gibi kültürel etkinlikler oldukça azdır; "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bu nedenle"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " gençler çoğu zaman sıkılır."
+            }
+          ],
+          "en": "Nevertheless, cultural activities such as cinema and theatre are quite rare in the village; for this reason, young people often get bored.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 3 (social life) turns the balance back towards the city."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Kısacası"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", bence kariyer yapmak isteyenler için şehir, sakin ve ucuz bir hayat arayanlar için ise köy daha uygundur."
+            }
+          ],
+          "en": "In short, in my view the city is more suitable for those who want to build a career, and the village for those looking for a quiet, inexpensive life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day."
+            }
+          ]
         }
       ]
     },
@@ -765,6 +2319,84 @@
                   }
                 ],
                 "en": "Although the rent is very high, I prefer living in the city centre."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparing"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "oysa"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-e göre"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gibi"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Şehirde hayat çok hızlıdır; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "oysa"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " köyde insanlar daha sakin yaşar."
+                  }
+                ],
+                "en": "Life in the city is very fast, whereas in the village people live more calmly."
               }
             ],
             [
@@ -1338,6 +2970,319 @@
                 {
                   "kind": "text",
                   "text": " — even if (a possibility)."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-e göre"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (compared with) also works in two pieces."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " The noun takes the dative ending (-e or -a by vowel harmony, with a -y- after a vowel), and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " follows: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "köye göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "kasabaya göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "İstanbul'a göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — note that "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehir"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " loses a vowel ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehre göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") and a final p/ç usually softens ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "kitaba göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "ağaca göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). With a comparative ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "daha"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " …) it means compared with: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Şehir köye göre daha pahalıdır."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " With a person or a source it usually means according to: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "bana göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (in my opinion), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "uzmanlara göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (according to experts). "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (like, as) follows a noun with no ending — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehir gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — but the personal pronouns take the genitive: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "benim gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "senin gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "onun gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (but "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "onlar gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). After a verb it uses the "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIğI"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " form: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehirlerde olduğu gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (as in the cities). "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "oysa"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (or "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "oysaki"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") opens the second half of a contrast, after a semicolon or a comma, or at the start of a new sentence; it often means \"whereas\" or \"but in fact\"."
                 }
               ]
             }
@@ -2077,7 +4022,20 @@
                   },
                   {
                     "kind": "text",
-                    "text": " ideas."
+                    "text": " ideas — and, for a comparison prompt, "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that compares"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
                   }
                 ]
               }

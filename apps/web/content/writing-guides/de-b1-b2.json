@@ -1,7 +1,7 @@
 {
   "id": "de-b1-b2",
   "title": "Writing a paragraph in German",
-  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison, a personal story or advice — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -150,6 +150,1279 @@
       ]
     },
     {
+      "id": "open-questions",
+      "title": "answering an open question",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Many B1–B2 prompts are open questions with no right answer. Before you write a word, decide "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "how"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " you will answer — then build the whole text around that decision."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Choose an approach."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " There are two. The wording of the prompt usually signals the better fit; when either works, pick the one you can argue best:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "A strong stance"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — argue one side and answer the strongest objection to it. Use it when the prompt asks for your view: \"give your opinion\", \"do you agree…?\", \"should…?\"."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "A balanced view"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — weigh both sides fairly, then say where you land. Use it when the prompt asks you to \"discuss the advantages and disadvantages\" or to \"compare\"."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Either way, commit from the first sentence."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " A balanced answer is not a way to avoid answering: it still ends with a clear judgement."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "The four-paragraph blueprint."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " Both approaches use the same four moves:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Introduction"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — restate the question in your own words, then give your position (stance) or say what you will weigh up (balanced)."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body paragraph 1: your primary point"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — one main reason, backed by an example or a consequence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body paragraph 2: the shift"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — with a stance, raise the strongest counter-argument and answer it; with a balanced view, give the other side fairly."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Conclusion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — answer the question directly. No new arguments."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "default",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Fitting it to the word range."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " At "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B2"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (150–200 words), write four short paragraphs: an introduction and a conclusion of about 30–40 words each, and two body paragraphs of about 40–55 words each — the primary point usually runs longest. At "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B1"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (80–120 words), the same four moves fit in 6–8 sentences, one or two per move. Put them in one paragraph or in four very short ones: short paragraphs make the structure visible, and either is fine within 80–120 words."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Phrases for each move."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Introduction"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Heute wird oft diskutiert, ob …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (it is often debated today whether …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Meiner Meinung nach …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in my opinion …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "In diesem Text vergleiche ich …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in this text I compare …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Body 1"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Der wichtigste Grund ist, dass …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (the most important reason is that …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Erstens …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (firstly …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Beispiel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (for example)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "The shift (stance)"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Zwar …, aber …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (admittedly …, but …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Kritiker sagen, dass … Das stimmt teilweise, aber …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (critics say that … That is partly true, but …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "The shift (balanced)"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Auf der anderen Seite …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (on the other hand …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Andererseits …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (on the other hand …)"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Conclusion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Abschließend lässt sich sagen, dass …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in conclusion, …), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Alles in allem …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (all in all …)"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Word order in these phrases."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "ob"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "dass"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (like "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "weil"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "wenn"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " in the sample) send the verb to the end: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, ob Autos verboten werden sollten"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Meiner Meinung nach"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Erstens"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Außerdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Andererseits"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Auf der anderen Seite"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Deshalb"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Abschließend"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Alles in allem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " fill position 1, so the verb comes straight after them: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Meiner Meinung nach ist das sinnvoll"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — not *Meiner Meinung nach das ist sinnvoll*."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zwar"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " can stand in position 1, with the verb next — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Zwar brauchen manche Menschen das Auto, aber …"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — or after the verb: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Manche Menschen brauchen zwar das Auto, aber …"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". After "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "aber"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " the clause keeps normal word order: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, aber es gibt Lösungen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "A sample answer."
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " The question: "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Sollten Städte Autos aus der Innenstadt verbannen?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (should cities ban cars from the city centre?). This answer takes a strong stance. It is 169 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Introduction"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Immer mehr Städte diskutieren, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ob"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " Autos in der Innenstadt verboten werden sollten."
+            }
+          ],
+          "en": "More and more cities are debating whether cars should be banned from the city centre.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Restates the question in your own words. "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ob"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sends "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sollten"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Die Frage ist nicht neu, aber sie wird immer dringender, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " der Verkehr ständig zunimmt."
+            }
+          ],
+          "en": "The question is not new, but it is becoming more and more urgent, because traffic keeps increasing.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Says why the question matters."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Meiner Meinung nach"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ist ein solches Verbot sinnvoll, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "wenn"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " man es gut plant."
+            }
+          ],
+          "en": "In my opinion, such a ban makes sense if it is well planned.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Your position, from the first paragraph."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Body 1 — primary point"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Der wichtigste Grund ist die Lebensqualität."
+            }
+          ],
+          "en": "The most important reason is quality of life.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "The primary point."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ohne Autos ist die Luft sauberer, es ist leiser, und Kinder können sicher draußen spielen."
+            }
+          ],
+          "en": "Without cars the air is cleaner, it is quieter, and children can play outside safely.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "The reason behind it."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Außerdem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " bewegen sich die Menschen mehr, weil sie zu Fuß gehen oder mit dem Rad fahren."
+            }
+          ],
+          "en": "Moreover, people get more exercise because they walk or cycle.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A further benefit that supports the same point."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "In Kopenhagen "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zum Beispiel"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " gibt es seit Jahrzehnten eine Fußgängerzone, in der man ruhig und sicher bummeln kann."
+            }
+          ],
+          "en": "In Copenhagen, for example, there has been a pedestrian zone for decades where you can stroll in peace and safety.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A concrete example."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Body 2 — the shift"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Zwar"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " brauchen manche Menschen das Auto, etwa Handwerker oder ältere Leute, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " auch für sie gibt es Lösungen."
+            }
+          ],
+          "en": "Admittedly, some people need a car, such as tradespeople or older people, but there are solutions for them too.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Raises the strongest objection and starts to answer it. "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Zwar"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " takes position 1, so "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "brauchen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " comes next."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Die Stadt kann den Nahverkehr ausbauen, Parkhäuser am Stadtrand bauen und Sondergenehmigungen für alle ausstellen, die wirklich auf ein Auto angewiesen sind."
+            }
+          ],
+          "en": "The city can expand local public transport, build multi-storey car parks on the edge of town and issue special permits to everyone who really depends on a car.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Answers the objection with concrete steps."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Conclusion"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Abschließend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " lässt sich sagen, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "dass"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " autofreie Innenstädte deutlich mehr Vorteile als Nachteile haben."
+            }
+          ],
+          "en": "In conclusion, car-free city centres have far more advantages than disadvantages.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Answers the question directly."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Eine Stadt gehört schließlich den Menschen, nicht den Autos."
+            }
+          ],
+          "en": "After all, a city belongs to people, not to cars.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Sums up the primary point in one line."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Deshalb"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sollten Städte diesen Schritt wagen, allerdings nicht von heute auf morgen."
+            }
+          ],
+          "en": "That is why cities should take this step, though not overnight.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Restates the condition from the introduction — no new argument."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "paragraph-shape",
       "title": "the shape of a paragraph",
       "body": [
@@ -198,6 +1471,109 @@
             {
               "kind": "text",
               "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The same three-part shape works for every kind of prompt. What changes is the job of the opening sentence:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Opinion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states your position."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparison"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — names the two things and the point (or points) you will compare them on."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Personal story or description"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — sets the scene: when, where and who."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Advice"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — states the problem and your main recommendation."
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The supporting points and the closing sentence follow the same pattern: in a comparison, each point compares the two options on one feature, and the closing says which suits whom; in a story, the points are what happened, in order, and the closing says how it ended or what you learned; in advice, each point is a reason or a concrete step."
             }
           ]
         },
@@ -505,6 +1881,299 @@
               "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. They also drive German word order — see the next section."
             }
           ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph for a comparison prompt, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Ist ein Online-Sprachkurs besser als ein Kurs vor Ort?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is an online language course better than an in-person course?), one sentence at a time. It is 117 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ein Online-Sprachkurs und ein Kurs vor Ort unterscheiden sich vor allem in drei Punkten: Flexibilität, Kosten und Kontakt zu anderen Lernenden."
+            }
+          ],
+          "en": "An online language course and an in-person course differ above all in three respects: flexibility, cost and contact with other learners.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: names the two options and the three points of comparison."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Online kann man lernen, wann und wo man will, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ein Kurs vor Ort zu festen Zeiten stattfindet."
+            }
+          ],
+          "en": "Online you can study whenever and wherever you like, whereas an in-person course takes place at fixed times.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 1 (flexibility). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sends "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "stattfindet"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Außerdem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sind Online-Kurse oft billiger, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " die Sprachschule keine Räume mieten muss."
+            }
+          ],
+          "en": "Moreover, online courses are often cheaper because the language school does not have to rent rooms.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 2 (cost), with a reason."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Im Gegensatz zum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " Online-Unterricht bietet ein Kurs vor Ort echten Kontakt: Man spricht in der Pause mit anderen Teilnehmern und übt dabei ganz natürlich."
+            }
+          ],
+          "en": "Unlike online lessons, an in-person course offers real contact: you talk to other participants during the break and practise without even noticing.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Point of comparison 3 (contact). "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " = "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zu dem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (dative); the whole phrase fills position 1, so the verb "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "bietet"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " comes next."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Genauso wie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " im Kursraum kann man zwar auch online Fragen stellen, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " spontane Gespräche sind am Bildschirm viel seltener."
+            }
+          ],
+          "en": "Just as in the classroom, you can ask questions online, but spontaneous conversations are much rarer on screen.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Back to contact, this time a similarity, with a limit ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zwar … aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Insgesamt"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ist ein Online-Kurs ideal für Menschen mit wenig Zeit, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "während"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ein Kurs vor Ort besser für alle ist, die viel sprechen wollen."
+            }
+          ],
+          "en": "Overall, an online course is ideal for people with little time, whereas an in-person course is better for anyone who wants to speak a lot.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day."
+            }
+          ]
         }
       ]
     },
@@ -726,6 +2395,80 @@
                   }
                 ],
                 "en": "Although the rent is high, I like living in the city."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Comparing"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "während"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "im Gegensatz zu"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "genauso wie"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Während"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " in der Stadt immer viel los ist, ist es auf dem Land oft sehr ruhig."
+                  }
+                ],
+                "en": "While there is always a lot going on in the city, it is often very quiet in the countryside."
               }
             ],
             [
@@ -1351,6 +3094,193 @@
                       "text": "Obwohl die Miete hoch ist, wohne ich gern in der Stadt."
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Comparing connectors have their own rules."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "während"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " as a conjunction (whereas, while) sends the verb to the end: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, während ein Kurs vor Ort zu festen Zeiten stattfindet"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". As a preposition it means during and takes the genitive: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "während des Kurses"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zu"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " always takes the dative — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zum Online-Kurs"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zum"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " = "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zu dem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "im Gegensatz zur Stadt"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zur"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " = "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zu der"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") — and at the start of a sentence the whole phrase is the first element, so the verb comes next: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Im Gegensatz zur Stadt ist das Dorf ruhig."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "genauso … wie"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " compares two equal things. With an adjective, the adjective goes between the two words: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Ein Online-Kurs ist genauso effektiv wie ein Kurs vor Ort."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (Not *genauso wie effektiv*.)"
                 }
               ]
             }
@@ -2042,7 +3972,20 @@
                   },
                   {
                     "kind": "text",
-                    "text": " ideas."
+                    "text": " ideas — and, for a comparison prompt, "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that compares"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
                   }
                 ]
               }
