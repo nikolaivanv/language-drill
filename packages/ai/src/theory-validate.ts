@@ -31,7 +31,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { GENERATION_MODEL } from "./generate.js";
 import type {
   TheoryDraft,
@@ -317,7 +317,7 @@ export async function validateTheoryDraft(
     effort: options?.effort,
   });
 
-  const response = await client.messages.create({
+  const response = await client.messages.create(applyShaped({
     model: effectiveModel,
     max_tokens: THEORY_VALIDATION_MAX_TOKENS,
     system: [
@@ -326,15 +326,9 @@ export async function validateTheoryDraft(
         text: systemText,
         cache_control: { type: "ephemeral" as const },
       },
-      ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
     ],
     messages: [{ role: "user" as const, content: userText }],
-    tools: shaped.tools,
-    tool_choice: shaped.tool_choice,
-    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-    ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
-    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-  } as Anthropic.MessageCreateParamsNonStreaming);
+  }, shaped));
 
   const toolInput = extractToolUse(response, THEORY_VALIDATION_TOOL_NAME, {
     label: "Validator",

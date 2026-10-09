@@ -963,6 +963,11 @@ export async function runGenEval(opts: {
 // Diff layer (pure) — roll per-cell arm results into a decision-grade summary.
 // ---------------------------------------------------------------------------
 
+/** An arm run's cost: its own per-model `costUsd`, else the Sonnet-4.6 estimate. */
+function armCostUsd(r: ArmResult): number {
+  return r.costUsd ?? estimateCostUsd(r.usage);
+}
+
 /**
  * Aggregate a list of one arm's per-cell results into `ArmStats`. Pass all
  * cells' baseline (or candidate) results for the run-level stats, or a
@@ -979,11 +984,6 @@ export async function runGenEval(opts: {
  * Exported (not just used internally by `computeGenDiff`) so tests can assert
  * the fold directly against hand-built `ArmResult`s.
  */
-/** An arm run's cost: its own per-model `costUsd`, else the Sonnet-4.6 estimate. */
-function armCostUsd(r: ArmResult): number {
-  return r.costUsd ?? estimateCostUsd(r.usage);
-}
-
 export function computeArmStats(results: ArmResult[]): ArmStats {
   let totalDrafts = 0;
   let autoApproved = 0;

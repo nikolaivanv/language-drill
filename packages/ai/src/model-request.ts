@@ -108,7 +108,7 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
   let thinkingLabel = "none";
 
   if (intent.thinking === "adaptive") {
-    thinking = { type: "adaptive" } as unknown as Anthropic.ThinkingConfigParam;
+    thinking = { type: "adaptive" };
     thinkingLabel = "adaptive";
   } else {
     switch (caps.thinkingOff) {
@@ -118,7 +118,7 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
         if (effort === "xhigh" || effort === "max") {
           throw new Error(`${model}: thinking disabled is invalid with effort ${effort}`);
         }
-        thinking = { type: "disabled" } as Anthropic.ThinkingConfigParam;
+        thinking = { type: "disabled" };
         thinkingLabel = "disabled";
         break;
       case "between_tools":
@@ -147,7 +147,7 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
             ...intent.tool,
             input_schema: strictToolSchema(intent.tool.input_schema) as Anthropic.Tool["input_schema"],
             strict: true,
-          } as unknown as Anthropic.Tool,
+          },
         ],
         tool_choice: { type: "auto" },
         systemSuffix: `Respond only by calling the ${intent.tool.name} tool.`,
@@ -158,6 +158,37 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
   if (intent.temperature !== undefined && caps.samplingParams) shaped.temperature = intent.temperature;
   shaped.mode = `${caps.family}: tool_choice=${caps.forcedToolChoice ? "forced" : "auto+strict"}, thinking=${thinkingLabel}, effort=${effort ?? "default"}`;
   return shaped;
+}
+
+/**
+ * Assemble the final request body from a call site's base fields plus the
+ * shaped fields. Appends the uncached suffix block after `base.system` when
+ * set. The single cast lives here: the SDK does not type `between_tools`
+ * thinking. `signal` is a request option (second arg of `create`), not a field.
+ */
+export function applyShaped(
+  base: {
+    model: string;
+    max_tokens: number;
+    system: Anthropic.TextBlockParam[];
+    messages: Anthropic.MessageParam[];
+  },
+  shaped: ShapedToolRequest,
+): Anthropic.MessageCreateParamsNonStreaming {
+  return {
+    model: base.model,
+    max_tokens: base.max_tokens,
+    system: [
+      ...base.system,
+      ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
+    ],
+    messages: base.messages,
+    tools: shaped.tools,
+    tool_choice: shaped.tool_choice,
+    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
+    ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
+    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
+  } as Anthropic.MessageCreateParamsNonStreaming;
 }
 
 export class NoToolCallError extends Error {

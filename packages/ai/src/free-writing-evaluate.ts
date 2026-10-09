@@ -24,7 +24,7 @@ import {
 } from "./free-writing-prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 import type { AttributionKey } from "./prompts.js";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 
 export const FREE_WRITING_EVAL_TOOL_NAME = "submit_free_writing_evaluation";
 
@@ -337,7 +337,7 @@ export async function evaluateFreeWriting(
     effort: input.effortOverride,
   });
 
-  const response = await client.messages.create({
+  const response = await client.messages.create(applyShaped({
     model: effectiveModel,
     max_tokens: MAX_TOKENS,
     system: [
@@ -346,19 +346,9 @@ export async function evaluateFreeWriting(
         text: systemPromptText,
         cache_control: { type: "ephemeral" as const },
       },
-      ...(shaped.systemSuffix
-        ? [{ type: "text" as const, text: shaped.systemSuffix }]
-        : []),
     ],
     messages: [{ role: "user" as const, content: userPrompt }],
-    tools: shaped.tools,
-    tool_choice: shaped.tool_choice,
-    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-    ...(shaped.temperature !== undefined
-      ? { temperature: shaped.temperature }
-      : {}),
-    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-  } as Anthropic.MessageCreateParamsNonStreaming);
+  }, shaped));
 
   const toolInput = extractToolUse(response, FREE_WRITING_EVAL_TOOL_NAME, {
     refusalMessage: "Claude refused to evaluate this free-writing submission.",

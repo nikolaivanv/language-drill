@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { capabilityFor, shapeToolRequest } from "../src/index.js";
-import { VERIFY_MODELS, VERIFY_TOOL } from "./verify-model-requests";
+import { SURFACE_MODELS, VERIFY_MODELS, VERIFY_SURFACES, VERIFY_TOOL } from "./verify-model-requests";
 
 describe("verify-model-requests", () => {
   it("covers every family in use or under evaluation", () => {
@@ -16,5 +16,31 @@ describe("verify-model-requests", () => {
 
   it("every model shapes without throwing", () => {
     for (const m of VERIFY_MODELS) expect(() => shapeToolRequest(m, { tool: VERIFY_TOOL, thinking: "off", temperature: 0 })).not.toThrow();
+  });
+
+  it("--surfaces covers all 8 migrated call sites", () => {
+    const names = VERIFY_SURFACES.map((s) => s.surface);
+    for (const prefix of [
+      "evaluation",
+      "validation-",
+      "generation-",
+      "free-writing-evaluation",
+      "free-writing-dedup",
+      "theory-generation",
+      "theory-validation",
+      "qa-crafter",
+    ]) {
+      expect(names.some((n) => n === prefix || n.startsWith(prefix))).toBe(true);
+    }
+  });
+
+  it("every surface tool shapes without throwing for both auto-mode families", () => {
+    for (const m of SURFACE_MODELS) {
+      for (const { tool } of VERIFY_SURFACES) {
+        const shaped = shapeToolRequest(m, { tool, thinking: "off", temperature: 0 });
+        expect(shaped.tool_choice).toEqual({ type: "auto" });
+        expect(shaped.tools[0]).toMatchObject({ strict: true });
+      }
+    }
   });
 });

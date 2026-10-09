@@ -8,7 +8,7 @@ import {
   buildFreeWritingDedupUserPrompt,
   type FreeWritingDedupInput,
 } from "./free-writing-dedup-prompts.js";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { getPromptOrFallback } from "./prompts-registry.js";
 
 const MAX_TOKENS = 400;
@@ -88,20 +88,14 @@ export async function judgeFreeWritingDuplicate(
     temperature: 0,
     effort: options.effort,
   });
-  const request = {
+  const request = applyShaped({
     model: effectiveModel,
     max_tokens: MAX_TOKENS,
     system: [
       { type: "text" as const, text: resolved.text, cache_control: { type: "ephemeral" as const } },
-      ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
     ],
     messages: [{ role: "user" as const, content: buildFreeWritingDedupUserPrompt(input) }],
-    tools: shaped.tools,
-    tool_choice: shaped.tool_choice,
-    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-    ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
-    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-  } as Anthropic.MessageCreateParamsNonStreaming;
+  }, shaped);
   // One retry on a malformed verdict: the 2026-10-07 eval saw ~1% of calls omit
   // `duplicateOf` despite the forced tool. A second failure throws, which the
   // insert path treats as "unavailable" (inserted flagged, never approved).

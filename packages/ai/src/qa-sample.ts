@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { ExerciseType } from "@language-drill/shared";
 import type { ExerciseContent } from "@language-drill/shared";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 
 /**
@@ -166,7 +166,7 @@ ${params.learnerView}
 Craft the three probe answers.`;
 }
 
-const QA_CRAFTER_TOOL: Anthropic.Tool = {
+export const QA_CRAFTER_TOOL: Anthropic.Tool = {
   name: QA_CRAFTER_TOOL_NAME,
   description: "Submit the three probe answers plus confidence and ambiguity assessment.",
   input_schema: {
@@ -247,20 +247,14 @@ export async function craftProbeAnswers(
     thinking: "off",
     effort: params.effort,
   });
-  const request = {
+  const request = applyShaped({
     model: effectiveModel,
     max_tokens: QA_CRAFTER_MAX_TOKENS,
     system: [
       { type: "text" as const, text: QA_SAMPLE_SYSTEM_PROMPT_TEMPLATE, cache_control: { type: "ephemeral" as const } },
-      ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
     ],
     messages: [{ role: "user" as const, content: buildQaCrafterUserPrompt(params) }],
-    tools: shaped.tools,
-    tool_choice: shaped.tool_choice,
-    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-    ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
-    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-  } as Anthropic.MessageCreateParamsNonStreaming;
+  }, shaped);
   const response = await client.messages.create(request, { signal });
   const usage = response.usage ? readUsage(response) : ZERO_USAGE;
   const toolInput = extractToolUse(response, QA_CRAFTER_TOOL_NAME, { label: "qa-craft" });

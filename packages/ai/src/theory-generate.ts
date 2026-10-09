@@ -33,7 +33,7 @@ import {
   parseTheoryTopicJson,
 } from "@language-drill/shared";
 
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { addUsage, ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   buildTheorySystemPrompt,
@@ -446,7 +446,7 @@ export async function generateTheoryTopic(
   for (let attempt = 0; ; attempt++) {
     try {
       // Per-model request shaping lives in model-request.ts.
-      const response = await client.messages.create({
+      const response = await client.messages.create(applyShaped({
         model: effectiveModel,
         max_tokens: THEORY_GENERATION_MAX_TOKENS,
         system: [
@@ -455,15 +455,9 @@ export async function generateTheoryTopic(
             text: systemText,
             cache_control: { type: "ephemeral" as const },
           },
-          ...(shaped.systemSuffix ? [{ type: "text" as const, text: shaped.systemSuffix }] : []),
         ],
         messages: [{ role: "user" as const, content: userText }],
-        tools: shaped.tools,
-        tool_choice: shaped.tool_choice,
-        ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-        ...(shaped.temperature !== undefined ? { temperature: shaped.temperature } : {}),
-        ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-      } as Anthropic.MessageCreateParamsNonStreaming);
+      }, shaped));
 
       // Capture usage BEFORE any parse/validation throw (Req 2.1) so a
       // malformed draft still propagates the tokens the call actually burned.

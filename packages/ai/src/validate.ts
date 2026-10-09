@@ -23,7 +23,7 @@ import {
 } from "@language-drill/shared";
 
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import {
   TOOL_NAME_BY_TYPE,
   type ExerciseDraft,
@@ -646,7 +646,7 @@ export async function validateDraft(
   });
 
   const response = await client.messages.create(
-    {
+    applyShaped({
       model: effectiveModel,
       max_tokens: VALIDATION_MAX_TOKENS,
       system: [
@@ -655,19 +655,9 @@ export async function validateDraft(
           text: systemText,
           cache_control: { type: "ephemeral" as const },
         },
-        ...(shaped.systemSuffix
-          ? [{ type: "text" as const, text: shaped.systemSuffix }]
-          : []),
       ],
       messages: [{ role: "user" as const, content: userText }],
-      tools: shaped.tools,
-      tool_choice: shaped.tool_choice,
-      ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-      ...(shaped.temperature !== undefined
-        ? { temperature: shaped.temperature }
-        : {}),
-      ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-    } as Anthropic.MessageCreateParamsNonStreaming,
+    }, shaped),
     { signal },
   );
 

@@ -4,6 +4,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { ContentRejectedError } from "./content-rejected-error";
 import {
   NoToolCallError,
+  applyShaped,
   capabilityFor,
   extractToolUse,
   shapeToolRequest,
@@ -179,5 +180,31 @@ describe("extractToolUse", () => {
     expect(() =>
       extractToolUse({ stop_reason: "tool_use", content: [{ type: "tool_use", name: "other", input: {} }] }, "submit_thing"),
     ).toThrow(/Unexpected tool name: expected "submit_thing", got "other"/);
+  });
+});
+
+describe("applyShaped", () => {
+  const base = {
+    model: "m",
+    max_tokens: 10,
+    system: [{ type: "text" as const, text: "sys", cache_control: { type: "ephemeral" as const } }],
+    messages: [{ role: "user" as const, content: "hi" }],
+  };
+
+  it("appends the uncached suffix after the cached block only when set", () => {
+    const auto = applyShaped(base, shapeToolRequest("claude-sonnet-5-5", { tool: TOOL, thinking: "off" }));
+    expect(auto.system).toEqual([base.system[0], { type: "text", text: "Respond only by calling the submit_thing tool." }]);
+    const forced = applyShaped(base, shapeToolRequest("claude-sonnet-4-6", { tool: TOOL, thinking: "off" }));
+    expect(forced.system).toEqual(base.system);
+  });
+
+  it("omits optional fields when absent and spreads them when present", () => {
+    const bare = applyShaped(base, shapeToolRequest("claude-haiku-4-5-20251001", { tool: TOOL, thinking: "off" }));
+    expect(Object.keys(bare).sort()).toEqual(["max_tokens", "messages", "model", "system", "tool_choice", "tools"]);
+    const full = applyShaped(base, shapeToolRequest("claude-sonnet-4-6", { tool: TOOL, thinking: "adaptive", temperature: 0, effort: "low" }));
+    expect(full.thinking).toEqual({ type: "adaptive" });
+    expect(full.temperature).toBe(0);
+    expect(full.output_config).toEqual({ effort: "low" });
+    expect(full.tool_choice).toEqual({ type: "tool", name: "submit_thing" });
   });
 });

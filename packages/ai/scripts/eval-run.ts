@@ -39,6 +39,7 @@ import {
   createClaudeClient,
   evaluateAnswer,
   buildEvaluationTool,
+  EVALUATION_MODEL,
   estimateCostUsdFor,
   getLangfuse,
   shapeToolRequest,
@@ -329,9 +330,6 @@ export type EvalRunItemExecutor = (
   params: EvalRunItemExecutorParams,
 ) => Promise<EvalRunItemExecutorOutput>;
 
-/** The evaluator's production model (evaluate.ts's `MODEL`, which is unexported). */
-const EVAL_DEFAULT_MODEL = "claude-sonnet-5";
-
 /**
  * Real per-item executor: opens a `withLlmTrace` scope, calls
  * `evaluateAnswer` with the candidate prompt as `systemPromptOverride`,
@@ -393,7 +391,7 @@ export function makeRealItemExecutor(
     const latencyMs = performance.now() - start;
     const candidateCostUsd =
       usageSink.current !== undefined
-        ? estimateCostUsdFor(model ?? EVAL_DEFAULT_MODEL, usageSink.current)
+        ? estimateCostUsdFor(model ?? EVALUATION_MODEL, usageSink.current)
         : undefined;
     return {
       actual,
@@ -1145,7 +1143,7 @@ async function main(): Promise<void> {
   }
 
   const requestMode = requestModeFor(
-    args.model ?? EVAL_DEFAULT_MODEL,
+    args.model ?? EVALUATION_MODEL,
     buildEvaluationTool(),
     args.thinking === "adaptive" ? "adaptive" : "off",
     args.effort ?? (args.thinking === "adaptive" ? "low" : undefined),

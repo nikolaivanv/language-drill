@@ -23,7 +23,7 @@ import {
   type AttributionKey,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 
 // ---------------------------------------------------------------------------
 // Tool schema — mirrors EvaluationResult type
@@ -311,6 +311,8 @@ export function parseEvaluationResult(
 // bumped for the model part of a change — Langfuse records the model natively
 // on each generation.
 const MODEL = "claude-sonnet-5" as const;
+/** The evaluator's production model; eval scripts price against this so costs never drift. */
+export const EVALUATION_MODEL = MODEL;
 
 /**
  * Max tokens for evaluation responses. Sized for the required `reasoning`
@@ -411,7 +413,7 @@ export async function evaluateAnswer(
     effort: effortOverride ?? (thinkingOverride === "adaptive" ? "low" : undefined),
   });
 
-  const response = await client.messages.create({
+  const response = await client.messages.create(applyShaped({
     model: effectiveModel,
     max_tokens:
       thinkingOverride === "adaptive" ? ADAPTIVE_MAX_TOKENS : MAX_TOKENS,
@@ -421,9 +423,6 @@ export async function evaluateAnswer(
         text: systemPromptText,
         cache_control: { type: "ephemeral" as const },
       },
-      ...(shaped.systemSuffix
-        ? [{ type: "text" as const, text: shaped.systemSuffix }]
-        : []),
     ],
     messages: [
       {
@@ -431,14 +430,7 @@ export async function evaluateAnswer(
         content: userPrompt,
       },
     ],
-    tools: shaped.tools,
-    tool_choice: shaped.tool_choice,
-    ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-    ...(shaped.temperature !== undefined
-      ? { temperature: shaped.temperature }
-      : {}),
-    ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-  } as Anthropic.MessageCreateParamsNonStreaming);
+  }, shaped));
 
   // A safety refusal throws ContentRejectedError; a missing/wrong tool call
   // throws NoToolCallError.

@@ -33,7 +33,7 @@ import {
   type VocabRecallContent,
 } from "@language-drill/shared";
 
-import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   buildGenerationSystemPrompt,
@@ -671,11 +671,11 @@ export type GenerationSpec = {
    * `pnpm eval:gen` drive a candidate generation prompt without mutating the
    * live Langfuse prompt or relying on the module-scope prompt cache.
    */
+  systemPromptOverride?: string;
   /** Eval-only: generator model override (default GENERATION_MODEL). Production never sets it. */
   modelOverride?: string;
   /** Eval-only: effort for the generator (families with effort only). */
   effort?: Effort;
-  systemPromptOverride?: string;
   /**
    * Surfaces already persisted in this cell, fed into the generator's system
    * prompt so Claude stops proposing what `exercises_dedup_idx` would reject
@@ -1550,7 +1550,7 @@ export async function generateOneDraft(
     effort: spec.effort,
   });
   const response = await client.messages.create(
-    {
+    applyShaped({
       model,
       max_tokens: GENERATION_MAX_TOKENS,
       system: [
@@ -1559,19 +1559,9 @@ export async function generateOneDraft(
           text: systemText,
           cache_control: { type: "ephemeral" as const },
         },
-        ...(shaped.systemSuffix
-          ? [{ type: "text" as const, text: shaped.systemSuffix }]
-          : []),
       ],
       messages: [{ role: "user" as const, content: userText }],
-      tools: shaped.tools,
-      tool_choice: shaped.tool_choice,
-      ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
-      ...(shaped.temperature !== undefined
-        ? { temperature: shaped.temperature }
-        : {}),
-      ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
-    } as Anthropic.MessageCreateParamsNonStreaming,
+    }, shaped),
     { signal },
   );
 
