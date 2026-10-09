@@ -15,6 +15,11 @@ const evaluation: FreeWritingEvaluationResponse = {
 };
 
 describe('FwResults', () => {
+  it('does not promise exam readiness', () => {
+    render(<FwResults evaluation={evaluation} onCorrections={() => {}} onCompare={() => {}} onAnother={() => {}} />);
+    expect(screen.queryByText(/readiness/i)).toBeNull();
+  });
+
   it('shows the headline, overall CEFR and the four criteria', () => {
     render(<FwResults evaluation={evaluation} onCorrections={() => {}} onCompare={() => {}} onAnother={() => {}} />);
     expect(screen.getByText('Persuasive.')).toBeInTheDocument();

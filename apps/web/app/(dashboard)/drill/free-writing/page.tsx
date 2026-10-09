@@ -94,6 +94,7 @@ export default function FreeWritingPage() {
       return (
         <FwBrief
           content={content}
+          language={activeLanguage}
           examMode={examMode}
           onToggleExam={() => setExamMode((v) => !v)}
           onBegin={() => setStage('composer')}
