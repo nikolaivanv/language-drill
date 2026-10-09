@@ -566,6 +566,7 @@ describe("generateBatch", () => {
     expect(drafts).toEqual([]);
     expect(malformedDrafts).toHaveLength(1);
     expect(malformedDrafts[0].errorMessage).toContain("acceptableAnswers[1]");
+    expect(malformedDrafts[0].errorKind).toBe("other");
   });
 
   it("produces a valid translation draft and dispatches the translation tool", async () => {
@@ -669,6 +670,7 @@ describe("generateBatch", () => {
     expect(malformedDrafts[0].errorMessage).toMatch(
       /ordinal=0 malformed: Generator did not return a tool use block\. Stop reason: end_turn/,
     );
+    expect(malformedDrafts[0].errorKind).toBe("no_tool_call:end_turn");
     // Token usage still accounted for — Claude's call cost real tokens.
     expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens);
     expect(tokenUsage.outputTokens).toBe(baseUsage.output_tokens);

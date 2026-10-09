@@ -33,7 +33,7 @@ import {
   type VocabRecallContent,
 } from "@language-drill/shared";
 
-import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
+import { applyShaped, extractToolUse, modelErrorKind, shapeToolRequest, type Effort } from "./model-request.js";
 import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   buildGenerationSystemPrompt,
@@ -748,6 +748,8 @@ export type MalformedDraft = {
   ordinal: number;
   /** The validator / parser message, with the `Draft ordinal=N malformed: ` prefix. */
   errorMessage: string;
+  /** `modelErrorKind` of the failure: `refusal`, `no_tool_call:<stop_reason>`, or `other` (parse failure). */
+  errorKind: string;
 };
 
 export type GenerateBatchResult = {
@@ -1585,6 +1587,7 @@ export async function generateOneDraft(
       malformed: {
         ordinal,
         errorMessage: `Draft ordinal=${ordinal} malformed: ${message}`,
+        errorKind: modelErrorKind(err),
       },
       usage,
     };

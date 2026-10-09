@@ -693,9 +693,15 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
     // parse still shows up in `variantCounts` — distinct from a variant that
     // was never seeded at all, which is the whole point of measuring this.
     for (const malformed of batch.malformedDrafts) {
+      // A model-level failure (refusal / no tool call, split by stop_reason)
+      // gets its own reason so a 5.5 arm's tool-skip rate is not confused
+      // with max_tokens truncation or ordinary parse failures.
       outcomes.push({
         bucket: "parser-failure",
-        reasons: ["parser-failure"],
+        reasons:
+          malformed.errorKind && malformed.errorKind !== "other"
+            ? [malformed.errorKind]
+            : ["parser-failure"],
         variantId: variantFor(malformed.ordinal),
       });
     }

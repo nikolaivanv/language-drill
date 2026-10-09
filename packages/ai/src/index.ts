@@ -228,6 +228,7 @@ export {
   capabilityFor,
   extractToolUse,
   NoToolCallError,
+  modelErrorKind,
   shapeToolRequest,
   strictToolSchema,
   type Effort,

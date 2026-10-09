@@ -593,6 +593,44 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
     mockValidateDraft.mockReset();
   });
 
+  it("labels model-level malformed drafts by kind so tool skips are not confused with truncation", async () => {
+    const grammarPoint = getGrammarPoint("tr-a1-locative");
+    if (!grammarPoint) throw new Error("fixture key missing");
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [] as ExerciseDraft[],
+      tokenUsage: usage({ inputTokens: 10, outputTokens: 5 }),
+      malformedDrafts: [
+        { ordinal: 0, errorMessage: "m", errorKind: "no_tool_call:max_tokens" },
+        { ordinal: 1, errorMessage: "m", errorKind: "no_tool_call:end_turn" },
+        { ordinal: 2, errorMessage: "m", errorKind: "refusal" },
+        { ordinal: 3, errorMessage: "m", errorKind: "other" },
+      ],
+    } satisfies GenerateBatchResult);
+
+    const executor = makeRealArmExecutor({} as never);
+    const arm = await executor({
+      cell: {
+        language: Language.TR,
+        cefrLevel: CefrLevel.A1,
+        exerciseType: ExerciseType.CLOZE,
+        grammarPointKey: "tr-a1-locative",
+      },
+      grammarPoint,
+      systemPromptOverride: "SYSTEM PROMPT BODY",
+      draftsPerCell: 4,
+      batchSeed: "eval-gen",
+      seedConstructionVariants: false,
+    });
+
+    expect(arm.outcomes.map((o) => o.bucket)).toEqual(Array(4).fill("parser-failure"));
+    expect(arm.outcomes.map((o) => o.reasons)).toEqual([
+      ["no_tool_call:max_tokens"],
+      ["no_tool_call:end_turn"],
+      ["refusal"],
+      ["parser-failure"],
+    ]);
+  });
+
   it("routes drafts via real routeValidationResult, buckets malformed, folds usage", async () => {
     const grammarPoint = getGrammarPoint("tr-a1-locative");
     if (!grammarPoint) throw new Error("fixture key missing");
@@ -612,7 +650,7 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       drafts: [{ id: "d1" }, { id: "d2" }, { id: "d3" }] as ExerciseDraft[],
       tokenUsage: GEN_USAGE,
       malformedDrafts: [
-        { ordinal: 4, errorMessage: "Draft ordinal=4 malformed: bad json" },
+        { ordinal: 4, errorMessage: "Draft ordinal=4 malformed: bad json", errorKind: "other" },
       ],
     } satisfies GenerateBatchResult);
 
@@ -778,7 +816,7 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       drafts: [{ id: "d-ord1" }, { id: "d-ord2" }] as ExerciseDraft[],
       tokenUsage: ZERO_USAGE,
       malformedDrafts: [
-        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json", errorKind: "other" },
       ],
     } satisfies GenerateBatchResult);
     mockValidateDraft.mockResolvedValue({
@@ -838,7 +876,7 @@ describe("makeRealArmExecutor — classification + cost folding", () => {
       drafts: [{ id: "d-ord1" }] as ExerciseDraft[],
       tokenUsage: ZERO_USAGE,
       malformedDrafts: [
-        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json" },
+        { ordinal: 0, errorMessage: "Draft ordinal=0 malformed: bad json", errorKind: "other" },
       ],
     } satisfies GenerateBatchResult);
     mockValidateDraft.mockResolvedValue({
