@@ -1,10 +1,13 @@
 import { describe, it, expect } from 'vitest';
+import { NoToolCallError } from '@language-drill/ai';
 import { CefrLevel, Language } from '@language-drill/shared';
 
 import {
   idsFileCandidates,
   parseIdsFile,
   parseRevalidateArgs,
+  verdictErrorRecord,
+  verdictRecord,
 } from './revalidate-cloze-pool';
 
 // ---------------------------------------------------------------------------
@@ -174,3 +177,76 @@ describe('idsFileCandidates', () => {
     ]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Validator model A/B flags (--validator-model / --validator-effort / --verdicts-out)
+// ---------------------------------------------------------------------------
+
+describe('parseRevalidateArgs — validator model A/B', () => {
+  it('defaults to the production validator with no verdict dump', () => {
+    const args = parseRevalidateArgs([]);
+    expect(args.validatorModel).toBeNull();
+    expect(args.validatorEffort).toBeNull();
+    expect(args.verdictsOut).toBeNull();
+  });
+
+  it('parses --validator-model, --validator-effort and --verdicts-out on a dry run', () => {
+    const args = parseRevalidateArgs([
+      '--validator-model', 'claude-sonnet-5-5',
+      '--validator-effort', 'low',
+      '--verdicts-out', '/tmp/v.jsonl',
+    ]);
+    expect(args.validatorModel).toBe('claude-sonnet-5-5');
+    expect(args.validatorEffort).toBe('low');
+    expect(args.verdictsOut).toBe('/tmp/v.jsonl');
+  });
+
+  it('refuses a non-production validator together with --apply', () => {
+    expect(() => parseRevalidateArgs(['--apply', '--validator-model', 'claude-sonnet-5-5'])).toThrow(/dry-run only/);
+    expect(() => parseRevalidateArgs(['--validator-effort', 'low', '--apply'])).toThrow(/dry-run only/);
+  });
+
+  it('rejects an unknown model, a bad effort, and the flags under --deterministic-only', () => {
+    expect(() => parseRevalidateArgs(['--validator-model', 'claude-mystery-9'])).toThrow(/No model capabilities/);
+    expect(() => parseRevalidateArgs(['--validator-effort', 'huge'])).toThrow(/validator-effort/);
+    expect(() => parseRevalidateArgs(['--deterministic-only', '--verdicts-out', 'x'])).toThrow(/deterministic-only/);
+  });
+
+  it('allows --verdicts-out with the production validator and --apply', () => {
+    const args = parseRevalidateArgs(['--apply', '--verdicts-out', 'v.jsonl']);
+    expect(args.apply).toBe(true);
+    expect(args.verdictsOut).toBe('v.jsonl');
+  });
+});
+
+describe('verdictRecord / verdictErrorRecord', () => {
+  const row = { id: 'ex1', language: 'es', difficulty: 'B1', grammarPointKey: 'es-b1-x', reviewStatus: 'auto-approved' };
+  const result = {
+    qualityScore: 0.9,
+    ambiguous: true,
+    contextSpoilsAnswer: false,
+    levelMatch: true,
+    grammarPointMatch: true,
+    culturalIssues: [],
+    flaggedReasons: ['two fillers fit'],
+  } as unknown as Parameters<typeof verdictRecord>[2];
+
+  it('records the routed status next to the stored one', () => {
+    const v = verdictRecord(row, 'claude-sonnet-5-5', result);
+    expect(v).toMatchObject({
+      id: 'ex1',
+      storedStatus: 'auto-approved',
+      model: 'claude-sonnet-5-5',
+      route: 'flagged',
+      qualityScore: 0.9,
+      ambiguous: true,
+      flaggedReasons: ['two fillers fit'],
+    });
+  });
+
+  it('labels a failed call by error kind', () => {
+    const v = verdictErrorRecord(row, 'claude-sonnet-5-5', new NoToolCallError('no tool', 'end_turn'));
+    expect(v).toMatchObject({ id: 'ex1', errorKind: 'no_tool_call:end_turn', error: 'no tool' });
+  });
+});
+
