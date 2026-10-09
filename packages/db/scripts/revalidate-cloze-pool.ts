@@ -61,15 +61,21 @@
  */
 
 
+import { writeFileSync } from 'node:fs';
+
 import { and, eq, inArray } from 'drizzle-orm';
 
 import {
+  VALIDATION_MODEL,
   ZERO_USAGE,
   addUsage,
+  capabilityFor,
   createClaudeClient,
-  estimateCostUsd,
+  estimateCostUsdFor,
+  modelErrorKind,
   validateDraft,
   type ClaudeUsageBreakdown,
+  type Effort,
   type ValidationResult,
 } from '@language-drill/ai';
 import {
@@ -83,7 +89,7 @@ import {
 import { createDb, type Db } from '../src/client';
 import { getGrammarPoint } from '../src/curriculum';
 import { exercises } from '../src/schema';
-import type { ReviewStatus } from '../src/generation/routing';
+import { routeValidationResult, type ReviewStatus } from '../src/generation/routing';
 import {
   decideDemotion,
   decideDeterministicDemotion,
@@ -116,7 +122,19 @@ export type RevalidateArgs = {
   limit: number | null;
   concurrency: number;
   maxCostUsd: number;
+  /**
+   * Model A/B only: run the validator on this model instead of
+   * VALIDATION_MODEL. Dry-run only — a non-production validator must never
+   * write the pool, so the parser refuses it together with `--apply`.
+   */
+  validatorModel: string | null;
+  /** Model A/B only: validator effort. Dry-run only, like `validatorModel`. */
+  validatorEffort: Effort | null;
+  /** Write one JSON line per validated row (verdict or error) to this path. */
+  verdictsOut: string | null;
 };
+
+const EFFORT_VALUES = new Set<string>(['low', 'medium', 'high', 'xhigh', 'max']);
 
 const LANGUAGE_VALUES = new Set(Object.values(Language));
 const CEFR_VALUES = new Set(Object.values(CefrLevel));
@@ -139,6 +157,9 @@ export function parseRevalidateArgs(argv: readonly string[]): RevalidateArgs {
   let limit: number | null = null;
   let concurrency = DEFAULT_CONCURRENCY;
   let maxCostUsd = DEFAULT_MAX_COST_USD;
+  let validatorModel: string | null = null;
+  let validatorEffort: Effort | null = null;
+  let verdictsOut: string | null = null;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -209,9 +230,35 @@ export function parseRevalidateArgs(argv: readonly string[]): RevalidateArgs {
         );
       }
       maxCostUsd = parsed;
+    } else if (arg === '--validator-model') {
+      const next = argv[++i];
+      if (next === undefined) throw new Error('--validator-model requires a value');
+      capabilityFor(next); // throws on a model with no capability row
+      validatorModel = next;
+    } else if (arg === '--validator-effort') {
+      const next = argv[++i];
+      if (next === undefined || !EFFORT_VALUES.has(next)) {
+        throw new Error(`--validator-effort must be one of low|medium|high|xhigh|max, got ${next}`);
+      }
+      validatorEffort = next as Effort;
+    } else if (arg === '--verdicts-out') {
+      const next = argv[++i];
+      if (next === undefined) throw new Error('--verdicts-out requires a value');
+      verdictsOut = next;
     } else {
       throw new Error(`Unrecognized argument: ${arg}`);
     }
+  }
+
+  if (apply && (validatorModel !== null || validatorEffort !== null)) {
+    throw new Error(
+      '--validator-model / --validator-effort are dry-run only: a non-production validator must never write the pool',
+    );
+  }
+  if (deterministicOnly && (validatorModel !== null || validatorEffort !== null || verdictsOut !== null)) {
+    throw new Error(
+      '--validator-model / --validator-effort / --verdicts-out need the LLM pass; drop --deterministic-only',
+    );
   }
 
   return {
@@ -224,6 +271,73 @@ export function parseRevalidateArgs(argv: readonly string[]): RevalidateArgs {
     limit,
     concurrency,
     maxCostUsd,
+    validatorModel,
+    validatorEffort,
+    verdictsOut,
+  };
+}
+
+/** One `--verdicts-out` line: the row's stored status next to this validator's fresh verdict. */
+export type VerdictRecord = {
+  id: string;
+  language: string | null;
+  cefrLevel: string | null;
+  grammarPointKey: string | null;
+  storedStatus: string;
+  model: string;
+} & (
+  | {
+      route: ReviewStatus;
+      qualityScore: number;
+      ambiguous: boolean;
+      levelMatch: boolean;
+      grammarPointMatch: boolean;
+      contextSpoilsAnswer: boolean;
+      culturalIssues: string[];
+      flaggedReasons: string[];
+    }
+  | { error: string; errorKind: string }
+);
+
+/** Pure: the verdict line for a row the validator scored. */
+export function verdictRecord(
+  row: { id: string; language: string | null; difficulty: string | null; grammarPointKey: string | null; reviewStatus: string },
+  model: string,
+  result: ValidationResult,
+): VerdictRecord {
+  return {
+    id: row.id,
+    language: row.language,
+    cefrLevel: row.difficulty,
+    grammarPointKey: row.grammarPointKey,
+    storedStatus: row.reviewStatus,
+    model,
+    route: routeValidationResult(result).reviewStatus,
+    qualityScore: result.qualityScore,
+    ambiguous: result.ambiguous,
+    levelMatch: result.levelMatch,
+    grammarPointMatch: result.grammarPointMatch,
+    contextSpoilsAnswer: result.contextSpoilsAnswer,
+    culturalIssues: result.culturalIssues,
+    flaggedReasons: result.flaggedReasons,
+  };
+}
+
+/** Pure: the verdict line for a row whose validator call failed. */
+export function verdictErrorRecord(
+  row: { id: string; language: string | null; difficulty: string | null; grammarPointKey: string | null; reviewStatus: string },
+  model: string,
+  err: unknown,
+): VerdictRecord {
+  return {
+    id: row.id,
+    language: row.language,
+    cefrLevel: row.difficulty,
+    grammarPointKey: row.grammarPointKey,
+    storedStatus: row.reviewStatus,
+    model,
+    error: err instanceof Error ? err.message : String(err),
+    errorKind: modelErrorKind(err),
   };
 }
 
@@ -376,6 +490,11 @@ type Outcome =
   | { kind: 'demote'; row: Candidate; action: Extract<DemotionAction, { kind: 'demote' }>; result: ValidationResult | null }
   | { kind: 'skip'; row: Candidate; reason: SkipReason | 'manual-approved' | 'rejected'; detail?: string };
 
+/** Cost at the model the validator actually ran on. */
+function costOf(usage: ClaudeUsageBreakdown, args: RevalidateArgs): number {
+  return estimateCostUsdFor(args.validatorModel ?? VALIDATION_MODEL, usage);
+}
+
 function printSummary(outcomes: readonly Outcome[], usage: ClaudeUsageBreakdown, args: RevalidateArgs): void {
   const noChange = outcomes.filter((o) => o.kind === 'no-change').length;
   const demoteToFlagged = outcomes.filter(
@@ -400,7 +519,13 @@ function printSummary(outcomes: readonly Outcome[], usage: ClaudeUsageBreakdown,
       `cache_create=${usage.cacheCreationInputTokens.toLocaleString()} ` +
       `output=${usage.outputTokens.toLocaleString()}\n`,
   );
-  process.stdout.write(`  estimated cost:    $${estimateCostUsd(usage).toFixed(4)}\n`);
+  process.stdout.write(`  estimated cost:    $${costOf(usage, args).toFixed(4)}\n`);
+  if (!args.deterministicOnly) {
+    process.stdout.write(
+      `  validator:         ${args.validatorModel ?? `${VALIDATION_MODEL} (production)`}` +
+        `${args.validatorEffort ? ` effort=${args.validatorEffort}` : ''}\n`,
+    );
+  }
   process.stdout.write(
     `  pass:              ${args.deterministicOnly ? 'DETERMINISTIC-ONLY (no LLM calls)' : 'LLM validator + deterministic checks'}\n`,
   );
@@ -466,7 +591,9 @@ async function main(): Promise<void> {
       `${args.grammarPoints.length > 0 ? ` grammar-point=${args.grammarPoints.join(',')}` : ''}` +
       `${ids ? ` ids-file=${args.idsFile} (${ids.length} ids)` : ''}` +
       `${args.limit !== null ? ` limit=${args.limit}` : ''}` +
-      `${args.deterministicOnly ? ' deterministic-only' : ''}\n`,
+      `${args.deterministicOnly ? ' deterministic-only' : ''}` +
+      `${args.validatorModel ? ` validator-model=${args.validatorModel}` : ''}` +
+      `${args.validatorEffort ? ` validator-effort=${args.validatorEffort}` : ''}\n`,
   );
 
   const candidates = await fetchCandidates(db, args, ids);
@@ -480,6 +607,8 @@ async function main(): Promise<void> {
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
   const outcomes: Outcome[] = [];
   let costStopped = false;
+  const verdicts: VerdictRecord[] = [];
+  const validatorModel = args.validatorModel ?? VALIDATION_MODEL;
 
   await Promise.all(
     candidates.map((row, idx) =>
@@ -540,10 +669,13 @@ async function main(): Promise<void> {
           // stored pool. `null` for every unseeded row — no change there.
           const r = await validateDraft(client, recon.draft, recon.spec, undefined, {
             seedWord: recon.seedWord,
+            ...(args.validatorModel ? { modelOverride: args.validatorModel } : {}),
+            ...(args.validatorEffort ? { effort: args.validatorEffort } : {}),
           });
           result = r.result;
           callUsage = r.tokenUsage;
         } catch (err: unknown) {
+          verdicts.push(verdictErrorRecord(row, validatorModel, err));
           const message = err instanceof Error ? err.message : String(err);
           outcomes[idx] = {
             kind: 'skip',
@@ -554,11 +686,12 @@ async function main(): Promise<void> {
           return;
         }
 
+        verdicts.push(verdictRecord(row, validatorModel, result));
         usage = addUsage(usage, callUsage);
-        if (estimateCostUsd(usage) > args.maxCostUsd) {
+        if (costOf(usage, args) > args.maxCostUsd) {
           costStopped = true;
           process.stderr.write(
-            `\n[cost-cap] estimated cost ($${estimateCostUsd(usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
+            `\n[cost-cap] estimated cost ($${costOf(usage, args).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
           );
         }
 
@@ -594,6 +727,11 @@ async function main(): Promise<void> {
   // entries (none expected — every branch writes outcomes[idx]).
   const compacted = outcomes.filter((o): o is Outcome => o !== undefined);
   printSummary(compacted, usage, args);
+
+  if (args.verdictsOut) {
+    writeFileSync(args.verdictsOut, verdicts.map((v) => JSON.stringify(v)).join('\n') + '\n', 'utf8');
+    process.stdout.write(`\nVerdicts (${verdicts.length}) written to ${args.verdictsOut}\n`);
+  }
 }
 
 // Skip auto-execution when this module is imported by tests.
