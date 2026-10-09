@@ -1,7 +1,7 @@
 {
   "id": "tr-b1-b2",
   "title": "Writing a paragraph in Turkish",
-  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison, a personal story or advice — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -649,7 +649,7 @@
             },
             {
               "kind": "text",
-              "text": " (is it better to live in a city or in a village?), one sentence at a time. It is 103 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+              "text": " (is it better to live in a city or in a village?), one sentence at a time. It is 104 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
             }
           ]
         },
@@ -819,7 +819,7 @@
           "target": [
             {
               "kind": "text",
-              "text": "Bugün şehirlerde olduğu "
+              "text": "Günümüzde şehirlerde olduğu "
             },
             {
               "kind": "hilite",
@@ -845,27 +845,27 @@
             },
             {
               "kind": "text",
-              "text": " hızlı internet var; bu sayede köydekiler de büyük şirketler için uzaktan çalışabiliyor."
+              "text": " hızlı internet vardır; bu sayede köyde yaşayanlar da büyük şirketler için uzaktan çalışabiliyor."
             }
           ],
-          "en": "Today, as in the cities, many villages have fast internet too; thanks to this, people in the village can also work remotely for big companies.",
+          "en": "Today, as in the cities, many villages have fast internet too; thanks to this, people who live in a village can also work remotely for big companies.",
           "note": [
             {
               "kind": "text",
-              "text": "Point of comparison 3: a similarity, not only differences ("
+              "text": "Back to work, this time a similarity, not only a difference ("
             },
             {
               "kind": "mono",
               "children": [
                 {
                   "kind": "text",
-                  "text": "-de olduğu gibi"
+                  "text": "şehirlerde olduğu gibi"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " = as is the case in …)."
+              "text": " = as is the case in the cities)."
             }
           ]
         },
@@ -903,7 +903,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "Point of comparison 4 (social life) turns the balance back towards the city."
+              "text": "Point of comparison 3 (social life) turns the balance back towards the city."
             }
           ]
         },
@@ -924,7 +924,7 @@
               "text": ", bence kariyer yapmak isteyenler için şehir, sakin ve ucuz bir hayat arayanlar için ise köy daha uygundur."
             }
           ],
-          "en": "In short, in my view the city is more suitable for those who want to build a career, and the village for those looking for a quiet, cheap life.",
+          "en": "In short, in my view the city is more suitable for those who want to build a career, and the village for those looking for a quiet, inexpensive life.",
           "note": [
             {
               "kind": "text",
@@ -937,7 +937,7 @@
           "text": [
             {
               "kind": "text",
-              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day."
             }
           ]
         }
@@ -1920,7 +1920,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " loses a vowel: "
+                  "text": " loses a vowel ("
                 },
                 {
                   "kind": "em",
@@ -1933,7 +1933,33 @@
                 },
                 {
                   "kind": "text",
-                  "text": ". It usually comes with "
+                  "text": ") and a final p/ç usually softens ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "kitaba göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "ağaca göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). With a comparative ("
                 },
                 {
                   "kind": "em",
@@ -1946,7 +1972,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": ": "
+                  "text": " …) it means compared with: "
                 },
                 {
                   "kind": "em",
@@ -1959,7 +1985,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " After a pronoun it means according to: "
+                  "text": " With a person or a source it usually means according to: "
                 },
                 {
                   "kind": "em",
@@ -1972,7 +1998,20 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (in my opinion). "
+                  "text": " (in my opinion), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "uzmanlara göre"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (according to experts). "
                 },
                 {
                   "kind": "mono",
@@ -1998,7 +2037,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " — but a pronoun takes the genitive: "
+                  "text": " — but the personal pronouns take the genitive: "
                 },
                 {
                   "kind": "em",
@@ -2018,13 +2057,65 @@
                   "children": [
                     {
                       "kind": "text",
+                      "text": "senin gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
                       "text": "onun gibi"
                     }
                   ]
                 },
                 {
                   "kind": "text",
-                  "text": ". "
+                  "text": " (but "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "onlar gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). After a verb it uses the "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIğI"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " form: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "şehirlerde olduğu gibi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (as in the cities). "
                 },
                 {
                   "kind": "mono",
@@ -2037,7 +2128,20 @@
                 },
                 {
                   "kind": "text",
-                  "text": " opens the second half of a contrast, usually after a semicolon or a comma."
+                  "text": " (or "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "oysaki"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") opens the second half of a contrast, after a semicolon or a comma, or at the start of a new sentence; it often means \"whereas\" or \"but in fact\"."
                 }
               ]
             }

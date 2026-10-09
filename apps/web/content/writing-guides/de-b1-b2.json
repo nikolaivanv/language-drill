@@ -1,7 +1,7 @@
 {
   "id": "de-b1-b2",
   "title": "Writing a paragraph in German",
-  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison, a personal story or advice — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -627,7 +627,7 @@
             },
             {
               "kind": "text",
-              "text": " (is an online language course better than an in-person course?), one sentence at a time. It is 116 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+              "text": " (is an online language course better than an in-person course?), one sentence at a time. It is 117 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
             }
           ]
         },
@@ -732,7 +732,7 @@
               "text": " die Sprachschule keine Räume mieten muss."
             }
           ],
-          "en": "Moreover, online courses are often cheaper, because the language school does not have to rent rooms.",
+          "en": "Moreover, online courses are often cheaper because the language school does not have to rent rooms.",
           "note": [
             {
               "kind": "text",
@@ -757,7 +757,7 @@
               "text": " Online-Unterricht bietet ein Kurs vor Ort echten Kontakt: Man spricht in der Pause mit anderen Teilnehmern und übt dabei ganz natürlich."
             }
           ],
-          "en": "Unlike online lessons, an in-person course offers real contact: you talk to other participants during the break and practise quite naturally as you do so.",
+          "en": "Unlike online lessons, an in-person course offers real contact: you talk to other participants during the break and practise without even noticing.",
           "note": [
             {
               "kind": "text",
@@ -818,7 +818,7 @@
             },
             {
               "kind": "text",
-              "text": " im Kursraum kann man online zwar Fragen stellen, "
+              "text": " im Kursraum kann man zwar auch online Fragen stellen, "
             },
             {
               "kind": "hilite",
@@ -838,7 +838,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "Point of comparison 4: a similarity, with a limit ("
+              "text": "Back to contact, this time a similarity, with a limit ("
             },
             {
               "kind": "mono",
@@ -863,7 +863,7 @@
               "children": [
                 {
                   "kind": "text",
-                  "text": "Zusammenfassend"
+                  "text": "Insgesamt"
                 }
               ]
             },
@@ -885,7 +885,7 @@
               "text": " ein Kurs vor Ort besser für alle ist, die viel sprechen wollen."
             }
           ],
-          "en": "In summary, an online course is ideal for people with little time, whereas an in-person course is better for anyone who wants to speak a lot.",
+          "en": "Overall, an online course is ideal for people with little time, whereas an in-person course is better for anyone who wants to speak a lot.",
           "note": [
             {
               "kind": "text",
@@ -898,7 +898,7 @@
           "text": [
             {
               "kind": "text",
-              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day."
             }
           ]
         }
@@ -1988,13 +1988,13 @@
                   "children": [
                     {
                       "kind": "text",
-                      "text": "genauso wie"
+                      "text": "genauso … wie"
                     }
                   ]
                 },
                 {
                   "kind": "text",
-                  "text": " compares two equal things, often around an adjective: "
+                  "text": " compares two equal things. With an adjective, the adjective goes between the two words: "
                 },
                 {
                   "kind": "em",
@@ -2004,6 +2004,10 @@
                       "text": "Ein Online-Kurs ist genauso effektiv wie ein Kurs vor Ort."
                     }
                   ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (Not *genauso wie effektiv*.)"
                 }
               ]
             }

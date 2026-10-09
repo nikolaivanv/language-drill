@@ -1,7 +1,7 @@
 {
   "id": "es-b1-b2",
   "title": "Writing a paragraph in Spanish",
-  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison or a personal story — what the grader looks for and how to deliver it.",
+  "subtitle": "How to write a paragraph at B1–B2 — an opinion, a comparison, a personal story or advice — what the grader looks for and how to deliver it.",
   "cefr": "B1–B2",
   "sections": [
     {
@@ -597,7 +597,7 @@
             },
             {
               "kind": "text",
-              "text": " (is it better to live in a city or a village?), one sentence at a time. It is 119 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
+              "text": " (is it better to live in a city or a village?), one sentence at a time. It is 120 words — B1 length (80–120). Each supporting point compares the two options on one feature, and one point names a similarity, not only differences."
             }
           ]
         },
@@ -606,14 +606,14 @@
           "target": [
             {
               "kind": "text",
-              "text": "Vivir en una ciudad y vivir en un pueblo son experiencias muy distintas en tres aspectos: el trabajo, la vivienda y el ocio."
+              "text": "Vivir en una ciudad y vivir en un pueblo son experiencias distintas en varios aspectos, como el trabajo, la vivienda y el ocio."
             }
           ],
-          "en": "Living in a city and living in a village are very different experiences, in three respects: work, housing and things to do.",
+          "en": "Living in a city and living in a village are different experiences in several respects, such as work, housing and things to do.",
           "note": [
             {
               "kind": "text",
-              "text": "Opening sentence: names the two options and the three points of comparison."
+              "text": "Opening sentence: names the two options and the main points of comparison."
             }
           ]
         },
@@ -673,7 +673,7 @@
             },
             {
               "kind": "text",
-              "text": ", la vivienda es mucho más barata en un pueblo: por el precio de un piso pequeño en Madrid, se alquila una casa con jardín."
+              "text": ", la vivienda es mucho más barata en un pueblo: por el precio de un piso pequeño en Madrid, se puede alquilar una casa con jardín."
             }
           ],
           "en": "On the other hand, housing is much cheaper in a village: for the price of a small flat in Madrid, you can rent a house with a garden.",
@@ -718,7 +718,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "Point of comparison 3: a similarity, not only differences."
+              "text": "Point of comparison 3 (internet and remote work): a similarity, not only differences."
             }
           ]
         },
@@ -764,11 +764,11 @@
               "text": ", la ciudad es mejor para hacer carrera, y el pueblo, para llevar una vida tranquila y barata."
             }
           ],
-          "en": "In conclusion, the city is better for building a career, and the village for leading a quiet, cheap life.",
+          "en": "In conclusion, the city is better for building a career, and the village for leading a quiet, inexpensive life.",
           "note": [
             {
               "kind": "text",
-              "text": "Closing sentence: says which option suits whom, instead of declaring one simply \"better\"."
+              "text": "Closing sentence: says which option suits which goal, instead of declaring one simply \"better\"."
             }
           ]
         },
@@ -777,7 +777,7 @@
           "text": [
             {
               "kind": "text",
-              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day — to reach 150 words or more."
+              "text": "A B2 answer (150–200 words) would extend each point of comparison with an example — a person you know, a price, a typical day."
             }
           ]
         }
@@ -977,7 +977,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "en cambio"
+                        "text": "no obstante"
                       }
                     ]
                   }
@@ -1533,7 +1533,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " works like "
+                  "text": " (by contrast) sets a second thing against the first one. Punctuate it like "
                 },
                 {
                   "kind": "mono",
@@ -1546,7 +1546,33 @@
                 },
                 {
                   "kind": "text",
-                  "text": ": it usually starts a new sentence or follows a semicolon, with a comma after it."
+                  "text": " — at the start of a new sentence or after a semicolon, with a comma after it — or put it inside the sentence between commas: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Yo prefiero el mar; mi hermano, en cambio, prefiere la montaña."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " It does not mean \"nevertheless\": for an unexpected result, use "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "sin embargo"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
                 }
               ]
             }
