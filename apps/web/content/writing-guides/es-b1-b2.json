@@ -1,0 +1,1927 @@
+{
+  "id": "es-b1-b2",
+  "title": "Writing a paragraph in Spanish",
+  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "cefr": "B1–B2",
+  "sections": [
+    {
+      "id": "what-is-graded",
+      "title": "what the grader looks for",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Every attempt is scored on four criteria, and each one counts. A paragraph with perfect grammar that ignores half the prompt scores low; so does a well-organised answer full of agreement errors. Aim for a balance."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Task"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — did you answer the prompt, cover every required element, take a clear position where one is asked for, and stay inside the word range?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Coherence"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — does the paragraph have a clear opening, supporting points and a conclusion, and do connectors show how each idea relates to the last?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Vocabulary"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — is your word choice precise and varied, and does it fit the register (informal or formal) of the task?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Grammar"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — are verb forms, agreement and word order correct, and do you use some more complex structures (subordinate clauses, a range of tenses) accurately?"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B1:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 80–120 words, 15 minutes on the timer. "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B2:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 150–200 words, 25 minutes on the timer."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "text",
+                  "text": "Going far over the maximum does not earn extra credit — it usually means repetition, which costs you on Coherence."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paragraph-shape",
+      "title": "the shape of a paragraph",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A strong opinion paragraph has three parts: an "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "opening sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that states your position, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "two or three supporting points"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (each backed by a reason or an example, and ideally one point that admits the other side), and a "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "closing sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph answering "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"¿Es positivo el teletrabajo?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is remote work a good thing?), one sentence at a time. It is 127 words — between B1 and B2 length. A B1 answer can drop one supporting point; a B2 answer can develop each point further."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "En mi opinión, el teletrabajo tiene más ventajas que inconvenientes."
+            }
+          ],
+          "en": "In my opinion, remote work has more advantages than disadvantages.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: states the position clearly."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "En primer lugar"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", permite ahorrar mucho tiempo, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ya que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " no hay que desplazarse a la oficina todos los días."
+            }
+          ],
+          "en": "Firstly, it saves a lot of time, since you don't have to travel to the office every day.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 1, with a reason ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ya que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Por ejemplo"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", una amiga mía tardaba casi dos horas en llegar al trabajo y ahora dedica ese tiempo a hacer deporte."
+            }
+          ],
+          "en": "For example, a friend of mine used to take almost two hours to get to work, and now she spends that time doing sport.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A concrete example backing point 1."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Además"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", muchas personas se concentran mejor en casa, lejos del ruido y de las interrupciones constantes."
+            }
+          ],
+          "en": "Moreover, many people concentrate better at home, away from noise and constant interruptions.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 2."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sin embargo"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", no todo es positivo: trabajar solo puede provocar aislamiento, y es importante que las empresas organicen reuniones presenciales de vez en cuando."
+            }
+          ],
+          "en": "However, not everything is positive: working alone can lead to isolation, and it is important that companies organise in-person meetings from time to time.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 3 admits the other side. Note the subjunctive "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "organicen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " after "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "es importante que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Aunque"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " el contacto con los compañeros es necesario, no hace falta ir a la oficina cada día para mantenerlo."
+            }
+          ],
+          "en": "Although contact with colleagues is necessary, you don't need to go to the office every day to keep it up.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Answers the objection. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Aunque"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " + indicative ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "es"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "), because the speaker accepts it as a fact."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "En conclusión"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", creo que un modelo mixto, con dos o tres días en casa, es la mejor solución."
+            }
+          ],
+          "en": "In conclusion, I think a hybrid model, with two or three days at home, is the best solution.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: restates the position in a more precise form."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "connectors",
+      "title": "connectors",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "At B1–B2 the grader looks for "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "range"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ": not just "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "y"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "pero"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "porque"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", but connectors that show contrast, consequence and concession."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Adding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "además"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "también"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "asimismo"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "El transporte público es barato; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "además"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", contamina menos que el coche."
+                  }
+                ],
+                "en": "Public transport is cheap; moreover, it pollutes less than the car."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Contrasting"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sin embargo"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "aunque"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en cambio"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Las redes sociales nos conectan; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sin embargo"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", también pueden aislarnos."
+                  }
+                ],
+                "en": "Social networks connect us; however, they can also isolate us."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Cause and effect"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ya que"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por eso"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por lo tanto"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Los alquileres han subido mucho; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por lo tanto"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", muchos jóvenes viven con sus padres."
+                  }
+                ],
+                "en": "Rents have risen a lot; therefore, many young people live with their parents."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Giving an example"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por ejemplo"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "como"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en concreto"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Algunas ciudades, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "como"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Barcelona, han limitado los pisos turísticos."
+                  }
+                ],
+                "en": "Some cities, such as Barcelona, have restricted tourist flats."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sequencing and concluding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en primer lugar"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por último"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en conclusión"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "en resumen"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "En conclusión"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", el problema tiene solución si todos colaboramos."
+                  }
+                ],
+                "en": "In conclusion, the problem can be solved if we all work together."
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "`aunque` takes two moods."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " With the "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "indicative"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " it concedes a fact you accept; with the "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "subjunctive"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " it concedes something hypothetical or not yet known."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Aunque llueve, salgo a correr."
+                }
+              ],
+              "en": "Although it is raining, I'm going for a run.",
+              "note": [
+                {
+                  "kind": "text",
+                  "text": "Indicative: it is raining right now."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Aunque llueva mañana, saldré a correr."
+                }
+              ],
+              "en": "Even if it rains tomorrow, I'll go for a run.",
+              "note": [
+                {
+                  "kind": "text",
+                  "text": "Subjunctive: maybe it will rain, maybe not."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "sin embargo"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "por lo tanto"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " usually start a new sentence or follow a semicolon, with a comma after them."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "register",
+      "title": "informal or formal",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Choose "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "tú"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (informal) or "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "usted"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (formal) and keep it to the end. The choice affects verbs, pronouns and possessives: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "tú tienes, te, tu"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " versus "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "usted tiene, le, su"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ". Mixing them — "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "usted tiene tu dirección"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — is one of the most visible register errors. In the plural, Spain uses "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "vosotros"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " informally and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ustedes"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " formally; Latin America uses "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ustedes"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " for both."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "An informal message to a friend:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Querida Ana: ¿Qué tal? Hace mucho que no te escribo."
+            }
+          ],
+          "en": "Dear Ana, how are you? I haven't written to you in a long time.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal opening; colon after the greeting."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Un abrazo,"
+            }
+          ],
+          "en": "Best wishes / Love,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal closing. Also: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Besos"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Hasta pronto"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A formal email or letter:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Estimado señor López:"
+            }
+          ],
+          "en": "Dear Mr López,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal opening. To an unknown reader: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Estimados señores:"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Le escribo para solicitar información sobre el curso de verano."
+            }
+          ],
+          "en": "I am writing to request information about the summer course.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A standard first line: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "le"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " is the formal \"to you\"."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Quedo a la espera de su respuesta."
+            }
+          ],
+          "en": "I look forward to your reply.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal pre-closing; "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "su"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", not "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "tu"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Atentamente,"
+            }
+          ],
+          "en": "Yours sincerely,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal closing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-and-length",
+      "title": "the task and the word count",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Most prompts list "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "required elements"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — things your text must mention. The grader checks each one. Make every element visibly present: give it its own sentence, and use the element's own key word so it cannot be missed."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Una desventaja del teletrabajo es el aislamiento."
+            }
+          ],
+          "en": "One disadvantage of remote work is isolation.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Required element \"mention a disadvantage\" — the key word "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "desventaja"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " makes it impossible to miss."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Plan first."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Before you write, list the required elements and give each one a sentence. Add your opening and closing sentence to the plan."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Write, then link."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Draft the sentences, then join them with connectors so the reasoning is easy to follow."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Count your words"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " before you submit, and compare with the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too short?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Add a reason or a concrete example to your weakest point, or a sentence that admits the other side."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too long?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Cut repetition first — sentences that say the same thing twice — not a required element."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-mistakes",
+      "title": "common mistakes",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "These are the errors the grader flags most often at B1–B2. Each example shows the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "correct"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sentence; the wrong version is in the note."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "No creo que sea una buena idea."
+            }
+          ],
+          "en": "I don't think it's a good idea.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *No creo que es una buena idea*. A negated opinion ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "no creo que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "no pienso que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") takes the subjunctive."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Es importante que todos participemos."
+            }
+          ],
+          "en": "It is important that we all take part.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Es importante que todos participamos*. Expressions of value or necessity + "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "que"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " take the subjunctive."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Estoy de acuerdo con esta propuesta."
+            }
+          ],
+          "en": "I agree with this proposal.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Soy de acuerdo*. The expression is always "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "estar de acuerdo"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Gracias por tu mensaje; te escribo para contarte una noticia."
+            }
+          ],
+          "en": "Thanks for your message; I'm writing to tell you some news.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Gracias para tu mensaje … por contarte*. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Por"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " for the reason or cause (thanks for), "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "para"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " for purpose (in order to)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Los problemas del sistema son graves."
+            }
+          ],
+          "en": "The system's problems are serious.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Las problemas del sistema*. Nouns in "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-ma"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " such as "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el problema"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el sistema"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el tema"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " are masculine."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "El año pasado trabajé en casa y mi jefe lo aceptó."
+            }
+          ],
+          "en": "Last year I worked from home and my boss accepted it.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *trabaje … acepto*. Without the accent these are different forms: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "trabaje"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " is subjunctive, "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "acepto"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " means \"I accept\"."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "title": "before you submit",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Run through this list before you press submit:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Every required element is present, each in its own sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The word count is inside the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "There is an opening sentence and a closing sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You used at least "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "4 connectors"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", including "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that contrasts"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ideas."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The register is consistent from start to finish — you did not switch between informal and formal."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You reread the text once, looking only for the mistakes listed in the previous section."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
