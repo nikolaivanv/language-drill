@@ -55,7 +55,7 @@ throws instead of guessing.
 | Haiku 4.5 (`haiku-4-5`) | yes | omit `thinking` | yes | no | $1 / $5 |
 | Sonnet 4.6 (`sonnet-4-6`) | yes | omit `thinking` | yes | yes | $3 / $15 |
 | Opus 4.6 (`opus-4-6`) | yes | omit `thinking` | yes | yes | $5 / $25 |
-| Opus 4.7 / 4.8 (`opus-4-7`, `opus-4-8`) | yes | `{type: "disabled"}` | no | yes | $5 / $25 |
+| Opus 4.7 / 4.8 (`opus-4-7`, `opus-4-8`) | yes | omit `thinking` (omitting means no thinking on 4.7/4.8; today's Opus 4.8 surfaces send no `thinking` field) | no | yes | $5 / $25 |
 | Sonnet 5 (`sonnet-5`, not `sonnet-5-5`) | yes | `{type: "disabled"}` | no | yes | $2 / $10 |
 | Opus 5 (`opus-5`, not `opus-5-5`) | yes | `{type: "disabled"}` (effort ≤ `high`) | no | yes | $5 / $25 |
 | Sonnet 5.5 (`sonnet-5-5`) | **no** | `{type: "between_tools"}` (effort ≤ `high`) | no | yes | $2 / $10 |
