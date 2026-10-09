@@ -189,7 +189,7 @@
             },
             {
               "kind": "text",
-              "text": " There are two, and the prompt tells you which one it wants:"
+              "text": " There are two. The wording of the prompt usually signals the better fit; when either works, pick the one you can argue best:"
             }
           ]
         },
@@ -318,7 +318,7 @@
                   },
                   {
                     "kind": "text",
-                    "text": " — one reason, backed by an example or a consequence."
+                    "text": " — one main reason, backed by an example or a consequence."
                   }
                 ]
               }
@@ -396,7 +396,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (150–200 words), write four short paragraphs of about 40–50 words each. At "
+                  "text": " (150–200 words), write four short paragraphs: an introduction and a conclusion of about 30–40 words each, and two body paragraphs of about 40–55 words each — the primary point usually runs longest. At "
                 },
                 {
                   "kind": "strong",
@@ -409,7 +409,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (80–120 words), the same four moves fit inside one paragraph of 6–8 sentences — one or two sentences per move."
+                  "text": " (80–120 words), the same four moves fit in 6–8 sentences, one or two per move. Put them in one paragraph or in four very short ones: short paragraphs make the structure visible, and either is fine within 80–120 words."
                 }
               ]
             }
@@ -526,13 +526,26 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Bunun en önemli nedeni …"
+                        "text": "Bunun en önemli nedeni … -mAsIdIr"
                       }
                     ]
                   },
                   {
                     "kind": "text",
-                    "text": " (the most important reason for this is …), "
+                    "text": " (the most important reason for this is that …) — e.g. "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bunun en önemli nedeni havanın kirli olmasıdır."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
                   },
                   {
                     "kind": "mono",
@@ -585,13 +598,35 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Bazı insanlar … düşünüyor, ancak …"
+                        "text": "Bazı insanlar … -DIğInI düşünüyor, ancak …"
                       }
                     ]
                   },
                   {
                     "kind": "text",
-                    "text": " (some people think …, but …)"
+                    "text": " or "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bazı insanlar «…» diye düşünüyor, ancak …"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (some people think that …, but …) — e.g. "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bazı insanlar arabaların gerekli olduğunu düşünüyor, ancak …"
+                      }
+                    ]
                   }
                 ]
               }
@@ -737,13 +772,39 @@
                   "children": [
                     {
                       "kind": "text",
+                      "text": "-DIk"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " plus a possessive ending for its subject ("
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
                       "text": "-DIğI"
                     }
                   ]
                 },
                 {
                   "kind": "text",
-                  "text": " plus a possessive ending for its subject, and the subject takes the genitive: "
+                  "text": " for he/she/it, "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-DIklArI"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " for they), and the subject takes the genitive: "
                 },
                 {
                   "kind": "em",
@@ -815,7 +876,7 @@
             },
             {
               "kind": "text",
-              "text": " (should cars be banned in city centres?). This answer takes a strong stance. It is 165 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
+              "text": " (should cars be banned in city centres?). This answer takes a strong stance. It is 164 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
             }
           ]
         },
@@ -847,10 +908,23 @@
             },
             {
               "kind": "text",
-              "text": " şehir merkezlerinde arabaların yasaklanıp yasaklanmaması sıkça tartışılıyor."
+              "text": " şehir merkezlerinde arabaların yasaklanması "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sıkça tartışılıyor"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
             }
           ],
-          "en": "These days there is a lot of debate about whether cars should be banned in city centres.",
+          "en": "These days, banning cars in city centres is often debated.",
           "note": [
             {
               "kind": "text",
@@ -904,7 +978,7 @@
               "text": " dikkatli bir şekilde uygulanmalı."
             }
           ],
-          "en": "In my opinion, such a ban is necessary both for the environment and for people's health, but it should be introduced carefully.",
+          "en": "In my opinion, such a ban is necessary both for the environment and for people's health, but it should be implemented carefully.",
           "note": [
             {
               "kind": "text",
@@ -1001,7 +1075,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "A second reason for the same point."
+              "text": "A further benefit that supports the same point."
             }
           ]
         },
@@ -1019,10 +1093,10 @@
             },
             {
               "kind": "text",
-              "text": " İstanbul'daki İstiklal Caddesi yıllardır araç trafiğine kapalı ve her gün binlerce insan orada güvenle dolaşıyor."
+              "text": " İstanbul'daki İstiklal Caddesi yıllardır trafiğe kapalı ve her gün yüz binlerce insan orada özgürce dolaşıyor."
             }
           ],
-          "en": "For example, İstiklal Avenue in Istanbul has been closed to traffic for years, and every day thousands of people walk there safely.",
+          "en": "For example, İstiklal Avenue in Istanbul has been closed to traffic for years, and every day hundreds of thousands of people stroll there freely.",
           "note": [
             {
               "kind": "text",
@@ -1049,14 +1123,14 @@
           "target": [
             {
               "kind": "text",
-              "text": "Yaşlıların, engellilerin ve şehir dışında yaşayanların arabaya gerçekten ihtiyaç duyduğu "
+              "text": "Yaşlıların, engellilerin ve şehir dışında yaşayanların arabaya gerçekten ihtiyaç "
             },
             {
               "kind": "hilite",
               "children": [
                 {
                   "kind": "text",
-                  "text": "doğru"
+                  "text": "duyduğu doğru"
                 }
               ]
             },
@@ -1162,7 +1236,7 @@
             },
             {
               "kind": "text",
-              "text": ", şehir merkezlerinde arabaların yasaklanması hem bugün hem de gelecek nesiller için doğru bir karardır."
+              "text": ", şehir merkezlerinde arabaların yasaklanması hem bugün için hem de gelecek nesiller için doğru bir karardır."
             }
           ],
           "en": "In conclusion, banning cars in city centres is the right decision, both for today and for future generations.",
@@ -1197,46 +1271,20 @@
               "children": [
                 {
                   "kind": "text",
-                  "text": "Yeter ki"
+                  "text": "Ancak"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " bu değişiklik adım adım ve gerçek alternatiflerle yapılsın."
+              "text": " bu değişiklik adım adım ve gerçek alternatiflerle yapılmalı."
             }
           ],
-          "en": "As long as the change is made step by step and with real alternatives.",
+          "en": "But the change must be made step by step and with real alternatives.",
           "note": [
             {
               "kind": "text",
-              "text": "Restates the condition from the introduction — no new argument. "
-            },
-            {
-              "kind": "mono",
-              "children": [
-                {
-                  "kind": "text",
-                  "text": "Yeter ki"
-                }
-              ]
-            },
-            {
-              "kind": "text",
-              "text": " + "
-            },
-            {
-              "kind": "mono",
-              "children": [
-                {
-                  "kind": "text",
-                  "text": "-sın"
-                }
-              ]
-            },
-            {
-              "kind": "text",
-              "text": ": as long as."
+              "text": "Restates the condition from the introduction — no new argument."
             }
           ]
         }

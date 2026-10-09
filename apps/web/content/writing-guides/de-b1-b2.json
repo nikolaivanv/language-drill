@@ -189,7 +189,7 @@
             },
             {
               "kind": "text",
-              "text": " There are two, and the prompt tells you which one it wants:"
+              "text": " There are two. The wording of the prompt usually signals the better fit; when either works, pick the one you can argue best:"
             }
           ]
         },
@@ -318,7 +318,7 @@
                   },
                   {
                     "kind": "text",
-                    "text": " — one reason, backed by an example or a consequence."
+                    "text": " — one main reason, backed by an example or a consequence."
                   }
                 ]
               }
@@ -396,7 +396,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (150–200 words), write four short paragraphs of about 40–50 words each. At "
+                  "text": " (150–200 words), write four short paragraphs: an introduction and a conclusion of about 30–40 words each, and two body paragraphs of about 40–55 words each — the primary point usually runs longest. At "
                 },
                 {
                   "kind": "strong",
@@ -409,7 +409,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (80–120 words), the same four moves fit inside one paragraph of 6–8 sentences — one or two sentences per move."
+                  "text": " (80–120 words), the same four moves fit in 6–8 sentences, one or two per move. Put them in one paragraph or in four very short ones: short paragraphs make the structure visible, and either is fine within 80–120 words."
                 }
               ]
             }
@@ -734,7 +734,33 @@
                 },
                 {
                   "kind": "text",
-                  "text": " send the verb to the end: "
+                  "text": " (like "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "weil"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "wenn"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " in the sample) send the verb to the end: "
                 },
                 {
                   "kind": "em",
@@ -780,6 +806,19 @@
                   "children": [
                     {
                       "kind": "text",
+                      "text": "Außerdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
                       "text": "Andererseits"
                     }
                   ]
@@ -794,6 +833,19 @@
                     {
                       "kind": "text",
                       "text": "Auf der anderen Seite"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Deshalb"
                     }
                   ]
                 },
@@ -941,7 +993,7 @@
             },
             {
               "kind": "text",
-              "text": " (should cities ban cars from the city centre?). This answer takes a strong stance. It is 168 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
+              "text": " (should cities ban cars from the city centre?). This answer takes a strong stance. It is 169 words — B2 length (150–200) — in four paragraphs, shown one sentence at a time."
             }
           ]
         },
@@ -1148,7 +1200,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "A second reason for the same point."
+              "text": "A further benefit that supports the same point."
             }
           ]
         },
@@ -1170,10 +1222,10 @@
             },
             {
               "kind": "text",
-              "text": " gibt es seit Jahrzehnten eine lange Fußgängerzone, und dort ist immer viel los."
+              "text": " gibt es seit Jahrzehnten eine Fußgängerzone, in der man ruhig und sicher bummeln kann."
             }
           ],
-          "en": "In Copenhagen, for example, there has been a long pedestrian zone for decades, and there is always a lot going on there.",
+          "en": "In Copenhagen, for example, there has been a pedestrian zone for decades where you can stroll in peace and safety.",
           "note": [
             {
               "kind": "text",
@@ -1319,7 +1371,7 @@
               "text": " autofreie Innenstädte deutlich mehr Vorteile als Nachteile haben."
             }
           ],
-          "en": "In conclusion, car-free city centres have clearly more advantages than disadvantages.",
+          "en": "In conclusion, car-free city centres have far more advantages than disadvantages.",
           "note": [
             {
               "kind": "text",
