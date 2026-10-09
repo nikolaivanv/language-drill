@@ -38,10 +38,13 @@ import type { EvaluationResult } from "@language-drill/shared";
 import {
   createClaudeClient,
   evaluateAnswer,
-  estimateCostUsd,
+  buildEvaluationTool,
+  estimateCostUsdFor,
   getLangfuse,
+  shapeToolRequest,
   withLlmTrace,
   type ClaudeUsageBreakdown,
+  type Effort,
   type EvaluateAnswerInput,
   type LlmTraceContext,
 } from "../src/index.js";
@@ -61,11 +64,12 @@ export type EvalRunArgs = {
   /**
    * Optional Anthropic model id for this arm (threaded to `evaluateAnswer`
    * as `modelOverride`). Absent → the production `MODEL` constant. Lets a
-   * single dataset compare model arms, not just prompt arms. NOTE: the
-   * per-item cost column always uses Sonnet list pricing (`estimateCostUsd`),
-   * so cost figures for non-Sonnet arms are indicative only.
+   * single dataset compare model arms, not just prompt arms. The per-item
+   * cost column is priced for the model actually used (`estimateCostUsdFor`).
    */
   model?: string;
+  /** Optional effort for this arm (threaded to `evaluateAnswer` as `effortOverride`). */
+  effort?: Effort;
   /**
    * Optional thinking mode for this arm. `"adaptive"` threads
    * `thinkingOverride: "adaptive"` to `evaluateAnswer` (adaptive thinking,
@@ -74,6 +78,35 @@ export type EvalRunArgs = {
    */
   thinking?: "adaptive";
 };
+
+const EFFORTS: readonly Effort[] = ["low", "medium", "high", "xhigh", "max"];
+
+/**
+ * Validate a raw `--effort`-style flag value. Empty/undefined → undefined;
+ * anything outside the closed set throws. Shared by the four eval CLIs.
+ */
+export function parseEffort(raw: string | undefined): Effort | undefined {
+  if (raw === undefined || raw === "") return undefined;
+  if (!(EFFORTS as readonly string[]).includes(raw)) {
+    throw new Error("--effort must be one of low|medium|high|xhigh|max");
+  }
+  return raw as Effort;
+}
+
+/**
+ * The `mode` string `shapeToolRequest` produces for a model + tool + intent —
+ * printed at CLI startup and recorded in report JSON as `requestMode`, so a
+ * run states which request shape it actually sent. Only the tool's identity
+ * matters to callers; `mode` depends on model/thinking/effort.
+ */
+export function requestModeFor(
+  model: string,
+  tool: Parameters<typeof shapeToolRequest>[1]["tool"],
+  thinking: "off" | "adaptive",
+  effort?: Effort,
+): string {
+  return shapeToolRequest(model, { tool, thinking, effort }).mode;
+}
 
 export function parseEvalRunArgs(
   argv: string[] = process.argv.slice(2),
@@ -88,6 +121,7 @@ export function parseEvalRunArgs(
       limit: { type: "string" },
       model: { type: "string" },
       thinking: { type: "string" },
+      effort: { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -144,6 +178,7 @@ export function parseEvalRunArgs(
     model:
       parsed.values.model === "" ? undefined : parsed.values.model,
     thinking,
+    effort: parseEffort(parsed.values.effort),
   };
 }
 
@@ -151,7 +186,7 @@ function printUsage(): void {
   console.log(
     [
       "Usage: pnpm eval --dataset <name> --candidate <source> [--run-name <name>]",
-      "                [--allow-prod] [--limit <n>] [--model <id>]",
+      "                [--allow-prod] [--limit <n>] [--model <id>] [--effort <level>]",
       "",
       "Runs a candidate prompt against a Langfuse dataset; links each",
       "result trace to a dataset run and prints per-item outcomes.",
@@ -163,6 +198,7 @@ function printUsage(): void {
       "  --limit <n>           Cap items processed (useful for fast iteration).",
       "  --model <id>          Anthropic model id for this arm (default: the",
       "                        production evaluator model). Enables model A/Bs.",
+      "  --effort <level>      low|medium|high|xhigh|max. Default: the surface default.",
       "  --thinking adaptive   Run the arm with adaptive thinking (effort low,",
       "                        larger max_tokens). Default: no thinking.",
       "  --help                Show this message.",
@@ -293,6 +329,9 @@ export type EvalRunItemExecutor = (
   params: EvalRunItemExecutorParams,
 ) => Promise<EvalRunItemExecutorOutput>;
 
+/** The evaluator's production model (evaluate.ts's `MODEL`, which is unexported). */
+const EVAL_DEFAULT_MODEL = "claude-sonnet-5";
+
 /**
  * Real per-item executor: opens a `withLlmTrace` scope, calls
  * `evaluateAnswer` with the candidate prompt as `systemPromptOverride`,
@@ -309,6 +348,7 @@ export function makeRealItemExecutor(
   client: Anthropic,
   model?: string,
   thinking?: "adaptive",
+  effort?: Effort,
 ): EvalRunItemExecutor {
   return async (params) => {
     const ctx: LlmTraceContext = {
@@ -343,6 +383,7 @@ export function makeRealItemExecutor(
           systemPromptOverride: params.candidateText,
           modelOverride: model,
           thinkingOverride: thinking,
+          effortOverride: effort,
         });
       });
     } catch (err) {
@@ -352,7 +393,7 @@ export function makeRealItemExecutor(
     const latencyMs = performance.now() - start;
     const candidateCostUsd =
       usageSink.current !== undefined
-        ? estimateCostUsd(usageSink.current)
+        ? estimateCostUsdFor(model ?? EVAL_DEFAULT_MODEL, usageSink.current)
         : undefined;
     return {
       actual,
@@ -884,6 +925,8 @@ export type EvalRunSummary = {
     baseline: { p50: number | null; p95: number | null };
   };
   errors: Array<{ submissionId?: string; itemId: string; error: string }>;
+  /** `shapeToolRequest(...).mode` for the model/effort this run used. */
+  requestMode?: string;
   perItem?: ItemResult[];
 };
 
@@ -1101,6 +1144,14 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
+  const requestMode = requestModeFor(
+    args.model ?? EVAL_DEFAULT_MODEL,
+    buildEvaluationTool(),
+    args.thinking === "adaptive" ? "adaptive" : "off",
+    args.effort ?? (args.thinking === "adaptive" ? "low" : undefined),
+  );
+  console.log(`[eval-run] request mode: ${requestMode}`);
+
   const candidate = await resolveCandidate(args.candidate, lf);
   const promptSha = sha8(candidate.text);
   const runName = deriveRunName(promptSha, args.runName, new Date());
@@ -1111,6 +1162,7 @@ async function main(): Promise<void> {
       createClaudeClient(apiKey),
       args.model,
       args.thinking,
+      args.effort,
     ),
     args,
     candidateText: candidate.text,
@@ -1119,7 +1171,7 @@ async function main(): Promise<void> {
     runName,
   });
 
-  const summary = computeDiff(result);
+  const summary = { ...computeDiff(result), requestMode };
   console.log("");
   console.log(renderMarkdownSummary(summary));
   const jsonPath = writeSummaryJson(summary);

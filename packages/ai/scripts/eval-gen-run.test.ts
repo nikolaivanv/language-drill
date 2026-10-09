@@ -1477,3 +1477,72 @@ describe("computeGenDiff + renderMarkdownSummary — pool reuse", () => {
     expect(renderMarkdownSummary(summary)).not.toContain("Pool reuse");
   });
 });
+
+describe("eval-gen candidate model/effort (Task 6)", () => {
+  const required = ["--candidate", "repo", "--dataset-file", "cells.json"];
+
+  it("parses --candidate-model and --candidate-effort", () => {
+    const args = parseEvalGenArgs([
+      ...required,
+      "--candidate-model",
+      "claude-sonnet-5-5",
+      "--candidate-effort",
+      "low",
+    ]);
+    expect(args.candidateModel).toBe("claude-sonnet-5-5");
+    expect(args.candidateEffort).toBe("low");
+  });
+
+  it("rejects an unknown --candidate-effort", () => {
+    expect(() =>
+      parseEvalGenArgs([...required, "--candidate-effort", "bogus"]),
+    ).toThrow(/effort/);
+  });
+
+  it("passes the candidate model/effort to the candidate arm only", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+    await runGenEval(
+      runOpts({
+        executor,
+        dataset: TR_CELLS.slice(0, 1),
+        args: { candidateModel: "claude-sonnet-5-5", candidateEffort: "low" },
+      }),
+    );
+    expect(seen).toHaveLength(2);
+    // baseline is called first, candidate second
+    expect(seen[0].generatorModel).toBeUndefined();
+    expect(seen[0].generatorEffort).toBeUndefined();
+    expect(seen[1].generatorModel).toBe("claude-sonnet-5-5");
+    expect(seen[1].generatorEffort).toBe("low");
+  });
+
+  it("computeArmStats prefers an ArmResult's own costUsd", () => {
+    const stats = computeArmStats([
+      { outcomes: [], usage: ZERO_USAGE, costUsd: 1.25 },
+    ]);
+    expect(stats.costUsd).toBe(1.25);
+  });
+
+  it("computeArmStats falls back to estimateCostUsd(usage) without costUsd", () => {
+    const usage = { ...ZERO_USAGE, outputTokens: 1000 };
+    const stats = computeArmStats([{ outcomes: [], usage }]);
+    expect(stats.costUsd).toBe(estimateCostUsd(usage));
+  });
+
+  it("the cost cap uses the per-arm costUsd", async () => {
+    const executor: GenCellArmExecutor = vi.fn(async () => ({
+      outcomes: [],
+      usage: ZERO_USAGE,
+      costUsd: 1,
+    }));
+    const result = await runGenEval(
+      runOpts({ executor, dataset: TR_CELLS, args: { maxCostUsd: 1.5 } }),
+    );
+    expect(result.costCapped).toBe(true);
+    expect(result.cells).toHaveLength(1);
+  });
+});

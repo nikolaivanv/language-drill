@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildGroundTruth, confirmedDuplicateIds, judgePasses, scoreJudge, type JudgeCase } from "./fw-dedup-judge-eval";
+import { buildGroundTruth, confirmedDuplicateIds, judgeOptions, judgePasses, scoreJudge, type JudgeCase } from "./fw-dedup-judge-eval";
 
 describe("buildGroundTruth", () => {
   it("labels rows in multi-row clusters as duplicates and singletons as distinct", () => {
@@ -62,5 +62,22 @@ describe("confirmedDuplicateIds", () => {
     expect(confirmedDuplicateIds(null).size).toBe(0);
     expect(confirmedDuplicateIds({ confirmedDuplicates: "x" }).size).toBe(0);
     expect(confirmedDuplicateIds({ confirmedDuplicates: [{ rowId: 7 }, {}] }).size).toBe(0);
+  });
+});
+
+describe("judgeOptions", () => {
+  it("returns {} when neither is set", () => {
+    expect(judgeOptions({})).toEqual({});
+  });
+  it("includes only the keys that are set", () => {
+    expect(judgeOptions({ model: "claude-opus-5-5" })).toEqual({ model: "claude-opus-5-5" });
+    expect(judgeOptions({ effort: "low" })).toEqual({ effort: "low" });
+    expect(Object.keys(judgeOptions({ model: "m" }))).toEqual(["model"]);
+  });
+  it("returns both", () => {
+    expect(judgeOptions({ model: "m", effort: "high" })).toEqual({ model: "m", effort: "high" });
+  });
+  it("rejects an unknown effort", () => {
+    expect(() => judgeOptions({ effort: "bogus" })).toThrow(/effort/);
   });
 });
