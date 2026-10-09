@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { ExerciseType } from "@language-drill/shared";
 
 import {
+  FREE_WRITING_DEDUP_MODEL,
   FREE_WRITING_DEDUP_PROMPT_VERSION,
   FREE_WRITING_DEDUP_SYSTEM_PROMPT,
   FREE_WRITING_DEDUP_TOOL_NAME,
@@ -205,8 +206,16 @@ describe("judgeFreeWritingDuplicate", () => {
       return create.mock.calls[0][0] as Record<string, unknown>;
     };
 
-    it("default model sends temperature 0 and no thinking", async () => {
+    it("defaults to FREE_WRITING_DEDUP_MODEL (Opus 4.8): no temperature, no thinking", async () => {
       const req = await run();
+      expect(FREE_WRITING_DEDUP_MODEL).toBe("claude-opus-4-8");
+      expect(req.model).toBe(FREE_WRITING_DEDUP_MODEL);
+      expect("temperature" in req).toBe(false);
+      expect("thinking" in req).toBe(false);
+    });
+
+    it("a Sonnet 4.x override sends temperature 0 and no thinking", async () => {
+      const req = await run("claude-sonnet-4-6");
       expect(req.temperature).toBe(0);
       expect("thinking" in req).toBe(false);
     });

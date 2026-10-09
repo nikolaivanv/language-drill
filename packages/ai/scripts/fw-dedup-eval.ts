@@ -9,7 +9,8 @@
  * draft is judged against the cell's prompts plus the drafts accepted so far;
  * a duplicate retries up to 3× with refreshed history, then gives up. A judge
  * failure accepts the draft as flagged.
- * Scoring: an independent judge (QA_CRAFTER_MODEL) checks each accepted draft
+ * Scoring: an independent judge (FW_DEDUP_SCORER_MODEL, a different model from the
+ * pipeline's FREE_WRITING_DEDUP_MODEL) checks each accepted draft
  * against the cell's existing prompts and the arm's other accepted drafts.
  *
  *   DATABASE_URL=<prod> pnpm eval:fw-dedup --judge-report <abs path to eval:fw-dedup-judge JSON> [--out <name>] [--max-cost-usd 10]
@@ -41,7 +42,6 @@ import {
 } from "@language-drill/shared";
 
 import {
-  QA_CRAFTER_MODEL,
   ZERO_USAGE,
   addUsage,
   createClaudeClient,
@@ -81,6 +81,12 @@ export type ArmMetrics = {
 export const CANDIDATE_MAX_DUP_RATE = 0.05;
 export const BASELINE_MIN_DUP_RATE = 0.2;
 export const MAX_APPROVAL_DROP = 0.1;
+/**
+ * Independent scorer: must differ from the pipeline judge (FREE_WRITING_DEDUP_MODEL,
+ * Opus 4.8). Opus 5.x would be the obvious pick but rejects `thinking: disabled`,
+ * which the judge's per-model guard sends; Opus 4.7 is guard-compatible.
+ */
+export const FW_DEDUP_SCORER_MODEL = "claude-opus-4-7";
 const MAX_RETRIES = 3;
 
 export function normalizeTitle(t: string): string {
@@ -243,7 +249,7 @@ async function scoreArm(client: Anthropic, c: EvalCell, arm: ArmOutcome): Promis
       const j = await judgeFreeWritingDuplicate(
         client,
         { candidate: arm.accepted[i].summary, existing: others, cefrLevel: c.cell.cefrLevel },
-        { model: QA_CRAFTER_MODEL },
+        { model: FW_DEDUP_SCORER_MODEL },
       );
       usage = addUsage(usage, j.tokenUsage);
       flags.push(j.result.duplicateOf !== null);
