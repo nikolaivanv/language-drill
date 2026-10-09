@@ -69,6 +69,29 @@ export function judgePasses(s: JudgeScore): boolean {
   return s.precision >= JUDGE_PRECISION_BAR && s.recall >= JUDGE_RECALL_BAR;
 }
 
+/**
+ * Row ids hand-confirmed as duplicates after a judge run disagreed with the
+ * #757 label (docs/analysis/fw-round3-dedup-label-amendments-*.json). Their
+ * truth is forced to "duplicate"; overturned entries keep the original label.
+ */
+export function confirmedDuplicateIds(amendments: unknown): Set<string> {
+  const list =
+    typeof amendments === "object" && amendments !== null
+      ? (amendments as Record<string, unknown>).confirmedDuplicates
+      : undefined;
+  if (!Array.isArray(list)) return new Set();
+  return new Set(
+    list.flatMap((e) => {
+      const id = typeof e === "object" && e !== null ? (e as Record<string, unknown>).rowId : undefined;
+      return typeof id === "string" ? [id] : [];
+    }),
+  );
+}
+
+const DEFAULT_AMENDMENTS = fileURLToPath(
+  new URL("../../../docs/analysis/fw-round3-dedup-label-amendments-2026-10-09.json", import.meta.url),
+);
+
 const DEFAULT_PROPOSALS = fileURLToPath(
   new URL("../../../docs/analysis/fw-round3-dedup-proposals-2026-10-07.json", import.meta.url),
 );
@@ -77,6 +100,12 @@ async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
       proposals: { type: "string", default: DEFAULT_PROPOSALS },
+      // Pass `--amendments none` to score against the raw #757 labels.
+      amendments: { type: "string", default: DEFAULT_AMENDMENTS },
+      // Judge model override (default VALIDATION_MODEL). Cost figures and the
+      // --max-cost-usd cap stay Sonnet-priced, so an Opus run spends ~5x the
+      // reported cost.
+      model: { type: "string" },
       out: { type: "string", default: `fw-dedup-judge-${new Date().toISOString().slice(0, 10)}` },
       limit: { type: "string" },
       "max-cost-usd": { type: "string", default: "5" },
@@ -89,6 +118,14 @@ async function main(): Promise<void> {
   const db = createDb(dbUrl);
   const client = createClaudeClient(apiKey);
   const maxCost = Number(values["max-cost-usd"]);
+  const confirmed =
+    values.amendments === "none"
+      ? new Set<string>()
+      : confirmedDuplicateIds(JSON.parse(readFileSync(values.amendments!, "utf8")));
+  if (values.model) {
+    console.log(`[fw-dedup-judge] judge model ${values.model} — cost figures are Sonnet-priced`);
+  }
+  console.log(`[fw-dedup-judge] ${confirmed.size} hand-confirmed label amendments applied`);
 
   let cells = JSON.parse(readFileSync(values.proposals!, "utf8")) as ProposalCell[];
   if (values.limit) cells = cells.slice(0, Number(values.limit));
@@ -123,14 +160,18 @@ async function main(): Promise<void> {
       const existing = others.map((o) => summaryById.get(o.id)!);
       // Truth is relative to the rows actually present: a duplicate whose
       // cluster-mates are all missing from the DB is not a findable duplicate.
-      const truth = others.some((o) => o.cluster === row.cluster);
+      const truth = others.some((o) => o.cluster === row.cluster) || confirmed.has(row.id);
       const candidate = summaryById.get(row.id)!;
       // A verdict that stays malformed after the judge's own retry is recorded,
       // not fatal: in production it means "inserted flagged", so its rate is a
       // measurement in its own right.
       let judged: Awaited<ReturnType<typeof judgeFreeWritingDuplicate>>;
       try {
-        judged = await judgeFreeWritingDuplicate(client, { candidate, existing, cefrLevel: cell.level });
+        judged = await judgeFreeWritingDuplicate(
+          client,
+          { candidate, existing, cefrLevel: cell.level },
+          values.model ? { model: values.model } : {},
+        );
       } catch (e) {
         judgeErrors.push({ cell: cell.cell, id: row.id, truth, error: (e as Error).message });
         continue;
@@ -151,6 +192,7 @@ async function main(): Promise<void> {
   const report = {
     runName: values.out, startedAt: new Date().toISOString(), cells: cells.length,
     rowsJudged: cases.length, rowsMissing: missing, costCapped: capped,
+    judgeModel: values.model ?? "default", amendmentsApplied: confirmed.size,
     score, bars: { precision: JUDGE_PRECISION_BAR, recall: JUDGE_RECALL_BAR }, passed,
     costUsd: estimateCostUsd(usage), judgeErrors, errorRate, cases, disagreements,
   };
