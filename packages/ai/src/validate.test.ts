@@ -30,6 +30,7 @@ import {
 } from "./validate.js";
 import { requestShape } from "./test-utils/request-shape";
 import { ContentRejectedError } from "./content-rejected-error.js";
+import { capabilityFor } from "./model-request.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -93,24 +94,19 @@ const validValidationInput: ValidationResult = {
 // ---------------------------------------------------------------------------
 
 describe("VALIDATION_MODEL", () => {
-  // Held at sonnet-4-6 ON PURPOSE. The sonnet-5 upgrade was built and measured;
-  // the five-arm run showed its recall gain is superadditive with the prompt
-  // change (39/53 together, 31/53 and 32/53 alone), so the model half was not
-  // shipped — it is the costlier one to unwind, needing a deploy where the
-  // prompt needs only a Langfuse label re-point. See the constant's docstring
-  // for the full table.
-  it("is pinned to claude-sonnet-4-6", () => {
-    expect(VALIDATION_MODEL).toBe("claude-sonnet-4-6");
+  // Switched to sonnet-5-5 on 2026-10-09 after the fixture + real-pool A/B
+  // (see the constant's docstring). Reverting is this constant plus a deploy.
+  it("is claude-sonnet-5-5", () => {
+    expect(VALIDATION_MODEL).toBe("claude-sonnet-5-5");
   });
 
-  // Guards the request shaping: sonnet-4-6 ACCEPTS sampling params and does not
-  // default to adaptive thinking, so `validateDraft` must send `temperature`
-  // and omit `thinking` for it. Those two guards are keyed off the model
-  // string, so this pin is what keeps them on the correct branch.
-  it("is a model that accepts temperature and does not imply adaptive thinking", () => {
-    expect(/sonnet-5|opus-4-[7-9]|opus-5|fable/.test(VALIDATION_MODEL)).toBe(
-      false,
-    );
+  // The request shape follows the model's capability row: sonnet-5-5 rejects a
+  // forced tool, sampling params and `thinking: disabled`.
+  it("resolves to the sonnet-5-5 capability row (no forced tool, no sampling params)", () => {
+    const caps = capabilityFor(VALIDATION_MODEL);
+    expect(caps.family).toBe("sonnet-5-5");
+    expect(caps.forcedToolChoice).toBe(false);
+    expect(caps.samplingParams).toBe(false);
   });
 });
 
@@ -479,15 +475,20 @@ describe("validateDraft", () => {
     // Sonnet 5 rejects non-default sampling params — see the "request shaping
     // for Sonnet 5" describe block below for the dedicated coverage.
     expect(callArgs.max_tokens).toBe(VALIDATION_MAX_TOKENS);
-    expect(callArgs.tools).toEqual([buildValidationTool(ExerciseType.CLOZE)]);
-    expect(callArgs.tool_choice).toEqual({
-      type: "tool",
-      name: VALIDATION_TOOL_NAME,
-    });
-    // The system block is cached for prompt-cache hits within a cell.
-    expect(callArgs.system).toHaveLength(1);
+    // sonnet-5-5: the tool goes out strict under tool_choice auto, with a
+    // one-line instruction block after the cached system block.
+    expect(callArgs.tools).toHaveLength(1);
+    expect(callArgs.tools[0].name).toBe(VALIDATION_TOOL_NAME);
+    expect(callArgs.tools[0].strict).toBe(true);
+    expect(callArgs.tool_choice).toEqual({ type: "auto" });
+    // The first system block is cached for prompt-cache hits within a cell.
+    expect(callArgs.system).toHaveLength(2);
     expect(callArgs.system[0].type).toBe("text");
     expect(callArgs.system[0].cache_control).toEqual({ type: "ephemeral" });
+    expect(callArgs.system[1]).toEqual({
+      type: "text",
+      text: `Respond only by calling the ${VALIDATION_TOOL_NAME} tool.`,
+    });
     // The user message carries the rendered draft.
     expect(callArgs.messages).toHaveLength(1);
     expect(callArgs.messages[0].role).toBe("user");
@@ -560,12 +561,10 @@ describe("validateDraft", () => {
     });
   });
 
-  // The production model is sonnet-4-6, which ACCEPTS sampling params and does
-  // not default to adaptive thinking — so the two guards above must take their
-  // other branch by default. Without these, reverting the model would silently
-  // leave the request shaped for a model we no longer call.
+  // The production model is sonnet-5-5: no sampling params, and "thinking off"
+  // is expressed as between_tools.
   describe("validateDraft request shaping for the production model", () => {
-    it("sends temperature and omits thinking on sonnet-4-6", async () => {
+    it("omits temperature and sends between_tools thinking on sonnet-5-5", async () => {
       mockCreate.mockResolvedValue({
         content: [
           {
@@ -587,9 +586,9 @@ describe("validateDraft", () => {
       await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.model).toBe("claude-sonnet-4-6");
-      expect(callArgs.temperature).toBe(VALIDATION_TEMPERATURE);
-      expect(callArgs.thinking).toBeUndefined();
+      expect(callArgs.model).toBe("claude-sonnet-5-5");
+      expect(callArgs.temperature).toBeUndefined();
+      expect(callArgs.thinking).toEqual({ type: "between_tools" });
     });
   });
 
