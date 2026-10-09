@@ -29,7 +29,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Task"
+                        "text": "Task achievement"
                       }
                     ]
                   },
@@ -49,7 +49,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Coherence"
+                        "text": "Coherence & cohesion"
                       }
                     ]
                   },
@@ -69,7 +69,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Vocabulary"
+                        "text": "Lexical resource"
                       }
                     ]
                   },
@@ -89,7 +89,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "Grammar"
+                        "text": "Grammatical range & accuracy"
                       }
                     ]
                   },
@@ -141,7 +141,7 @@
               "text": [
                 {
                   "kind": "text",
-                  "text": "Writing fewer words than the minimum costs you on Task, even if every sentence is correct."
+                  "text": "Writing fewer words than the minimum costs you on Task achievement, even if every sentence is correct."
                 }
               ]
             }

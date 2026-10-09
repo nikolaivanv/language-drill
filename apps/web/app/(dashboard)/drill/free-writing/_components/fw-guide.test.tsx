@@ -48,6 +48,22 @@ describe('FwGuide', () => {
     expect(onBandChange).toHaveBeenCalledWith('a1-a2');
   });
 
+  it('resets the article scroll to the top when the band changes', () => {
+    const tree = (band: 'a1-a2' | 'b1-b2') => (
+      <QueryClientProvider client={new QueryClient()}>
+        <ConsentProvider>
+          <FwGuide language={Language.ES} band={band} onBandChange={vi.fn()} />
+        </ConsentProvider>
+      </QueryClientProvider>
+    );
+    const { container, rerender } = render(tree('b1-b2'));
+    const scroller = container.querySelector('.theory-scroll') as HTMLElement;
+    scroller.scrollTop = 500;
+    expect(scroller.scrollTop).toBe(500);
+    rerender(tree('a1-a2'));
+    expect(scroller.scrollTop).toBe(0);
+  });
+
   it('links back to free writing', () => {
     renderGuide();
     expect(screen.getByRole('link', { name: /free writing/ })).toHaveAttribute('href', '/drill/free-writing');

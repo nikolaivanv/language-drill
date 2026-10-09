@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import type { LearningLanguage } from '@language-drill/shared';
 import { useScrollSpy } from '../../../../../lib/hooks/use-scroll-spy';
@@ -34,6 +34,12 @@ export function FwGuide({ language, band, onBandChange }: FwGuideProps) {
   const topic = useMemo(() => renderTheoryTopicJson(getWritingGuide(language, band)), [language, band]);
   const sectionIds = topic.sections.map((s) => s.id);
   const activeSectionId = useScrollSpy(sectionIds, scrollRef);
+
+  // Switching band or language swaps the whole article; start it at the top
+  // (mirrors the theory detail page). Only the content scroller resets.
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [band, language]);
 
   // The article scrolls inside `.theory-scroll`; render the footer there.
   useSuppressShellFooter(true);
