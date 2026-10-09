@@ -40,6 +40,7 @@
     "eval:gen": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:gen",
     "eval:fw-dedup-judge": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:fw-dedup-judge",
     "eval:fw-dedup": "dotenv -e .env -- pnpm --filter @language-drill/ai eval:fw-dedup",
+    "verify:model-requests": "dotenv -e .env -- pnpm --filter @language-drill/ai verify:model-requests",
     "qa:sample": "dotenv -e .env -- pnpm --filter @language-drill/ai qa:sample",
     "audit:collapse": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:collapse",
     "audit:gloss": "dotenv -e .env -- pnpm --filter @language-drill/ai audit:gloss",
