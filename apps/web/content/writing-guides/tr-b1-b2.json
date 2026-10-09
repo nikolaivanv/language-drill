@@ -1,0 +1,2112 @@
+{
+  "id": "tr-b1-b2",
+  "title": "Writing a paragraph in Turkish",
+  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "cefr": "B1–B2",
+  "sections": [
+    {
+      "id": "what-is-graded",
+      "title": "what the grader looks for",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Every attempt is scored on four criteria, and each one counts. A paragraph with perfect grammar that ignores half the prompt scores low; so does a well-organised answer full of agreement errors. Aim for a balance."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Task achievement"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — did you answer the prompt, cover every required element, take a clear position where one is asked for, and stay inside the word range?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Coherence & cohesion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — does the paragraph have a clear opening, supporting points and a conclusion, and do connectors show how each idea relates to the last?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Lexical resource"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — is your word choice precise and varied, and does it fit the register (informal or formal) of the task?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Grammatical range & accuracy"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — are verb forms, agreement and word order correct, and do you use some more complex structures (subordinate clauses, a range of tenses) accurately?"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B1:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 80–120 words, 15 minutes on the timer. "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B2:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 150–200 words, 25 minutes on the timer."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "text",
+                  "text": "Going far over the maximum does not earn extra credit — it usually means padding or repetition, and going over the length band also costs you on Task achievement."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paragraph-shape",
+      "title": "the shape of a paragraph",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A strong opinion paragraph has three parts: an "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "opening sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that states your position, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "two or three supporting points"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (each backed by a reason or an example, and ideally one point that admits the other side), and a "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "closing sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph answering "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Uzaktan çalışma iyi bir fikir mi?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (is remote work a good idea?), one sentence at a time. It is 97 words — B1 length. A B2 answer would develop each point further."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Bence uzaktan çalışmanın avantajları dezavantajlarından daha fazladır."
+            }
+          ],
+          "en": "In my opinion, remote work has more advantages than disadvantages.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: states the position clearly."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Her şeyden önce"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", uzaktan çalışan kişiler işe gidip gelmek zorunda olmadıkları "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " çok zaman kazanırlar."
+            }
+          ],
+          "en": "First of all, people who work remotely save a lot of time because they don't have to commute.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 1, with a reason: "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-dıkları için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (because they …)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Örneğin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", İstanbul'da yaşayan bir arkadaşım eskiden her gün trafikte iki saat geçiriyordu; şimdi bu zamanı spora ayırıyor."
+            }
+          ],
+          "en": "For example, a friend of mine who lives in Istanbul used to spend two hours in traffic every day; now she devotes that time to sport.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A concrete example backing point 1."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ayrıca"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", birçok kişi evde daha sakin bir ortamda çalıştığı "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " işine daha iyi odaklanabiliyor."
+            }
+          ],
+          "en": "Moreover, many people can focus better on their work because they work in a calmer environment at home.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 2."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ancak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " uzaktan çalışmanın bazı riskleri "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "de"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " var: Uzun süre evde tek başına çalışan insanlar kendilerini yalnız hissedebilir."
+            }
+          ],
+          "en": "However, remote work also has some risks: people who work alone at home for a long time may feel lonely.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 3 admits the other side."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bu yüzden"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " şirketlerin çalışanlarını düzenli olarak bir araya getirmesi önemlidir."
+            }
+          ],
+          "en": "That is why it is important for companies to bring their employees together regularly.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Draws a consequence from the objection."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sonuç olarak"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", uzaktan çalışmanın bazı zorlukları olmasına "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "rağmen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " haftanın birkaç günü evden çalışmak bence en iyi çözümdür."
+            }
+          ],
+          "en": "In conclusion, although remote work has some difficulties, working from home a few days a week is, in my view, the best solution.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: restates the position in a more precise form, with a concession ("
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-masına rağmen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. Notice that some of them work in two pieces: a suffix that turns the verb into a noun ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "olmadıkları"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "olmasına"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "), followed by a separate word ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "rağmen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "). See the next section."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "connectors",
+      "title": "connectors",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "At B1–B2 the grader looks for "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "range"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ": not just "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ve"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ama"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "çünkü"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", but connectors that show contrast, consequence and concession — including the suffix-based ones."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Adding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ayrıca"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "bunun yanı sıra"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "üstelik"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Toplu taşıma ucuzdur; "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ayrıca"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " çevreyi daha az kirletir."
+                  }
+                ],
+                "en": "Public transport is cheap; moreover, it pollutes the environment less."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Contrasting"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ancak"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "fakat"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-masına rağmen"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-sa bile"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Kira çok yüksek olmasına "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "rağmen"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " şehir merkezinde yaşamayı tercih ediyorum."
+                  }
+                ],
+                "en": "Although the rent is very high, I prefer living in the city centre."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Cause and effect"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "çünkü"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-dığı için"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "bu yüzden"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "bu nedenle"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Otobüsler gece çalışmıyor. "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Bu yüzden"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " genellikle taksiye biniyorum."
+                  }
+                ],
+                "en": "The buses don't run at night. That's why I usually take a taxi."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Giving an example"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "örneğin"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "mesela"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (informal), "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "… gibi"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Kopenhag "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gibi"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " bazı şehirler daha fazla bisiklet yolu yapıyor."
+                  }
+                ],
+                "en": "Some cities, such as Copenhagen, are building more cycle paths."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sequencing and concluding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ilk olarak"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "son olarak"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sonuç olarak"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "kısacası"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sonuç olarak"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", bu sorunun çözümü hepimizin elinde."
+                  }
+                ],
+                "en": "In conclusion, the solution to this problem is in all our hands."
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Many Turkish connectors are a verb suffix plus a small word at the end of a clause"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-dığı için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-sa bile"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). The subordinate clause comes first and ends in the connector; the main clause follows. The suffix takes vowel harmony, and both "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-dığı için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " change with the subject: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğum için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmama rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (I), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğun için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmana rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (you), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğu için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmasına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (he/she/it)."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yağmur yağdığı için evde kaldık."
+                }
+              ],
+              "en": "Because it was raining, we stayed at home.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-dığı için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — because."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yorgun olduğum için erken yattım."
+                }
+              ],
+              "en": "Because I was tired, I went to bed early.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-duğum için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — the ending shows the subject is \"I\"."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yağmur yağmasına rağmen dışarı çıktık."
+                }
+              ],
+              "en": "Even though it was raining, we went out.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — although (a fact)."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yorgun olmama "
+                },
+                {
+                  "kind": "hilite",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ders çalıştım."
+                }
+              ],
+              "en": "Although I was tired, I studied.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " with the ending for \"I\": "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmama rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yağmur yağsa bile yarın dışarı çıkacağız."
+                }
+              ],
+              "en": "Even if it rains, we will go out tomorrow.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-sa bile"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — even if (a possibility)."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "register",
+      "title": "informal or formal",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Choose "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (informal) or "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "siz"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (formal) and keep it to the end. The choice affects verb endings and possessives: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sen gelirsin, senin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " versus "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "siz gelirsiniz, sizin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ". Mixing them in one letter is one of the most visible register errors. Formal requests are usually phrased as polite questions: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bana bilgi verebilir misiniz?"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (Could you give me some information?)"
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "An informal message to a friend:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Sevgili Ayşe, nasılsın? Uzun zamandır sana yazamadım."
+            }
+          ],
+          "en": "Dear Ayşe, how are you? I haven't been able to write to you for a long time.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal opening."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Görüşmek üzere,"
+            }
+          ],
+          "en": "See you soon,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal closing. Also: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sevgiler,"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A formal email or letter:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Sayın Yetkili,"
+            }
+          ],
+          "en": "Dear Sir or Madam,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal opening when you don't know the name."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Yaz kursu hakkında bilgi almak için yazıyorum."
+            }
+          ],
+          "en": "I am writing to get information about the summer course.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A standard first line."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Yanıtınız için şimdiden teşekkür ederim."
+            }
+          ],
+          "en": "Thank you in advance for your reply.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal pre-closing; "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "yanıtınız"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " is the siz form of \"your reply\"."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Saygılarımla,"
+            }
+          ],
+          "en": "Yours sincerely,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal closing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-and-length",
+      "title": "the task and the word count",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Most prompts list "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "required elements"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — things your text must mention. The grader checks each one. Make every element visibly present: give it its own sentence, and use the element's own key word so it cannot be missed."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Uzaktan çalışmanın bir dezavantajı yalnızlıktır."
+            }
+          ],
+          "en": "One disadvantage of remote work is loneliness.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Required element \"mention a disadvantage\" — the key word "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "dezavantaj"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " makes it impossible to miss."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Plan first."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Before you write, list the required elements and give each one a sentence. Add your opening and closing sentence to the plan."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Write, then link."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Draft the sentences, then join them with connectors so the reasoning is easy to follow."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Count your words"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " before you submit, and compare with the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too short?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Add a reason or a concrete example to your weakest point, or a sentence that admits the other side."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too long?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Cut repetition first — sentences that say the same thing twice — not a required element."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-mistakes",
+      "title": "common mistakes",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "These are the errors the grader flags most often at B1–B2. Each example shows the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "correct"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sentence; the wrong version is in the note."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Arkadaşlarımla konuştuktan sonra kararımı verdim."
+            }
+          ],
+          "en": "After talking to my friends, I made my decision.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *konuştukten sonra*. Suffix vowels follow the last vowel of the stem: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "konuş- → konuştuktan"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "İstanbul'da yaşayan bir arkadaşım var."
+            }
+          ],
+          "en": "I have a friend who lives in Istanbul.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *İstanbul'da yaşadığı arkadaşım*. When the noun is the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "subject"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " of the relative clause (the friend lives), use "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-an / -en"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ". Use "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-dığı"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " only when the noun is the object or a place ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "yaşadığım şehir"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — the city I live in)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Geçen yıl okuduğum kitap çok ilginçti."
+            }
+          ],
+          "en": "The book I read last year was very interesting.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Geçen yıl okudum kitap*. A relative clause with its own subject uses "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-dık-"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (past/present) or "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-acak-"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (future) plus a possessive ending for the subject ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğun"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğu"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "…), before the noun: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "yarın gideceğim şehir"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — \"the city I will go to tomorrow\"."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Dün aldığım kitabı bitirdim."
+            }
+          ],
+          "en": "I finished the book I bought yesterday.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Dün aldığım kitap bitirdim*. A definite object takes the accusative "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-ı / -i / -u / -ü"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "; an indefinite one does not: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Dün bir kitap aldım."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Bu konuda sizinle görüşmek istiyorum."
+            }
+          ],
+          "en": "I would like to meet with you about this matter.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *İstiyorum sizinle görüşmek bu konuda*. The main verb comes at the end, even in long sentences."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "title": "before you submit",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Run through this list before you press submit:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Every required element is present, each in its own sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The word count is inside the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "There is an opening sentence and a closing sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You used at least "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "4 connectors"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", including "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that contrasts"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ideas."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The register is consistent from start to finish — you did not switch between informal and formal."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You reread the text once, looking only for the mistakes listed in the previous section."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

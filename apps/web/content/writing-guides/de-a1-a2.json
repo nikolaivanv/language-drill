@@ -1,0 +1,1949 @@
+{
+  "id": "de-a1-a2",
+  "title": "Writing a paragraph in German",
+  "subtitle": "How to write a short paragraph about everyday life at A1–A2 — what the grader looks for and how to deliver it.",
+  "cefr": "A1–A2",
+  "sections": [
+    {
+      "id": "what-is-graded",
+      "title": "what the grader looks for",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Every attempt is scored on four criteria. You get a score for each one, plus corrections of your sentences. Knowing the four criteria tells you where to spend your effort."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Task achievement"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — did you answer the question, include every required element, and stay inside the word range?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Coherence & cohesion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — do your sentences come in a clear order, joined with simple connectors such as \"and\", \"but\" and \"because\"?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Lexical resource"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — did you use words that fit the topic, spelled correctly, without repeating the same word again and again?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Grammatical range & accuracy"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — are your verb forms, agreement and word order correct?"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "A1:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 30–60 words, 10 minutes on the timer. "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "A2:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 60–100 words, 15 minutes on the timer."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "text",
+                  "text": "Writing fewer words than the minimum costs you on Task achievement, even if every sentence is correct."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paragraph-shape",
+      "title": "the shape of a paragraph",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A good short paragraph has three parts: an "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "opening sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that says what you are writing about, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "two or three supporting points"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (each with a detail, a reason or an example), and a "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "closing sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that rounds it off."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph on the topic "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Mein Wochenende\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (my weekend), one sentence at a time. It is 75 words — A2 length. At A1, write the opening, two supporting sentences and the closing."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Wochenende habe ich viel Zeit für meine Familie "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " meine Hobbys."
+            }
+          ],
+          "en": "At the weekend I have a lot of time for my family and my hobbies.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: says what the paragraph is about. The time phrase comes first, so the verb "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "habe"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " comes second and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ich"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " follows it."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Samstag stehe ich spät auf "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " frühstücke mit meinem Bruder."
+            }
+          ],
+          "en": "On Saturday I get up late and have breakfast with my brother.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 1. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aufstehen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " is separable: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "stehe … auf"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Dann"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " gehen wir zusammen in den Park, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " wir gern Fußball spielen."
+            }
+          ],
+          "en": "Then we go to the park together, because we like playing football.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Adds a reason with "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — the verb "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "spielen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " goes to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Abend koche ich oft für meine Freunde, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " manchmal gehen wir "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "auch"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " ins Kino."
+            }
+          ],
+          "en": "In the evening I often cook for my friends, and sometimes we also go to the cinema.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 2."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Sonntag besuche ich "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zuerst"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " meine Großeltern, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " am Nachmittag lese ich ein Buch."
+            }
+          ],
+          "en": "On Sunday I first visit my grandparents, and in the afternoon I read a book.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 3."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich mag das Wochenende sehr, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " es ist immer zu kurz!"
+            }
+          ],
+          "en": "I like the weekend a lot, but it is always too short!",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: your feeling about the topic."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Notice that each sentence does one job, and the highlighted connectors link them. Starting sentences with a time phrase ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Samstag"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Abend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") gives the paragraph a clear order — just remember the verb still comes second."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "connectors",
+      "title": "connectors",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Connectors are the small words that show how one idea relates to the next. At this level, a handful used correctly is enough."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Adding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "und"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "auch"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Ich spiele Gitarre "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "und"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " singe "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "auch"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " gern."
+                  }
+                ],
+                "en": "I play the guitar and I also like singing."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Contrasting"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "aber"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sondern"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (after a negative: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "nicht klein, sondern groß"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Meine Wohnung ist klein, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "aber"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " sie ist sehr hell."
+                  }
+                ],
+                "en": "My flat is small, but it is very bright."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Cause"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "weil"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "denn"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Ich lerne Deutsch, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "weil"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ich in Berlin arbeiten möchte."
+                  }
+                ],
+                "en": "I am learning German because I want to work in Berlin."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Giving an example"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Beispiel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "wie"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (such as, before a noun: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Obst wie Äpfel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Ich esse gern Obst, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Beispiel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Äpfel und Bananen."
+                  }
+                ],
+                "en": "I like eating fruit, for example apples and bananas."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sequencing and concluding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zuerst"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "dann"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "danach"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Schluss"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Zuerst"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " frühstücke ich, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "dann"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " gehe ich zur Arbeit."
+                  }
+                ],
+                "en": "First I have breakfast, then I go to work."
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Connectors change word order."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "weil"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " sends the verb to the "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "end"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " of its clause: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, weil ich krank bin"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — not *weil ich bin krank*."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "zuerst"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "dann"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "danach"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " at the start of a sentence take the place before the verb, so the verb comes "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "second"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and the subject follows it: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Dann gehe ich nach Hause"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — not *Dann ich gehe nach Hause*."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "und"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "aber"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "denn"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " do "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "not"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " count as a position. The clause after them is a normal main clause with the verb second: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, aber ich bin müde"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". If another word comes first, the verb still comes second: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, und am Nachmittag lese ich ein Buch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "register",
+      "title": "informal or formal",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "German has two ways to say \"you\". Use "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "du"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " with friends, family and children; use "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " with adults you do not know, with people in an official role (a teacher, a doctor, a landlord) and in formal letters. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " is always written with a capital S, and its verb form is the same as for "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "sie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (they)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Hast du am Samstag Zeit?"
+            }
+          ],
+          "en": "Do you have time on Saturday?",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal: "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "du hast"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Haben Sie am Samstag Zeit?"
+            }
+          ],
+          "en": "Do you have time on Saturday?",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal: "
+            },
+            {
+              "kind": "mono",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie haben"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Pick one at the start and keep it to the end. Letters and emails also open and close differently. After the greeting comes a comma, and the next line starts with a small letter, unless its first word is always capitalised anyway (a noun, a name, or "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie / Ihnen / Ihr"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Liebe Anna,"
+            }
+          ],
+          "en": "Dear Anna,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal opening. For a man: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Lieber Tom,"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — or simply "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Hallo Tom,"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Viele Grüße"
+            }
+          ],
+          "en": "Best wishes",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal closing (no comma after it)."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Sehr geehrte Damen und Herren,"
+            }
+          ],
+          "en": "Dear Sir or Madam,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal opening when you don't know the name. With a name: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sehr geehrter Herr Müller,"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sehr geehrte Frau Müller,"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Mit freundlichen Grüßen"
+            }
+          ],
+          "en": "Yours sincerely",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal closing (no comma after it)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-and-length",
+      "title": "the task and the word count",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Most prompts list "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "required elements"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — things your text must mention. The grader checks each one. Make every element visibly present: give it its own sentence, and use the element's own key word so it cannot be missed."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Sonntag esse ich mit meiner Familie zu Mittag."
+            }
+          ],
+          "en": "On Sunday I have lunch with my family.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Required element \"what you do on Sunday\" — the sentence starts with the key word "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sonntag"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Plan first."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Before you write, list the required elements and give each one a sentence. Add your opening and closing sentence to the plan."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Write simply."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Short, correct sentences score better than long sentences with mistakes."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Count your words"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " before you submit, and compare with the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too short?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Add a reason (with \"because\") or an example to one of your points."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too long?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Cut repetition first — sentences that say the same thing twice — not a required element."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-mistakes",
+      "title": "common mistakes",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "These are the errors the grader flags most often at A1–A2. Each example shows the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "correct"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sentence; the wrong version is in the note."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Montag gehe ich ins Kino."
+            }
+          ],
+          "en": "On Monday I go to the cinema.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Am Montag ich gehe ins Kino*. In a main clause the verb is always the second element, even when the sentence starts with a time phrase."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich bleibe zu Hause, weil ich krank bin."
+            }
+          ],
+          "en": "I am staying at home because I am ill.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *weil ich bin krank*. After "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " the verb goes to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Die Wohnung ist klein, aber der Balkon ist groß."
+            }
+          ],
+          "en": "The flat is small, but the balcony is big.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Der Wohnung … die Balkon*. Learn every noun with its article: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "die Wohnung"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "der Balkon"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "das Haus"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich stehe um sieben Uhr auf."
+            }
+          ],
+          "en": "I get up at seven o'clock.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Ich aufstehe um sieben Uhr*. In a main clause, separable verbs split: the prefix goes to the end of the clause. After "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (or a modal verb) the verb stays in one piece at the end: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "…, weil ich um sieben Uhr aufstehe"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ich muss früh aufstehen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Am Abend lese ich ein Buch."
+            }
+          ],
+          "en": "In the evening I read a book.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Am abend lese ich ein buch*. All nouns are capitalised in German — also after "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ": "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Abend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Montag"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "title": "before you submit",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Run through this list before you press submit:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Every required element is present, each in its own sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The word count is inside the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "There is an opening sentence and a closing sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You used at least "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "2 connectors"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (for example \"and\", \"but\", \"because\")."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The register is consistent from start to finish — you did not switch between informal and formal."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You reread the text once, looking only for the mistakes listed in the previous section."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

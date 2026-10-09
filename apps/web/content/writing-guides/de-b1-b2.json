@@ -1,0 +1,2077 @@
+{
+  "id": "de-b1-b2",
+  "title": "Writing a paragraph in German",
+  "subtitle": "How to write an opinion or argument paragraph at B1–B2 — what the grader looks for and how to deliver it.",
+  "cefr": "B1–B2",
+  "sections": [
+    {
+      "id": "what-is-graded",
+      "title": "what the grader looks for",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Every attempt is scored on four criteria, and each one counts. A paragraph with perfect grammar that ignores half the prompt scores low; so does a well-organised answer full of agreement errors. Aim for a balance."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Task achievement"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — did you answer the prompt, cover every required element, take a clear position where one is asked for, and stay inside the word range?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Coherence & cohesion"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — does the paragraph have a clear opening, supporting points and a conclusion, and do connectors show how each idea relates to the last?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Lexical resource"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — is your word choice precise and varied, and does it fit the register (informal or formal) of the task?"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Grammatical range & accuracy"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — are verb forms, agreement and word order correct, and do you use some more complex structures (subordinate clauses, a range of tenses) accurately?"
+                  }
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B1:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 80–120 words, 15 minutes on the timer. "
+                },
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "B2:"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " 150–200 words, 25 minutes on the timer."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "text",
+                  "text": "Going far over the maximum does not earn extra credit — it usually means padding or repetition, and going over the length band also costs you on Task achievement."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "paragraph-shape",
+      "title": "the shape of a paragraph",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A strong opinion paragraph has three parts: an "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "opening sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that states your position, "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "two or three supporting points"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (each backed by a reason or an example, and ideally one point that admits the other side), and a "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "closing sentence"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " that restates your view."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Here is a model paragraph answering "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "\"Sind soziale Medien gut für Jugendliche?\""
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (are social media good for young people?), one sentence at a time. It is 116 words — B1 length (80–120). A B2 answer needs 150–200 words, so it would develop each point further with an extra reason or example."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Meiner Meinung nach bringen soziale Medien mehr Nachteile als Vorteile, besonders für Jugendliche."
+            }
+          ],
+          "en": "In my opinion, social media bring more disadvantages than advantages, especially for young people.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Opening sentence: states the position clearly."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Erstens"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " verbringen viele junge Menschen täglich mehrere Stunden am Handy, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "obwohl"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sie eigentlich lernen sollten."
+            }
+          ],
+          "en": "Firstly, many young people spend several hours a day on their phones, although they should really be studying.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 1. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Erstens"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " takes the first position, so the verb comes second; after "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "obwohl"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " the verb goes to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Außerdem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " vergleichen sie sich ständig mit perfekten Bildern, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " das kann ihr Selbstbewusstsein schwächen."
+            }
+          ],
+          "en": "Moreover, they constantly compare themselves with perfect pictures, and that can weaken their self-confidence.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 2, with a consequence."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Eine Freundin von mir hat "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "zum Beispiel"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " erzählt, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "dass"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sie sich nach einer Stunde auf Instagram oft schlecht fühlt."
+            }
+          ],
+          "en": "A friend of mine told me, for example, that she often feels bad after an hour on Instagram.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A concrete example backing point 2. "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "dass"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sends "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "fühlt"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Trotzdem"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " darf man die Vorteile nicht vergessen: Man kann schnell Informationen finden und mit Menschen auf der ganzen Welt sprechen."
+            }
+          ],
+          "en": "Nevertheless, you must not forget the advantages: you can find information quickly and talk to people all over the world.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Supporting point 3 admits the other side."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Deshalb"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sollten Eltern und Schulen den Jugendlichen zeigen, wie man soziale Medien bewusst nutzt."
+            }
+          ],
+          "en": "That is why parents and schools should show young people how to use social media mindfully.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Draws a consequence from both sides."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Zusammenfassend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " lässt sich sagen, dass soziale Medien für Jugendliche riskant sind, "
+            },
+            {
+              "kind": "hilite",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " nützlich sein können, wenn man sie in Maßen nutzt."
+            }
+          ],
+          "en": "In summary, social media are risky for young people, but they can be useful if used in moderation.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Closing sentence: restates the position in a more precise form."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. They also drive German word order — see the next section."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "connectors",
+      "title": "connectors",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "At B1–B2 the grader looks for "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "range"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ": not just "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "und"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "aber"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " and "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", but connectors that show contrast, consequence and concession — used with the right word order."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Adding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "außerdem"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zudem"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "darüber hinaus"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Das Fahrrad ist billig. "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Außerdem"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ist es gut für die Umwelt."
+                  }
+                ],
+                "en": "The bike is cheap. Moreover, it is good for the environment."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Contrasting"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "obwohl"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "trotzdem"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "jedoch"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Obwohl"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " die Miete hoch ist, wohne ich gern in der Stadt."
+                  }
+                ],
+                "en": "Although the rent is high, I like living in the city."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Cause and effect"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "weil"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "da"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "deshalb"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "daher"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Nachts fahren keine Busse. "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Deshalb"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " nehme ich oft ein Taxi."
+                  }
+                ],
+                "en": "There are no buses at night. That's why I often take a taxi."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Giving an example"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Beispiel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "beispielsweise"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "etwa"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "text",
+                    "text": "Viele Städte, "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zum Beispiel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Kopenhagen, bauen mehr Radwege."
+                  }
+                ],
+                "en": "Many cities, for example Copenhagen, are building more cycle paths."
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Sequencing and concluding"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " — "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "erstens"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "schließlich"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "zusammenfassend"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "kind": "example",
+                "target": [
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Zusammenfassend"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " kann man sagen, dass beide Seiten gute Argumente haben."
+                  }
+                ],
+                "en": "In summary, one can say that both sides have good arguments."
+              }
+            ]
+          ]
+        },
+        {
+          "kind": "callout",
+          "variant": "warn",
+          "children": [
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Three word-order patterns to get right."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Verb to the end"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " after subordinating conjunctions — "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "weil"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "da"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "dass"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "obwohl"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "wenn"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, obwohl die Miete hoch ist"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Verb second (inversion)"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " after adverbs at the start of a sentence — "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "deshalb"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "trotzdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "außerdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "daher"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Deshalb nehme ich ein Taxi"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " — not *Deshalb ich nehme ein Taxi*."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "jedoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " works like "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "trotzdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " at the start ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Jedoch ist die Miete hoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") but is most natural after the verb: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Die Miete ist jedoch hoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "strong",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "No extra position"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " after "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "und"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "aber"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "oder"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "denn"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "sondern"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": they stand before a normal verb-second clause — "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, aber ich wohne gern hier"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, aber trotzdem wohne ich gern hier"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
+                  "kind": "text",
+                  "text": "When a subordinate clause comes first, it counts as the first element — so the main clause starts with its verb: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Obwohl die Miete hoch ist, wohne ich gern in der Stadt."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "register",
+      "title": "informal or formal",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Choose "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "du"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (informal) or "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (formal) and keep it to the end. The choice affects verbs, pronouns and possessives: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "du hast, dich, dir, dein"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " versus "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie haben, Sie, Ihnen, Ihr"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — and Sie / Ihnen / Ihr are always capitalised (in letters and messages you may also capitalise Du / Dich / Dein as a courtesy; both are correct). For a group, use informal "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "ihr"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " or formal "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sie"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "An informal message to a friend:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Liebe Anna, wie geht es dir? Ich habe lange nichts von dir gehört."
+            }
+          ],
+          "en": "Dear Anna, how are you? I haven't heard from you for a long time.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal opening. After the comma, the next line starts in lower case."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Viele Grüße"
+            }
+          ],
+          "en": "Best wishes",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Informal closing. Also: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Liebe Grüße"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Bis bald"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "A formal email or letter:"
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Sehr geehrte Frau Schmidt,"
+            }
+          ],
+          "en": "Dear Ms Schmidt,",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal opening. To an unknown reader: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Sehr geehrte Damen und Herren,"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "ich schreibe Ihnen, weil ich mich für den Sommerkurs interessiere."
+            }
+          ],
+          "en": "I am writing to you because I am interested in the summer course.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "A standard first line, lower case after the greeting's comma; "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ihnen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " capitalised."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich würde mich über eine baldige Antwort freuen."
+            }
+          ],
+          "en": "I look forward to hearing from you soon.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal pre-closing."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Mit freundlichen Grüßen"
+            }
+          ],
+          "en": "Yours sincerely",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Formal closing."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-and-length",
+      "title": "the task and the word count",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Most prompts list "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "required elements"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " — things your text must mention. The grader checks each one. Make every element visibly present: give it its own sentence, and use the element's own key word so it cannot be missed."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ein Nachteil von sozialen Medien ist, dass sie viel Zeit kosten."
+            }
+          ],
+          "en": "One disadvantage of social media is that they take up a lot of time.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "Required element \"mention a disadvantage\" — the key word "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Nachteil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " makes it impossible to miss."
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Plan first."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Before you write, list the required elements and give each one a sentence. Add your opening and closing sentence to the plan."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Write, then link."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Draft the sentences, then join them with connectors so the reasoning is easy to follow."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Count your words"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " before you submit, and compare with the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too short?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Add a reason or a concrete example to your weakest point, or a sentence that admits the other side."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Too long?"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " Cut repetition first — sentences that say the same thing twice — not a required element."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "common-mistakes",
+      "title": "common mistakes",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "These are the errors the grader flags most often at B1–B2. Each example shows the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "correct"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sentence; the wrong version is in the note."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich glaube, dass das eine gute Idee ist."
+            }
+          ],
+          "en": "I think that this is a good idea.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *dass das ist eine gute Idee*. In a "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "dass"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " clause the verb goes to the end."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Deshalb habe ich mich für diesen Kurs angemeldet."
+            }
+          ],
+          "en": "That's why I signed up for this course.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Deshalb ich habe mich …*. After "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "deshalb"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " at the start, the verb comes second."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich glaube, dass man soziale Medien bewusst nutzen sollte."
+            }
+          ],
+          "en": "I think that one should use social media mindfully.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *dass man soziale Medien sollte bewusst nutzen*. In a subordinate clause the conjugated verb (here the modal) goes to the very end, after the infinitive."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich lege das Handy auf den Tisch. Jetzt liegt es auf dem Tisch."
+            }
+          ],
+          "en": "I put the phone on the table. Now it is lying on the table.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Ich lege das Handy auf dem Tisch*. Two-way prepositions ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "auf, in, an, über"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " …) take the accusative for a destination ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "wohin?"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") and the dative for a location ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "wo?"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") — even when there is movement within that place: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ich laufe im Park"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Ich weiß nicht, wann der Zug ankommt."
+            }
+          ],
+          "en": "I don't know when the train arrives.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *wann der Zug kommt an*. In a subordinate clause, a separable verb joins up again at the end."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checklist",
+      "title": "before you submit",
+      "body": [
+        {
+          "kind": "paragraph",
+          "text": [
+            {
+              "kind": "text",
+              "text": "Run through this list before you press submit:"
+            }
+          ]
+        },
+        {
+          "kind": "list",
+          "items": [
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Every required element is present, each in its own sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The word count is inside the range for your level."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "There is an opening sentence and a closing sentence."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You used at least "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "4 connectors"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", including "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "one that contrasts"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ideas."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The register is consistent from start to finish — you did not switch between informal and formal."
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "You reread the text once, looking only for the mistakes listed in the previous section."
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

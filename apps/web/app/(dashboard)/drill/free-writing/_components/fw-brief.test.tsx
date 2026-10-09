@@ -48,6 +48,26 @@ describe('FwBrief', () => {
     );
   });
 
+  it('shows the writing-guide card only when given a guide href', () => {
+    const { rerender } = render(
+      <FwBrief content={content} examMode={false} onToggleExam={() => {}} onBegin={() => {}} />,
+    );
+    expect(screen.queryByRole('link', { name: /how to write this/i })).toBeNull();
+    rerender(
+      <FwBrief
+        content={content}
+        examMode={false}
+        onToggleExam={() => {}}
+        onBegin={() => {}}
+        guideHref="/drill/free-writing/guide"
+      />,
+    );
+    expect(screen.getByRole('link', { name: /how to write this/i })).toHaveAttribute(
+      'href',
+      '/drill/free-writing/guide',
+    );
+  });
+
   it('begins on click', () => {
     const onBegin = vi.fn();
     render(
