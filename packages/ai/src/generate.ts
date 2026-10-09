@@ -33,6 +33,7 @@ import {
   type VocabRecallContent,
 } from "@language-drill/shared";
 
+import { extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   buildGenerationSystemPrompt,
@@ -670,6 +671,10 @@ export type GenerationSpec = {
    * `pnpm eval:gen` drive a candidate generation prompt without mutating the
    * live Langfuse prompt or relying on the module-scope prompt cache.
    */
+  /** Eval-only: generator model override (default GENERATION_MODEL). Production never sets it. */
+  modelOverride?: string;
+  /** Eval-only: effort for the generator (families with effort only). */
+  effort?: Effort;
   systemPromptOverride?: string;
   /**
    * Surfaces already persisted in this cell, fed into the generator's system
@@ -1537,9 +1542,16 @@ export async function generateOneDraft(
   // Infrastructure-level failures (network, rate-limit, auth) propagate
   // — they're not per-ordinal data quality issues. Only the parse path
   // below is loss-tolerant.
+  const model = spec.modelOverride ?? GENERATION_MODEL;
+  const shaped = shapeToolRequest(model, {
+    tool,
+    thinking: "off",
+    temperature: GENERATION_TEMPERATURE,
+    effort: spec.effort,
+  });
   const response = await client.messages.create(
     {
-      model: GENERATION_MODEL,
+      model,
       max_tokens: GENERATION_MAX_TOKENS,
       system: [
         {
@@ -1547,12 +1559,19 @@ export async function generateOneDraft(
           text: systemText,
           cache_control: { type: "ephemeral" as const },
         },
+        ...(shaped.systemSuffix
+          ? [{ type: "text" as const, text: shaped.systemSuffix }]
+          : []),
       ],
       messages: [{ role: "user" as const, content: userText }],
-      tools: [tool],
-      tool_choice: { type: "tool" as const, name: tool.name },
-      temperature: GENERATION_TEMPERATURE,
-    },
+      tools: shaped.tools,
+      tool_choice: shaped.tool_choice,
+      ...(shaped.thinking ? { thinking: shaped.thinking } : {}),
+      ...(shaped.temperature !== undefined
+        ? { temperature: shaped.temperature }
+        : {}),
+      ...(shaped.output_config ? { output_config: shaped.output_config } : {}),
+    } as Anthropic.MessageCreateParamsNonStreaming,
     { signal },
   );
 
@@ -1563,24 +1582,12 @@ export async function generateOneDraft(
 
   let content: ExerciseContent;
   try {
-    const toolUseBlock = response.content.find(
-      (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-    );
-    if (!toolUseBlock) {
-      throw new Error(
-        `no tool_use block returned (stop_reason=${response.stop_reason})`,
-      );
-    }
-    if (toolUseBlock.name !== tool.name) {
-      throw new Error(
-        `expected tool '${tool.name}', got '${toolUseBlock.name}'`,
-      );
-    }
+    const input = extractToolUse(response, tool.name, { label: "Generator" });
     content = isDictation
-      ? parseGeneratedDictationDraft(toolUseBlock.input, spec, ordinal)
+      ? parseGeneratedDictationDraft(input, spec, ordinal)
       : isFreeWriting
-        ? parseGeneratedFreeWritingDraft(toolUseBlock.input, spec)
-        : parseToolInput(toolUseBlock.input, spec);
+        ? parseGeneratedFreeWritingDraft(input, spec)
+        : parseToolInput(input, spec);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return {
@@ -1601,7 +1608,7 @@ export async function generateOneDraft(
       metadata: {
         grammarPointKey: spec.grammarPoint.key,
         topicDomain: spec.topicDomain,
-        modelId: GENERATION_MODEL,
+        modelId: model,
         inputTokens:
           usage.inputTokens +
           usage.cacheCreationInputTokens +

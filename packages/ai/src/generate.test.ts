@@ -410,6 +410,48 @@ describe("generateBatch", () => {
     expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
+  it("modelOverride claude-sonnet-5-5 shapes an auto + strict request with the suffix block", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "toolu_1", name: TOOL_NAME_BY_TYPE.cloze, input: validClozeInput }],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+    await generateOneDraft(mockClient, { ...baseSpec, modelOverride: "claude-sonnet-5-5" }, 0);
+    const req = mockCreate.mock.calls[0][0];
+    expect(req.model).toBe("claude-sonnet-5-5");
+    expect(req.tool_choice).toEqual({ type: "auto" });
+    expect(req.tools[0].strict).toBe(true);
+    expect(req.temperature).toBeUndefined();
+    expect(req.thinking).toEqual({ type: "between_tools" });
+    expect(req.system).toHaveLength(2);
+    expect(req.system[0].cache_control).toEqual({ type: "ephemeral" });
+    expect(req.system[1]).toEqual({
+      type: "text",
+      text: `Respond only by calling the ${req.tools[0].name} tool.`,
+    });
+  });
+
+  it("a reply with no tool call under auto mode is a malformed draft, not a crash", async () => {
+    mockCreate.mockResolvedValue({
+      stop_reason: "end_turn",
+      content: [{ type: "text", text: "Here is an exercise..." }],
+      usage: baseUsage,
+    });
+    const r = await generateOneDraft(mockClient, { ...baseSpec, modelOverride: "claude-sonnet-5-5" }, 0);
+    expect(r.kind).toBe("malformed");
+  });
+
+  it("metadata.modelId follows the override", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "toolu_1", name: TOOL_NAME_BY_TYPE.cloze, input: validClozeInput }],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+    const r = await generateOneDraft(mockClient, { ...baseSpec, modelOverride: "claude-opus-5-5" }, 0);
+    expect(r.kind).toBe("draft");
+    if (r.kind === "draft") expect(r.draft.metadata.modelId).toBe("claude-opus-5-5");
+  });
+
   it("produces a valid cloze draft and dispatches the cloze tool", async () => {
     mockCreate.mockResolvedValue({
       content: [
@@ -625,7 +667,7 @@ describe("generateBatch", () => {
     expect(malformedDrafts).toHaveLength(1);
     expect(malformedDrafts[0].ordinal).toBe(0);
     expect(malformedDrafts[0].errorMessage).toMatch(
-      /ordinal=0 malformed: no tool_use block returned \(stop_reason=end_turn\)/,
+      /ordinal=0 malformed: Generator did not return a tool use block\. Stop reason: end_turn/,
     );
     // Token usage still accounted for — Claude's call cost real tokens.
     expect(tokenUsage.inputTokens).toBe(baseUsage.input_tokens);
@@ -654,7 +696,7 @@ describe("generateBatch", () => {
     expect(drafts).toHaveLength(0);
     expect(malformedDrafts).toHaveLength(1);
     expect(malformedDrafts[0].errorMessage).toMatch(
-      /ordinal=0 malformed: expected tool 'submit_cloze_exercise'/,
+      /ordinal=0 malformed: Unexpected tool name: expected "submit_cloze_exercise"/,
     );
   });
 
@@ -1649,6 +1691,14 @@ describe("parseGeneratedFreeWritingDraft", () => {
     >;
     expect(props.requiredElements.minItems).toBe(2);
     expect(props.requiredElements.maxItems).toBe(4);
+  });
+
+  // strictToolSchema strips minItems/maxItems for non-forced-tool models, so
+  // the parser is the only gate there. It enforces non-empty only.
+  it("parser still rejects an empty requiredElements (stripped minItems)", () => {
+    expect(() => parseGeneratedFreeWritingDraft({ ...validInput, requiredElements: [] }, spec)).toThrow(
+      /requiredElements/,
+    );
   });
 
   // The prompt states the same range in prose. If the two drift, the model is
