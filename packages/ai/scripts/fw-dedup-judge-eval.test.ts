@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildGroundTruth, judgePasses, scoreJudge, type JudgeCase } from "./fw-dedup-judge-eval";
+import { buildGroundTruth, confirmedDuplicateIds, judgePasses, scoreJudge, type JudgeCase } from "./fw-dedup-judge-eval";
 
 describe("buildGroundTruth", () => {
   it("labels rows in multi-row clusters as duplicates and singletons as distinct", () => {
@@ -46,5 +46,21 @@ describe("judgePasses", () => {
     expect(judgePasses({ ...base, precision: 0.9, recall: 0.8 })).toBe(true);
     expect(judgePasses({ ...base, precision: 0.89, recall: 1 })).toBe(false);
     expect(judgePasses({ ...base, precision: 1, recall: 0.79 })).toBe(false);
+  });
+});
+
+describe("confirmedDuplicateIds", () => {
+  it("returns the row ids hand-confirmed as duplicates, ignoring overturned ones", () => {
+    const ids = confirmedDuplicateIds({
+      confirmedDuplicates: [{ rowId: "a" }, { rowId: "b" }],
+      overturned: [{ rowId: "c" }],
+    });
+    expect([...ids].sort()).toEqual(["a", "b"]);
+  });
+
+  it("tolerates a missing or malformed amendments object", () => {
+    expect(confirmedDuplicateIds(null).size).toBe(0);
+    expect(confirmedDuplicateIds({ confirmedDuplicates: "x" }).size).toBe(0);
+    expect(confirmedDuplicateIds({ confirmedDuplicates: [{ rowId: 7 }, {}] }).size).toBe(0);
   });
 });

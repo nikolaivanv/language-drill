@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
-import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
+import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   FREE_WRITING_DEDUP_PROMPT_VERSION,
   FREE_WRITING_DEDUP_SYSTEM_PROMPT,
@@ -9,9 +9,18 @@ import {
   type FreeWritingDedupInput,
 } from "./free-writing-dedup-prompts.js";
 import { getPromptOrFallback } from "./prompts-registry.js";
-import { VALIDATION_MODEL } from "./validate.js";
 
 const MAX_TOKENS = 400;
+
+/**
+ * Judge model. Opus, not the validator's Sonnet: on the #757 human clusters
+ * (with five hand-confirmed label corrections) Sonnet 4.6 scored precision
+ * 0.893 / recall 0.983 and Opus 4.8 0.913 / 0.975 against a 0.9 / 0.8 bar —
+ * Sonnet merged prompts that differ in time frame, focus or task type, and
+ * prompt rewording did not fix it (eval-runs fw-dedup-judge-2026-10-r1..r3).
+ * At ~1–2k input tokens a call the cost is a few cents per free-writing draft.
+ */
+export const FREE_WRITING_DEDUP_MODEL = "claude-opus-4-8" as const;
 
 export type FreeWritingDedupVerdict = { duplicateOf: number | null; reason: string };
 
@@ -74,7 +83,7 @@ export async function judgeFreeWritingDuplicate(
   // Per-model request shaping, mirroring the guards in validate.ts: Sonnet 5 /
   // Opus 4.7+ / Fable reject `temperature: 0` (400), and Sonnet 5 / Opus 5 /
   // Fable run adaptive thinking unless it is explicitly disabled.
-  const effectiveModel = options.model ?? VALIDATION_MODEL;
+  const effectiveModel = options.model ?? FREE_WRITING_DEDUP_MODEL;
   const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(effectiveModel);
   const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(effectiveModel);
   const request: Anthropic.MessageCreateParamsNonStreaming = {
@@ -87,13 +96,21 @@ export async function judgeFreeWritingDuplicate(
   };
   if (!rejectsSamplingParams) request.temperature = 0;
   if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
-  const response = await client.messages.create(request, { signal: options.signal });
-  const block = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  if (!block) {
-    throw new Error(`dedup judge returned no tool call (stop_reason=${response.stop_reason})`);
+  // One retry on a malformed verdict: the 2026-10-07 eval saw ~1% of calls omit
+  // `duplicateOf` despite the forced tool. A second failure throws, which the
+  // insert path treats as "unavailable" (inserted flagged, never approved).
+  let tokenUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  for (let attempt = 0; ; attempt++) {
+    const response = await client.messages.create(request, { signal: options.signal });
+    tokenUsage = addUsage(tokenUsage, readUsage(response));
+    try {
+      const block = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+      if (!block) {
+        throw new Error(`dedup judge returned no tool call (stop_reason=${response.stop_reason})`);
+      }
+      return { result: parseFreeWritingDedupVerdict(block.input, input.existing.length), tokenUsage };
+    } catch (e) {
+      if (attempt >= 1) throw e;
+    }
   }
-  return {
-    result: parseFreeWritingDedupVerdict(block.input, input.existing.length),
-    tokenUsage: readUsage(response),
-  };
 }

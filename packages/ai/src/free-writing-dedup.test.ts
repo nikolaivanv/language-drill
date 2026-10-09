@@ -3,6 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { ExerciseType } from "@language-drill/shared";
 
 import {
+  FREE_WRITING_DEDUP_MODEL,
   FREE_WRITING_DEDUP_PROMPT_VERSION,
   FREE_WRITING_DEDUP_SYSTEM_PROMPT,
   FREE_WRITING_DEDUP_TOOL_NAME,
@@ -120,6 +121,38 @@ describe("parseFreeWritingDedupVerdict", () => {
 
 describe("judgeFreeWritingDuplicate", () => {
   const candidate = { title: "C", task: "Task.", requiredElements: [] };
+  const usage = { input_tokens: 100, output_tokens: 20, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
+  const toolReply = (input: unknown) => ({
+    stop_reason: "tool_use",
+    usage,
+    content: [{ type: "tool_use", name: FREE_WRITING_DEDUP_TOOL_NAME, input }],
+  });
+  const oneExisting = [{ title: "E", task: "T.", requiredElements: [] }];
+
+  it("retries once when the verdict is malformed, summing both calls' usage", async () => {
+    const create = vi
+      .fn()
+      .mockResolvedValueOnce(toolReply({ reason: "no field" }))
+      .mockResolvedValueOnce(toolReply({ duplicateOf: null, reason: "distinct" }));
+    const client = { messages: { create } } as unknown as Anthropic;
+    const out = await judgeFreeWritingDuplicate(client, { candidate, existing: oneExisting, cefrLevel: "B1" });
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(out.result).toEqual({ duplicateOf: null, reason: "distinct" });
+    expect(out.tokenUsage.inputTokens).toBe(200);
+  });
+
+  it("throws when the retry is malformed too", async () => {
+    const create = vi.fn().mockResolvedValue(toolReply({ reason: "no field" }));
+    const client = { messages: { create } } as unknown as Anthropic;
+    let error: unknown;
+    try {
+      await judgeFreeWritingDuplicate(client, { candidate, existing: oneExisting, cefrLevel: "B1" });
+    } catch (e) {
+      error = e;
+    }
+    expect(String(error)).toMatch(/missing duplicateOf/);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
 
   it("does not call Claude when there are no existing prompts", async () => {
     const create = vi.fn();
@@ -173,8 +206,16 @@ describe("judgeFreeWritingDuplicate", () => {
       return create.mock.calls[0][0] as Record<string, unknown>;
     };
 
-    it("default model sends temperature 0 and no thinking", async () => {
+    it("defaults to FREE_WRITING_DEDUP_MODEL (Opus 4.8): no temperature, no thinking", async () => {
       const req = await run();
+      expect(FREE_WRITING_DEDUP_MODEL).toBe("claude-opus-4-8");
+      expect(req.model).toBe(FREE_WRITING_DEDUP_MODEL);
+      expect("temperature" in req).toBe(false);
+      expect("thinking" in req).toBe(false);
+    });
+
+    it("a Sonnet 4.x override sends temperature 0 and no thinking", async () => {
+      const req = await run("claude-sonnet-4-6");
       expect(req.temperature).toBe(0);
       expect("thinking" in req).toBe(false);
     });

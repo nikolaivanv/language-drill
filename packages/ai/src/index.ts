@@ -559,6 +559,7 @@ export {
   type FreeWritingDedupInput,
 } from "./free-writing-dedup-prompts.js";
 export {
+  FREE_WRITING_DEDUP_MODEL,
   FREE_WRITING_DEDUP_TOOL,
   judgeFreeWritingDuplicate,
   parseFreeWritingDedupVerdict,
