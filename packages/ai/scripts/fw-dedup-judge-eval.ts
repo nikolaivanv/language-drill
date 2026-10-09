@@ -20,13 +20,16 @@ import {
   ZERO_USAGE,
   addUsage,
   createClaudeClient,
-  estimateCostUsd,
+  FREE_WRITING_DEDUP_MODEL,
+  FREE_WRITING_DEDUP_TOOL,
+  estimateCostUsdFor,
   freeWritingSummary,
   judgeFreeWritingDuplicate,
   type ClaudeUsageBreakdown,
+  type Effort,
   type FreeWritingPromptSummary,
 } from "../src/index.js";
-import { EVAL_RUNS_DIR } from "./eval-run.js";
+import { EVAL_RUNS_DIR, parseEffort, requestModeFor } from "./eval-run.js";
 
 export type ProposalCell = {
   language: string;
@@ -88,6 +91,22 @@ export function confirmedDuplicateIds(amendments: unknown): Set<string> {
   );
 }
 
+/**
+ * `judgeFreeWritingDuplicate`'s options from the parsed CLI values: only the
+ * keys that are set (so an unset flag never overrides the judge's defaults),
+ * `{}` when neither is. Rejects an unknown effort.
+ */
+export function judgeOptions(values: {
+  model?: string;
+  effort?: string;
+}): { model?: string; effort?: Effort } {
+  const effort = parseEffort(values.effort);
+  return {
+    ...(values.model ? { model: values.model } : {}),
+    ...(effort ? { effort } : {}),
+  };
+}
+
 const DEFAULT_AMENDMENTS = fileURLToPath(
   new URL("../../../docs/analysis/fw-round3-dedup-label-amendments-2026-10-09.json", import.meta.url),
 );
@@ -102,10 +121,10 @@ async function main(): Promise<void> {
       proposals: { type: "string", default: DEFAULT_PROPOSALS },
       // Pass `--amendments none` to score against the raw #757 labels.
       amendments: { type: "string", default: DEFAULT_AMENDMENTS },
-      // Judge model override (default VALIDATION_MODEL). Cost figures and the
-      // --max-cost-usd cap stay Sonnet-priced, so an Opus run spends ~5x the
-      // reported cost.
+      // Judge model override (default FREE_WRITING_DEDUP_MODEL). Cost figures
+      // and the --max-cost-usd cap are priced for the model actually used.
       model: { type: "string" },
+      effort: { type: "string" },
       out: { type: "string", default: `fw-dedup-judge-${new Date().toISOString().slice(0, 10)}` },
       limit: { type: "string" },
       "max-cost-usd": { type: "string", default: "5" },
@@ -118,13 +137,15 @@ async function main(): Promise<void> {
   const db = createDb(dbUrl);
   const client = createClaudeClient(apiKey);
   const maxCost = Number(values["max-cost-usd"]);
+  const options = judgeOptions(values);
+  const judgeModel = values.model || FREE_WRITING_DEDUP_MODEL;
+  const requestMode = requestModeFor(judgeModel, FREE_WRITING_DEDUP_TOOL, "off", options.effort);
+  console.log(`[fw-dedup-judge] request mode: ${requestMode}`);
+  const costOf = (u: ClaudeUsageBreakdown): number => estimateCostUsdFor(judgeModel, u);
   const confirmed =
     values.amendments === "none"
       ? new Set<string>()
       : confirmedDuplicateIds(JSON.parse(readFileSync(values.amendments!, "utf8")));
-  if (values.model) {
-    console.log(`[fw-dedup-judge] judge model ${values.model} — cost figures are Sonnet-priced`);
-  }
   console.log(`[fw-dedup-judge] ${confirmed.size} hand-confirmed label amendments applied`);
 
   let cells = JSON.parse(readFileSync(values.proposals!, "utf8")) as ProposalCell[];
@@ -155,7 +176,7 @@ async function main(): Promise<void> {
       return ok;
     });
     for (const row of labeled) {
-      if (estimateCostUsd(usage) >= maxCost) { capped = true; break outer; }
+      if (costOf(usage) >= maxCost) { capped = true; break outer; }
       const others = labeled.filter((o) => o.id !== row.id);
       const existing = others.map((o) => summaryById.get(o.id)!);
       // Truth is relative to the rows actually present: a duplicate whose
@@ -170,7 +191,7 @@ async function main(): Promise<void> {
         judged = await judgeFreeWritingDuplicate(
           client,
           { candidate, existing, cefrLevel: cell.level },
-          values.model ? { model: values.model } : {},
+          options,
         );
       } catch (e) {
         judgeErrors.push({ cell: cell.cell, id: row.id, truth, error: (e as Error).message });
@@ -194,7 +215,7 @@ async function main(): Promise<void> {
     rowsJudged: cases.length, rowsMissing: missing, costCapped: capped,
     judgeModel: values.model ?? "default", amendmentsApplied: confirmed.size,
     score, bars: { precision: JUDGE_PRECISION_BAR, recall: JUDGE_RECALL_BAR }, passed,
-    costUsd: estimateCostUsd(usage), judgeErrors, errorRate, cases, disagreements,
+    costUsd: costOf(usage), requestMode, judgeErrors, errorRate, cases, disagreements,
   };
   mkdirSync(EVAL_RUNS_DIR, { recursive: true });
   const outPath = path.join(EVAL_RUNS_DIR, `${values.out}.json`);

@@ -1227,3 +1227,13 @@ describe("computeDiff exit-code gate — case (c)", () => {
     expect(summary.errors.length > 0).toBe(false);
   });
 });
+
+describe("parseEvalRunArgs — --effort", () => {
+  const base = ["--dataset", "d", "--candidate", "file:./c.txt"];
+  it("parses --effort", () => {
+    expect(parseEvalRunArgs([...base, "--effort", "medium"]).effort).toBe("medium");
+  });
+  it("rejects an unknown effort", () => {
+    expect(() => parseEvalRunArgs([...base, "--effort", "bogus"])).toThrow(/effort/);
+  });
+});

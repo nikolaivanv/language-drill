@@ -1,0 +1,93 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateBatch > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 1024,
+  "model": "claude-sonnet-4-6",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": 0.7,
+  "thinking": null,
+  "tool_choice": {
+    "name": "submit_cloze_exercise",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptableAnswers": {
+            "description": "Every additional lexeme/form (beyond \`correctAnswer\`) that fits the blank and satisfies the targeted grammar point in this exact sentence. Required whenever the surrounding text does not single out one specific word — e.g. for 'Sınıfta sekiz ___ var', supply ['öğrenci', 'kitap', 'kalem', ...]. Omit (or pass \`[]\`) only when the sentence references the blank's referent explicitly enough that no other lexeme plausibly fits.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "correctAnswer": {
+            "description": "The canonical fill for the blank. Must satisfy the targeted grammar point. If the sentence's surrounding text does not pick out one specific lexeme/form, you MUST also populate \`acceptableAnswers\` with every other lexeme/form that fits — otherwise the exercise is ambiguous and will be rejected.",
+            "type": "string",
+          },
+          "glossEn": {
+            "description": "Optional one-line English gloss shown above the sentence as a disambiguation device — chiefly for Turkish accusative (definiteness-marking) clozes where a short L2-only sentence cannot force the case. Include it for CEFR A1–A2; omit it for B1+. It MUST convey meaning/case WITHOUT stating the rule's outcome or naming the required form: 'I drink the coffee' is allowed; 'use the accusative -yi' is forbidden (it must not state the rule's outcome or name the required form).",
+            "type": "string",
+          },
+          "instructions": {
+            "description": "Short imperative instructing the learner what to do (e.g. 'Fill in the blank with the correct subjunctive form.').",
+            "type": "string",
+          },
+          "options": {
+            "description": "Optional multiple-choice distractors (3–4 items). When present, must include the correctAnswer.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "sentence": {
+            "description": "The full sentence with exactly one blank rendered as \`___\` (three underscores).",
+            "type": "string",
+          },
+          "topicHint": {
+            "description": "Optional topic theme (e.g. 'travel', 'work', 'family').",
+            "enum": [
+              "travel",
+              "food",
+              "home",
+              "work",
+              "health",
+              "shopping",
+              "weather",
+              "education",
+              "family",
+              "money",
+              "transport",
+              "technology",
+              "nature",
+              "media",
+              "sport",
+              "holidays",
+              "other",
+            ],
+            "type": "string",
+          },
+        },
+        "required": [
+          "instructions",
+          "sentence",
+          "correctAnswer",
+        ],
+        "type": "object",
+      },
+      "name": "submit_cloze_exercise",
+      "strict": null,
+    },
+  ],
+}
+`;

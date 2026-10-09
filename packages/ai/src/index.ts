@@ -22,6 +22,7 @@ export {
   buildEvaluationTool,
   EVAL_REQUEST_TIMEOUT_MS,
   EVAL_MAX_RETRIES,
+  EVALUATION_MODEL,
 } from "./evaluate.js";
 export type { EvaluateAnswerInput } from "./evaluate.js";
 export { ContentRejectedError } from "./content-rejected-error.js";
@@ -217,10 +218,23 @@ export {
   OPUS_4_8_PRICING,
   estimateCostUsd,
   estimateCostUsdAt,
+  estimateCostUsdFor,
   addUsage,
   ZERO_USAGE,
 } from "./cost-model.js";
 export type { ClaudeUsageBreakdown } from "./cost-model.js";
+export {
+  applyShaped,
+  capabilityFor,
+  extractToolUse,
+  NoToolCallError,
+  shapeToolRequest,
+  strictToolSchema,
+  type Effort,
+  type ModelCapabilities,
+  type ShapedToolRequest,
+  type ToolIntent,
+} from "./model-request.js";
 
 export {
   buildValidationTool,
@@ -426,6 +440,7 @@ export {
   FAIL_THRESHOLD,
   MIN_CORRECT_CONFIDENCE,
   QA_CRAFTER_MODEL,
+  QA_CRAFTER_TOOL,
   QA_CRAFTER_TOOL_NAME,
   QA_SAMPLE_PROMPT_VERSION,
 } from "./qa-sample.js";

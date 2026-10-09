@@ -28,6 +28,8 @@ import {
   VALIDATION_TOOL_NAME,
   type ValidationResult,
 } from "./validate.js";
+import { requestShape } from "./test-utils/request-shape";
+import { ContentRejectedError } from "./content-rejected-error.js";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -392,6 +394,52 @@ describe("validateDraft", () => {
     mockCreate.mockReset();
   });
 
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_snap",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: {
+        input_tokens: 1000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 200,
+      },
+    });
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
+  });
+
+  it("request shape for claude-sonnet-5 is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_snap",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: {
+        input_tokens: 1000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 200,
+      },
+    });
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-5",
+    });
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
+  });
+
   it("calls Claude with the right params and returns the parsed result + tokenUsage", async () => {
     mockCreate.mockResolvedValue({
       content: [
@@ -570,6 +618,30 @@ describe("validateDraft", () => {
       cacheReadInputTokens: 0,
       outputTokens: 100,
     });
+  });
+
+  it("modelOverride claude-opus-5-5 with effort medium shapes auto + strict, effort medium, no thinking field", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "toolu_v", name: VALIDATION_TOOL_NAME, input: validValidationInput }],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1000, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 200 },
+    });
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-opus-5-5",
+      effort: "medium",
+    });
+    const req = mockCreate.mock.calls[0][0];
+    expect(req.tool_choice).toEqual({ type: "auto" });
+    expect(req.output_config).toEqual({ effort: "medium" });
+    expect(req.thinking).toBeUndefined();
+    expect(req.temperature).toBeUndefined();
+  });
+
+  it("a refusal surfaces as ContentRejectedError", async () => {
+    mockCreate.mockResolvedValue({ stop_reason: "refusal", content: [], usage: { input_tokens: 1, output_tokens: 1 } });
+    await expect(
+      validateDraft(mockClient, makeDraft(clozeContent), baseSpec),
+    ).rejects.toBeInstanceOf(ContentRejectedError);
   });
 
   it("throws when Claude returns no tool_use block", async () => {

@@ -40,6 +40,7 @@ import {
   loadValidatorCases,
   makeRealValidatorExecutor,
   parseEvalValidatorArgs,
+  resolveArmModel,
   renderValidatorMarkdownSummary,
   renderValidatorSystemPrompt,
   runValidatorEval,
@@ -1267,5 +1268,31 @@ describe("writeValidatorSummaryJson", () => {
     expect(written).toMatch(/validator-smoke-test-xyz\.json$/);
     const contents = JSON.parse(readFileSync(written, "utf8"));
     expect(contents.runName).toBe("smoke-test-xyz");
+  });
+});
+
+describe("--model / --effort and resolveArmModel (Task 6)", () => {
+  it("parses --model and --effort", () => {
+    const args = parseEvalValidatorArgs(["--model", "claude-opus-5-5", "--effort", "low"]);
+    expect(args.model).toBe("claude-opus-5-5");
+    expect(args.effort).toBe("low");
+  });
+
+  it("rejects an unknown --effort", () => {
+    expect(() => parseEvalValidatorArgs(["--effort", "bogus"])).toThrow(/effort/);
+  });
+
+  it("applies args.model to arms without an explicit modelOverride only", () => {
+    const args = { dryRun: false, model: "claude-opus-5-5" };
+    const byName = (n: string) => ARMS.find((a) => a.name === n)!;
+    expect(resolveArmModel(byName("model-only"), args)).toBe("claude-opus-5-5");
+    expect(resolveArmModel(byName("both"), args)).toBe("claude-opus-5-5");
+    expect(resolveArmModel(byName("baseline"), args)).toBe("claude-sonnet-4-6");
+    expect(resolveArmModel(byName("blind-solver"), args)).toBe("claude-sonnet-5");
+  });
+
+  it("returns undefined for a no-override arm when --model is unset", () => {
+    const arm = ARMS.find((a) => a.name === "both")!;
+    expect(resolveArmModel(arm, { dryRun: false })).toBeUndefined();
   });
 });

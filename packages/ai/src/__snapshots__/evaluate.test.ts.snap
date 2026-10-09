@@ -1,0 +1,241 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`evaluateAnswer > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 2048,
+  "model": "claude-sonnet-5",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": null,
+  "thinking": {
+    "type": "disabled",
+  },
+  "tool_choice": {
+    "name": "submit_evaluation",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "properties": {
+          "errors": {
+            "description": "Array of specific errors found in the answer.",
+            "items": {
+              "properties": {
+                "correction": {
+                  "description": "The corrected version of the text.",
+                  "type": "string",
+                },
+                "explanation": {
+                  "description": "Brief explanation of why this is an error and how to fix it.",
+                  "type": "string",
+                },
+                "severity": {
+                  "description": "Severity: minor (does not impede communication) or major (changes meaning or is ungrammatical).",
+                  "enum": [
+                    "minor",
+                    "major",
+                  ],
+                  "type": "string",
+                },
+                "text": {
+                  "description": "The erroneous text from the user's answer.",
+                  "type": "string",
+                },
+                "type": {
+                  "description": "Category of the error.",
+                  "enum": [
+                    "grammar",
+                    "vocabulary",
+                    "spelling",
+                    "pragmatics",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "severity",
+                "text",
+                "correction",
+                "explanation",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "estimatedCefrEvidence": {
+            "description": "The CEFR level this answer provides evidence for (e.g. "B1").",
+            "type": "string",
+          },
+          "feedback": {
+            "description": "Concise, encouraging explanation of what was good and what needs improvement.",
+            "type": "string",
+          },
+          "grammarAccuracy": {
+            "description": "Grammar accuracy score from 0.0 to 1.0. Covers morphology, syntax, agreement, tense, word order.",
+            "type": "number",
+          },
+          "reasoning": {
+            "description": "Private verification scratchpad (never shown to the learner). Before scoring: segment the user's answer morpheme by morpheme, compare each form against what the sentence requires, and check every rule you are about to state in feedback against these specific forms. 2-4 short sentences.",
+            "type": "string",
+          },
+          "score": {
+            "description": "Overall score from 0.0 to 1.0 combining all evaluation factors.",
+            "type": "number",
+          },
+          "taskAchievement": {
+            "description": "Task achievement score from 0.0 to 1.0. How well the answer fulfills the exercise requirements.",
+            "type": "number",
+          },
+          "vocabularyRange": {
+            "description": "CEFR level string (A1–C2) representing the sophistication of vocabulary used.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "reasoning",
+          "score",
+          "grammarAccuracy",
+          "vocabularyRange",
+          "taskAchievement",
+          "feedback",
+          "errors",
+          "estimatedCefrEvidence",
+        ],
+        "type": "object",
+      },
+      "name": "submit_evaluation",
+      "strict": null,
+    },
+  ],
+}
+`;
+
+exports[`evaluateAnswer > request shape with adaptive thinking is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 8192,
+  "model": "claude-sonnet-5",
+  "output_config": {
+    "effort": "low",
+  },
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": null,
+  "thinking": {
+    "type": "adaptive",
+  },
+  "tool_choice": {
+    "name": "submit_evaluation",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "properties": {
+          "errors": {
+            "description": "Array of specific errors found in the answer.",
+            "items": {
+              "properties": {
+                "correction": {
+                  "description": "The corrected version of the text.",
+                  "type": "string",
+                },
+                "explanation": {
+                  "description": "Brief explanation of why this is an error and how to fix it.",
+                  "type": "string",
+                },
+                "severity": {
+                  "description": "Severity: minor (does not impede communication) or major (changes meaning or is ungrammatical).",
+                  "enum": [
+                    "minor",
+                    "major",
+                  ],
+                  "type": "string",
+                },
+                "text": {
+                  "description": "The erroneous text from the user's answer.",
+                  "type": "string",
+                },
+                "type": {
+                  "description": "Category of the error.",
+                  "enum": [
+                    "grammar",
+                    "vocabulary",
+                    "spelling",
+                    "pragmatics",
+                  ],
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "severity",
+                "text",
+                "correction",
+                "explanation",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "estimatedCefrEvidence": {
+            "description": "The CEFR level this answer provides evidence for (e.g. "B1").",
+            "type": "string",
+          },
+          "feedback": {
+            "description": "Concise, encouraging explanation of what was good and what needs improvement.",
+            "type": "string",
+          },
+          "grammarAccuracy": {
+            "description": "Grammar accuracy score from 0.0 to 1.0. Covers morphology, syntax, agreement, tense, word order.",
+            "type": "number",
+          },
+          "reasoning": {
+            "description": "Private verification scratchpad (never shown to the learner). Before scoring: segment the user's answer morpheme by morpheme, compare each form against what the sentence requires, and check every rule you are about to state in feedback against these specific forms. 2-4 short sentences.",
+            "type": "string",
+          },
+          "score": {
+            "description": "Overall score from 0.0 to 1.0 combining all evaluation factors.",
+            "type": "number",
+          },
+          "taskAchievement": {
+            "description": "Task achievement score from 0.0 to 1.0. How well the answer fulfills the exercise requirements.",
+            "type": "number",
+          },
+          "vocabularyRange": {
+            "description": "CEFR level string (A1–C2) representing the sophistication of vocabulary used.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "reasoning",
+          "score",
+          "grammarAccuracy",
+          "vocabularyRange",
+          "taskAchievement",
+          "feedback",
+          "errors",
+          "estimatedCefrEvidence",
+        ],
+        "type": "object",
+      },
+      "name": "submit_evaluation",
+      "strict": null,
+    },
+  ],
+}
+`;

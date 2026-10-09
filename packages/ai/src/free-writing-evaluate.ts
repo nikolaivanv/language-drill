@@ -24,7 +24,7 @@ import {
 } from "./free-writing-prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
 import type { AttributionKey } from "./prompts.js";
-import { ContentRejectedError } from "./content-rejected-error.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 
 export const FREE_WRITING_EVAL_TOOL_NAME = "submit_free_writing_evaluation";
 
@@ -166,6 +166,10 @@ export type EvaluateFreeWritingInput = {
   attributionKeys?: readonly AttributionKey[];
   /** Eval-runner escape hatch — verbatim system prompt, stamped override cohort. */
   systemPromptOverride?: string;
+  /** Eval-runner escape hatch — run on a different model than production. */
+  modelOverride?: string;
+  /** Eval-runner escape hatch — sent as `output_config.effort`. */
+  effortOverride?: Effort;
 };
 
 function clamp01(n: unknown): number {
@@ -325,8 +329,16 @@ export async function evaluateFreeWriting(
     systemPromptText = resolved.text;
   }
 
-  const response = await client.messages.create({
-    model: MODEL,
+  const effectiveModel = input.modelOverride ?? MODEL;
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: buildFreeWritingEvalTool(attributionKeys),
+    thinking: "off",
+    temperature: 0,
+    effort: input.effortOverride,
+  });
+
+  const response = await client.messages.create(applyShaped({
+    model: effectiveModel,
     max_tokens: MAX_TOKENS,
     system: [
       {
@@ -336,38 +348,15 @@ export async function evaluateFreeWriting(
       },
     ],
     messages: [{ role: "user" as const, content: userPrompt }],
-    tools: [buildFreeWritingEvalTool(attributionKeys)],
-    tool_choice: { type: "tool" as const, name: FREE_WRITING_EVAL_TOOL_NAME },
-    temperature: 0,
+  }, shaped));
+
+  const toolInput = extractToolUse(response, FREE_WRITING_EVAL_TOOL_NAME, {
+    refusalMessage: "Claude refused to evaluate this free-writing submission.",
   });
-
-  // A safety refusal arrives as a 200 with stop_reason "refusal" and no tool
-  // block. Surface it as a distinct, expected outcome (the route maps it to a
-  // user-facing rejection) rather than a generic "no tool block" infra error.
-  if (response.stop_reason === "refusal") {
-    throw new ContentRejectedError(
-      "Claude refused to evaluate this free-writing submission.",
-      response.stop_reason,
-    );
-  }
-
-  const toolUseBlock = response.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-  );
-  if (!toolUseBlock) {
-    throw new Error(
-      `Claude did not return a tool use block. Stop reason: ${response.stop_reason}.`,
-    );
-  }
-  if (toolUseBlock.name !== FREE_WRITING_EVAL_TOOL_NAME) {
-    throw new Error(
-      `Unexpected tool name: expected "${FREE_WRITING_EVAL_TOOL_NAME}", got "${toolUseBlock.name}"`,
-    );
-  }
 
   const validKeys =
     attributionKeys && attributionKeys.length > 0
       ? new Set(attributionKeys.map((k) => k.key))
       : undefined;
-  return parseFreeWritingEvaluation(toolUseBlock.input, validKeys);
+  return parseFreeWritingEvaluation(toolInput, validKeys);
 }

@@ -23,6 +23,7 @@ import {
 } from "@language-drill/shared";
 
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import {
   TOOL_NAME_BY_TYPE,
   type ExerciseDraft,
@@ -286,6 +287,8 @@ export type ValidateDraftOptions = {
    * byte-identical to the pre-2026-08-18 text.
    */
   seedWord?: string | null;
+  /** Eval-only: effort for the validator (families with effort only). */
+  effort?: Effort;
 };
 
 export type ValidationResult = {
@@ -634,58 +637,35 @@ export async function validateDraft(
         ? buildFreeWritingValidationUserPrompt(draft.contentJson, spec)
         : buildValidationUserPrompt(draft, spec, options?.seedWord);
 
-  // Per-model request shaping (see evaluate.ts:399-411 for the same guards):
-  //  - Sonnet 5 / Opus 4.7+ / Fable reject non-default sampling params
-  //    (`temperature: 0` → 400), so temperature only goes to models that take it.
-  //  - Sonnet 5 (and Fable) run ADAPTIVE thinking when `thinking` is omitted —
-  //    send an explicit `disabled` so this stays a model change and not a
-  //    silent thinking change (which would also spend against max_tokens).
   const effectiveModel = options?.modelOverride ?? VALIDATION_MODEL;
-  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(
-    effectiveModel,
-  );
-  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(
-    effectiveModel,
-  );
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: buildValidationTool(draft.contentJson.type),
+    thinking: "off",
+    temperature: VALIDATION_TEMPERATURE,
+    effort: options?.effort,
+  });
 
-  const request: Anthropic.MessageCreateParamsNonStreaming = {
-    model: effectiveModel,
-    max_tokens: VALIDATION_MAX_TOKENS,
-    system: [
-      {
-        type: "text" as const,
-        text: systemText,
-        cache_control: { type: "ephemeral" as const },
-      },
-    ],
-    messages: [{ role: "user" as const, content: userText }],
-    tools: [buildValidationTool(draft.contentJson.type)],
-    tool_choice: { type: "tool" as const, name: VALIDATION_TOOL_NAME },
-  };
-  if (!rejectsSamplingParams) request.temperature = VALIDATION_TEMPERATURE;
-  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
-
-  const response = await client.messages.create(request, { signal });
-
-  const toolUseBlock = response.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
+  const response = await client.messages.create(
+    applyShaped({
+      model: effectiveModel,
+      max_tokens: VALIDATION_MAX_TOKENS,
+      system: [
+        {
+          type: "text" as const,
+          text: systemText,
+          cache_control: { type: "ephemeral" as const },
+        },
+      ],
+      messages: [{ role: "user" as const, content: userText }],
+    }, shaped),
+    { signal },
   );
 
-  if (!toolUseBlock) {
-    throw new Error(
-      "Validator did not return a tool use block. " +
-        `Stop reason: ${response.stop_reason}. ` +
-        `Content types: ${response.content.map((b) => b.type).join(", ")}`,
-    );
-  }
+  const input = extractToolUse(response, VALIDATION_TOOL_NAME, {
+    label: "Validator",
+  });
 
-  if (toolUseBlock.name !== VALIDATION_TOOL_NAME) {
-    throw new Error(
-      `Unexpected tool name: expected "${VALIDATION_TOOL_NAME}", got "${toolUseBlock.name}"`,
-    );
-  }
-
-  const parsed = parseValidationResult(toolUseBlock.input);
+  const parsed = parseValidationResult(input);
   const result =
     draft.contentJson.type === ExerciseType.CLOZE
       ? applyCandidateFillerConsistency(

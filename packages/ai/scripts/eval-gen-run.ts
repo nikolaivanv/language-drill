@@ -60,12 +60,17 @@ import {
   addUsage,
   applyTemplate,
   createClaudeClient,
+  GENERATION_MODEL,
+  GENERATION_TOOL_BY_TYPE,
+  VALIDATION_MODEL,
   estimateCostUsd,
+  estimateCostUsdFor,
   generateBatch,
   getLangfuse,
   historyStem,
   validateDraft,
   type ClaudeUsageBreakdown,
+  type Effort,
   type GenerationPromptInputs,
   type GenerationSpec,
 } from "../src/index.js";
@@ -77,6 +82,8 @@ import {
   EVAL_RUNS_DIR,
   assertNotProdWithoutAllow,
   deriveRunName,
+  parseEffort,
+  requestModeFor,
   writeSummaryJson,
   type EvalRunSummary,
   type LangfusePromptFetcher,
@@ -268,6 +275,11 @@ export type PoolDraftRecord = Pick<DraftOutcome, "bucket" | "reasons" | "details
 export type ArmResult = {
   outcomes: DraftOutcome[];
   usage: ClaudeUsageBreakdown;
+  /**
+   * USD cost of this arm run, priced per model (generator + validator).
+   * Absent → `estimateCostUsd(usage)` (Sonnet-4.6 list price).
+   */
+  costUsd?: number;
   error?: string;
 };
 
@@ -324,6 +336,8 @@ export type GenEvalSummary = {
    *  way as `reasonDeltas`/`flagDeltas`. Empty when neither arm seeded. */
   variantDeltas: Record<string, { baseline: number; candidate: number }>;
   costUsd: { baseline: number; candidate: number };
+  /** `shapeToolRequest(...).mode` per arm's generator (set by the CLI). */
+  requestMode?: { baseline: string; candidate: string };
   errors: Array<{ cellKey: string; error: string }>;
   perCell?: Array<{ cellKey: string; baseline: ArmStats; candidate: ArmStats }>;
   /** `--pool-history` runs only: lexical reuse vs. each cell's pool + the spec's decision rule. */
@@ -363,6 +377,10 @@ export type EvalGenArgs = {
   maxCostUsd?: number;
   /** `--pool-history`: candidate sees the cell's approved stems; both arms get prod's seeds. */
   poolHistory?: boolean;
+  /** Generator model for the candidate arm only (baseline keeps production). */
+  candidateModel?: string;
+  /** Generator effort for the candidate arm only. */
+  candidateEffort?: Effort;
 };
 
 // ---------------------------------------------------------------------------
@@ -531,6 +549,10 @@ export type GenCellArmExecutorParams = {
   systemPromptOverride: string | undefined;
   draftsPerCell: number;
   batchSeed: string;
+  /** Generator model override (candidate arm only). Validation is unaffected. */
+  generatorModel?: string;
+  /** Generator effort override (candidate arm only). */
+  generatorEffort?: Effort;
   signal?: AbortSignal;
 };
 
@@ -577,6 +599,8 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
     systemPromptOverride,
     draftsPerCell,
     batchSeed,
+    generatorModel,
+    generatorEffort,
     signal,
   }: GenCellArmExecutorParams): Promise<ArmResult> => {
     const seedWords = explicitSeeds
@@ -608,13 +632,16 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       batchSeed,
       systemPromptOverride,
       seedWords,
+      modelOverride: generatorModel,
+      effort: generatorEffort,
     };
 
     const batch = await generateBatch(client, spec, signal);
 
     // Seed usage with the generation total (already folds malformed-draft
     // tokens), then add each validation call's usage.
-    let usage: ClaudeUsageBreakdown = batch.tokenUsage;
+    const genUsage: ClaudeUsageBreakdown = batch.tokenUsage;
+    let valUsage: ClaudeUsageBreakdown = ZERO_USAGE;
     const outcomes: DraftOutcome[] = [];
 
     // `batch.drafts` is ordinal-COMPACTED, not ordinal-indexed: `generateBatch`
@@ -640,7 +667,7 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
         spec,
         signal,
       );
-      usage = addUsage(usage, tokenUsage);
+      valUsage = addUsage(valUsage, tokenUsage);
       const { reviewStatus, flaggedReasons } = routeValidationResult(result);
       const stem = historyStem(draft.contentJson);
       outcomes.push({
@@ -673,7 +700,12 @@ export function makeRealArmExecutor(client: Anthropic): GenCellArmExecutor {
       });
     }
 
-    return { outcomes, usage };
+    // Generator and validator are priced separately: the generator may be an
+    // override model, the validator is always the production one.
+    const costUsd =
+      estimateCostUsdFor(generatorModel ?? GENERATION_MODEL, genUsage) +
+      estimateCostUsdFor(VALIDATION_MODEL, valUsage);
+    return { outcomes, usage: addUsage(genUsage, valUsage), costUsd };
   };
 }
 
@@ -793,7 +825,7 @@ export async function runGenEval(opts: {
   const cells: GenCellRecord[] = [];
   const errors: Array<{ cellKey: string; error: string }> = [];
   let costCapped = false;
-  let accumulatedUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let accumulatedCostUsd = 0;
 
   for (const entry of entries) {
     const resolution = resolveCell(entry);
@@ -882,6 +914,8 @@ export async function runGenEval(opts: {
         systemPromptOverride: candidatePrompt,
         draftsPerCell: args.draftsPerCell,
         batchSeed,
+        generatorModel: args.candidateModel,
+        generatorEffort: args.candidateEffort,
         signal,
       });
 
@@ -891,10 +925,7 @@ export async function runGenEval(opts: {
         candidate: candidateResult,
         ...(pool ? { poolStems: pool.stems } : {}),
       });
-      accumulatedUsage = addUsage(
-        addUsage(accumulatedUsage, baselineResult.usage),
-        candidateResult.usage,
-      );
+      accumulatedCostUsd += armCostUsd(baselineResult) + armCostUsd(candidateResult);
     } catch (e) {
       // Both-arm failure for this cell: record and continue. Partial usage from
       // a half-run cell is intentionally not accrued (the cell is excluded from
@@ -904,11 +935,11 @@ export async function runGenEval(opts: {
 
     if (
       args.maxCostUsd !== undefined &&
-      estimateCostUsd(accumulatedUsage) >= args.maxCostUsd
+      accumulatedCostUsd >= args.maxCostUsd
     ) {
       costCapped = true;
       log(
-        `[eval-gen] cost cap hit (${estimateCostUsd(accumulatedUsage)} >= ${args.maxCostUsd} USD); ` +
+        `[eval-gen] cost cap hit (${accumulatedCostUsd} >= ${args.maxCostUsd} USD); ` +
           `stopping at cell boundary after ${cells.length} compared cell(s)`,
       );
       break;
@@ -931,6 +962,11 @@ export async function runGenEval(opts: {
 // ---------------------------------------------------------------------------
 // Diff layer (pure) — roll per-cell arm results into a decision-grade summary.
 // ---------------------------------------------------------------------------
+
+/** An arm run's cost: its own per-model `costUsd`, else the Sonnet-4.6 estimate. */
+function armCostUsd(r: ArmResult): number {
+  return r.costUsd ?? estimateCostUsd(r.usage);
+}
 
 /**
  * Aggregate a list of one arm's per-cell results into `ArmStats`. Pass all
@@ -957,7 +993,7 @@ export function computeArmStats(results: ArmResult[]): ArmStats {
   const rejectionReasonCounts: Record<string, number> = {};
   const flagTagCounts: Record<string, number> = {};
   const variantCounts: Record<string, number> = {};
-  let usage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let costUsd = 0;
 
   const bump = (counts: Record<string, number>, reasons: string[]): void => {
     for (const reason of reasons) {
@@ -966,7 +1002,7 @@ export function computeArmStats(results: ArmResult[]): ArmStats {
   };
 
   for (const r of results) {
-    usage = addUsage(usage, r.usage);
+    costUsd += armCostUsd(r);
     for (const outcome of r.outcomes) {
       totalDrafts++;
       if (outcome.variantId) {
@@ -1003,7 +1039,7 @@ export function computeArmStats(results: ArmResult[]): ArmStats {
     rejectionReasonCounts,
     flagTagCounts,
     variantCounts,
-    costUsd: estimateCostUsd(usage),
+    costUsd,
   };
 }
 
@@ -1281,6 +1317,8 @@ export function parseEvalGenArgs(
       "allow-prod": { type: "boolean", default: false },
       "pool-history": { type: "boolean", default: false },
       "max-cost-usd": { type: "string" },
+      "candidate-model": { type: "string" },
+      "candidate-effort": { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -1354,6 +1392,11 @@ export function parseEvalGenArgs(
     allowProd: parsed.values["allow-prod"] ?? false,
     maxCostUsd,
     poolHistory: parsed.values["pool-history"] ?? false,
+    candidateModel:
+      parsed.values["candidate-model"] === ""
+        ? undefined
+        : parsed.values["candidate-model"],
+    candidateEffort: parseEffort(parsed.values["candidate-effort"]),
   };
 }
 
@@ -1364,6 +1407,7 @@ function printGenUsage(): void {
       "                    [--baseline <source>] [--drafts-per-cell <n>]",
       "                    [--limit <n>] [--run-name <name>] [--allow-prod]",
       "                    [--max-cost-usd <n>] [--pool-history]",
+      "                    [--candidate-model <id>] [--candidate-effort <level>]",
       "",
       "Compares two generation-prompt sources over a dataset of cells,",
       "reporting approval-rate / rejection-reason / flag-tag deltas. Writes a",
@@ -1379,6 +1423,9 @@ function printGenUsage(): void {
       "  --max-cost-usd <n>       Hard cost ceiling; stops at a cell boundary.",
       "  --pool-history           Candidate sees each cell's approved stems (reads DATABASE_URL);",
       "                           both arms get prod's seeds. cloze/translation/SC cells only.",
+      "  --candidate-model <id>   Generator model for the candidate arm only (baseline keeps",
+      "                           production). Validation always uses the production validator.",
+      "  --candidate-effort <l>   low|medium|high|xhigh|max. Generator effort, candidate arm only.",
       "  --help                   Show this message.",
     ].join("\n"),
   );
@@ -1443,6 +1490,21 @@ async function main(): Promise<void> {
     poolContextLoader = makeDbPoolContextLoader(createDb(dbUrl));
   }
 
+  // Mode of the generator request per arm (cloze tool as the representative
+  // surface tool; mode depends only on model/thinking/effort).
+  const requestMode = {
+    baseline: requestModeFor(GENERATION_MODEL, GENERATION_TOOL_BY_TYPE.cloze, "off"),
+    candidate: requestModeFor(
+      args.candidateModel ?? GENERATION_MODEL,
+      GENERATION_TOOL_BY_TYPE.cloze,
+      "off",
+      args.candidateEffort,
+    ),
+  };
+  console.log(
+    `[eval-gen] request mode: baseline ${requestMode.baseline}; candidate ${requestMode.candidate}`,
+  );
+
   const result = await runGenEval({
     poolContextLoader,
     executor: makeRealArmExecutor(createClaudeClient(apiKey)),
@@ -1454,7 +1516,7 @@ async function main(): Promise<void> {
     datasetName,
   });
 
-  const summary = computeGenDiff(result);
+  const summary = { ...computeGenDiff(result), requestMode };
   console.log("");
   console.log(renderMarkdownSummary(summary));
   const jsonPath = writeGenSummaryJson(summary);

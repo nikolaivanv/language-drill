@@ -8,6 +8,7 @@ import {
   buildFreeWritingDedupUserPrompt,
   type FreeWritingDedupInput,
 } from "./free-writing-dedup-prompts.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { getPromptOrFallback } from "./prompts-registry.js";
 
 const MAX_TOKENS = 400;
@@ -69,7 +70,7 @@ function readUsage(response: Anthropic.Message): ClaudeUsageBreakdown {
 export async function judgeFreeWritingDuplicate(
   client: Anthropic,
   input: FreeWritingDedupInput,
-  options: { signal?: AbortSignal; model?: string } = {},
+  options: { signal?: AbortSignal; model?: string; effort?: Effort } = {},
 ): Promise<{ result: FreeWritingDedupVerdict; tokenUsage: ClaudeUsageBreakdown }> {
   // Nothing to duplicate: skip the call entirely.
   if (input.existing.length === 0) {
@@ -80,22 +81,21 @@ export async function judgeFreeWritingDuplicate(
     FREE_WRITING_DEDUP_SYSTEM_PROMPT,
     FREE_WRITING_DEDUP_PROMPT_VERSION,
   );
-  // Per-model request shaping, mirroring the guards in validate.ts: Sonnet 5 /
-  // Opus 4.7+ / Fable reject `temperature: 0` (400), and Sonnet 5 / Opus 5 /
-  // Fable run adaptive thinking unless it is explicitly disabled.
   const effectiveModel = options.model ?? FREE_WRITING_DEDUP_MODEL;
-  const rejectsSamplingParams = /sonnet-5|opus-4-[7-9]|opus-5|fable/.test(effectiveModel);
-  const omittedThinkingMeansAdaptive = /sonnet-5|opus-5|fable/.test(effectiveModel);
-  const request: Anthropic.MessageCreateParamsNonStreaming = {
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: FREE_WRITING_DEDUP_TOOL,
+    thinking: "off",
+    temperature: 0,
+    effort: options.effort,
+  });
+  const request = applyShaped({
     model: effectiveModel,
     max_tokens: MAX_TOKENS,
-    system: [{ type: "text" as const, text: resolved.text, cache_control: { type: "ephemeral" as const } }],
+    system: [
+      { type: "text" as const, text: resolved.text, cache_control: { type: "ephemeral" as const } },
+    ],
     messages: [{ role: "user" as const, content: buildFreeWritingDedupUserPrompt(input) }],
-    tools: [FREE_WRITING_DEDUP_TOOL],
-    tool_choice: { type: "tool" as const, name: FREE_WRITING_DEDUP_TOOL_NAME },
-  };
-  if (!rejectsSamplingParams) request.temperature = 0;
-  if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
+  }, shaped);
   // One retry on a malformed verdict: the 2026-10-07 eval saw ~1% of calls omit
   // `duplicateOf` despite the forced tool. A second failure throws, which the
   // insert path treats as "unavailable" (inserted flagged, never approved).
@@ -104,11 +104,8 @@ export async function judgeFreeWritingDuplicate(
     const response = await client.messages.create(request, { signal: options.signal });
     tokenUsage = addUsage(tokenUsage, readUsage(response));
     try {
-      const block = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-      if (!block) {
-        throw new Error(`dedup judge returned no tool call (stop_reason=${response.stop_reason})`);
-      }
-      return { result: parseFreeWritingDedupVerdict(block.input, input.existing.length), tokenUsage };
+      const toolInput = extractToolUse(response, FREE_WRITING_DEDUP_TOOL_NAME, { label: "Dedup judge" });
+      return { result: parseFreeWritingDedupVerdict(toolInput, input.existing.length), tokenUsage };
     } catch (e) {
       if (attempt >= 1) throw e;
     }

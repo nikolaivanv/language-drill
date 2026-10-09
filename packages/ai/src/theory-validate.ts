@@ -31,6 +31,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { GENERATION_MODEL } from "./generate.js";
 import type {
   TheoryDraft,
@@ -303,12 +304,21 @@ export async function validateTheoryDraft(
   client: Anthropic,
   draft: TheoryDraft,
   spec: TheoryGenerationSpec,
+  options?: { model?: string; effort?: Effort },
 ): Promise<ValidateTheoryDraftResult> {
   const systemText = await buildTheoryValidationSystemPrompt(spec);
   const userText = buildTheoryValidationUserPrompt(draft, spec);
 
-  const response = await client.messages.create({
-    model: THEORY_VALIDATION_MODEL,
+  const effectiveModel = options?.model ?? THEORY_VALIDATION_MODEL;
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: THEORY_VALIDATION_TOOL,
+    thinking: "off",
+    temperature: THEORY_VALIDATION_TEMPERATURE,
+    effort: options?.effort,
+  });
+
+  const response = await client.messages.create(applyShaped({
+    model: effectiveModel,
     max_tokens: THEORY_VALIDATION_MAX_TOKENS,
     system: [
       {
@@ -318,33 +328,13 @@ export async function validateTheoryDraft(
       },
     ],
     messages: [{ role: "user" as const, content: userText }],
-    tools: [THEORY_VALIDATION_TOOL],
-    tool_choice: {
-      type: "tool" as const,
-      name: THEORY_VALIDATION_TOOL_NAME,
-    },
-    temperature: THEORY_VALIDATION_TEMPERATURE,
+  }, shaped));
+
+  const toolInput = extractToolUse(response, THEORY_VALIDATION_TOOL_NAME, {
+    label: "Validator",
   });
 
-  const toolUseBlock = response.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-  );
-
-  if (!toolUseBlock) {
-    throw new Error(
-      "Validator did not return a tool use block. " +
-        `Stop reason: ${response.stop_reason}. ` +
-        `Content types: ${response.content.map((b) => b.type).join(", ")}`,
-    );
-  }
-
-  if (toolUseBlock.name !== THEORY_VALIDATION_TOOL_NAME) {
-    throw new Error(
-      `Unexpected tool name: expected "${THEORY_VALIDATION_TOOL_NAME}", got "${toolUseBlock.name}"`,
-    );
-  }
-
-  const result = parseTheoryValidationResult(toolUseBlock.input);
+  const result = parseTheoryValidationResult(toolInput);
   const tokenUsage = readUsage(response);
   return { result, tokenUsage };
 }

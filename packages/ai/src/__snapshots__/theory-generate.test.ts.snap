@@ -1,0 +1,343 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`theory-generate / generateTheoryTopic > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 8192,
+  "model": "claude-opus-4-8",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": null,
+  "thinking": null,
+  "tool_choice": {
+    "name": "submit_theory_topic",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "$defs": {
+          "block": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/blockParagraph",
+              },
+              {
+                "$ref": "#/$defs/blockCallout",
+              },
+              {
+                "$ref": "#/$defs/blockExample",
+              },
+              {
+                "$ref": "#/$defs/blockList",
+              },
+              {
+                "$ref": "#/$defs/blockConjugationTable",
+              },
+            ],
+          },
+          "blockCallout": {
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/block",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "callout",
+              },
+              "variant": {
+                "enum": [
+                  "default",
+                  "warn",
+                ],
+              },
+            },
+            "required": [
+              "kind",
+              "children",
+            ],
+            "type": "object",
+          },
+          "blockConjugationTable": {
+            "properties": {
+              "head": {
+                "items": {
+                  "type": "string",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "conjugation-table",
+              },
+              "rows": {
+                "items": {
+                  "items": {
+                    "type": "string",
+                  },
+                  "type": "array",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "kind",
+              "head",
+              "rows",
+            ],
+            "type": "object",
+          },
+          "blockExample": {
+            "properties": {
+              "en": {
+                "minLength": 1,
+                "type": "string",
+              },
+              "kind": {
+                "const": "example",
+              },
+              "note": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "target": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "kind",
+              "target",
+              "en",
+            ],
+            "type": "object",
+          },
+          "blockList": {
+            "properties": {
+              "items": {
+                "items": {
+                  "items": {
+                    "$ref": "#/$defs/block",
+                  },
+                  "minItems": 1,
+                  "type": "array",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "list",
+              },
+            },
+            "required": [
+              "kind",
+              "items",
+            ],
+            "type": "object",
+          },
+          "blockParagraph": {
+            "properties": {
+              "kind": {
+                "const": "paragraph",
+              },
+              "text": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+            },
+            "required": [
+              "kind",
+              "text",
+            ],
+            "type": "object",
+          },
+          "inline": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/inlineText",
+              },
+              {
+                "$ref": "#/$defs/inlineStrong",
+              },
+              {
+                "$ref": "#/$defs/inlineEm",
+              },
+              {
+                "$ref": "#/$defs/inlineHilite",
+              },
+              {
+                "$ref": "#/$defs/inlineMono",
+              },
+            ],
+          },
+          "inlineEm": {
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "em",
+              },
+            },
+            "required": [
+              "kind",
+              "children",
+            ],
+            "type": "object",
+          },
+          "inlineHilite": {
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "hilite",
+              },
+            },
+            "required": [
+              "kind",
+              "children",
+            ],
+            "type": "object",
+          },
+          "inlineMono": {
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "mono",
+              },
+            },
+            "required": [
+              "kind",
+              "children",
+            ],
+            "type": "object",
+          },
+          "inlineStrong": {
+            "properties": {
+              "children": {
+                "items": {
+                  "$ref": "#/$defs/inline",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "kind": {
+                "const": "strong",
+              },
+            },
+            "required": [
+              "kind",
+              "children",
+            ],
+            "type": "object",
+          },
+          "inlineText": {
+            "properties": {
+              "kind": {
+                "const": "text",
+              },
+              "text": {
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "kind",
+              "text",
+            ],
+            "type": "object",
+          },
+          "section": {
+            "properties": {
+              "body": {
+                "items": {
+                  "$ref": "#/$defs/block",
+                },
+                "minItems": 1,
+                "type": "array",
+              },
+              "id": {
+                "type": "string",
+              },
+              "title": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "title",
+              "body",
+            ],
+            "type": "object",
+          },
+        },
+        "properties": {
+          "cefr": {
+            "type": "string",
+          },
+          "id": {
+            "type": "string",
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/section",
+            },
+            "minItems": 1,
+            "type": "array",
+          },
+          "subtitle": {
+            "type": "string",
+          },
+          "title": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "id",
+          "title",
+          "subtitle",
+          "cefr",
+          "sections",
+        ],
+        "type": "object",
+      },
+      "name": "submit_theory_topic",
+      "strict": null,
+    },
+  ],
+}
+`;

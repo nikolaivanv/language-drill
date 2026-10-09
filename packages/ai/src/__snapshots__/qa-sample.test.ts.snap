@@ -1,0 +1,64 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`craftProbeAnswers > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 1024,
+  "model": "claude-opus-4-8",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": null,
+  "thinking": null,
+  "tool_choice": {
+    "name": "submit_probe_answers",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "properties": {
+          "alt": {
+            "type": [
+              "string",
+              "null",
+            ],
+          },
+          "ambiguityNote": {
+            "type": "string",
+          },
+          "ambiguous": {
+            "type": "boolean",
+          },
+          "correct": {
+            "type": "string",
+          },
+          "correctConfidence": {
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number",
+          },
+          "wrong": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "correct",
+          "correctConfidence",
+          "wrong",
+          "ambiguous",
+          "ambiguityNote",
+        ],
+        "type": "object",
+      },
+      "name": "submit_probe_answers",
+      "strict": null,
+    },
+  ],
+}
+`;

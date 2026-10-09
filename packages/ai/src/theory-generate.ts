@@ -33,6 +33,7 @@ import {
   parseTheoryTopicJson,
 } from "@language-drill/shared";
 
+import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 import { addUsage, ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   buildTheorySystemPrompt,
@@ -394,6 +395,9 @@ export async function generateTheoryTopic(
      * call reads it from the prompt cache.
      */
     validatorFeedback?: readonly string[];
+    /** Overrides `THEORY_GENERATION_MODEL` (eval / A-B runs). */
+    model?: string;
+    effort?: Effort;
   } = {},
 ): Promise<TheoryGenerateResult> {
   // Top guards. The cast through `Language` mirrors generate.ts:520 — TS
@@ -420,6 +424,12 @@ export async function generateTheoryTopic(
   const systemText = await buildTheorySystemPrompt(promptInputs);
   const userText = buildTheoryUserPrompt(promptInputs, opts.validatorFeedback);
 
+  const effectiveModel = opts.model ?? THEORY_GENERATION_MODEL;
+  const shaped = shapeToolRequest(effectiveModel, {
+    tool: THEORY_GENERATION_TOOL,
+    thinking: "off",
+    effort: opts.effort,
+  });
   const maxRetries = opts.maxRetries ?? THEORY_GENERATION_MAX_RETRIES;
   // Mirror `buildTheoryCellKey` (@language-drill/db) — `<lang>:<level>:<gp-key>`
   // with each segment lowercased — without importing it (db imports ai, so the
@@ -435,11 +445,9 @@ export async function generateTheoryTopic(
 
   for (let attempt = 0; ; attempt++) {
     try {
-      // No `temperature` (Opus 4.8 returns a 400 on any sampling param) and
-      // no `thinking` (forced tool_choice is incompatible with thinking; on
-      // Opus 4.8 omitting the field means thinking-off).
-      const response = await client.messages.create({
-        model: THEORY_GENERATION_MODEL,
+      // Per-model request shaping lives in model-request.ts.
+      const response = await client.messages.create(applyShaped({
+        model: effectiveModel,
         max_tokens: THEORY_GENERATION_MAX_TOKENS,
         system: [
           {
@@ -449,33 +457,25 @@ export async function generateTheoryTopic(
           },
         ],
         messages: [{ role: "user" as const, content: userText }],
-        tools: [THEORY_GENERATION_TOOL],
-        tool_choice: { type: "tool" as const, name: THEORY_TOOL_NAME },
-      });
+      }, shaped));
 
       // Capture usage BEFORE any parse/validation throw (Req 2.1) so a
       // malformed draft still propagates the tokens the call actually burned.
       const usage = readUsage(response);
 
-      const toolUseBlock = response.content.find(
-        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-      );
-      if (!toolUseBlock) {
+      let toolInput: unknown;
+      try {
+        toolInput = extractToolUse(response, THEORY_TOOL_NAME, { label: "Theory generator" });
+      } catch (e) {
         throw new TheoryDraftMalformedError(
-          `Theory draft malformed: no tool_use block returned (stop_reason=${response.stop_reason})`,
-          usage,
-        );
-      }
-      if (toolUseBlock.name !== THEORY_TOOL_NAME) {
-        throw new TheoryDraftMalformedError(
-          `Theory draft malformed: expected tool '${THEORY_TOOL_NAME}', got '${toolUseBlock.name}'`,
+          `Theory draft malformed: ${(e as Error).message}`,
           usage,
         );
       }
 
       let contentJson: TheoryTopicJson;
       try {
-        contentJson = parseTheoryTopicJson(toolUseBlock.input);
+        contentJson = parseTheoryTopicJson(toolInput);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         throw new TheoryDraftMalformedError(
@@ -493,7 +493,7 @@ export async function generateTheoryTopic(
           contentJson,
           metadata: {
             grammarPointKey: spec.grammarPoint.key,
-            modelId: THEORY_GENERATION_MODEL,
+            modelId: effectiveModel,
             inputTokens:
               usage.inputTokens +
               usage.cacheCreationInputTokens +

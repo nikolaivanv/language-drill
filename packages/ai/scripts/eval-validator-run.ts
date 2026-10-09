@@ -109,11 +109,15 @@ import {
   applyTemplate,
   craftProbeAnswers,
   createClaudeClient,
-  estimateCostUsd,
+  QA_CRAFTER_TOOL_NAME,
+  VALIDATION_MODEL,
+  buildValidationTool,
+  estimateCostUsdFor,
   renderLearnerView,
   validateDraft,
   VALIDATION_SYSTEM_PROMPT_TEMPLATE,
   type ClaudeUsageBreakdown,
+  type Effort,
   type ExerciseDraft,
   type GenerationSpec,
   type QaProbe,
@@ -127,6 +131,7 @@ import {
 import { listed, SELF_INCONSISTENT_REASON } from "../src/validate.js";
 import { computeValidationPromptVars } from "../src/validation-prompts.js";
 import { sha8 } from "../src/prompts-registry.js";
+import { parseEffort, requestModeFor } from "./eval-run.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, "fixtures");
@@ -314,6 +319,27 @@ export const ARMS: ValidatorArm[] = [
 ];
 
 /**
+ * The model an arm runs on: its own pinned `modelOverride`, else the run-wide
+ * `--model` (arms with no pin are the ones meant to follow the CLI), else
+ * `undefined` = the production validator model.
+ */
+export function resolveArmModel(
+  arm: ValidatorArm,
+  args: { model?: string },
+): string | undefined {
+  return arm.modelOverride ?? args.model;
+}
+
+/** Per-arm USD cost, priced for the model the arm actually ran on. */
+function armCostUsd(
+  arm: ValidatorArm,
+  usage: ClaudeUsageBreakdown,
+  args: { model?: string },
+): number {
+  return estimateCostUsdFor(resolveArmModel(arm, args) ?? VALIDATION_MODEL, usage);
+}
+
+/**
  * Render one of `PROMPT_TEMPLATES` for a specific case's `spec` — the SAME
  * local substitution `buildValidationSystemPrompt` falls back to when
  * Langfuse is unreachable (`applyTemplate` + `computeValidationPromptVars`),
@@ -480,6 +506,7 @@ export type ValidatorCaseExecutor = (
 
 export function makeRealValidatorExecutor(
   client: Anthropic,
+  args: { model?: string; effort?: Effort } = {},
 ): ValidatorCaseExecutor {
   return async ({ case: c, arm, signal }) => {
     if (arm.kind === "solver") {
@@ -492,6 +519,7 @@ export function makeRealValidatorExecutor(
           cefrLevel: c.cefrLevel,
           exerciseType: "cloze",
           model: arm.modelOverride,
+          effort: args.effort,
         },
         signal,
       );
@@ -541,7 +569,8 @@ export function makeRealValidatorExecutor(
     }
 
     const { result, tokenUsage } = await validateDraft(client, draft, spec, signal, {
-      modelOverride: arm.modelOverride,
+      modelOverride: resolveArmModel(arm, args),
+      effort: args.effort,
       systemPromptOverride,
     });
     return { result, usage: tokenUsage };
@@ -599,6 +628,8 @@ export async function runValidatorEval(opts: {
   runName: string;
   datasetName: string;
   maxCostUsd?: number;
+  /** Run-wide `--model`, used to price arms with no pinned model. */
+  args?: { model?: string };
   signal?: AbortSignal;
   now?: () => Date;
   log?: (...args: unknown[]) => void;
@@ -624,6 +655,7 @@ export async function runValidatorEval(opts: {
     runName,
     datasetName,
     maxCostUsd,
+    args = {},
     signal,
     now = () => new Date(),
     log = (...a: unknown[]) => console.log(...a),
@@ -647,17 +679,17 @@ export async function runValidatorEval(opts: {
     `validator-${runName}.partial.json`,
   );
 
-  let accumulatedUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let accumulatedCostUsd = 0;
   let costCapped = false;
 
   for (const c of cases) {
     if (
       maxCostUsd !== undefined &&
-      estimateCostUsd(accumulatedUsage) >= maxCostUsd
+      accumulatedCostUsd >= maxCostUsd
     ) {
       costCapped = true;
       log(
-        `[eval-validator] cost cap hit (${estimateCostUsd(accumulatedUsage)} >= ${maxCostUsd} USD); ` +
+        `[eval-validator] cost cap hit (${accumulatedCostUsd} >= ${maxCostUsd} USD); ` +
           `stopping at a case boundary`,
       );
       break;
@@ -669,7 +701,7 @@ export async function runValidatorEval(opts: {
         const { result, usage } = await executor({ case: c, arm, signal });
         armResults[ai].records.push({ caseId: c.id, label: c.label, result });
         armResults[ai].usage = addUsage(armResults[ai].usage, usage);
-        accumulatedUsage = addUsage(accumulatedUsage, usage);
+        accumulatedCostUsd += armCostUsd(arm, usage, args);
       } catch (e) {
         armResults[ai].records.push({
           caseId: c.id,
@@ -734,6 +766,8 @@ export type ValidatorEvalSummary = {
   costCapped: boolean;
   arms: ValidatorArmSummary[];
   totalCostUsd: number;
+  /** `shapeToolRequest(...).mode` per arm (set by the CLI). */
+  requestMode?: Record<string, string>;
 };
 
 /** Pair one arm's records against the fixture's labels, in record order,
@@ -766,6 +800,7 @@ function pairForMetrics(
 export function computeValidatorSummary(
   run: ValidatorEvalRunResult,
   cases: ValidatorAmbiguityCase[],
+  args: { model?: string } = {},
 ): ValidatorEvalSummary {
   const arms: ValidatorArmSummary[] = run.arms.map((armResult) => {
     const { cases: pairedCases, results: pairedResults } = pairForMetrics(
@@ -791,14 +826,14 @@ export function computeValidatorSummary(
         // `ValidatorArmSummary.metrics`'s docstring.
         selfInconsistentRate: arm.kind === "solver" ? null : rawMetrics.selfInconsistentRate,
       },
-      costUsd: estimateCostUsd(armResult.usage),
+      costUsd: armCostUsd(arm, armResult.usage, args),
       errors,
     };
   });
 
-  const totalUsage = run.arms.reduce(
-    (acc, a) => addUsage(acc, a.usage),
-    ZERO_USAGE,
+  const totalCostUsd = run.arms.reduce(
+    (acc, a) => acc + armCostUsd(a.arm, a.usage, args),
+    0,
   );
 
   return {
@@ -808,7 +843,7 @@ export function computeValidatorSummary(
     caseCount: run.caseCount,
     costCapped: run.costCapped,
     arms,
-    totalCostUsd: estimateCostUsd(totalUsage),
+    totalCostUsd,
   };
 }
 
@@ -958,6 +993,9 @@ export type EvalValidatorArgs = {
   maxCostUsd?: number;
   dryRun: boolean;
   runName?: string;
+  /** Model for arms with no pinned `modelOverride` (`model-only`, `both`). */
+  model?: string;
+  effort?: Effort;
 };
 
 export function parseEvalValidatorArgs(
@@ -970,6 +1008,8 @@ export function parseEvalValidatorArgs(
       "max-cost-usd": { type: "string" },
       "dry-run": { type: "boolean", default: false },
       "run-name": { type: "string" },
+      model: { type: "string" },
+      effort: { type: "string" },
       help: { type: "boolean", default: false },
     },
     allowPositionals: false,
@@ -1008,6 +1048,8 @@ export function parseEvalValidatorArgs(
     maxCostUsd,
     dryRun: parsed.values["dry-run"] ?? false,
     runName: parsed.values["run-name"],
+    model: parsed.values.model === "" ? undefined : parsed.values.model,
+    effort: parseEffort(parsed.values.effort),
   };
 }
 
@@ -1016,6 +1058,7 @@ function printUsage(): void {
     [
       "Usage: pnpm eval:validator [--limit <n>] [--max-cost-usd <n>]",
       "                           [--dry-run] [--run-name <name>]",
+      "                           [--model <id>] [--effort <level>]",
       "",
       "Replays the validator-ambiguity-cases.json fixture through 5 arms:",
       "four sighted validator arms (baseline / prompt-only / model-only / both)",
@@ -1028,6 +1071,8 @@ function printUsage(): void {
       `  --max-cost-usd <n>   Hard cost ceiling; default ${DEFAULT_MAX_COST_USD}. Stops at a case boundary.`,
       "  --dry-run            Print the arm matrix + case counts; zero Anthropic calls.",
       "  --run-name <name>    Optional. Defaults to run-<ISO timestamp>.",
+      "  --model <id>         Model for the arms with no pinned model (model-only, both).",
+      "  --effort <level>     low|medium|high|xhigh|max. Applied to every arm.",
       "  --help               Show this message.",
       "",
       "NOTE: invoke as `pnpm eval:validator --flag`, NOT `pnpm eval:validator -- --flag`",
@@ -1087,6 +1132,23 @@ async function main(): Promise<void> {
     );
   }
 
+  const requestMode: Record<string, string> = {};
+  for (const arm of ARMS) {
+    requestMode[arm.name] = requestModeFor(
+      resolveArmModel(arm, args) ?? VALIDATION_MODEL,
+      arm.kind === "solver"
+        ? {
+            name: QA_CRAFTER_TOOL_NAME,
+            description: "stand-in for the qa crafter tool (mode ignores the schema)",
+            input_schema: { type: "object" as const, properties: {} },
+          }
+        : buildValidationTool(ExerciseType.CLOZE),
+      "off",
+      args.effort,
+    );
+    console.log(`[eval-validator] request mode ${arm.name}: ${requestMode[arm.name]}`);
+  }
+
   // Warn at startup — NOT only under `--dry-run` — whenever the rough
   // full-run estimate exceeds the cap that will actually apply. A real run
   // invoked without `--max-cost-usd` silently defaults to
@@ -1129,12 +1191,13 @@ async function main(): Promise<void> {
 
   const client = createClaudeClient(apiKey);
   const result = await runValidatorEval({
-    executor: makeRealValidatorExecutor(client),
+    executor: makeRealValidatorExecutor(client, args),
     cases,
     arms: ARMS,
     runName,
     datasetName,
     maxCostUsd: args.maxCostUsd,
+    args,
     // Checkpoint after every case (every arm has run it) so a killed run
     // keeps whatever spend it already produced, without ever capturing a
     // mid-case, unbalanced state — same serializer
@@ -1143,12 +1206,12 @@ async function main(): Promise<void> {
     // same tooling.
     onCaseComplete: (partialPath, run) => {
       mkdirSync(EVAL_RUNS_DIR, { recursive: true });
-      const partialSummary = computeValidatorSummary(run, cases);
+      const partialSummary = { ...computeValidatorSummary(run, cases, args), requestMode };
       writeFileSync(partialPath, JSON.stringify(partialSummary, null, 2), "utf8");
     },
   });
 
-  const summary = computeValidatorSummary(result, cases);
+  const summary = { ...computeValidatorSummary(result, cases, args), requestMode };
   console.log("");
   console.log(renderValidatorMarkdownSummary(summary));
   const jsonPath = writeValidatorSummaryJson(summary);
