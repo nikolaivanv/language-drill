@@ -35,6 +35,7 @@ import {
   __resetRegistryForTests,
   sha8,
 } from "./prompts-registry.js";
+import { requestShape } from "./test-utils/request-shape";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -455,6 +456,49 @@ describe("evaluateAnswer", () => {
 
   beforeEach(() => {
     mockCreate.mockReset();
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+    });
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
+  });
+
+  it("request shape with adaptive thinking is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_123",
+          name: EVALUATION_TOOL_NAME,
+          input: validEvaluationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+    });
+    await evaluateAnswer(mockClient, {
+      exercise: clozeContent,
+      userAnswer: "went",
+      language: Language.EN,
+      difficulty: CefrLevel.B1,
+      thinkingOverride: "adaptive",
+    });
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
   it("calls Claude with correct parameters and returns parsed result", async () => {

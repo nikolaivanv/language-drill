@@ -18,6 +18,7 @@ import {
   craftProbeAnswers,
   QA_CRAFTER_TOOL_NAME,
 } from "./qa-sample.js";
+import { requestShape } from "./test-utils/request-shape";
 
 describe("renderLearnerView", () => {
   it("cloze: shows sentence + instructions, hides correctAnswer/acceptableAnswers", () => {
@@ -275,6 +276,21 @@ describe("craftProbeAnswers", () => {
     // the learner view must reach the model; the reference answer must not be injected by us
     const callArg = create.mock.calls[0][0];
     expect(JSON.stringify(callArg)).toContain("In my opinion, it is late.");
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      content: [{
+        type: "tool_use",
+        name: QA_CRAFTER_TOOL_NAME,
+        input: { correct: "x", correctConfidence: 0.9, wrong: "y", alt: null, ambiguous: false, ambiguityNote: "" },
+      }],
+      usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await craftProbeAnswers(client, { learnerView: "x", language: "TR", cefrLevel: "A1", exerciseType: "cloze" });
+    expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
   it("throws when no tool_use block is returned", async () => {

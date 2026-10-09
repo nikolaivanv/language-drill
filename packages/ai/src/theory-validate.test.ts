@@ -15,6 +15,7 @@ import {
   THEORY_VALIDATION_TOOL_NAME,
   type TheoryValidationResult,
 } from "./theory-validate.js";
+import { requestShape } from "./test-utils/request-shape";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -262,6 +263,28 @@ describe("validateTheoryDraft", () => {
 
   beforeEach(() => {
     mockCreate.mockReset();
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_tv_snap",
+          name: THEORY_VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: {
+        input_tokens: 4000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 200,
+      },
+    });
+    await validateTheoryDraft(mockClient, makeDraft(), baseSpec);
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
   it("calls Claude with the right params and returns the parsed result + tokenUsage", async () => {

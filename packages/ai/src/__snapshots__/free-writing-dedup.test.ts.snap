@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`judgeFreeWritingDuplicate > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 400,
+  "model": "claude-opus-4-8",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": null,
+  "thinking": null,
+  "tool_choice": {
+    "name": "submit_dedup_verdict",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "properties": {
+          "duplicateOf": {
+            "description": "Index of the closest duplicated existing prompt, or null if the candidate is distinct.",
+            "type": [
+              "integer",
+              "null",
+            ],
+          },
+          "reason": {
+            "description": "One sentence explaining the verdict.",
+            "type": "string",
+          },
+        },
+        "required": [
+          "duplicateOf",
+          "reason",
+        ],
+        "type": "object",
+      },
+      "name": "submit_dedup_verdict",
+      "strict": null,
+    },
+  ],
+}
+`;

@@ -1,0 +1,179 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`evaluateFreeWriting > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
+{
+  "max_tokens": 8192,
+  "model": "claude-sonnet-4-6",
+  "output_config": null,
+  "system": [
+    {
+      "cache_control": {
+        "type": "ephemeral",
+      },
+      "type": "text",
+    },
+  ],
+  "temperature": 0,
+  "thinking": null,
+  "tool_choice": {
+    "name": "submit_free_writing_evaluation",
+    "type": "tool",
+  },
+  "tools": [
+    {
+      "input_schema": {
+        "properties": {
+          "criteria": {
+            "description": "Exactly four criteria, in order: task, coherence, lexis, grammar.",
+            "items": {
+              "properties": {
+                "cefr": {
+                  "description": "Per-criterion CEFR estimate, e.g. B1+.",
+                  "type": "string",
+                },
+                "id": {
+                  "enum": [
+                    "task",
+                    "coherence",
+                    "lexis",
+                    "grammar",
+                  ],
+                  "type": "string",
+                },
+                "label": {
+                  "type": "string",
+                },
+                "note": {
+                  "type": "string",
+                },
+                "score": {
+                  "description": "0.0–1.0.",
+                  "type": "number",
+                },
+              },
+              "required": [
+                "id",
+                "label",
+                "score",
+                "cefr",
+                "note",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "errors": {
+            "description": "Located errors. \`original\` MUST be an exact substring of the learner's text.",
+            "items": {
+              "properties": {
+                "correction": {
+                  "type": "string",
+                },
+                "n": {
+                  "description": "1-based index.",
+                  "type": "number",
+                },
+                "note": {
+                  "type": "string",
+                },
+                "original": {
+                  "description": "Exact substring of the learner's text.",
+                  "type": "string",
+                },
+                "severity": {
+                  "enum": [
+                    "high",
+                    "med",
+                    "low",
+                  ],
+                  "type": "string",
+                },
+                "type": {
+                  "description": "Short category label in the target language.",
+                  "type": "string",
+                },
+                "where": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "n",
+                "severity",
+                "type",
+                "original",
+                "correction",
+                "note",
+              ],
+              "type": "object",
+            },
+            "type": "array",
+          },
+          "goodSpans": {
+            "description": "Exact substrings of the learner's text done well.",
+            "items": {
+              "type": "string",
+            },
+            "type": "array",
+          },
+          "headline": {
+            "description": "One vivid sentence (English).",
+            "type": "string",
+          },
+          "improved": {
+            "properties": {
+              "text": {
+                "description": "Freshly written improved paragraph(s).",
+                "type": "string",
+              },
+              "upgrades": {
+                "description": "Exact substrings within \`text\` to highlight as upgrades.",
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "text",
+            ],
+            "type": "object",
+          },
+          "improvedWordCount": {
+            "type": "number",
+          },
+          "overallCefr": {
+            "description": "Overall writing CEFR level, e.g. B2.",
+            "type": "string",
+          },
+          "overallScore": {
+            "description": "Holistic grade 0.0–1.0.",
+            "type": "number",
+          },
+          "summary": {
+            "description": "2–3 sentence summary (English).",
+            "type": "string",
+          },
+          "wordCount": {
+            "type": "number",
+          },
+        },
+        "required": [
+          "overallScore",
+          "overallCefr",
+          "headline",
+          "summary",
+          "criteria",
+          "errors",
+          "goodSpans",
+          "improved",
+          "wordCount",
+          "improvedWordCount",
+        ],
+        "type": "object",
+      },
+      "name": "submit_free_writing_evaluation",
+      "strict": null,
+    },
+  ],
+}
+`;

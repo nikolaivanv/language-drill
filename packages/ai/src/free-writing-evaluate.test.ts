@@ -8,6 +8,7 @@ import {
   evaluateFreeWriting,
 } from './free-writing-evaluate';
 import { ContentRejectedError } from './content-rejected-error';
+import { requestShape } from './test-utils/request-shape';
 
 const content: FreeWritingContent = {
   type: ExerciseType.FREE_WRITING,
@@ -202,6 +203,21 @@ describe('evaluateFreeWriting', () => {
     const args = create.mock.calls[0][0];
     expect(args.tools[0].name).toBe('submit_free_writing_evaluation');
     expect(args.tool_choice).toEqual({ type: 'tool', name: 'submit_free_writing_evaluation' });
+  });
+
+  it('request shape for the default model is unchanged (model-request shaping guard)', async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: 'tool_use',
+      content: [{ type: 'tool_use', name: 'submit_free_writing_evaluation', input: valid }],
+    });
+    const client = { messages: { create } } as unknown as import('@anthropic-ai/sdk').default;
+    await evaluateFreeWriting(client, {
+      content,
+      userAnswer: 'Mi texto.',
+      language: Language.ES,
+      difficulty: CefrLevel.B2,
+    });
+    expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
   it('builds the tool with the in-scope key enum and coerces the returned key (attribution)', async () => {

@@ -28,6 +28,7 @@ import {
   VALIDATION_TOOL_NAME,
   type ValidationResult,
 } from "./validate.js";
+import { requestShape } from "./test-utils/request-shape";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -390,6 +391,52 @@ describe("validateDraft", () => {
 
   beforeEach(() => {
     mockCreate.mockReset();
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_snap",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: {
+        input_tokens: 1000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 200,
+      },
+    });
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec);
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
+  });
+
+  it("request shape for claude-sonnet-5 is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_v_snap",
+          name: VALIDATION_TOOL_NAME,
+          input: validValidationInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: {
+        input_tokens: 1000,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
+        output_tokens: 200,
+      },
+    });
+    await validateDraft(mockClient, makeDraft(clozeContent), baseSpec, undefined, {
+      modelOverride: "claude-sonnet-5",
+    });
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
   });
 
   it("calls Claude with the right params and returns the parsed result + tokenUsage", async () => {

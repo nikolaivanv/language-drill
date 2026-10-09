@@ -13,6 +13,7 @@ import {
   judgeFreeWritingDuplicate,
   parseFreeWritingDedupVerdict,
 } from "./index.js";
+import { requestShape } from "./test-utils/request-shape";
 
 const FW = (over: Record<string, unknown> = {}) => ({
   type: ExerciseType.FREE_WRITING,
@@ -188,6 +189,17 @@ describe("judgeFreeWritingDuplicate", () => {
     await expect(
       judgeFreeWritingDuplicate(client, { candidate, existing: [{ title: "E", task: "T.", requiredElements: [] }], cefrLevel: "B1" }),
     ).rejects.toThrow();
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1, output_tokens: 1 },
+      content: [{ type: "tool_use", name: FREE_WRITING_DEDUP_TOOL_NAME, input: { duplicateOf: null, reason: "" } }],
+    });
+    const client = { messages: { create } } as unknown as Anthropic;
+    await judgeFreeWritingDuplicate(client, { candidate, existing: oneExisting, cefrLevel: "B1" });
+    expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
   describe("per-model request shaping", () => {

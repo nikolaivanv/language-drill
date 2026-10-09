@@ -54,6 +54,7 @@ vi.mock("./generation-prompts.js", async (importActual) => {
   };
 });
 import { buildGenerationSystemPrompt } from "./generation-prompts.js";
+import { requestShape } from "./test-utils/request-shape";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -391,6 +392,23 @@ describe("generateBatch", () => {
   });
 
   // ---- Happy-path × 3 types ----
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    mockCreate.mockResolvedValue({
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_1",
+          name: TOOL_NAME_BY_TYPE.cloze,
+          input: validClozeInput,
+        },
+      ],
+      stop_reason: "tool_use",
+      usage: baseUsage,
+    });
+    await generateOneDraft(mockClient, baseSpec, 0);
+    expect(requestShape(mockCreate.mock.calls[0][0])).toMatchSnapshot();
+  });
 
   it("produces a valid cloze draft and dispatches the cloze tool", async () => {
     mockCreate.mockResolvedValue({

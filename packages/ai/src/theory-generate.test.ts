@@ -19,6 +19,7 @@ import {
   theoryDraftId,
   TheoryDraftMalformedError,
 } from "./theory-generate.js";
+import { requestShape } from "./test-utils/request-shape";
 
 // ---------------------------------------------------------------------------
 // Fixtures — Phase 1 subjunctive theory page JSON
@@ -275,6 +276,13 @@ describe("theory-generate / generateTheoryTopic", () => {
     expect(draft.metadata.inputTokens).toBe(1500);
     expect(draft.metadata.outputTokens).toBe(800);
     expect(draft.metadata.grammarPointKey).toBe(baseSpec.grammarPoint.key);
+  });
+
+  it("request shape for the default model is unchanged (model-request shaping guard)", async () => {
+    const client = makeStubClient(subjunctiveFixture);
+    await generateTheoryTopic(client, baseSpec);
+    const create = client.messages.create as unknown as { mock: { calls: unknown[][] } };
+    expect(requestShape(create.mock.calls[0][0])).toMatchSnapshot();
   });
 
   // -------------------------------------------------------------------------
