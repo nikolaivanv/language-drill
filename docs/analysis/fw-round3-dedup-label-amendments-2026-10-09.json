@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-09",
+  "source": "docs/analysis/fw-round3-dedup-proposals-2026-10-07.json",
+  "method": "Pipeline judge (Sonnet) called these pairs duplicates against a 'distinct' #757 label; an independent Opus pass using the #757 reviewer rule agreed; the project owner confirmed or overturned each by hand.",
+  "note": "Only the judge's false positives were re-checked; its 2 misses and the agreement rows were not, so corrected scores lean slightly in the judge's favour.",
+  "confirmedDuplicates": [
+    {
+      "cell": "es-b1-fw-a-trip",
+      "rowId": "fb6e5901-e320-5a7d-9f2e-24d1ef9f1144",
+      "rowTitle": "El viaje que llevo en el corazón",
+      "duplicateOfTitle": "Un viaje que no olvido"
+    },
+    {
+      "cell": "es-b1-fw-favorite-meal",
+      "rowId": "07e2ad42-a21e-517a-9665-55e65538d31b",
+      "rowTitle": "Un plato que me lleva a casa",
+      "duplicateOfTitle": "Mi plato favorito: ¿qué es y por qué te encanta?"
+    },
+    {
+      "cell": "es-b1-fw-my-town",
+      "rowId": "d83e691f-e261-5f93-ab78-8b6fdb9d7d92",
+      "rowTitle": "Mi ciudad: ¿dónde se reúne la gente?",
+      "duplicateOfTitle": "Mi ciudad: lugares y actividades"
+    },
+    {
+      "cell": "tr-a1-fw-my-weekend",
+      "rowId": "c43450da-b444-5604-8acd-49c88bf82501",
+      "rowTitle": "Cumartesi sabahı rutinin ne?",
+      "duplicateOfTitle": "Sabah mı, öğleden sonra mı? Hafta sonu rutinin"
+    },
+    {
+      "cell": "de-a1-fw-my-family",
+      "rowId": "f688977b-64b0-595f-aff6-c2c38a648486",
+      "rowTitle": "Wer kocht heute Abend?",
+      "duplicateOfTitle": "Mein Lieblingsmensch zu Hause"
+    }
+  ],
+  "overturned": [
+    {
+      "cell": "es-b1-fw-favorite-meal",
+      "rowId": "05e2aa1c-9fe4-55f0-9465-52ac52ff9779",
+      "rowTitle": "Un día especial: la comida que siempre pido",
+      "duplicateOfTitle": "Mi plato favorito: ¿qué es y por qué te encanta?"
+    },
+    {
+      "cell": "es-b1-fw-my-town",
+      "rowId": "d73e678c-6144-51ce-aa78-89d25cba1b63",
+      "rowTitle": "Mi barrio favorito: el rincón que más me gusta",
+      "duplicateOfTitle": "Mi ciudad: dos lugares que no te puedes perder"
+    },
+    {
+      "cell": "de-a2-fw-best-friend",
+      "rowId": "b2e64809-2a7c-576b-9452-6c7716b46fe6",
+      "rowTitle": "Was mein Freund / meine Freundin immer in meiner Küche isst",
+      "duplicateOfTitle": "Der Moment, als wir uns kennengelernt haben"
+    }
+  ]
+}

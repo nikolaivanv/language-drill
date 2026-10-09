@@ -40,6 +40,8 @@ export type JudgeScore = { tp: number; fp: number; fn: number; tn: number; preci
 
 export const JUDGE_PRECISION_BAR = 0.9;
 export const JUDGE_RECALL_BAR = 0.8;
+/** Rows whose verdict stays malformed after the judge's retry; above this the run does not pass. */
+export const MAX_JUDGE_ERROR_RATE = 0.02;
 
 export function buildGroundTruth(cell: ProposalCell): LabeledRow[] {
   return cell.clusters.flatMap((c, i) => {
@@ -106,6 +108,7 @@ async function main(): Promise<void> {
   const disagreements: Array<JudgeCase & { candidate: FreeWritingPromptSummary; matched: FreeWritingPromptSummary | null }> = [];
   let usage: ClaudeUsageBreakdown = ZERO_USAGE;
   let missing = 0;
+  const judgeErrors: Array<{ cell: string; id: string; truth: boolean; error: string }> = [];
   let capped = false;
 
   outer: for (const cell of cells) {
@@ -122,9 +125,17 @@ async function main(): Promise<void> {
       // cluster-mates are all missing from the DB is not a findable duplicate.
       const truth = others.some((o) => o.cluster === row.cluster);
       const candidate = summaryById.get(row.id)!;
-      const { result, tokenUsage } = await judgeFreeWritingDuplicate(client, {
-        candidate, existing, cefrLevel: cell.level,
-      });
+      // A verdict that stays malformed after the judge's own retry is recorded,
+      // not fatal: in production it means "inserted flagged", so its rate is a
+      // measurement in its own right.
+      let judged: Awaited<ReturnType<typeof judgeFreeWritingDuplicate>>;
+      try {
+        judged = await judgeFreeWritingDuplicate(client, { candidate, existing, cefrLevel: cell.level });
+      } catch (e) {
+        judgeErrors.push({ cell: cell.cell, id: row.id, truth, error: (e as Error).message });
+        continue;
+      }
+      const { result, tokenUsage } = judged;
       usage = addUsage(usage, tokenUsage);
       const c: JudgeCase = { cell: cell.cell, id: row.id, truth, predicted: result.duplicateOf !== null, reason: result.reason };
       cases.push(c);
@@ -135,12 +146,13 @@ async function main(): Promise<void> {
   }
 
   const score = scoreJudge(cases);
-  const passed = !capped && judgePasses(score);
+  const errorRate = cases.length + judgeErrors.length === 0 ? 0 : judgeErrors.length / (cases.length + judgeErrors.length);
+  const passed = !capped && errorRate <= MAX_JUDGE_ERROR_RATE && judgePasses(score);
   const report = {
     runName: values.out, startedAt: new Date().toISOString(), cells: cells.length,
     rowsJudged: cases.length, rowsMissing: missing, costCapped: capped,
     score, bars: { precision: JUDGE_PRECISION_BAR, recall: JUDGE_RECALL_BAR }, passed,
-    costUsd: estimateCostUsd(usage), cases, disagreements,
+    costUsd: estimateCostUsd(usage), judgeErrors, errorRate, cases, disagreements,
   };
   mkdirSync(EVAL_RUNS_DIR, { recursive: true });
   const outPath = path.join(EVAL_RUNS_DIR, `${values.out}.json`);
@@ -149,6 +161,7 @@ async function main(): Promise<void> {
   console.log(`# Free-writing dedup judge — ${values.out}`);
   console.log(`rows judged ${cases.length} (missing ${missing})${capped ? " — COST CAPPED, partial" : ""}`);
   console.log(`precision ${score.precision.toFixed(3)} (bar ${JUDGE_PRECISION_BAR})  recall ${score.recall.toFixed(3)} (bar ${JUDGE_RECALL_BAR})`);
+  console.log(`judge errors ${judgeErrors.length} (${(errorRate * 100).toFixed(1)}%, max ${MAX_JUDGE_ERROR_RATE * 100}%)`);
   console.log(`tp ${score.tp} fp ${score.fp} fn ${score.fn} tn ${score.tn}  cost $${report.costUsd.toFixed(2)}`);
   console.log(`**${passed ? "PASSED" : "FAILED"}** — ${disagreements.length} disagreements in ${outPath}`);
   if (!passed) process.exit(1);

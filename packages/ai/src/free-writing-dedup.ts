@@ -1,6 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 
-import { ZERO_USAGE, type ClaudeUsageBreakdown } from "./cost-model.js";
+import { ZERO_USAGE, addUsage, type ClaudeUsageBreakdown } from "./cost-model.js";
 import {
   FREE_WRITING_DEDUP_PROMPT_VERSION,
   FREE_WRITING_DEDUP_SYSTEM_PROMPT,
@@ -87,13 +87,21 @@ export async function judgeFreeWritingDuplicate(
   };
   if (!rejectsSamplingParams) request.temperature = 0;
   if (omittedThinkingMeansAdaptive) request.thinking = { type: "disabled" };
-  const response = await client.messages.create(request, { signal: options.signal });
-  const block = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
-  if (!block) {
-    throw new Error(`dedup judge returned no tool call (stop_reason=${response.stop_reason})`);
+  // One retry on a malformed verdict: the 2026-10-07 eval saw ~1% of calls omit
+  // `duplicateOf` despite the forced tool. A second failure throws, which the
+  // insert path treats as "unavailable" (inserted flagged, never approved).
+  let tokenUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  for (let attempt = 0; ; attempt++) {
+    const response = await client.messages.create(request, { signal: options.signal });
+    tokenUsage = addUsage(tokenUsage, readUsage(response));
+    try {
+      const block = response.content.find((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
+      if (!block) {
+        throw new Error(`dedup judge returned no tool call (stop_reason=${response.stop_reason})`);
+      }
+      return { result: parseFreeWritingDedupVerdict(block.input, input.existing.length), tokenUsage };
+    } catch (e) {
+      if (attempt >= 1) throw e;
+    }
   }
-  return {
-    result: parseFreeWritingDedupVerdict(block.input, input.existing.length),
-    tokenUsage: readUsage(response),
-  };
 }
