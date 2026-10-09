@@ -217,10 +217,22 @@ export {
   OPUS_4_8_PRICING,
   estimateCostUsd,
   estimateCostUsdAt,
+  estimateCostUsdFor,
   addUsage,
   ZERO_USAGE,
 } from "./cost-model.js";
 export type { ClaudeUsageBreakdown } from "./cost-model.js";
+export {
+  capabilityFor,
+  extractToolUse,
+  NoToolCallError,
+  shapeToolRequest,
+  strictToolSchema,
+  type Effort,
+  type ModelCapabilities,
+  type ShapedToolRequest,
+  type ToolIntent,
+} from "./model-request.js";
 
 export {
   buildValidationTool,

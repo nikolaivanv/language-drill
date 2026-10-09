@@ -1,16 +1,10 @@
+import { capabilityFor } from "./model-request.js";
+
 /**
- * Sonnet-tier list pricing (USD per token), verified 2026-07-05: Sonnet 4.5,
- * Sonnet 4.6, and Sonnet 5 all list at $3/$15 per MTok, so these constants
- * cover the evaluator (Sonnet 5 since 2026-07-05) and the generator
- * (Sonnet 4.6) alike. NOTE: Sonnet 5 bills at intro pricing ($2/$10) through
- * 2026-08-31 — estimates here intentionally use the durable list price, so
- * evaluator costs are overstated ~33% during the intro window.
- *
- * Update path: when the evaluator's MODEL constant in evaluate.ts and the
- * generator's GENERATION_MODEL constant in generate.ts move to a new model,
- * bump these constants in the same PR. These prices are the authoritative
- * source for the --max-cost-usd CLI flag and the generation_jobs.cost_usd_estimate
- * column.
+ * Sonnet 4.6 list pricing ($3 / $15 per MTok), used by the production
+ * `generation_jobs.cost_usd_estimate` (the generator and validator run on
+ * Sonnet 4.6). For other models use `estimateCostUsdFor(model, usage)`, which
+ * reads `capabilityFor(model).pricing` (Sonnet 5 / 5.5 list at $2 / $10).
  */
 export const SONNET_4_5_PRICING = Object.freeze({
   inputUsdPerToken: 3.0 / 1_000_000, // base
@@ -81,4 +75,9 @@ export function estimateCostUsdAt(
 /** Pure: returns USD cost at Sonnet list pricing, rounded to 4 decimal places. */
 export function estimateCostUsd(usage: ClaudeUsageBreakdown): number {
   return estimateCostUsdAt(SONNET_4_5_PRICING, usage);
+}
+
+/** USD cost of `usage` at `model`'s list price (see model-request.ts), rounded to 4 decimals. */
+export function estimateCostUsdFor(model: string, usage: ClaudeUsageBreakdown): number {
+  return estimateCostUsdAt(capabilityFor(model).pricing, usage);
 }

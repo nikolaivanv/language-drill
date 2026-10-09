@@ -7,6 +7,7 @@ import {
   type ClaudeUsageBreakdown,
   OPUS_4_8_PRICING,
   estimateCostUsdAt,
+  estimateCostUsdFor,
 } from "./cost-model.js";
 import {
   buildCostDetails,
@@ -251,5 +252,31 @@ describe("OPUS_4_8_PRICING / estimateCostUsdAt", () => {
       outputTokens: 1_000_000,
     };
     expect(estimateCostUsdAt(OPUS_4_8_PRICING, usage)).toBe(30);
+  });
+});
+
+describe("estimateCostUsdFor", () => {
+  const usage = { inputTokens: 1_000_000, cacheCreationInputTokens: 0, cacheReadInputTokens: 0, outputTokens: 1_000_000 };
+  it.each([
+    ["claude-sonnet-4-6", 18],
+    ["claude-sonnet-5", 12],
+    ["claude-sonnet-5-5", 12],
+    ["claude-opus-4-8", 30],
+    ["claude-opus-5-5", 24],
+    ["claude-haiku-4-5-20251001", 6],
+    ["claude-haiku-5-5", 0.6],
+  ])("%s → $%d for 1M in + 1M out", (model, dollars) => {
+    expect(estimateCostUsdFor(model, usage)).toBe(dollars);
+  });
+
+  it("prices cache writes at 1.25x and cache reads at 0.1x input", () => {
+    expect(
+      estimateCostUsdFor("claude-sonnet-5-5", {
+        inputTokens: 0,
+        cacheCreationInputTokens: 1_000_000,
+        cacheReadInputTokens: 1_000_000,
+        outputTokens: 0,
+      }),
+    ).toBe(2.5 + 0.2);
   });
 });
