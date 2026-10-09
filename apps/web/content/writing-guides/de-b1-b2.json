@@ -219,7 +219,7 @@
             },
             {
               "kind": "text",
-              "text": " (are social media good for young people?), one sentence at a time. It is 116 words — B1 length, close to B2. A B2 answer would develop each point further."
+              "text": " (are social media good for young people?), one sentence at a time. It is 116 words — B1 length (80–120). A B2 answer needs 150–200 words, so it would develop each point further with an extra reason or example."
             }
           ]
         },
@@ -1174,11 +1174,68 @@
               "kind": "paragraph",
               "text": [
                 {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "jedoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " works like "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "trotzdem"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " at the start ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Jedoch ist die Miete hoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ") but is most natural after the verb: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Die Miete ist jedoch hoch"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
+                }
+              ]
+            },
+            {
+              "kind": "paragraph",
+              "text": [
+                {
                   "kind": "strong",
                   "children": [
                     {
                       "kind": "text",
-                      "text": "No change"
+                      "text": "No extra position"
                     }
                   ]
                 },
@@ -1236,7 +1293,20 @@
                 },
                 {
                   "kind": "text",
-                  "text": ": "
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "sondern"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": they stand before a normal verb-second clause — "
                 },
                 {
                   "kind": "em",
@@ -1244,6 +1314,19 @@
                     {
                       "kind": "text",
                       "text": "…, aber ich wohne gern hier"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, aber trotzdem wohne ich gern hier"
                     }
                   ]
                 },
@@ -1336,7 +1419,7 @@
             },
             {
               "kind": "text",
-              "text": " — and the formal forms are always capitalised. For a group, use informal "
+              "text": " — and Sie / Ihnen / Ihr are always capitalised (in letters and messages you may also capitalise Du / Dich / Dein as a courtesy; both are correct). For a group, use informal "
             },
             {
               "kind": "em",
@@ -1504,7 +1587,7 @@
               "text": "Ich würde mich über eine baldige Antwort freuen."
             }
           ],
-          "en": "I would be glad to receive a reply soon.",
+          "en": "I look forward to hearing from you soon.",
           "note": [
             {
               "kind": "text",
@@ -1781,27 +1864,14 @@
           "target": [
             {
               "kind": "text",
-              "text": "Ich fahre mit dem Bus zur Arbeit."
+              "text": "Ich glaube, dass man soziale Medien bewusst nutzen sollte."
             }
           ],
-          "en": "I go to work by bus.",
+          "en": "I think that one should use social media mindfully.",
           "note": [
             {
               "kind": "text",
-              "text": "not: *mit den Bus*. "
-            },
-            {
-              "kind": "em",
-              "children": [
-                {
-                  "kind": "text",
-                  "text": "mit"
-                }
-              ]
-            },
-            {
-              "kind": "text",
-              "text": " always takes the dative."
+              "text": "not: *dass man soziale Medien sollte bewusst nutzen*. In a subordinate clause the conjugated verb (here the modal) goes to the very end, after the infinitive."
             }
           ]
         },
@@ -1830,7 +1900,46 @@
             },
             {
               "kind": "text",
-              "text": " …) take the accusative for movement towards a place and the dative for location."
+              "text": " …) take the accusative for a destination ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "wohin?"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") and the dative for a location ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "wo?"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ") — even when there is movement within that place: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ich laufe im Park"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
             }
           ]
         },

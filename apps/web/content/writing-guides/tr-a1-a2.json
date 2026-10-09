@@ -401,6 +401,62 @@
             {
               "kind": "text",
               "text": " (too) is a separate word."
+            },
+            {
+              "kind": "text",
+              "text": " "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "kardeş"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " means brother "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "or"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " sister; say "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "erkek kardeş"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "kız kardeş"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " if you need to specify."
             }
           ]
         },
@@ -725,6 +781,36 @@
                         "text": "çünkü"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "bu yüzden"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (= that's why: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Hastayım, bu yüzden evde kalıyorum."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -865,7 +951,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "en sonunda"
+                        "text": "en son"
                       }
                     ]
                   }
@@ -917,8 +1003,30 @@
                   "kind": "strong",
                   "children": [
                     {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "de"
+                        }
+                      ]
+                    },
+                    {
                       "kind": "text",
-                      "text": "`de` / `da` (too, also) is a separate word."
+                      "text": " / "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "da"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (too, also) is a separate word."
                     }
                   ]
                 },
@@ -1037,7 +1145,20 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (at, in), which is written "
+                  "text": " (at, in; "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-te / -ta"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " after p, ç, t, k, f, h, s, ş), which is written "
                 },
                 {
                   "kind": "strong",
@@ -1063,7 +1184,59 @@
                 },
                 {
                   "kind": "text",
-                  "text": " (at home). Both can appear together: "
+                  "text": " (at home), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "parkta"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (in the park). The separate word "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "de / da"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " never changes to "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "te / ta"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ": "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Kitap da güzel."
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (\"The book is nice too.\") Both can appear together: "
                 },
                 {
                   "kind": "em",
@@ -1216,6 +1389,88 @@
             {
               "kind": "text",
               "text": ")."
+            },
+            {
+              "kind": "text",
+              "text": " In the past tense the endings are shorter: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-n"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " for sen, "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-nız"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " for siz ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "geldin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "geldiniz"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "gittin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "gittiniz"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ")."
             }
           ]
         },
@@ -1352,7 +1607,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "Formal opening when you don't know the name (literally \"dear official\")."
+              "text": "Formal opening when you don't know the name (literally \"respected official\")."
             }
           ]
         },
@@ -1717,6 +1972,61 @@
             {
               "kind": "text",
               "text": "not: *İki kardeşlerim var*. After a number, the noun stays singular."
+            }
+          ]
+        },
+        {
+          "kind": "example",
+          "target": [
+            {
+              "kind": "text",
+              "text": "Yazın Ankara'ya gidiyorum."
+            }
+          ],
+          "en": "I'm going to Ankara in the summer.",
+          "note": [
+            {
+              "kind": "text",
+              "text": "not: *Ankaraya*. Put an apostrophe before a suffix on a name of a person, city or country: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ankara'ya"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Türkiye'de"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ali'nin"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
             }
           ]
         }

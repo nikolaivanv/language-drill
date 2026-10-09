@@ -486,7 +486,7 @@
           "target": [
             {
               "kind": "text",
-              "text": "Ich mag mein Wochenende sehr, "
+              "text": "Ich mag das Wochenende sehr, "
             },
             {
               "kind": "hilite",
@@ -502,7 +502,7 @@
               "text": " es ist immer zu kurz!"
             }
           ],
-          "en": "I like my weekend a lot, but it is always too short!",
+          "en": "I like the weekend a lot, but it is always too short!",
           "note": [
             {
               "kind": "text",
@@ -666,6 +666,36 @@
                         "text": "aber"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sondern"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (after a negative: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "nicht klein, sondern groß"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -783,6 +813,36 @@
                         "text": "zum Beispiel"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "wie"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (such as, before a noun: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Obst wie Äpfel"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -1097,7 +1157,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " change word order: "
+                  "text": " count as a position. The clause after them is a normal main clause with the verb second: "
                 },
                 {
                   "kind": "em",
@@ -1105,6 +1165,19 @@
                     {
                       "kind": "text",
                       "text": "…, aber ich bin müde"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ". If another word comes first, the verb still comes second: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "…, und am Nachmittag lese ich ein Buch"
                     }
                   ]
                 },
@@ -1153,7 +1226,7 @@
             },
             {
               "kind": "text",
-              "text": " with adults you do not know, at work and in formal letters. "
+              "text": " with adults you do not know, with people in an official role (a teacher, a doctor, a landlord) and in formal letters. "
             },
             {
               "kind": "em",
@@ -1246,14 +1319,14 @@
           "text": [
             {
               "kind": "text",
-              "text": "Pick one at the start and keep it to the end. Letters and emails also open and close differently. After the greeting comes a comma, and the next line starts with a small letter (unless it starts with a noun or "
+              "text": "Pick one at the start and keep it to the end. Letters and emails also open and close differently. After the greeting comes a comma, and the next line starts with a small letter, unless its first word is always capitalised anyway (a noun, a name, or "
             },
             {
               "kind": "em",
               "children": [
                 {
                   "kind": "text",
-                  "text": "Sie"
+                  "text": "Sie / Ihnen / Ihr"
                 }
               ]
             },
@@ -1673,7 +1746,46 @@
           "note": [
             {
               "kind": "text",
-              "text": "not: *Ich aufstehe um sieben Uhr*. Separable verbs split: the prefix goes to the end of the clause."
+              "text": "not: *Ich aufstehe um sieben Uhr*. In a main clause, separable verbs split: the prefix goes to the end of the clause. After "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "weil"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " (or a modal verb) the verb stays in one piece at the end: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "…, weil ich um sieben Uhr aufstehe"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " / "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "Ich muss früh aufstehen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
             }
           ]
         },
@@ -1689,7 +1801,46 @@
           "note": [
             {
               "kind": "text",
-              "text": "not: *am abend lese ich ein buch*. All nouns are capitalised in German."
+              "text": "not: *Am abend lese ich ein buch*. All nouns are capitalised in German — also after "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ": "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Abend"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "am Montag"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "."
             }
           ]
         }

@@ -472,7 +472,59 @@
           "text": [
             {
               "kind": "text",
-              "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. Notice that many of them are suffixes on the verb rather than separate words — see the next section."
+              "text": "The connectors (highlighted) carry the argument: they tell the reader which sentence is a new point, which is an example, and where the paragraph turns to the other side. Notice that some of them work in two pieces: a suffix that turns the verb into a noun ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "olmadıkları"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "olmasına"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "), followed by a separate word ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "için"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "rağmen"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "). See the next section."
             }
           ]
         }
@@ -847,7 +899,7 @@
                   },
                   {
                     "kind": "text",
-                    "text": ", "
+                    "text": " (informal), "
                   },
                   {
                     "kind": "mono",
@@ -985,13 +1037,13 @@
                   "children": [
                     {
                       "kind": "text",
-                      "text": "Many Turkish connectors are suffixes at the end of a clause."
+                      "text": "Many Turkish connectors are a verb suffix plus a small word at the end of a clause"
                     }
                   ]
                 },
                 {
                   "kind": "text",
-                  "text": " The subordinate clause comes first and ends in the suffix; the main clause follows. The suffix takes vowel harmony, and "
+                  "text": " ("
                 },
                 {
                   "kind": "mono",
@@ -1004,7 +1056,137 @@
                 },
                 {
                   "kind": "text",
-                  "text": " also takes a personal ending for its subject."
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": ", "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-sa bile"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "). The subordinate clause comes first and ends in the connector; the main clause follows. The suffix takes vowel harmony, and both "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-dığı için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " and "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " change with the subject: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğum için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmama rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (I), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğun için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmana rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (you), "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olduğu için"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " / "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmasına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " (he/she/it)."
                 }
               ]
             },
@@ -1080,6 +1262,57 @@
                 {
                   "kind": "text",
                   "text": " — although (a fact)."
+                }
+              ]
+            },
+            {
+              "kind": "example",
+              "target": [
+                {
+                  "kind": "text",
+                  "text": "Yorgun olmama "
+                },
+                {
+                  "kind": "hilite",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ders çalıştım."
+                }
+              ],
+              "en": "Although I was tired, I studied.",
+              "note": [
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "-masına rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " with the ending for \"I\": "
+                },
+                {
+                  "kind": "mono",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "olmama rağmen"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
                 }
               ]
             },
@@ -1550,79 +1783,66 @@
           "target": [
             {
               "kind": "text",
-              "text": "Bu durumu çocuğuma anlattım."
+              "text": "İstanbul'da yaşayan bir arkadaşım var."
             }
           ],
-          "en": "I explained this situation to my child.",
+          "en": "I have a friend who lives in Istanbul.",
           "note": [
             {
               "kind": "text",
-              "text": "not: *çocukuma*. Final "
+              "text": "not: *İstanbul'da yaşadığı arkadaşım*. When the noun is the "
+            },
+            {
+              "kind": "strong",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "subject"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " of the relative clause (the friend lives), use "
             },
             {
               "kind": "em",
               "children": [
                 {
                   "kind": "text",
-                  "text": "k"
+                  "text": "-an / -en"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " becomes "
+              "text": ". Use "
             },
             {
               "kind": "em",
               "children": [
                 {
                   "kind": "text",
-                  "text": "ğ"
+                  "text": "-dığı"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " before a vowel suffix, as "
+              "text": " only when the noun is the object or a place ("
             },
             {
               "kind": "em",
               "children": [
                 {
                   "kind": "text",
-                  "text": "p"
+                  "text": "yaşadığım şehir"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " becomes "
-            },
-            {
-              "kind": "em",
-              "children": [
-                {
-                  "kind": "text",
-                  "text": "b"
-                }
-              ]
-            },
-            {
-              "kind": "text",
-              "text": " ("
-            },
-            {
-              "kind": "em",
-              "children": [
-                {
-                  "kind": "text",
-                  "text": "kitap → kitabı"
-                }
-              ]
-            },
-            {
-              "kind": "text",
-              "text": ")."
+              "text": " — the city I live in)."
             }
           ]
         },
@@ -1645,7 +1865,7 @@
               "children": [
                 {
                   "kind": "text",
-                  "text": "-dığı"
+                  "text": "-dık-"
                 }
               ]
             },
@@ -1658,13 +1878,52 @@
               "children": [
                 {
                   "kind": "text",
-                  "text": "-acağı"
+                  "text": "-acak-"
                 }
               ]
             },
             {
               "kind": "text",
-              "text": " (future) plus a personal ending, before the noun: "
+              "text": " (future) plus a possessive ending for the subject ("
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğum"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğun"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "okuduğu"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": "…), before the noun: "
             },
             {
               "kind": "em",

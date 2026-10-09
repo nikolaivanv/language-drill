@@ -219,7 +219,7 @@
             },
             {
               "kind": "text",
-              "text": " (is remote work a good thing?), one sentence at a time. It is 127 words — between B1 and B2 length. A B1 answer can drop one supporting point; a B2 answer can develop each point further."
+              "text": " (is remote work a good thing?), one sentence at a time. It is 128 words — a little over the B1 maximum (120) and short of the B2 minimum (150). At B1, drop the example sentence (to about 104 words); at B2, add a reason or example to each point."
             }
           ]
         },
@@ -354,7 +354,7 @@
             },
             {
               "kind": "text",
-              "text": ", no todo es positivo: trabajar solo puede provocar aislamiento, y es importante que las empresas organicen reuniones presenciales de vez en cuando."
+              "text": ", no todo es positivo: trabajar en solitario puede provocar aislamiento, y es importante que las empresas organicen reuniones presenciales de vez en cuando."
             }
           ],
           "en": "However, not everything is positive: working alone can lead to isolation, and it is important that companies organise in-person meetings from time to time.",
@@ -699,7 +699,7 @@
                     "text": ", también pueden aislarnos."
                   }
                 ],
-                "en": "Social networks connect us; however, they can also isolate us."
+                "en": "Social media connects us; however, it can also isolate us."
               }
             ],
             [
@@ -958,8 +958,17 @@
                   "kind": "strong",
                   "children": [
                     {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "aunque"
+                        }
+                      ]
+                    },
+                    {
                       "kind": "text",
-                      "text": "`aunque` takes two moods."
+                      "text": " takes two moods."
                     }
                   ]
                 },
@@ -992,6 +1001,23 @@
                 {
                   "kind": "text",
                   "text": " it concedes something hypothetical or not yet known."
+                },
+                {
+                  "kind": "text",
+                  "text": " At B2 you will also meet the subjunctive with a known fact the speaker treats as irrelevant: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "Aunque sea tu jefe, no tiene razón"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": "."
                 }
               ]
             },
@@ -1117,7 +1143,7 @@
               "children": [
                 {
                   "kind": "text",
-                  "text": "usted tiene, le, su"
+                  "text": "usted tiene, le (to you) / lo, la (you), su"
                 }
               ]
             },
@@ -1711,7 +1737,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "not: *Las problemas del sistema*. Nouns in "
+              "text": "not: *Las problemas del sistema*. Many nouns in "
             },
             {
               "kind": "em",
@@ -1724,7 +1750,7 @@
             },
             {
               "kind": "text",
-              "text": " such as "
+              "text": " that come from Greek are masculine even though they end in -a: "
             },
             {
               "kind": "em",
@@ -1750,7 +1776,7 @@
             },
             {
               "kind": "text",
-              "text": " and "
+              "text": ", "
             },
             {
               "kind": "em",
@@ -1763,7 +1789,85 @@
             },
             {
               "kind": "text",
-              "text": " are masculine."
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el programa"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el idioma"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "el clima"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ". (Most other "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "-ma"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": " nouns are feminine as expected: "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "la cama"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ", "
+            },
+            {
+              "kind": "em",
+              "children": [
+                {
+                  "kind": "text",
+                  "text": "la forma"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "text": ".)"
             }
           ]
         },
@@ -1772,7 +1876,7 @@
           "target": [
             {
               "kind": "text",
-              "text": "El año pasado trabajé en casa y mi jefe lo aceptó."
+              "text": "El año pasado trabajé desde casa y mi jefe lo aceptó."
             }
           ],
           "en": "Last year I worked from home and my boss accepted it.",

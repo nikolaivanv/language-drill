@@ -588,6 +588,49 @@
                         "text": "pero"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "sino"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (after "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "no"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ": "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "No es grande, sino pequeño"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -640,6 +683,36 @@
                         "text": "porque"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "por eso"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (= that's why: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Tengo sueño, por eso me acuesto temprano"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -705,6 +778,23 @@
                         "text": "como"
                       }
                     ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (= such as, before a noun: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "deportes como el tenis"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")"
                   }
                 ]
               },
@@ -726,7 +816,7 @@
                   },
                   {
                     "kind": "text",
-                    "text": " el tenis y la natación."
+                    "text": ", el tenis y la natación."
                   }
                 ],
                 "en": "I really like sport, for example tennis and swimming."
@@ -780,7 +870,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "al final"
+                        "text": "por último"
                       }
                     ]
                   }
@@ -820,7 +910,7 @@
                     "children": [
                       {
                         "kind": "text",
-                        "text": "al final"
+                        "text": "por último"
                       }
                     ]
                   },
@@ -909,7 +999,7 @@
                 },
                 {
                   "kind": "text",
-                  "text": " before a word starting with an "
+                  "text": " before a word starting with the sound "
                 },
                 {
                   "kind": "em",
@@ -922,6 +1012,19 @@
                 },
                 {
                   "kind": "text",
+                  "text": " (spelled "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "i-"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
                   "text": " or "
                 },
                 {
@@ -929,13 +1032,13 @@
                   "children": [
                     {
                       "kind": "text",
-                      "text": "hi"
+                      "text": "hi-"
                     }
                   ]
                 },
                 {
                   "kind": "text",
-                  "text": " sound: "
+                  "text": "): "
                 },
                 {
                   "kind": "em",
@@ -961,7 +1064,33 @@
                 },
                 {
                   "kind": "text",
-                  "text": "."
+                  "text": ". But: "
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "agua y hielo"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " ("
+                },
+                {
+                  "kind": "em",
+                  "children": [
+                    {
+                      "kind": "text",
+                      "text": "hie-"
+                    }
+                  ]
+                },
+                {
+                  "kind": "text",
+                  "text": " is not an \"i\" sound)."
                 }
               ]
             }
@@ -1004,7 +1133,7 @@
             },
             {
               "kind": "text",
-              "text": " with strangers, officials and in formal letters. The verb changes too: with "
+              "text": " with older people you don't know, officials, and in formal letters and emails. The verb changes too: with "
             },
             {
               "kind": "em",
@@ -1411,7 +1540,7 @@
             },
             {
               "kind": "text",
-              "text": " for states and moods that can change; "
+              "text": " for how someone feels or is at the moment (tired, happy, ill) and for location; "
             },
             {
               "kind": "em",
@@ -1424,7 +1553,7 @@
             },
             {
               "kind": "text",
-              "text": " for what something is."
+              "text": " for what someone or something is (identity, nationality, character, profession)."
             }
           ]
         },
@@ -1469,7 +1598,7 @@
           "note": [
             {
               "kind": "text",
-              "text": "not: *Mis hermanas son alto*. Plural nouns need plural adjectives."
+              "text": "not: *Mis hermanas son alta*. Plural nouns need plural adjectives."
             }
           ]
         },
