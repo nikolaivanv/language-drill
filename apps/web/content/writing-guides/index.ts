@@ -26,7 +26,7 @@ export const WRITING_GUIDE_BAND_LABELS: Record<WritingGuideBand, string> = {
   'b1-b2': 'B1–B2',
 };
 
-export const WRITING_GUIDE_SECTION_IDS: readonly string[] = [
+const BASE_SECTION_IDS = [
   'what-is-graded',
   'paragraph-shape',
   'connectors',
@@ -34,7 +34,13 @@ export const WRITING_GUIDE_SECTION_IDS: readonly string[] = [
   'task-and-length',
   'common-mistakes',
   'checklist',
-];
+] as const;
+
+// B1–B2 adds an open-question strategy section second, after the grading criteria.
+export const WRITING_GUIDE_SECTION_IDS: Record<WritingGuideBand, readonly string[]> = {
+  'a1-a2': BASE_SECTION_IDS,
+  'b1-b2': [BASE_SECTION_IDS[0], 'open-questions', ...BASE_SECTION_IDS.slice(1)],
+};
 
 const GUIDES: Record<LearningLanguage, Record<WritingGuideBand, TheoryTopicJson>> = {
   [Language.ES]: { 'a1-a2': parseTheoryTopicJson(esA1A2), 'b1-b2': parseTheoryTopicJson(esB1B2) },

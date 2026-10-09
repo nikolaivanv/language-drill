@@ -32,8 +32,8 @@ describe('writing guides', () => {
           expect(guide.cefr).toBe(WRITING_GUIDE_BAND_LABELS[band]);
         });
 
-        it('has exactly the seven guide sections, in order', () => {
-          expect(guide.sections.map((s) => s.id)).toEqual([...WRITING_GUIDE_SECTION_IDS]);
+        it('has exactly the sections for its band, in order', () => {
+          expect(guide.sections.map((s) => s.id)).toEqual([...WRITING_GUIDE_SECTION_IDS[band]]);
         });
 
         it('includes at least one target-language example in the model and mistakes sections', () => {
@@ -76,6 +76,18 @@ describe('b1-b2 comparison coverage', () => {
         .body.filter((b) => b.kind === 'example')
         .map((b) => inlineText(b.target).toLowerCase());
       expect(targets.some((t) => t.includes(inModel.toLowerCase()))).toBe(true);
+    });
+  }
+});
+
+describe('b1-b2 open-question section', () => {
+  for (const language of LANGUAGES) {
+    it(`${language}: has a sample answer and covers both approaches`, () => {
+      const section = getWritingGuide(language, 'b1-b2').sections.find((s) => s.id === 'open-questions')!;
+      expect(section.body.filter((b) => b.kind === 'example').length).toBeGreaterThanOrEqual(8);
+      const json = JSON.stringify(section.body);
+      expect(json).toContain('strong stance');
+      expect(json).toContain('balanced view');
     });
   }
 });
