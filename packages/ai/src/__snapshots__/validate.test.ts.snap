@@ -192,7 +192,7 @@ exports[`validateDraft > request shape for claude-sonnet-5 is unchanged (model-r
 exports[`validateDraft > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
 {
   "max_tokens": 2048,
-  "model": "claude-sonnet-4-6",
+  "model": "claude-sonnet-5-5",
   "output_config": null,
   "system": [
     {
@@ -201,16 +201,22 @@ exports[`validateDraft > request shape for the default model is unchanged (model
       },
       "type": "text",
     },
+    {
+      "cache_control": null,
+      "type": "text",
+    },
   ],
-  "temperature": 0,
-  "thinking": null,
+  "temperature": null,
+  "thinking": {
+    "type": "between_tools",
+  },
   "tool_choice": {
-    "name": "submit_validation_result",
-    "type": "tool",
+    "type": "auto",
   },
   "tools": [
     {
       "input_schema": {
+        "additionalProperties": false,
         "properties": {
           "ambiguous": {
             "description": "True if more than one substantively different answer would be equally correct. For cloze: true when more than one plausibly-fitting lexeme/form satisfies the targeted grammar point in this sentence AND the draft's \`acceptableAnswers\` list does not enumerate them (e.g. 'Sınıfta sekiz ___ var' — chair/student/book all fit — with no \`acceptableAnswers\`). For translation: surface variation is fine, but two structurally different correct translations is ambiguous. For vocab_recall: the prompt must single out exactly one headword.",
@@ -219,6 +225,7 @@ exports[`validateDraft > request shape for the default model is unchanged (model
           "candidateFillers": {
             "description": "Fill this FIRST, before any other field. List 2-4 distinct fillers a competent speaker might write in the blank — including \`correctAnswer\` itself — and adjudicate each against the VISIBLE sentence alone, never against \`correctAnswer\`. This is your working-out for \`ambiguous\`, not a verdict.",
             "items": {
+              "additionalProperties": false,
               "properties": {
                 "filler": {
                   "description": "The candidate fill.",
@@ -255,6 +262,7 @@ exports[`validateDraft > request shape for the default model is unchanged (model
             "type": "boolean",
           },
           "coverage": {
+            "additionalProperties": false,
             "description": "Realized coverage values for this draft, on the axes the user prompt asks about. Fill ONLY the sub-fields requested for this exercise; omit the rest. These are descriptive tags for pool-diversity monitoring — they never affect approval.",
             "properties": {
               "case": {
@@ -370,7 +378,7 @@ exports[`validateDraft > request shape for the default model is unchanged (model
         "type": "object",
       },
       "name": "submit_validation_result",
-      "strict": null,
+      "strict": true,
     },
   ],
 }

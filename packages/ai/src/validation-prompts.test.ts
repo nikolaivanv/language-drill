@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -401,7 +401,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
   });
 });
 
@@ -514,7 +514,13 @@ describe("buildValidationUserPrompt", () => {
     expect(prompt).toContain("**Sentence:** Espero que ___ a tiempo.");
     expect(prompt).toContain("**Correct Answer:** llegues");
     expect(prompt).toContain("**Options:** llegas, llegues, llegabas");
-    expect(prompt).toContain("**Context:** Hopes and wishes");
+    expect(prompt).toContain("**Context (shown to the learner):** Hopes and wishes");
+  });
+
+  it("contextSpoilsAnswer treats the learner-visible context label naming the form as a spoiler (validate@2026-10-09)", () => {
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("**Context (shown to the learner)**");
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("Subject relative clause with -(y)An / -(y)En");
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE).toContain("never as author metadata");
   });
 
   it("omits Options and Context lines for cloze drafts that lack them", () => {
@@ -526,7 +532,7 @@ describe("buildValidationUserPrompt", () => {
     };
     const prompt = buildValidationUserPrompt(makeDraft(content), baseSpec);
     expect(prompt).not.toContain("**Options:**");
-    expect(prompt).not.toContain("**Context:**");
+    expect(prompt).not.toContain("**Context");
   });
 
   it("adds the possessive-suffix scoring note ONLY for the tr-a1-possessive-suffixes cell", () => {
@@ -1086,7 +1092,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-09-22");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
   });
 });
 

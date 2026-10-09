@@ -219,7 +219,16 @@ function renderBulletList(items: readonly string[]): string {
 // enumerate", whereas here the rival set is closed at two members, so the
 // sub-bullet asks for the enumeration and flags only its ABSENCE.
 // Template edit -> Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-09-22";
+// Bumped 2026-10-09 (validate@2026-10-09): the cloze USER prompt now labels
+// the Context line "(shown to the learner)" -- the drill renders it next to
+// the blank before the learner answers (apps/web cloze-prompt.tsx) -- and
+// contextSpoilsAnswer names the context-label shapes that state the outcome
+// while looking like a rule category (the exact suffix, the converb, the
+// agreement result). A paired real-pool run (300 rows) found Sonnet 5.5
+// approving 7 rows Sonnet 4.6 rejects for exactly this, at least 5 of them
+// genuine spoilers, which blocked the validator's move to Sonnet 5.5.
+// Template edit -> Langfuse push per env.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-10-09";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -275,6 +284,7 @@ Score conservatively — a flagged draft costs a human ~30 seconds of review; an
    - "Ben çok mutlu___" / \`correctAnswer: "um"\` or \`"yum"\` — buffer-consonant blank: vowel-final stem "mutlu" + 1sg copular \`-Im\` requires buffer \`-y-\`. Without \`acceptableAnswers\` listing both ("um" and "yum"), or embedding \`-y-\` in the visible stem as "mutluy___", set \`ambiguous = true\` AND add \`'buffer-consonant ambiguous blank'\` to \`flaggedReasons\`.
    - Translation: "In my opinion…" / ref \`Bence bu doğru.\` — IS ambiguous with empty \`acceptableAnswers\` (equally-correct \`Bana göre bu doğru.\` unlisted), NOT ambiguous once it is listed. A source forcing one structure ("In his opinion…" → only \`Ona göre…\`) needs no list.
 3. **contextSpoilsAnswer** (boolean): does the draft's \`instructions\`, \`context\`, or \`glossEn\` (the learner-visible **Meaning** line) state the rule's outcome, name the required suffix/form, or otherwise let the learner write the answer without engaging with the blank? Naming the rule category is fine ("vowel harmony", "plural agreement after a numeral"); stating the outcome is not. Also true when \`context\` exhaustively enumerates every member of the closed set of forms the grammar point selects between. \`true\` is a hard veto.
+   - The \`context\` line (**Context (shown to the learner)**) sits next to the blank BEFORE the learner answers — judge it exactly like \`instructions\`, never as author metadata. A label that names the exact suffix, ending, or form the blank requires IS stating the outcome even when it reads like a category heading: "Subject relative clause with -(y)An / -(y)En" above a \`giden\` blank, "Temporal converb: -DIktAn sonra ('after doing')" above \`bittikten sonra\`, "Consonant doubling (gemination) before a vowel suffix" above \`hattı\`. So is a label that states the agreement or choice the blank must show — "The verb must agree with *muchos idiomas* (plural)" above \`se hablan\`. Fine: "Relative clauses", "Temporal converbs", "Passive with se" — the category, not the form.
    - "Vowel harmony: stem 'çocuk' (u = back, unrounded → -lar)" / blank "lar" — context derives the answer from the stem.
    - "Use -da/-de after voiced consonants, -ta/-te after voiceless" / blank one of "-da/-de/-ta/-te" — closed set exhaustively enumerated.
    - "Vowel harmony: front vowel stems take -ler suffix" above "Odada pencere___" / blank "ler" — rule's outcome stated for the exact stem class.
@@ -500,7 +510,7 @@ ${typeof content.glossEn === "string" && content.glossEn.length > 0 ? `**Meaning
 **Correct Answer:** ${content.correctAnswer}
 ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? `**Acceptable Answers (also accepted):** ${content.acceptableAnswers.join(", ")}` : "**Acceptable Answers (also accepted):** (none declared — `correctAnswer` must be the only plausible fill)"}
 ${content.options ? `**Options:** ${content.options.join(", ")}` : ""}
-${content.context ? `**Context:** ${content.context}` : ""}${clozeCellScoringNote(spec.grammarPoint.key)}${selfRevealingScoringNote(spec)}
+${content.context ? `**Context (shown to the learner):** ${content.context}` : ""}${clozeCellScoringNote(spec.grammarPoint.key)}${selfRevealingScoringNote(spec)}
 
 Score the dimensions in the system prompt and submit via the tool.`;
 }

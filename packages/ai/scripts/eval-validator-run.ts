@@ -347,9 +347,10 @@ export function armEffort(
 /**
  * The arms named by `--arms` (comma-separated), in `ARMS` order; every arm
  * when `names` is undefined. Throws on an unknown or empty selection.
- * For a model A/B, `--arms prompt-only,both --model <candidate>` runs the
- * production validator (prompt-only = current prompt on VALIDATION_MODEL)
- * next to the candidate on the same prompt.
+ * For a model A/B, `--arms both` without `--model` is the production
+ * validator (current prompt on VALIDATION_MODEL); re-run it with
+ * `--model <candidate>` for each candidate. `prompt-only` is pinned to
+ * sonnet-4-6 — the pre-2026-10-09 production model — as a fixed reference.
  */
 export function selectArms(
   names: string[] | undefined,
@@ -1143,7 +1144,7 @@ function printUsage(): void {
       "  --model <id>         Model for the arms with no pinned model (model-only, both).",
       "  --effort <level>     low|medium|high|xhigh|max. Applied only to arms with no pinned model.",
       "  --arms <a,b>         Run only these arms (baseline, prompt-only, model-only, both, blind-solver).",
-      "                       Model A/B: --arms prompt-only,both --model <id> (prompt-only = production).",
+      "                       Model A/B: --arms both (production), then --arms both --model <id> per candidate.",
       "  --help               Show this message.",
       "",
       "NOTE: invoke as `pnpm eval:validator --flag`, NOT `pnpm eval:validator -- --flag`",
