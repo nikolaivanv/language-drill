@@ -31,7 +31,8 @@ import {
   ZERO_USAGE,
   addUsage,
   createClaudeClient,
-  estimateCostUsd,
+  VALIDATION_MODEL,
+  estimateCostUsdFor,
   validateDraft,
   type ClaudeUsageBreakdown,
 } from '@language-drill/ai';
@@ -1221,7 +1222,7 @@ admin.post('/admin/revalidate', async (c) => {
       continue;
     }
     usage = addUsage(usage, callUsage);
-    if (estimateCostUsd(usage) > REVALIDATE_MAX_COST_USD) costStopped = true;
+    if (estimateCostUsdFor(VALIDATION_MODEL, usage) > REVALIDATE_MAX_COST_USD) costStopped = true;
 
     const action = decideDemotion(
       row.reviewStatus as ReviewStatus,
@@ -1261,7 +1262,7 @@ admin.post('/admin/revalidate', async (c) => {
       action: 'revalidate.apply',
       targetType: 'cell',
       targetId: cellKey,
-      metadata: { scanned: candidates.length, demotedToFlagged, demotedToRejected, skipped, estCostUsd: estimateCostUsd(usage) },
+      metadata: { scanned: candidates.length, demotedToFlagged, demotedToRejected, skipped, estCostUsd: estimateCostUsdFor(VALIDATION_MODEL, usage) },
     });
   }
 
@@ -1273,7 +1274,7 @@ admin.post('/admin/revalidate', async (c) => {
     demotedToRejected,
     skipped,
     skipReasons,
-    estCostUsd: estimateCostUsd(usage),
+    estCostUsd: estimateCostUsdFor(VALIDATION_MODEL, usage),
     truncated,
     totalCandidates,
     demotions,

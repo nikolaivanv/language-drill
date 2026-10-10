@@ -201,6 +201,7 @@ function cellResultBase(): CellResult {
     skippedCount: 0,
     tokenUsage: ZERO_USAGE,
     costUsd: 0,
+    spentUsd: 0,
     durationMs: 0,
     inBatchDuplicateCount: 0,
     validatedCount: 0,

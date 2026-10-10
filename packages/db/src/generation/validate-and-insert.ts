@@ -28,9 +28,12 @@ import {
 } from '@language-drill/shared';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
+  FREE_WRITING_DEDUP_MODEL,
   GENERATION_MODEL,
+  VALIDATION_MODEL,
   ZERO_USAGE,
   addUsage,
+  estimateCostUsdFor,
   canonicalSurface,
   freeWritingHistoryLine,
   generateBatch,
@@ -150,6 +153,13 @@ export type DraftOutcome = {
    *  usage is folded by the caller; the original validator call's usage IS
    *  included here). */
   extraUsage: ClaudeUsageBreakdown;
+  /**
+   * USD cost of `extraUsage`, priced per model as each call was made: the
+   * validator at VALIDATION_MODEL, retry generations at GENERATION_MODEL, the
+   * free-writing dedup judge at FREE_WRITING_DEDUP_MODEL. `extraUsage` alone
+   * cannot be priced correctly — it mixes models.
+   */
+  extraCostUsd: number;
   /** Additional drafts Claude produced via retries (0..MAX_DEDUP_RETRIES). */
   extraProduced: number;
   /** 1 (original validator call) + N retry validator calls. */
@@ -225,6 +235,7 @@ export function validatorParseFailedOutcome(): DraftOutcome {
     validatorParseFailedAtFirst: true,
     rejectionReasons: [VALIDATOR_PARSE_FAILURE_REASON],
     extraUsage: ZERO_USAGE,
+    extraCostUsd: 0,
     extraProduced: 0,
     validatedCount: 1,
   };
@@ -323,6 +334,7 @@ export async function validateAndInsertWithRetry(
   const parentCtx = getCurrentLlmTraceContext();
   const body = async (): Promise<DraftOutcome> => {
   let extraUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  let extraCostUsd = 0;
   let extraProduced = 0;
   let validatedCount = 0;
 
@@ -375,6 +387,7 @@ export async function validateAndInsertWithRetry(
       ));
     }
     extraUsage = addUsage(extraUsage, valUsage);
+    extraCostUsd += estimateCostUsdFor(VALIDATION_MODEL, valUsage);
     validatedCount++;
 
     // Deterministic Turkish gate runs after the LLM routing decision and can
@@ -413,6 +426,7 @@ export async function validateAndInsertWithRetry(
         // the wasted call cost is attributable to this ordinal whether or
         // not Claude returned a parseable draft (R5.1, R5.2).
         extraUsage = addUsage(extraUsage, retry.usage);
+        extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
         extraProduced += 1;
         if (!retry.ok) {
           // Parser failure on a dedup-retry. If this was the LAST allowed
@@ -428,6 +442,7 @@ export async function validateAndInsertWithRetry(
               parserFailedAtFinal: true,
               rejectionReasons: [PARSER_FAILURE_REASON],
               extraUsage,
+              extraCostUsd,
               extraProduced,
               validatedCount,
             };
@@ -441,6 +456,7 @@ export async function validateAndInsertWithRetry(
         ? {
             terminalStatus: 'dedup-given-up',
             extraUsage,
+            extraCostUsd,
             extraProduced,
             validatedCount,
           }
@@ -454,6 +470,7 @@ export async function validateAndInsertWithRetry(
             // `vocabSeedMismatch`.
             rejectionReasons: gatedDecision.flaggedReasons,
             extraUsage,
+            extraCostUsd,
             extraProduced,
             validatedCount,
           };
@@ -505,7 +522,10 @@ export async function validateAndInsertWithRetry(
         : null;
     // An abort mid-judge surfaces as 'unavailable'; do not insert a flagged row.
     if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
-    if (fwCheck) extraUsage = addUsage(extraUsage, fwCheck.usage);
+    if (fwCheck) {
+      extraUsage = addUsage(extraUsage, fwCheck.usage);
+      extraCostUsd += estimateCostUsdFor(FREE_WRITING_DEDUP_MODEL, fwCheck.usage);
+    }
     const semanticDuplicate = fwCheck?.status === 'duplicate';
     // A judge outage inserts FLAGGED (not served) rather than approving blind.
     const insertDecision =
@@ -573,6 +593,7 @@ export async function validateAndInsertWithRetry(
         // for newly-approved dictation rows (PR 2).
         insertedExerciseId: currentDraft.id,
         extraUsage,
+        extraCostUsd,
         extraProduced,
         validatedCount,
       };
@@ -594,6 +615,7 @@ export async function validateAndInsertWithRetry(
       // the wasted call cost is attributable to this ordinal whether or
       // not Claude returned a parseable draft (R5.1, R5.2).
       extraUsage = addUsage(extraUsage, retry.usage);
+      extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
       extraProduced += 1;
       if (!retry.ok) {
         // Parser failure on the dedup retry. If this was the last allowed
@@ -607,6 +629,7 @@ export async function validateAndInsertWithRetry(
             parserFailedAtFinal: true,
             rejectionReasons: [PARSER_FAILURE_REASON],
             extraUsage,
+            extraCostUsd,
             extraProduced,
             validatedCount,
           };
@@ -621,6 +644,7 @@ export async function validateAndInsertWithRetry(
   return {
     terminalStatus: 'dedup-given-up',
     extraUsage,
+    extraCostUsd,
     extraProduced,
     validatedCount,
   };

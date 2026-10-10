@@ -23,10 +23,11 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  GENERATION_MODEL,
   ZERO_USAGE,
   addUsage,
   cefrRankWindow,
-  estimateCostUsd,
+  estimateCostUsdFor,
   freeWritingHistoryLine,
   HISTORY_STEM_TYPES,
   historyStem,
@@ -154,6 +155,12 @@ export type CellResult = {
   /** Generator + validator + retries combined. */
   tokenUsage: ClaudeUsageBreakdown;
   costUsd: number;
+  /**
+   * USD spent on Claude by this cell, priced per model. Equal to `costUsd` on
+   * success; also set on a failed cell (whose `costUsd` stays 0) so the spend
+   * metric still counts the tokens it burned before failing.
+   */
+  spentUsd: number;
   errorMessage?: string;
   durationMs: number;
   inBatchDuplicateCount: number;
@@ -939,6 +946,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       cell,
       jobId,
       tokenUsage: ZERO_USAGE,
+      spentUsd: 0,
       durationMs: Date.now() - startedAt,
       errorMessage: message,
       // No audit row exists yet — the precheck happened before the INSERT.
@@ -973,6 +981,10 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
   // `outcome.extraUsage` covers every validator call + every retry's
   // generator+validator. Counts grow during the per-ordinal loop below.
   let combinedUsage: ClaudeUsageBreakdown = ZERO_USAGE;
+  // Priced per model as the usage is folded — `combinedUsage` mixes the
+  // generator, the validator and the free-writing dedup judge, which bill at
+  // different rates, so it cannot be priced as one total.
+  let combinedCostUsd = 0;
   let producedCount = 0;
   let approvedCount = 0;
   let flaggedCount = 0;
@@ -1081,6 +1093,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       throw new Error('Aborted by user (SIGINT)');
     }
     combinedUsage = addUsage(combinedUsage, batch.tokenUsage);
+    combinedCostUsd += estimateCostUsdFor(GENERATION_MODEL, batch.tokenUsage);
     producedCount += batch.drafts.length;
     inBatchDuplicateCount = batch.drafts.filter(
       (d) => d.metadata.inBatchDuplicate,
@@ -1142,6 +1155,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       if (!outcome) continue;
 
       combinedUsage = addUsage(combinedUsage, outcome.extraUsage);
+      combinedCostUsd += outcome.extraCostUsd;
       producedCount += outcome.extraProduced;
       validatedCount += outcome.validatedCount;
       if (outcome.parserFailedAtFinal) {
@@ -1219,6 +1233,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       cell,
       jobId,
       tokenUsage: combinedUsage,
+      spentUsd: Math.round(combinedCostUsd * 10_000) / 10_000,
       durationMs: Date.now() - startedAt,
       errorMessage: message,
       auditRowExists: true,
@@ -1235,7 +1250,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     approvedRealized,
   );
 
-  const costUsd = estimateCostUsd(combinedUsage);
+  const costUsd = Math.round(combinedCostUsd * 10_000) / 10_000;
   const totalInputTokens =
     combinedUsage.inputTokens +
     combinedUsage.cacheCreationInputTokens +
@@ -1299,6 +1314,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     skippedCount: firstAttemptSkippedCount,
     tokenUsage: combinedUsage,
     costUsd,
+    spentUsd: costUsd,
     durationMs: Date.now() - startedAt,
     inBatchDuplicateCount,
     validatedCount,
@@ -1323,6 +1339,8 @@ async function failClosed(opts: {
   cell: Cell;
   jobId: string;
   tokenUsage: ClaudeUsageBreakdown;
+  /** Per-model-priced spend so far (see `RunOneCellResult.spentUsd`). */
+  spentUsd: number;
   durationMs: number;
   errorMessage: string;
   auditRowExists: boolean;
@@ -1353,6 +1371,7 @@ async function failClosed(opts: {
     skippedCount: 0,
     tokenUsage: opts.tokenUsage,
     costUsd: 0,
+    spentUsd: opts.spentUsd,
     errorMessage: truncatedMessage,
     durationMs: opts.durationMs,
     inBatchDuplicateCount: 0,
