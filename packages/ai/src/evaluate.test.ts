@@ -728,6 +728,54 @@ describe("evaluateAnswer", () => {
     ).rejects.toBeInstanceOf(ContentRejectedError);
   });
 
+  describe("retry on a malformed verdict", () => {
+    const ok = {
+      content: [{ type: "tool_use", id: "toolu_ok", name: EVALUATION_TOOL_NAME, input: validEvaluationInput }],
+      stop_reason: "tool_use",
+    };
+    // The 2026-10-10 Sonnet 5 failure: `errors` delivered as a JSON-encoded
+    // string whose inner quotes are unescaped, so it is not even valid JSON.
+    const stringifiedErrors = {
+      content: [
+        {
+          type: "tool_use",
+          id: "toolu_bad",
+          name: EVALUATION_TOOL_NAME,
+          input: { ...validEvaluationInput, errors: '[{"type":"spelling","explanation":"needs "¿" first"}]' },
+        },
+      ],
+      stop_reason: "tool_use",
+    };
+    const input = { exercise: clozeContent, userAnswer: "went", language: Language.EN, difficulty: CefrLevel.B1 };
+
+    it("retries once and returns the second, well-formed verdict", async () => {
+      mockCreate.mockResolvedValueOnce(stringifiedErrors).mockResolvedValueOnce(ok);
+      const result = await evaluateAnswer(mockClient, input);
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+      expect(result.score).toBe(validEvaluationInput.score);
+    });
+
+    it("throws the parse error after a second malformed verdict", async () => {
+      mockCreate.mockResolvedValue(stringifiedErrors);
+      await expect(evaluateAnswer(mockClient, input)).rejects.toThrow("Invalid errors: must be an array");
+      expect(mockCreate).toHaveBeenCalledTimes(2);
+    });
+
+    it("never retries a refusal", async () => {
+      mockCreate.mockResolvedValue({ content: [], stop_reason: "refusal" });
+      await expect(evaluateAnswer(mockClient, input)).rejects.toBeInstanceOf(ContentRejectedError);
+      expect(mockCreate).toHaveBeenCalledTimes(1);
+    });
+
+    it("sends the tool in strict mode with the forced tool choice kept", async () => {
+      mockCreate.mockResolvedValue(ok);
+      await evaluateAnswer(mockClient, input);
+      const req = mockCreate.mock.calls[0][0];
+      expect(req.tools[0].strict).toBe(true);
+      expect(req.tool_choice).toEqual({ type: "tool", name: EVALUATION_TOOL_NAME });
+    });
+  });
+
   it("throws when Claude returns wrong tool name", async () => {
     mockCreate.mockResolvedValue({
       content: [

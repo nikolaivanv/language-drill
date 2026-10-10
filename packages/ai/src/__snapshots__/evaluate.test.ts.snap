@@ -24,10 +24,12 @@ exports[`evaluateAnswer > request shape for the default model is unchanged (mode
   "tools": [
     {
       "input_schema": {
+        "additionalProperties": false,
         "properties": {
           "errors": {
             "description": "Array of specific errors found in the answer.",
             "items": {
+              "additionalProperties": false,
               "properties": {
                 "correction": {
                   "description": "The corrected version of the text.",
@@ -113,7 +115,7 @@ exports[`evaluateAnswer > request shape for the default model is unchanged (mode
         "type": "object",
       },
       "name": "submit_evaluation",
-      "strict": null,
+      "strict": true,
     },
   ],
 }
@@ -145,10 +147,12 @@ exports[`evaluateAnswer > request shape with adaptive thinking is unchanged (mod
   "tools": [
     {
       "input_schema": {
+        "additionalProperties": false,
         "properties": {
           "errors": {
             "description": "Array of specific errors found in the answer.",
             "items": {
+              "additionalProperties": false,
               "properties": {
                 "correction": {
                   "description": "The corrected version of the text.",
@@ -234,7 +238,7 @@ exports[`evaluateAnswer > request shape with adaptive thinking is unchanged (mod
         "type": "object",
       },
       "name": "submit_evaluation",
-      "strict": null,
+      "strict": true,
     },
   ],
 }

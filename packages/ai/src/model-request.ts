@@ -63,6 +63,13 @@ export type ToolIntent = {
   thinking: "off" | "adaptive";
   temperature?: number;
   effort?: Effort;
+  /**
+   * Send the tool in strict mode on families that keep a forced tool choice
+   * too (it is always strict on the auto-mode families). Strict decoding is
+   * schema-constrained, so a nested array can't come back as a JSON-encoded
+   * string — the failure the answer evaluator hit on Sonnet 5.
+   */
+  strict?: boolean;
 };
 
 export type ShapedToolRequest = {
@@ -139,16 +146,19 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
     throw new Error(`${model} does not support effort`);
   }
 
+  const strictTool: Anthropic.Tool = {
+    ...intent.tool,
+    input_schema: strictToolSchema(intent.tool.input_schema) as Anthropic.Tool["input_schema"],
+    strict: true,
+  };
   const shaped: ShapedToolRequest = caps.forcedToolChoice
-    ? { tools: [intent.tool], tool_choice: { type: "tool", name: intent.tool.name }, mode: "" }
+    ? {
+        tools: [intent.strict ? strictTool : intent.tool],
+        tool_choice: { type: "tool", name: intent.tool.name },
+        mode: "",
+      }
     : {
-        tools: [
-          {
-            ...intent.tool,
-            input_schema: strictToolSchema(intent.tool.input_schema) as Anthropic.Tool["input_schema"],
-            strict: true,
-          },
-        ],
+        tools: [strictTool],
         tool_choice: { type: "auto" },
         systemSuffix: `Respond only by calling the ${intent.tool.name} tool.`,
         mode: "",
@@ -156,7 +166,7 @@ export function shapeToolRequest(model: string, intent: ToolIntent): ShapedToolR
   if (thinking !== undefined) shaped.thinking = thinking;
   if (effort !== undefined) shaped.output_config = { effort };
   if (intent.temperature !== undefined && caps.samplingParams) shaped.temperature = intent.temperature;
-  shaped.mode = `${caps.family}: tool_choice=${caps.forcedToolChoice ? "forced" : "auto+strict"}, thinking=${thinkingLabel}, effort=${effort ?? "default"}`;
+  shaped.mode = `${caps.family}: tool_choice=${caps.forcedToolChoice ? (intent.strict ? "forced+strict" : "forced") : "auto+strict"}, thinking=${thinkingLabel}, effort=${effort ?? "default"}`;
   return shaped;
 }
 
