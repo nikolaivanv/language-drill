@@ -253,7 +253,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // free-writing umbrellas (argument, formal complaint, review), and
 // tr-b2-paraphrase. Authored alongside the German dictation / free-writing /
 // paraphrase tracks; see CURRICULUM_VERSION_DE's 2026-09-04 note.
-export const CURRICULUM_VERSION_TR = '2026-09-04';
+//
+// `2026-10-10`: +3 free-writing topic umbrellas per level. Since #776 one
+// dedup give-up suppresses a free-writing cell (the topic has run out of
+// distinct essay questions), so pool breadth now comes from more topics rather
+// than more questions per topic. The additions favour exam text types the set
+// lacked (messages, invitations, recommendations, formal complaints and cover
+// letters) over further personal-essay themes.
+export const CURRICULUM_VERSION_TR = '2026-10-10';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -5035,6 +5042,62 @@ const trCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'informal' },
   },
   {
+    key: 'tr-a1-fw-introduce-yourself',
+    kind: 'free-writing',
+    name: 'Kendimi tanıtıyorum',
+    description:
+      'An informal prompt to introduce yourself: your name, where you are from and where you live, your job, the languages you speak and two hobbies, in the present tense.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks for name, origin, city of residence and job.',
+      'Requires the languages the learner speaks and two hobbies.',
+    ],
+    examplesNegative: ['*Write your life story.'],
+    commonErrors: [
+      'So many required elements that an A1 learner cannot cover them in 30-60 words.',
+      'Missing locative or ablative suffixes on places (*İstanbul yaşıyorum).',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-a1-fw-my-home',
+    kind: 'free-writing',
+    name: 'Evim',
+    description:
+      'A neutral prompt to describe your home: which rooms there are (var/yok), what is in two of them (locative -DA), and your favourite room.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks for the rooms, using var and yok.',
+      'Requires what is in two rooms, with the locative (salonda bir koltuk var).',
+    ],
+    examplesNegative: ['*Describe a palace.'],
+    commonErrors: [
+      'Listing rooms with no connected description.',
+      'Locative without vowel or consonant harmony (*mutfakda).',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-a1-fw-food',
+    kind: 'free-writing',
+    name: 'Sevdiğim yemekler',
+    description:
+      'A neutral prompt about food: what you eat for breakfast, one dish you like and one you do not like, and what you drink during the day.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: [
+      'Asks what the learner eats for breakfast.',
+      'Requires one food they like and one they do not (… seviyorum / sevmiyorum).',
+    ],
+    examplesNegative: ['*Write a recipe.'],
+    commonErrors: [
+      'Object of sevmek left without the accusative when it is definite.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
     key: 'tr-a2-fw-a-trip',
     kind: 'free-writing',
     name: 'Unutamadığım bir gezi',
@@ -5088,6 +5151,64 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Listing places with no description.',
       'Locative/ablative case errors with place names.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-a2-fw-best-friend',
+    kind: 'free-writing',
+    name: 'En iyi arkadaşım',
+    description:
+      'A neutral prompt about your best friend: what they are like, how and when you met (-DI past), and what you usually do together (aorist or present).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks for two features of the friend.',
+      'Requires how they met in the -DI past and one thing they do together.',
+    ],
+    examplesNegative: ['*Write about friendship in general.'],
+    commonErrors: [
+      'Mixing up the past and the present across the parts of the text.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-a2-fw-invitation-message',
+    kind: 'free-writing',
+    name: 'Bir davet mesajı',
+    description:
+      'An informal prompt to write a message inviting a friend: the occasion, the day, the time and the place, with a suggestion (-(y)AlIm) and a question (gelir misin?).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks for the occasion, a day, a time and a place.',
+      'Requires one suggestion with -(y)AlIm and a question to the friend.',
+    ],
+    examplesNegative: ['*Describe a party you went to last year.'],
+    commonErrors: [
+      'Writing a past narrative instead of an invitation.',
+      'Forgetting the time or place, so the plan cannot be acted on.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-a2-fw-celebration',
+    kind: 'free-writing',
+    name: 'Bir bayram ya da kutlama',
+    description:
+      'A neutral prompt to tell about a holiday or celebration you took part in (a bayram, a birthday, a wedding): where and with whom it was, what you ate and what you did, in the -DI past.',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      'Asks for where it was and who was there.',
+      'Requires two things the learner did or ate, in the -DI past.',
+    ],
+    examplesNegative: [
+      '*Explain how all Turkish holidays are celebrated (needs -(I)yordu and generalizing -DIr above A2).',
+    ],
+    commonErrors: [
+      'Requiring background description in -(I)yordu, which is B1.',
+      'Generic description instead of one specific occasion.',
     ],
     freeWriting: { register: 'neutral' },
   },
@@ -5146,6 +5267,54 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Describing the past instead of a plan/hope.',
       'No future/conditional form.',
     ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b1-fw-advice-to-friend',
+    kind: 'free-writing',
+    name: 'Bir arkadaşa tavsiye',
+    description:
+      'An informal prompt to reply to a friend who has a problem (moving to a new city, a hard exam, a noisy neighbour): show you understand, and give two or three pieces of advice (-mAlIsIn, -sA iyi olur).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks the learner to restate the friend\'s problem in one sentence.',
+      'Requires at least two pieces of advice, one with -mAlI and one with -sA iyi olur.',
+    ],
+    examplesNegative: ['*Write a general text about friendship.'],
+    commonErrors: ['One piece of advice with no reason given.'],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'tr-b1-fw-recommendation',
+    kind: 'free-writing',
+    name: 'Bir öneri',
+    description:
+      'A neutral prompt to recommend a book, a film, a series or a place: what it is, two reasons it is worth it, and who would enjoy it.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks the learner to name the recommendation and give two reasons.',
+      'Requires who the recommendation suits.',
+    ],
+    examplesNegative: ['*Retell the whole story of a film.'],
+    commonErrors: ['Retelling the plot instead of evaluating it.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b1-fw-city-life',
+    kind: 'free-writing',
+    name: 'Şehirde yaşamak',
+    description:
+      'A neutral prompt about living in a big city: two advantages, two disadvantages, and where the learner would prefer to live and why.',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: [
+      'Asks for two advantages and two disadvantages of city life.',
+      'Requires a stated preference with a reason (çünkü, -DIğI için).',
+    ],
+    examplesNegative: ['*Describe your city.'],
+    commonErrors: ['Description of one city instead of weighing pros and cons.'],
     freeWriting: { register: 'neutral' },
   },
 
@@ -5270,6 +5439,59 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Summarising the content instead of evaluating it.',
       'Recommending it to everyone, so the judgement carries no information.',
     ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b2-fw-job-application',
+    kind: 'free-writing',
+    name: 'Bir iş başvurusu',
+    description:
+      'A formal prompt to write a cover letter for a job or internship: the position, why you are applying, two relevant experiences or skills, and a formal closing (saygılarımla, arz ederim).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Asks for the position and the reason for applying.',
+      'Requires two relevant experiences or skills and a formal closing.',
+    ],
+    examplesNegative: ['*Write your CV as a list.'],
+    commonErrors: [
+      'Informal sen forms or greetings in a formal letter.',
+      'Listing skills with no link to the position.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'tr-b2-fw-technology',
+    kind: 'free-writing',
+    name: 'Teknoloji ve günlük hayat',
+    description:
+      'A neutral prompt on how one technology (smartphones, online shopping, AI tools) has changed daily life: one benefit, one cost, and a position, with a reply to one objection.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Asks the learner to pick one specific technology.',
+      'Requires one benefit, one cost and a stated position.',
+    ],
+    examplesNegative: ['*List every technology you use.'],
+    commonErrors: [
+      'Discussing technology in general instead of one specific tool.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'tr-b2-fw-environment',
+    kind: 'free-writing',
+    name: 'Çevre ve bireysel sorumluluk',
+    description:
+      'A neutral prompt on environmental responsibility: what individuals can do, what governments or companies should do, and whose role matters more and why.',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: [
+      'Asks for one individual action and one action by a government or company.',
+      'Requires a position on whose role matters more.',
+    ],
+    examplesNegative: ['*Explain climate science.'],
+    commonErrors: ['Abstract platitudes with no concrete action.'],
     freeWriting: { register: 'neutral' },
   },
   {

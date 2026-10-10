@@ -342,7 +342,14 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // subordination) where Spanish gets away with `porque` + indicative, and a
 // three-activity day drifts into the Perfekt. `de-a1-fw-my-home` had produced
 // zero approved rows. Nothing else changed; B1/B2 free-writing generated clean.
-export const CURRICULUM_VERSION_DE = '2026-09-06';
+//
+// `2026-10-10`: +3 free-writing topic umbrellas per level. Since #776 one
+// dedup give-up suppresses a free-writing cell (the topic has run out of
+// distinct essay questions), so pool breadth now comes from more topics rather
+// than more questions per topic. The additions favour exam text types the set
+// lacked (messages, invitations, recommendations, formal complaints and cover
+// letters) over further personal-essay themes.
+export const CURRICULUM_VERSION_DE = '2026-10-10';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4798,6 +4805,64 @@ const deCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
   {
+    key: 'de-a1-fw-introduce-yourself',
+    kind: 'free-writing',
+    name: 'Ich stelle mich vor',
+    description:
+      'An informal prompt to introduce yourself, for example in a language course: name, where you come from and live, your job, your languages and two hobbies. Present tense and simple main clauses only.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks for name, origin, place of residence and job.',
+      'Requires the languages the learner speaks and two hobbies.',
+    ],
+    examplesNegative: [
+      '*Explain why you are learning German (a reason clause needs weil/denn, which is A2).',
+    ],
+    commonErrors: [
+      'Prompt that requires a reason clause, forcing weil/denn above A1.',
+      'So many required elements that an A1 learner cannot cover them in 30-60 words.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a1-fw-short-message',
+    kind: 'free-writing',
+    name: 'Eine kurze Nachricht',
+    description:
+      'An informal prompt in the style of Goethe A1 Schreiben Teil 2: a short message to a friend to invite them, accept, or decline (leider) an invitation, with a day, a time and a place. Main clauses only.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks for a day, a time and a place.',
+      'Requires a greeting, the invitation or reply, and a closing (Bis bald).',
+    ],
+    examplesNegative: ['*Explain in detail why you cannot come (weil/denn is A2).'],
+    commonErrors: [
+      'Asking for a reason, which forces weil/denn above A1.',
+      'Missing the time or place, so the message cannot be acted on.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a1-fw-food',
+    kind: 'free-writing',
+    name: 'Was ich gern esse',
+    description:
+      'A neutral prompt about food: what you eat for breakfast and lunch, one dish you like (gern) and one you do not like (nicht gern). Present tense and simple main clauses.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: [
+      'Asks what the learner eats at two meals.',
+      'Requires one food with gern and one with nicht gern.',
+    ],
+    examplesNegative: ['*Write a recipe.'],
+    commonErrors: [
+      'Asking why the learner likes a dish, which forces weil/denn above A1.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
     key: 'de-a2-fw-last-vacation',
     kind: 'free-writing',
     name: 'Mein letzter Urlaub',
@@ -4843,6 +4908,63 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Describe a city.'],
     commonErrors: ['Prompt that produces a list of shops with no evaluation.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-a2-fw-email-to-friend',
+    kind: 'free-writing',
+    name: 'E-Mail an einen Freund',
+    description:
+      'An informal prompt in the style of Goethe A2 Schreiben Teil 1: reply to a friend\'s email or invitation and cover three given points (for example: thank them, say whether you can come, ask a question).',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Gives three concrete content points the reply must cover.',
+      'Requires a greeting and closing suited to a friend (Liebe/Lieber …, Viele Grüße).',
+    ],
+    examplesNegative: ['*Write a formal letter to a company.'],
+    commonErrors: [
+      'Answering only one of the content points.',
+      'Formal Sie forms in a message to a friend.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'de-a2-fw-work-or-studies',
+    kind: 'free-writing',
+    name: 'Meine Arbeit oder mein Studium',
+    description:
+      'A neutral prompt to describe your job or studies: what you do, your working or study hours, and one thing you like and one thing that is hard, with at most one reason (denn or weil).',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Asks what the learner does and when they work or study.',
+      'Requires one positive and one difficult aspect.',
+    ],
+    examplesNegative: ['*Explain the labour market in Germany.'],
+    commonErrors: [
+      'Listing tasks with no personal evaluation.',
+      'Verb in second position after weil (*weil ich habe viel Arbeit).',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-a2-fw-celebration',
+    kind: 'free-writing',
+    name: 'Ein Fest',
+    description:
+      'A neutral prompt to tell about a celebration you went to (a birthday, a wedding, a holiday): when and where it was, who was there and what you did, in the Perfekt.',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: [
+      'Asks for the occasion, the place and who was there.',
+      'Requires two things the learner did, told in the Perfekt.',
+    ],
+    examplesNegative: ['*Describe how people celebrate in general.'],
+    commonErrors: [
+      'Present-tense description of a habit instead of a past event.',
+      'Wrong auxiliary in the Perfekt (*ich habe gefahren).',
+    ],
     freeWriting: { register: 'neutral' },
   },
   {
@@ -4942,6 +5064,57 @@ const deCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
   {
+    key: 'de-b1-fw-recommendation',
+    kind: 'free-writing',
+    name: 'Eine Empfehlung',
+    description:
+      'A neutral prompt to recommend a book, a film, a series or a place: what it is, two reasons it is worth it, and who it is (and is not) for.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks the learner to name the recommendation and give two reasons.',
+      'Requires saying who would enjoy it and who might not.',
+    ],
+    examplesNegative: ['*Retell the whole story of a film.'],
+    commonErrors: ['Retelling the plot instead of evaluating it.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b1-fw-apartment-email',
+    kind: 'free-writing',
+    name: 'Anfrage zu einer Wohnung',
+    description:
+      'A formal prompt to email a landlord about an apartment advert: introduce yourself briefly, ask two questions about the flat (rent, move-in date, pets) and ask for a viewing appointment.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for two concrete questions about the flat.',
+      'Requires a request for a viewing and a formal greeting and closing (Sehr geehrte …, Mit freundlichen Grüßen).',
+    ],
+    examplesNegative: ['*Describe your dream apartment.'],
+    commonErrors: [
+      'Writing to a friend (du) instead of a landlord (Sie).',
+      'Forgetting to ask for a viewing.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b1-fw-healthy-living',
+    kind: 'free-writing',
+    name: 'Gesund leben',
+    description:
+      'A neutral prompt about a healthy lifestyle: what you already do for your health, one habit you would like to change, and how you plan to do it.',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: [
+      'Asks for two things the learner already does for their health.',
+      'Requires one habit to change and a concrete plan (Ich möchte …, deshalb …).',
+    ],
+    examplesNegative: ['*Explain how the human body works.'],
+    commonErrors: ['Generic health advice with no personal plan.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
     key: 'de-b2-fw-remote-work',
     kind: 'free-writing',
     name: 'Homeoffice',
@@ -5036,6 +5209,62 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Give your opinion.'],
     commonErrors: ['Prompt with no concession requirement, so the answer becomes one-sided.'],
     freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b2-fw-cover-letter',
+    kind: 'free-writing',
+    name: 'Bewerbung',
+    description:
+      'A formal prompt to write a cover letter (Anschreiben) for a job or internship: why you are applying, two relevant experiences or skills, and a request for an interview.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks the learner to name the position and why they want it.',
+      'Requires two relevant experiences or skills and a closing request for an interview.',
+    ],
+    examplesNegative: ['*Write your CV as a list.'],
+    commonErrors: [
+      'Listing qualifications with no link to the position.',
+      'Informal greetings or du forms in a formal application.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'de-b2-fw-city-vs-country',
+    kind: 'free-writing',
+    name: 'Stadt oder Land?',
+    description:
+      'A neutral prompt weighing life in the city against life in the country: two advantages of each, which you prefer and why, and one condition under which you would choose the other.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks for at least one advantage of each side.',
+      'Requires a clear preference and a condition under which the learner would choose differently (Wenn …, würde ich …).',
+    ],
+    examplesNegative: ['*Describe your town.'],
+    commonErrors: [
+      'Description of one place instead of a comparison.',
+      'Listing pros and cons without a final position.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'de-b2-fw-education',
+    kind: 'free-writing',
+    name: 'Schule und Bildung',
+    description:
+      'A neutral prompt arguing for one change in schools (a new subject, fewer exams, more practical learning): why it matters, how it could work, and a reply to one objection.',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: [
+      'Asks the learner to propose one specific change.',
+      'Requires one objection and a reply to it (zwar … aber, trotzdem).',
+    ],
+    examplesNegative: ['*Describe your school days.'],
+    commonErrors: [
+      'Proposing several changes superficially instead of arguing one.',
+    ],
+    freeWriting: { register: 'neutral' },
   },
 
   // ---------------------------------------------------------------------------

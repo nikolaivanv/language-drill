@@ -1071,7 +1071,7 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
@@ -1083,13 +1083,14 @@ describe('per-language counts', () => {
     expect(vocab).toBe(20);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
-    // 3 × A1 + 3 × A2 + 6 × B1 + 6 × B2 free-writing topic umbrellas (Phase 2 free-writing generation).
-    expect(freeWriting).toBe(18);
+    // 6 × A1 + 6 × A2 + 9 × B1 + 9 × B2 free-writing topic umbrellas: the
+    // original 3/3/6/6 (Phase 2) plus three per level on 2026-10-10.
+    expect(freeWriting).toBe(30);
     // es-b1-paraphrase + es-b2-paraphrase (Phase 2 contextual-paraphrase generation).
     expect(paraphrase).toBe(2);
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 18 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
@@ -1108,13 +1109,14 @@ describe('per-language counts', () => {
     // 3 A1 + 3 A2 + 6 B1 + 6 B2 free-writing topic umbrellas, mirroring the ES
     // density. A1/A2 reuse the universal ES beginner topics; B1/B2 are shaped
     // by the Goethe Zertifikat B1/B2 writing parts (Forumsbeitrag,
-    // halbformelle E-Mail, Beschwerde, Stellungnahme).
-    expect(freeWriting).toBe(18);
+    // halbformelle E-Mail, Beschwerde, Stellungnahme). +3 per level on
+    // 2026-10-10 → 6 A1 + 6 A2 + 9 B1 + 9 B2.
+    expect(freeWriting).toBe(30);
     // de-b1-paraphrase + de-b2-paraphrase.
     expect(paraphrase).toBe(2);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 12 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -1133,8 +1135,9 @@ describe('per-language counts', () => {
     expect(vocab).toBe(20);
     // tr-a1 + tr-a2 + tr-b1 + tr-b2 dictation (B2 added 2026-09-04).
     expect(dictation).toBe(4);
-    // 3 free-writing topic umbrellas per level, B2 included (2026-09-04).
-    expect(freeWriting).toBe(12);
+    // 3 free-writing topic umbrellas per level, B2 included (2026-09-04);
+    // +3 per level on 2026-10-10 → 6 per level.
+    expect(freeWriting).toBe(24);
     // tr-b1-paraphrase + tr-b2-paraphrase (2026-09-04): the 2026-07-17 B2
     // cycle was grammar-only, which left B2 as the one TR level with no
     // dictation, free-writing or paraphrase cell.
@@ -1143,34 +1146,34 @@ describe('per-language counts', () => {
 });
 
 describe('free-writing topic umbrellas', () => {
-  it('has 3 free-writing topic umbrellas per ES A1 and A2, and 6 per B1 and B2', () => {
+  it('has 6 free-writing topic umbrellas per ES A1 and A2, and 9 per B1 and B2', () => {
     const fw = esCurriculum.filter((e) => e.kind === 'free-writing');
-    expect(fw.filter((e) => e.cefrLevel === 'A1')).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === 'A2')).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === 'B1')).toHaveLength(6);
-    expect(fw.filter((e) => e.cefrLevel === 'B2')).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === 'A1')).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === 'A2')).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === 'B1')).toHaveLength(9);
+    expect(fw.filter((e) => e.cefrLevel === 'B2')).toHaveLength(9);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
   });
 
-  it("has 3 free-writing topic umbrellas per TR level, B2 included", () => {
+  it("has 6 free-writing topic umbrellas per TR level, B2 included", () => {
     const fw = trCurriculum.filter((e) => e.kind === "free-writing");
-    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(3);
-    for (const e of fw) {
-      expect(e.freeWriting?.register).toBeDefined();
-    }
-  });
-
-  it("has 3 free-writing topic umbrellas per DE A1 and A2, and 6 per B1 and B2", () => {
-    const fw = deCurriculum.filter((e) => e.kind === "free-writing");
-    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(3);
-    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(3);
+    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(6);
     expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(6);
     expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(6);
+    for (const e of fw) {
+      expect(e.freeWriting?.register).toBeDefined();
+    }
+  });
+
+  it("has 6 free-writing topic umbrellas per DE A1 and A2, and 9 per B1 and B2", () => {
+    const fw = deCurriculum.filter((e) => e.kind === "free-writing");
+    expect(fw.filter((e) => e.cefrLevel === "A1")).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === "A2")).toHaveLength(6);
+    expect(fw.filter((e) => e.cefrLevel === "B1")).toHaveLength(9);
+    expect(fw.filter((e) => e.cefrLevel === "B2")).toHaveLength(9);
     for (const e of fw) {
       expect(e.freeWriting?.register).toBeDefined();
     }
