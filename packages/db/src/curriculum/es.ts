@@ -5410,7 +5410,14 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'past-counterfactual-standard',
         directive:
-          'si + pluperfect subjunctive with the CONDITIONAL PERFECT (habría + participle) in the result clause (Si hubiera estudiado, habría aprobado; Si hubieras venido, te habrías divertido)',
+          'si + pluperfect subjunctive with the CONDITIONAL PERFECT (habría + participle) in the result clause (Si hubiera estudiado, habría aprobado; Si hubieras venido, te habrías divertido). hubiera + participle is EQUALLY correct in that result clause, so whenever the answer contains the conditional perfect, acceptableAnswers MUST also list the same answer with the -ra form (habría aprobado → hubiera aprobado; habríamos → hubiéramos) — never hubiese — and the -ra form must never appear among the wrong options',
+        // 2026-10-10: the Sonnet 5.5 validator (#772) flags every result-clause
+        // blank keyed only to habría as `ambiguous` — rightly: hubiera +
+        // participle is a valid result-clause alternant this point teaches
+        // (see the variant below). First nightly run: 0/11 cloze approved,
+        // 10 flagged. Unlike the hubiera-result variant (habría always fits
+        // there, so that one is translation-only), here the cure is to
+        // enumerate: the rival set is closed at two interchangeable forms.
         share: 3,
       },
       {
