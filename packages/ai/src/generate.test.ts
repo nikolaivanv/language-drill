@@ -1695,12 +1695,22 @@ describe("parseGeneratedFreeWritingDraft", () => {
     expect(props.requiredElements.maxItems).toBe(4);
   });
 
-  // strictToolSchema strips minItems/maxItems for non-forced-tool models, so
-  // the parser is the only gate there. It enforces non-empty only.
+  // The API does not enforce minItems/maxItems on a non-strict tool, and
+  // strictToolSchema strips them for the 5.5 families, so the parser is the
+  // real gate for the whole 2–4 range.
   it("parser still rejects an empty requiredElements (stripped minItems)", () => {
     expect(() => parseGeneratedFreeWritingDraft({ ...validInput, requiredElements: [] }, spec)).toThrow(
       /requiredElements/,
     );
+  });
+
+  it("parser enforces the 2–4 range: rejects 1 and 5, accepts 2 and 4", () => {
+    const el = (n: number) => ({ id: `e${n}`, label: `Element ${n}` });
+    const withN = (n: number) => ({ ...validInput, requiredElements: Array.from({ length: n }, (_, i) => el(i)) });
+    expect(() => parseGeneratedFreeWritingDraft(withN(1), spec)).toThrow(/must have 2\u20134 entries \(got 1\)/);
+    expect(() => parseGeneratedFreeWritingDraft(withN(5), spec)).toThrow(/must have 2\u20134 entries \(got 5\)/);
+    expect(parseGeneratedFreeWritingDraft(withN(2), spec).requiredElements).toHaveLength(2);
+    expect(parseGeneratedFreeWritingDraft(withN(4), spec).requiredElements).toHaveLength(4);
   });
 
   // The prompt states the same range in prose. If the two drift, the model is
@@ -1774,7 +1784,7 @@ describe("parseGeneratedFreeWritingDraft", () => {
   it("still applies per-element validation to a parsed string", () => {
     expect(() =>
       parseGeneratedFreeWritingDraft(
-        { ...validInput, requiredElements: JSON.stringify([{ id: "x" }]) },
+        { ...validInput, requiredElements: JSON.stringify([{ id: "a", label: "A" }, { id: "x" }]) },
         spec,
       ),
     ).toThrow(/label/);
@@ -1789,7 +1799,7 @@ describe("parseGeneratedFreeWritingDraft", () => {
   it("rejects a required element missing its label", () => {
     expect(() =>
       parseGeneratedFreeWritingDraft(
-        { ...validInput, requiredElements: [{ id: "x" }] },
+        { ...validInput, requiredElements: [{ id: "a", label: "A" }, { id: "x" }] },
         spec,
       ),
     ).toThrow(/label/);
