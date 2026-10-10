@@ -23,6 +23,7 @@ import {
   type AttributionKey,
 } from "./prompts.js";
 import { getPromptOrFallback, sha8 } from "./prompts-registry.js";
+import { ContentRejectedError } from "./content-rejected-error.js";
 import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
 
 // ---------------------------------------------------------------------------
@@ -328,6 +329,9 @@ const MAX_TOKENS = 2048;
  */
 const ADAPTIVE_MAX_TOKENS = 8192;
 
+/** Attempts per evaluation when the verdict is malformed (see evaluateAnswer). */
+const EVALUATION_MAX_ATTEMPTS = 2;
+
 /**
  * SDK request timeout for the (non-streaming, user-waiting) evaluation call.
  * The submit→feedback loop is interactive, so we fail fast rather than inherit
@@ -411,9 +415,15 @@ export async function evaluateAnswer(
     thinking: thinkingOverride === "adaptive" ? "adaptive" : "off",
     temperature: 0,
     effort: effortOverride ?? (thinkingOverride === "adaptive" ? "low" : undefined),
+    // Strict decoding keeps `errors` an array. Without it Sonnet 5 sometimes
+    // returned the whole list as a JSON-ENCODED STRING to dodge escaping a
+    // nested quote (observed 2026-10-10: an explanation quoting "¿" left the
+    // string itself invalid JSON), and the parse failure surfaced to the
+    // learner as a failed grading — ~3% of submissions in an eval replay.
+    strict: true,
   });
 
-  const response = await client.messages.create(applyShaped({
+  const request = applyShaped({
     model: effectiveModel,
     max_tokens:
       thinkingOverride === "adaptive" ? ADAPTIVE_MAX_TOKENS : MAX_TOKENS,
@@ -430,17 +440,28 @@ export async function evaluateAnswer(
         content: userPrompt,
       },
     ],
-  }, shaped));
-
-  // A safety refusal throws ContentRejectedError; a missing/wrong tool call
-  // throws NoToolCallError.
-  const toolInput = extractToolUse(response, EVALUATION_TOOL_NAME, {
-    refusalMessage: "Claude refused to evaluate this answer.",
-  });
+  }, shaped);
 
   const validKeys =
     attributionKeys && attributionKeys.length > 0
       ? new Set(attributionKeys.map((k) => k.key))
       : undefined;
-  return parseEvaluationResult(toolInput, validKeys);
+
+  // One retry on a malformed verdict (a missing tool call, or a tool input the
+  // parser rejects). Strict mode makes this rare but not impossible — a
+  // required field still went missing once in 80 strict replays. A refusal is
+  // deterministic and is never retried. Any second failure is thrown as before.
+  for (let attempt = 1; ; attempt++) {
+    const response = await client.messages.create(request);
+    try {
+      // A safety refusal throws ContentRejectedError; a missing/wrong tool call
+      // throws NoToolCallError.
+      const toolInput = extractToolUse(response, EVALUATION_TOOL_NAME, {
+        refusalMessage: "Claude refused to evaluate this answer.",
+      });
+      return parseEvaluationResult(toolInput, validKeys);
+    } catch (err) {
+      if (err instanceof ContentRejectedError || attempt >= EVALUATION_MAX_ATTEMPTS) throw err;
+    }
+  }
 }

@@ -74,6 +74,21 @@ describe("shapeToolRequest", () => {
     expect(s.temperature).toBeUndefined();
   });
 
+  it("strict: true on a forced family keeps the forced tool and sends a strict, sanitized schema", () => {
+    const s = shapeToolRequest("claude-sonnet-5", { tool: TOOL, thinking: "off", strict: true });
+    expect(s.tool_choice).toEqual({ type: "tool", name: "submit_thing" });
+    expect((s.tools[0] as unknown as { strict: boolean }).strict).toBe(true);
+    expect(s.tools[0].input_schema).toEqual(strictToolSchema(TOOL.input_schema));
+    expect(s.systemSuffix).toBeUndefined();
+    expect(s.mode).toBe("sonnet-5: tool_choice=forced+strict, thinking=disabled, effort=default");
+  });
+
+  it("strict is a no-op on auto-mode families (they are always strict)", () => {
+    expect(shapeToolRequest("claude-sonnet-5-5", { tool: TOOL, thinking: "off", strict: true })).toEqual(
+      shapeToolRequest("claude-sonnet-5-5", { tool: TOOL, thinking: "off" }),
+    );
+  });
+
   it("Sonnet 5, adaptive with effort low: adaptive thinking + effort", () => {
     const s = shapeToolRequest("claude-sonnet-5", { tool: TOOL, thinking: "adaptive", effort: "low" });
     expect(s.thinking).toEqual({ type: "adaptive" });
