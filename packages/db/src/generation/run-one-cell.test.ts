@@ -2338,6 +2338,25 @@ describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
     });
     expect(vi.mocked(runOutcomePool).mock.calls[0][0].concurrency).toBeGreaterThan(1);
   });
+
+  it('skips the parallel first-validation pool for free-writing cells only', async () => {
+    const { db } = makeMockDb();
+    await runOneCell({
+      db, client: {} as never, cell: buildCell(ExerciseType.FREE_WRITING),
+      args: { count: 3, batchSeed: 'fw-no-phase-a', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(), trigger: 'scheduled',
+    });
+    // The duplicate judge runs before the validator, so no draft is validated up front.
+    expect(runValidatorPool).not.toHaveBeenCalled();
+    expect(vi.mocked(runOutcomePool).mock.calls[0][0].firstValidations.size).toBe(0);
+
+    await runOneCell({
+      db, client: {} as never, cell: buildCell(ExerciseType.CLOZE),
+      args: { count: 3, batchSeed: 'cloze-phase-a', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(), trigger: 'scheduled',
+    });
+    expect(runValidatorPool).toHaveBeenCalledTimes(1);
+  });
 });
 
 // ---------------------------------------------------------------------------

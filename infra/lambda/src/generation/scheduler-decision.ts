@@ -13,6 +13,8 @@
  *   1. C2 / not-in-Round-1 → `skip-c2` (Round-1 narrowing per Req 4.5)
  *   2. approvedInPool ≥ target → `skip-target-reached`
  *   3. Curriculum-version mismatch → clears suppression → `enqueue` (R6.4)
+ *   3b. Free-writing cell whose last run gave up any slot to duplicates →
+ *      `skip-saturated-dedup` (2026-10-10)
  *   4. Predictive saturation (near target + dedup-heavy last run) →
  *      `skip-saturated-dedup` on the same tick (R4.1)
  *   5. Saturated-dedup (reactive: low approved + dedup-heavy) →
@@ -34,6 +36,7 @@
 
 import { ROUND_1_CEFR_LEVELS, type Cell } from '@language-drill/db';
 import {
+  ExerciseType,
   grammarPointFingerprint,
   SUPPRESSION_LAPSE_DAYS,
 } from '@language-drill/shared';
@@ -342,6 +345,25 @@ export function decideEnqueue(
   const ageMs = (options.now ?? new Date()).getTime() - recentJob.finishedAt.getTime();
   if (ageMs >= lapseDays * MS_PER_DAY) {
     return { kind: 'enqueue', need };
+  }
+
+  // 4c. Free-writing topic exhaustion (2026-10-10). A free-writing slot is
+  //     only given up after the semantic duplicate judge rejected four drafts
+  //     in a row, each generated with the cell's full prompt list in view —
+  //     strong evidence the topic has run out of distinct essay questions.
+  //     The generic saturated-dedup test below needs half the slots given up
+  //     AND under 30% approved, which a 4-slot free-writing run that approves
+  //     one and gives up three escapes; the next night pays for four more
+  //     duplicate drafts per slot. So for free writing ONE give-up ends
+  //     refills, i.e. the cell's effective target drops to what it holds.
+  //     Breadth comes from more topic umbrellas, not more questions per topic.
+  //     A curriculum edit to the point (step 4) or the staleness lapse (4b)
+  //     still re-opens it.
+  if (
+    cell.exerciseType === ExerciseType.FREE_WRITING &&
+    recentJob.dedupGivenUpCount > 0
+  ) {
+    return { kind: 'skip-saturated-dedup' };
   }
 
   // 5. Predictive saturation (R4.1). The cell is within a small margin of its
