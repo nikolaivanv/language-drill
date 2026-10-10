@@ -160,7 +160,7 @@ export type DraftOutcome = {
   extraUsage: ClaudeUsageBreakdown;
   /**
    * USD cost of `extraUsage`, priced per model as each call was made: the
-   * validator at VALIDATION_MODEL, retry generations at GENERATION_MODEL, the
+   * validator at VALIDATION_MODEL, retry generations at the spec's generator model, the
    * free-writing dedup judge at FREE_WRITING_DEDUP_MODEL. `extraUsage` alone
    * cannot be priced correctly — it mixes models.
    */
@@ -387,7 +387,7 @@ export async function validateAndInsertWithRetry(
     // wasted call cost is attributable to this ordinal whether or not Claude
     // returned a parseable draft (R5.1, R5.2).
     extraUsage = addUsage(extraUsage, retry.usage);
-    extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
+    extraCostUsd += estimateCostUsdFor(opts.spec.modelOverride ?? GENERATION_MODEL, retry.usage);
     extraProduced += 1;
     if (!retry.ok) {
       // Parser failure on the last allowed retry slot (equivalent to the
@@ -597,7 +597,7 @@ export async function validateAndInsertWithRetry(
             grammarPointKey: opts.cell.grammarPoint.key,
             topicDomain: opts.args.topicDomain,
             generationSource: 'claude-realtime' as const,
-            modelId: GENERATION_MODEL,
+            modelId: currentDraft.metadata.modelId,
             reviewStatus: insertDecision.reviewStatus,
             qualityScore: result.qualityScore,
             flaggedReasons:

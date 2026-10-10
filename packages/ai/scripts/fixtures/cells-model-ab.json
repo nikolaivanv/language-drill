@@ -78,12 +78,6 @@
     "grammarPointKey": "tr-a1-locative"
   },
   {
-    "language": "TR",
-    "cefrLevel": "A1",
-    "exerciseType": "vocab_recall",
-    "grammarPointKey": "tr-a1-present-continuous"
-  },
-  {
     "language": "ES",
     "cefrLevel": "B1",
     "exerciseType": "cloze",

@@ -63,6 +63,47 @@ import {
  */
 export const GENERATION_MODEL = "claude-sonnet-4-6" as const;
 
+/**
+ * The cheaper generator for the cells where it measured as good as
+ * GENERATION_MODEL. 2026-10-10 A/B (19 cells, 5 drafts/arm, Sonnet 5.5
+ * validator): approval 74/95 vs 74/95 at roughly a third of the arm cost; a
+ * read of 57 drafts per model found ES/DE A1–B1 and free writing as natural
+ * as Sonnet 4.6, but Turkish B2 drafts awkward and multi-field consistency
+ * weaker (keyword lists contradicting the task, a register clash in
+ * acceptableAnswers). See `generationModelFor`.
+ */
+export const FAST_GENERATION_MODEL = "claude-haiku-5-5" as const;
+
+/** Languages, levels and exercise types `generationModelFor` routes to FAST_GENERATION_MODEL. */
+const FAST_GENERATION_LANGUAGES: ReadonlySet<string> = new Set([Language.ES, Language.DE]);
+const FAST_GENERATION_LEVELS: ReadonlySet<string> = new Set(["A1", "A2", "B1"]);
+const FAST_GENERATION_TYPES: ReadonlySet<string> = new Set([
+  ExerciseType.CLOZE,
+  ExerciseType.TRANSLATION,
+  ExerciseType.SENTENCE_CONSTRUCTION,
+  ExerciseType.VOCAB_RECALL,
+  ExerciseType.FREE_WRITING,
+]);
+
+/**
+ * The generator model for one production cell: FAST_GENERATION_MODEL for
+ * Spanish and German at A1–B1 on the five types the A/B measured, and
+ * GENERATION_MODEL everywhere else (Turkish, B2+, and untested types such as
+ * dictation, conjugation and contextual paraphrase). A partial switch, so each
+ * night's per-model costs and approval can confirm it before it widens.
+ */
+export function generationModelFor(cell: {
+  language: string;
+  cefrLevel: string;
+  exerciseType: string;
+}): string {
+  return FAST_GENERATION_LANGUAGES.has(cell.language) &&
+    FAST_GENERATION_LEVELS.has(cell.cefrLevel) &&
+    FAST_GENERATION_TYPES.has(cell.exerciseType)
+    ? FAST_GENERATION_MODEL
+    : GENERATION_MODEL;
+}
+
 export const GENERATION_MAX_TOKENS = 1024;
 
 export const GENERATION_TEMPERATURE = 0.7;
@@ -681,7 +722,10 @@ export type GenerationSpec = {
    * live Langfuse prompt or relying on the module-scope prompt cache.
    */
   systemPromptOverride?: string;
-  /** Eval-only: generator model override (default GENERATION_MODEL). Production never sets it. */
+  /**
+   * Generator model (default GENERATION_MODEL). Production sets it per cell
+   * from `generationModelFor`; evals set it to compare models.
+   */
   modelOverride?: string;
   /** Eval-only: effort for the generator (families with effort only). */
   effort?: Effort;

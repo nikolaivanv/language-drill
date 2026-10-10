@@ -20,6 +20,8 @@ import {
   FREE_WRITING_GENERATION_TOOL,
   dictationVoicePoolFor,
   GENERATION_MODEL,
+  FAST_GENERATION_MODEL,
+  generationModelFor,
   GENERATION_TEMPERATURE,
   GENERATION_TOOL_BY_TYPE,
   SENTENCE_CONSTRUCTION_GENERATION_TOOL,
@@ -1959,3 +1961,30 @@ describe("topicHint schema constraint", () => {
     expect(prop.enum).toEqual([...TOPIC_HINT_VALUES]);
   });
 });
+
+describe("generationModelFor (partial Haiku 5.5 switch)", () => {
+  it.each([
+    [Language.ES, "A1", ExerciseType.CLOZE],
+    [Language.ES, "B1", ExerciseType.SENTENCE_CONSTRUCTION],
+    [Language.DE, "A2", ExerciseType.TRANSLATION],
+    [Language.DE, "B1", ExerciseType.VOCAB_RECALL],
+    [Language.ES, "B1", ExerciseType.FREE_WRITING],
+  ])("%s %s %s → Haiku 5.5", (language, cefrLevel, exerciseType) => {
+    expect(generationModelFor({ language, cefrLevel, exerciseType })).toBe(FAST_GENERATION_MODEL);
+  });
+
+  it.each([
+    [Language.TR, "A1", ExerciseType.CLOZE, "Turkish stays on Sonnet"],
+    [Language.ES, "B2", ExerciseType.CLOZE, "B2+ stays on Sonnet"],
+    [Language.DE, "C1", ExerciseType.TRANSLATION, "B2+ stays on Sonnet"],
+    [Language.ES, "A2", ExerciseType.DICTATION, "untested type stays on Sonnet"],
+    [Language.DE, "A1", ExerciseType.CONJUGATION, "untested type stays on Sonnet"],
+  ])("%s %s %s → Sonnet 4.6 (%s)", (language, cefrLevel, exerciseType) => {
+    expect(generationModelFor({ language, cefrLevel, exerciseType })).toBe(GENERATION_MODEL);
+  });
+
+  it("FAST_GENERATION_MODEL is Haiku 5.5 and keeps a forced tool choice", () => {
+    expect(FAST_GENERATION_MODEL).toBe("claude-haiku-5-5");
+  });
+});
+
