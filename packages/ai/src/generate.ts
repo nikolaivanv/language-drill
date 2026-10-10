@@ -572,6 +572,15 @@ export const DICTATION_GENERATION_TOOL: Anthropic.Tool = {
   },
 };
 
+/**
+ * Bounds on a free-writing card's required elements — the tool schema's
+ * minItems/maxItems AND the parser's check. The parser is the real gate: the
+ * API does not enforce these on a non-strict tool, and `strictToolSchema`
+ * strips them for the strict (5.5-family) request.
+ */
+const REQUIRED_ELEMENTS_MIN = 2;
+const REQUIRED_ELEMENTS_MAX = 4;
+
 export const FREE_WRITING_GENERATION_TOOL: Anthropic.Tool = {
   name: "submit_free_writing_exercise",
   description:
@@ -608,8 +617,8 @@ export const FREE_WRITING_GENERATION_TOOL: Anthropic.Tool = {
         // shortfall, invisible in `generation_jobs` because malformed drafts
         // only show up as `produced_count < requested_count`. Keep these bounds
         // in step with the "(2–4)" the system prompt states in prose.
-        minItems: 2,
-        maxItems: 4,
+        minItems: REQUIRED_ELEMENTS_MIN,
+        maxItems: REQUIRED_ELEMENTS_MAX,
         items: {
           type: "object",
           properties: {
@@ -1379,6 +1388,11 @@ function parseRequiredElements(
       `${ctx}: invalid requiredElements: must be a non-empty array (got ${
         Array.isArray(v) ? "an empty array" : typeof v
       })`,
+    );
+  }
+  if (v.length < REQUIRED_ELEMENTS_MIN || v.length > REQUIRED_ELEMENTS_MAX) {
+    throw new Error(
+      `${ctx}: invalid requiredElements: must have ${REQUIRED_ELEMENTS_MIN}\u2013${REQUIRED_ELEMENTS_MAX} entries (got ${v.length})`,
     );
   }
   return v.map((el, i): FreeWritingRequiredElement => {
