@@ -32,7 +32,6 @@ import {
 import { SendMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs';
 import {
   createObservedClaudeClient,
-  estimateCostUsd,
   flushObservability,
   GENERATION_PROMPT_VERSION,
   withLlmTrace,
@@ -335,10 +334,10 @@ export async function handler(
       emitCellOutcomeMetric(result.status, metricEnv);
       // Anthropic-spend signal: emit this cell's estimated cost so the daily
       // SUM alarm (GenerationDailyCostAlarm) can see total generation spend.
-      // Derived from the accumulated `tokenUsage` rather than `result.costUsd`
-      // so a `failed` cell (which reports costUsd=0 but carries real usage)
-      // still contributes the tokens it burned before failing.
-      emitCellCostMetric(estimateCostUsd(result.tokenUsage), metricEnv);
+      // `spentUsd` rather than `result.costUsd`: a `failed` cell reports
+      // costUsd=0 but still spent tokens before failing. Priced per model
+      // (generator / validator / dedup judge), not one rate for all tokens.
+      emitCellCostMetric(result.spentUsd, metricEnv);
 
       // Result dispatch. Req 2.4 amendment: terminal failures (audit row
       // already has the verdict) are NOT pushed to batchItemFailures —

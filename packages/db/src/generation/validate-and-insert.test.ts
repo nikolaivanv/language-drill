@@ -31,6 +31,7 @@ import type {
   LlmTraceContext,
   ValidateDraftResult,
 } from '@language-drill/ai';
+import { GENERATION_MODEL, VALIDATION_MODEL, estimateCostUsdFor } from '@language-drill/ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Db } from '../client';
@@ -295,6 +296,35 @@ describe('validateAndInsertWithRetry — R5 malformed-retry recovery', () => {
     expect(outcome.extraUsage.cacheReadInputTokens).toBeGreaterThanOrEqual(
       PARSER_FAIL_USAGE.cacheReadInputTokens,
     );
+  });
+
+  it('prices extraUsage per model: validator calls at VALIDATION_MODEL, retry generations at GENERATION_MODEL', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [],
+      malformedDrafts: [{ ordinal: 0, errorMessage: 'parser err' }],
+      tokenUsage: PARSER_FAIL_USAGE,
+    } satisfies GenerateBatchResult);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(),
+      client: mockClient,
+      spec,
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    const validatorCalls = mockValidateDraft.mock.calls.length;
+    const retryGenerations = mockGenerateBatch.mock.calls.length;
+    expect(validatorCalls).toBeGreaterThan(0);
+    expect(retryGenerations).toBeGreaterThan(0);
+    const expected =
+      validatorCalls * estimateCostUsdFor(VALIDATION_MODEL, PASSING_VALIDATION.tokenUsage) +
+      retryGenerations * estimateCostUsdFor(GENERATION_MODEL, PARSER_FAIL_USAGE);
+    expect(outcome.extraCostUsd).toBeCloseTo(expected, 6);
   });
 
   it('returns terminalStatus="rejected" with parserFailedAtFinal=true after retries exhaust on parser failures', async () => {

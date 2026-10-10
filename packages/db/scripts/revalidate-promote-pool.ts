@@ -68,7 +68,8 @@ import {
   ZERO_USAGE,
   addUsage,
   createClaudeClient,
-  estimateCostUsd,
+  VALIDATION_MODEL,
+  estimateCostUsdFor,
   validateDraft,
   type ClaudeUsageBreakdown,
   type ValidationResult,
@@ -333,7 +334,7 @@ function printSummary(
       `cache_create=${usage.cacheCreationInputTokens.toLocaleString()} ` +
       `output=${usage.outputTokens.toLocaleString()}\n`,
   );
-  process.stdout.write(`  estimated cost:          $${estimateCostUsd(usage).toFixed(4)}\n`);
+  process.stdout.write(`  estimated cost:          $${estimateCostUsdFor(VALIDATION_MODEL, usage).toFixed(4)}\n`);
   process.stdout.write(`  mode:                    ${args.apply ? 'APPLIED' : 'DRY-RUN (no writes)'}\n`);
 
   // Per-(language, level) promotion breakdown — where the recovery landed.
@@ -474,10 +475,10 @@ async function main(): Promise<void> {
         }
 
         usage = addUsage(usage, callUsage);
-        if (estimateCostUsd(usage) > args.maxCostUsd) {
+        if (estimateCostUsdFor(VALIDATION_MODEL, usage) > args.maxCostUsd) {
           costStopped = true;
           process.stderr.write(
-            `\n[cost-cap] estimated cost ($${estimateCostUsd(usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
+            `\n[cost-cap] estimated cost ($${estimateCostUsdFor(VALIDATION_MODEL, usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
           );
         }
 
