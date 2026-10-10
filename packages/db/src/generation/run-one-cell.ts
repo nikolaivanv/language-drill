@@ -24,6 +24,7 @@
 import type Anthropic from '@anthropic-ai/sdk';
 import {
   GENERATION_MODEL,
+  generationModelFor,
   ZERO_USAGE,
   addUsage,
   cefrRankWindow,
@@ -1077,6 +1078,9 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       seedWords,
       coverageTargets: args.coverageTargets,
       topicTargets: args.topicTargets,
+      // Per-cell generator model (Haiku 5.5 for ES/DE A1–B1, Sonnet 4.6
+      // elsewhere). Retries reuse this spec, so they run on the same model.
+      modelOverride: generationModelFor(cell),
     };
 
     const batch = await runGeneratorPool({
@@ -1093,7 +1097,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       throw new Error('Aborted by user (SIGINT)');
     }
     combinedUsage = addUsage(combinedUsage, batch.tokenUsage);
-    combinedCostUsd += estimateCostUsdFor(GENERATION_MODEL, batch.tokenUsage);
+    combinedCostUsd += estimateCostUsdFor(spec.modelOverride ?? GENERATION_MODEL, batch.tokenUsage);
     producedCount += batch.drafts.length;
     inBatchDuplicateCount = batch.drafts.filter(
       (d) => d.metadata.inBatchDuplicate,

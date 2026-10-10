@@ -14,6 +14,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { generationModelFor } from '@language-drill/ai';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -2309,6 +2310,20 @@ describe('runOneCell — approvedDictationIds collection (pool-mocked)', () => {
     });
     const spec = vi.mocked(runGeneratorPool).mock.calls[0][0].spec;
     expect(spec.priorPoolSurfaces).toEqual([stem]);
+  });
+
+  it('sets the generator model per cell from generationModelFor', async () => {
+    const { db } = makeMockDb();
+    const cell = buildCell(ExerciseType.CLOZE);
+    await runOneCell({
+      db,
+      client: {} as never,
+      cell,
+      args: { count: 3, batchSeed: 'model-policy', topicDomain: null, maxCostUsd: 5 },
+      jobId: randomUUID(),
+      trigger: 'scheduled',
+    });
+    expect(vi.mocked(runGeneratorPool).mock.calls[0][0].spec.modelOverride).toBe(generationModelFor(cell));
   });
 
   it('passes no cell history for a dictation cell', async () => {
