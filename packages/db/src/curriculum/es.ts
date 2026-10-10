@@ -364,8 +364,15 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * allow-list entry. Both cells sit at target, so the new directive reaches
  * only future refills; no demotion is part of this change (the existing rows
  * are correct Spanish).
+ *
+ * `2026-10-10`: +3 free-writing topic umbrellas per level. Since #776 one
+ * dedup give-up suppresses a free-writing cell (the topic has run out of
+ * distinct essay questions), so pool breadth now comes from more topics rather
+ * than more questions per topic. The additions favour exam text types the set
+ * lacked (messages, invitations, recommendations, formal complaints and cover
+ * letters) over further personal-essay themes.
  */
-export const CURRICULUM_VERSION_ES = '2026-09-13b';
+export const CURRICULUM_VERSION_ES = '2026-10-10';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -7479,6 +7486,61 @@ const esCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'neutral' },
   },
   {
+    key: 'es-a1-fw-introduce-yourself',
+    kind: 'free-writing',
+    name: 'Me presento',
+    description:
+      'An informal prompt to introduce yourself on a language-exchange profile: name, where you are from, what you do, which languages you speak and two things you like (gustar), in the present tense.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks for name, origin, job or studies and the languages the learner speaks.',
+      'Requires two likes expressed with me gusta / me gustan.',
+    ],
+    examplesNegative: ['*Write a full autobiography.'],
+    commonErrors: [
+      'Asking about the past or the future, which pulls the answer above A1.',
+      'So many required elements that an A1 learner cannot cover them in 30-60 words.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-a1-fw-what-i-eat',
+    kind: 'free-writing',
+    name: 'Lo que como',
+    description:
+      'A neutral prompt to describe what you eat on an ordinary day: breakfast, lunch and dinner, plus one food you like and one you do not, in the present tense.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks what the learner eats at two meals of the day.',
+      'Requires one food they like and one they do not like (me gusta / no me gusta).',
+    ],
+    examplesNegative: ['*Write a recipe.'],
+    commonErrors: [
+      'Prompt that turns into a restaurant review or a recipe, which needs vocabulary above A1.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a1-fw-message-to-friend',
+    kind: 'free-writing',
+    name: 'Un mensaje a un amigo',
+    description:
+      'An informal prompt to write a short message to a friend about a plan this week: what you want to do, the day and time, and where to meet. Present tense and ir a + infinitive only.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: [
+      'Asks for an activity, a day and a time.',
+      'Requires a meeting place and a closing question to the friend (¿Vienes?).',
+    ],
+    examplesNegative: ['*Write a long letter about your life.'],
+    commonErrors: [
+      'Forgetting the time or place, so the plan cannot be acted on.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
     key: 'es-a2-fw-last-vacation',
     kind: 'free-writing',
     name: 'Mis últimas vacaciones',
@@ -7522,6 +7584,59 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Describe a neighborhood (any neighborhood).'],
     commonErrors: ['Conflating "describe" with an unscoped free dump.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a2-fw-email-invitation',
+    kind: 'free-writing',
+    name: 'Una invitación por correo',
+    description:
+      'An informal prompt to write an email inviting a friend to an event (a birthday, a dinner, a concert): what it is, when and where, and what to bring, with a request to reply.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks for the occasion, the date and the place.',
+      'Requires one thing the friend should bring and a request to confirm (dime si puedes venir).',
+    ],
+    examplesNegative: ['*Describe a party you went to last year.'],
+    commonErrors: [
+      'Writing a narrative about a past event instead of an invitation to a future one.',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
+    key: 'es-a2-fw-work-or-studies',
+    kind: 'free-writing',
+    name: 'Mi trabajo o mis estudios',
+    description:
+      'A neutral prompt to describe your job or your studies: what you do, a typical task or class, and one thing you like and one thing you find difficult.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks what the learner does and one typical task or class.',
+      'Requires one thing they like and one thing they find difficult about it.',
+    ],
+    examplesNegative: ['*Explain the economy of your country.'],
+    commonErrors: ['Listing tasks with no personal evaluation.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-a2-fw-childhood',
+    kind: 'free-writing',
+    name: 'Cuando era pequeño/a',
+    description:
+      'A neutral prompt about your childhood: where you lived, what you usually did (imperfect) and one specific thing that happened once (preterite). Keep it concrete and everyday.',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: [
+      'Asks for a place and two habitual activities in the imperfect (jugaba, iba).',
+      'Requires one single event told in the preterite.',
+    ],
+    examplesNegative: ['*Analyse how your childhood shaped your personality.'],
+    commonErrors: [
+      'Using the preterite for habits or the imperfect for the single event.',
+      'Abstract reflection that pulls the answer above A2.',
+    ],
     freeWriting: { register: 'neutral' },
   },
   {
@@ -7615,6 +7730,60 @@ const esCurriculum: readonly GrammarPoint[] = [
     freeWriting: { register: 'informal' },
   },
   {
+    key: 'es-b1-fw-formal-complaint',
+    kind: 'free-writing',
+    name: 'Una reclamación',
+    description:
+      'A formal prompt to complain in writing to a company about a faulty product or a poor service: what you bought or booked, what went wrong, and what you expect them to do, with a deadline.',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks for the product or service, the date and the specific problem.',
+      'Requires a concrete remedy (refund, replacement) and a date for a reply.',
+    ],
+    examplesNegative: ['*Complain about something.'],
+    commonErrors: [
+      'Prompt that invites venting instead of a stated remedy.',
+      'Mixing tú and usted within the same letter.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b1-fw-recommendation',
+    kind: 'free-writing',
+    name: 'Te recomiendo…',
+    description:
+      'A neutral prompt to recommend a book, a series, a film or a place to visit: what it is, why it is worth it, and who would enjoy it (and who would not).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to name the recommendation and give two reasons.',
+      'Requires saying what kind of person would enjoy it and who might not.',
+    ],
+    examplesNegative: ['*Summarise the whole plot of a film.'],
+    commonErrors: ['Retelling the plot instead of evaluating it.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b1-fw-advice-email',
+    kind: 'free-writing',
+    name: 'Consejos a un amigo',
+    description:
+      'An informal prompt to reply to a friend who has a problem (a new city, a hard exam, a noisy flatmate): show you understand it, and give two or three pieces of advice (te recomiendo que, deberías, ¿por qué no…?).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to state the friend\'s problem in one sentence before advising.',
+      'Requires at least two pieces of advice, one with recomendar / aconsejar que + subjunctive.',
+    ],
+    examplesNegative: ['*Write a general text about friendship.'],
+    commonErrors: [
+      'Giving one piece of advice with no reasoning.',
+      'Indicative after te recomiendo que (*te recomiendo que hablas).',
+    ],
+    freeWriting: { register: 'informal' },
+  },
+  {
     key: 'es-b2-fw-remote-work',
     kind: 'free-writing',
     name: 'El teletrabajo: ¿avance o aislamiento?',
@@ -7702,6 +7871,63 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Work-life balance.'],
     commonErrors: ['Abstract platitudes with no concrete strategies.'],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b2-fw-cover-letter',
+    kind: 'free-writing',
+    name: 'Carta de presentación',
+    description:
+      'A formal prompt to write a cover letter for a job, an internship or a study programme: why you are applying, two relevant experiences or skills, and a request for an interview.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to name the position or programme and why they want it.',
+      'Requires two relevant experiences or skills and a closing request for an interview.',
+    ],
+    examplesNegative: ['*Write your CV as a list.'],
+    commonErrors: [
+      'Listing qualifications with no link to the position.',
+      'Informal openings or closings (Hola, Besos) in a formal letter.',
+    ],
+    freeWriting: { register: 'formal' },
+  },
+  {
+    key: 'es-b2-fw-mass-tourism',
+    kind: 'free-writing',
+    name: 'El turismo masivo',
+    description:
+      'A neutral prompt on mass tourism in cities: its effects on residents (housing, prices, daily life), a position on whether it should be limited, and one concrete measure.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks for two effects of mass tourism on residents.',
+      'Requires a clear position and one concrete measure a city could take.',
+    ],
+    examplesNegative: ['*Describe your last holiday.'],
+    commonErrors: [
+      'Personal travel narrative instead of an argument about cities.',
+      'Abstract position with no concrete measure.',
+    ],
+    freeWriting: { register: 'neutral' },
+  },
+  {
+    key: 'es-b2-fw-education',
+    kind: 'free-writing',
+    name: '¿Qué debería enseñar la escuela?',
+    description:
+      'A neutral prompt arguing for one change to what schools teach (finance, cooking, programming, a second language): why it matters, how it could work, and an answer to one objection.',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: [
+      'Asks the learner to propose one specific change to school teaching.',
+      'Requires one likely objection and a reply to it (aunque, sin embargo).',
+    ],
+    examplesNegative: ['*Describe your school.'],
+    commonErrors: [
+      'Proposing several changes superficially instead of arguing one.',
+      'Ignoring the objection the prompt asks for.',
+    ],
     freeWriting: { register: 'neutral' },
   },
 
