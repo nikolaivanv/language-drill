@@ -39,6 +39,7 @@ import {
   generateBatch,
   getCurrentLlmTraceContext,
   loadFrequency,
+  ValidationParseError,
   validateDraft,
   withLlmTrace,
   type ClaudeUsageBreakdown,
@@ -56,7 +57,11 @@ import { exerciseTags, exercises } from '../schema/index';
 import type { Cell } from './cells';
 import { applicableCoverageTags } from './coverage-tags';
 import { applyDeterministicChecks } from './deterministic-checks';
-import { checkFreeWritingDuplicate, fetchFreeWritingPromptSummaries } from './free-writing-dedup';
+import {
+  checkFreeWritingDuplicate,
+  fetchFreeWritingPromptSummaries,
+  type FreeWritingDuplicateCheck,
+} from './free-writing-dedup';
 import { routeValidationResult } from './routing';
 import { vocabSeedMismatch } from './vocab-seed-check';
 
@@ -361,8 +366,79 @@ export async function validateAndInsertWithRetry(
     }
   };
 
+  // A collision (dedup index, vocab per-word cap, free-writing duplicate)
+  // exhausts the current draft: regenerate it under a bumped seed. Returns a
+  // terminal outcome only for a parser failure on the last retry slot; `null`
+  // means the attempt loop continues. On a non-final parser failure the old
+  // draft stays current, so the next iteration collides again and dispatches
+  // another retry.
+  const regenerateAfterCollision = async (
+    attempt: number,
+  ): Promise<DraftOutcome | null> => {
+    firstAttemptDeduped = true;
+    if (attempt >= MAX_DEDUP_RETRIES) return null;
+    const retry = await runRetryGeneration(
+      opts.client,
+      await retrySpec(),
+      attempt + 1,
+      opts.signal,
+    );
+    // Fold the retry's usage and bump extraProduced UNCONDITIONALLY — the
+    // wasted call cost is attributable to this ordinal whether or not Claude
+    // returned a parseable draft (R5.1, R5.2).
+    extraUsage = addUsage(extraUsage, retry.usage);
+    extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
+    extraProduced += 1;
+    if (!retry.ok) {
+      // Parser failure on the last allowed retry slot (equivalent to the
+      // design's `attempt >= MAX_DEDUP_RETRIES` after dispatch): short-circuit
+      // with parserFailedAtFinal so `runOneCell` can bump
+      // CellResult.parserFailedCount.
+      if (attempt + 1 >= MAX_DEDUP_RETRIES) {
+        return {
+          terminalStatus: 'rejected',
+          parserFailedAtFinal: true,
+          rejectionReasons: [PARSER_FAILURE_REASON],
+          extraUsage,
+          extraCostUsd,
+          extraProduced,
+          validatedCount,
+        };
+      }
+      return null;
+    }
+    currentDraft = retry.draft;
+    return null;
+  };
+
   for (let attempt = 0; attempt <= MAX_DEDUP_RETRIES; attempt++) {
     if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+
+    // Free-writing semantic dedup (#757) runs BEFORE the validator: most
+    // free-writing drafts in a filling cell are duplicates (2026-10-10: ~160
+    // of 235), and a judge call costs about what a validator call does, so
+    // judging first skips the validator for every duplicate. The pool is
+    // re-read per call, and free-writing outcomes run serially (run-one-cell),
+    // so nothing is inserted between this check and the INSERT below.
+    let fwCheck: FreeWritingDuplicateCheck | null = null;
+    if (isFreeWriting) {
+      fwCheck = await checkFreeWritingDuplicate(
+        opts.db,
+        opts.client,
+        opts.cell,
+        currentDraft.contentJson,
+        opts.signal,
+      );
+      // An abort mid-judge surfaces as 'unavailable'; do not insert a flagged row.
+      if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
+      extraUsage = addUsage(extraUsage, fwCheck.usage);
+      extraCostUsd += estimateCostUsdFor(FREE_WRITING_DEDUP_MODEL, fwCheck.usage);
+      if (fwCheck.status === 'duplicate') {
+        const terminal = await regenerateAfterCollision(attempt);
+        if (terminal) return terminal;
+        continue;
+      }
+    }
 
     // Validate. Every validator call's usage folds into extraUsage — there
     // is NO conditional guard on attempt index (the bug the design validator
@@ -375,16 +451,26 @@ export async function validateAndInsertWithRetry(
     if (attempt === 0 && opts.precomputedFirstValidation) {
       ({ result, tokenUsage: valUsage } = opts.precomputedFirstValidation);
     } else {
-      ({ result, tokenUsage: valUsage } = await validateDraft(
-        opts.client,
-        currentDraft,
-        opts.spec,
-        opts.signal,
-        // `seedWord` is this ordinal's generation seed (resolved above). A
-        // retry regenerates the draft under the SAME seed, so the validator
-        // keeps seeing the sub-construction that was actually requested.
-        { seedWord },
-      ));
+      try {
+        ({ result, tokenUsage: valUsage } = await validateDraft(
+          opts.client,
+          currentDraft,
+          opts.spec,
+          opts.signal,
+          // `seedWord` is this ordinal's generation seed (resolved above). A
+          // retry regenerates the draft under the SAME seed, so the validator
+          // keeps seeing the sub-construction that was actually requested.
+          { seedWord },
+        ));
+      } catch (err) {
+        // A first validation that skipped Phase A (free-writing cells, see
+        // run-one-cell) keeps Phase A's R8 contract: a malformed validator
+        // response costs this ordinal, never the whole cell.
+        if (attempt === 0 && err instanceof ValidationParseError) {
+          return { ...validatorParseFailedOutcome(), extraUsage, extraCostUsd, extraProduced };
+        }
+        throw err;
+      }
     }
     extraUsage = addUsage(extraUsage, valUsage);
     extraCostUsd += estimateCostUsdFor(VALIDATION_MODEL, valUsage);
@@ -416,40 +502,11 @@ export async function validateAndInsertWithRetry(
       // If we're already retrying a dedup-collided slot, dispatch another
       // retry; if we've exhausted retries, give up on this slot.
       if (firstAttemptDeduped && attempt < MAX_DEDUP_RETRIES) {
-        const retry = await runRetryGeneration(
-          opts.client,
-          await retrySpec(),
-          attempt + 1,
-          opts.signal,
-        );
-        // Fold the retry's usage and bump extraProduced UNCONDITIONALLY —
-        // the wasted call cost is attributable to this ordinal whether or
-        // not Claude returned a parseable draft (R5.1, R5.2).
-        extraUsage = addUsage(extraUsage, retry.usage);
-        extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
-        extraProduced += 1;
-        if (!retry.ok) {
-          // Parser failure on a dedup-retry. If this was the LAST allowed
-          // retry slot (attempt + 1 === MAX_DEDUP_RETRIES, equivalent to
-          // the design's `attempt >= MAX_DEDUP_RETRIES` after dispatch),
-          // short-circuit with parserFailedAtFinal so `runOneCell` can
-          // bump CellResult.parserFailedCount. Otherwise, continue — the
-          // next iteration revalidates the old (rejected) currentDraft
-          // and dispatches a fresh retry from this same branch.
-          if (attempt + 1 >= MAX_DEDUP_RETRIES) {
-            return {
-              terminalStatus: 'rejected',
-              parserFailedAtFinal: true,
-              rejectionReasons: [PARSER_FAILURE_REASON],
-              extraUsage,
-              extraCostUsd,
-              extraProduced,
-              validatedCount,
-            };
-          }
-          continue;
-        }
-        currentDraft = retry.draft;
+        // A non-final parser failure leaves the old (rejected) draft current,
+        // so the next iteration re-rejects it and dispatches a fresh retry
+        // from this same branch.
+        const terminal = await regenerateAfterCollision(attempt);
+        if (terminal) return terminal;
         continue;
       }
       return firstAttemptDeduped
@@ -513,21 +570,9 @@ export async function validateAndInsertWithRetry(
         currentDraft.contentJson.expectedWord,
       )) >= VOCAB_MAX_PER_WORD;
 
-    // Free-writing semantic dedup (#757): pre-empts the INSERT exactly like the
-    // vocab cap, so a duplicate takes the dedup-retry path. Re-reads the pool
-    // per attempt; outcomes run serially for free-writing cells (run-one-cell).
-    const fwCheck =
-      !capReached && isFreeWriting
-        ? await checkFreeWritingDuplicate(opts.db, opts.client, opts.cell, currentDraft.contentJson, opts.signal)
-        : null;
-    // An abort mid-judge surfaces as 'unavailable'; do not insert a flagged row.
-    if (opts.signal?.aborted) throw new Error('Aborted by user (SIGINT)');
-    if (fwCheck) {
-      extraUsage = addUsage(extraUsage, fwCheck.usage);
-      extraCostUsd += estimateCostUsdFor(FREE_WRITING_DEDUP_MODEL, fwCheck.usage);
-    }
-    const semanticDuplicate = fwCheck?.status === 'duplicate';
-    // A judge outage inserts FLAGGED (not served) rather than approving blind.
+    // The free-writing duplicate judge already ran at the top of this attempt;
+    // a duplicate never reaches here. A judge outage inserts FLAGGED (not
+    // served) rather than approving blind.
     const insertDecision =
       fwCheck?.status === 'unavailable'
         ? {
@@ -539,7 +584,7 @@ export async function validateAndInsertWithRetry(
           }
         : gatedDecision;
 
-    const inserted = capReached || semanticDuplicate
+    const inserted = capReached
       ? []
       : await opts.db
           .insert(exercises)
@@ -600,44 +645,10 @@ export async function validateAndInsertWithRetry(
     }
 
     // INSERT was a no-op: dedup-index conflict on _dedupKey within the cell,
-    // the R6 per-word cap was reached (skipped INSERT), OR the free-writing
-    // semantic duplicate judge matched an existing prompt. Either way the slot
+    // or the R6 per-word cap was reached (skipped INSERT). Either way the slot
     // is exhausted for this draft — regenerate with a bumped seed.
-    firstAttemptDeduped = true;
-    if (attempt < MAX_DEDUP_RETRIES) {
-      const retry = await runRetryGeneration(
-        opts.client,
-        await retrySpec(),
-        attempt + 1,
-        opts.signal,
-      );
-      // Fold the retry's usage and bump extraProduced UNCONDITIONALLY —
-      // the wasted call cost is attributable to this ordinal whether or
-      // not Claude returned a parseable draft (R5.1, R5.2).
-      extraUsage = addUsage(extraUsage, retry.usage);
-      extraCostUsd += estimateCostUsdFor(GENERATION_MODEL, retry.usage);
-      extraProduced += 1;
-      if (!retry.ok) {
-        // Parser failure on the dedup retry. If this was the last allowed
-        // retry slot, short-circuit with parserFailedAtFinal; otherwise,
-        // continue to the next iteration where the OLD currentDraft will
-        // be revalidated (the validator's same approve/flag decision and
-        // INSERT will dedup again, then we'll dispatch another retry).
-        if (attempt + 1 >= MAX_DEDUP_RETRIES) {
-          return {
-            terminalStatus: 'rejected',
-            parserFailedAtFinal: true,
-            rejectionReasons: [PARSER_FAILURE_REASON],
-            extraUsage,
-            extraCostUsd,
-            extraProduced,
-            validatedCount,
-          };
-        }
-        continue;
-      }
-      currentDraft = retry.draft;
-    }
+    const terminal = await regenerateAfterCollision(attempt);
+    if (terminal) return terminal;
   }
 
   // All attempts collided with the dedup index without a successful INSERT.

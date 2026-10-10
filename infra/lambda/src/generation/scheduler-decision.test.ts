@@ -376,6 +376,43 @@ describe('decideEnqueue — table-driven cases', () => {
     expect(decision).toEqual({ kind: 'skip-saturated-dedup' });
   });
 
+  describe('free-writing topic exhaustion', () => {
+    const FW_CELL: Cell = {
+      ...ROUND_1_CELL,
+      exerciseType: ExerciseType.FREE_WRITING,
+      cellKey: 'es:b1:free_writing:es-b1-test',
+    };
+
+    it('suppresses a free-writing cell after ONE given-up slot, even on a productive run', () => {
+      // 3 of 4 approved, 1 given up: the generic rule (>=2 given up AND <2 approved) does not fire.
+      const job = makeRecentJob({ approvedCount: 3, requestedCount: 4, dedupGivenUpCount: 1 });
+      expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION)).toEqual({
+        kind: 'skip-saturated-dedup',
+      });
+      expect(decideEnqueue(ROUND_1_CELL, 2, 5, job, CURRENT_VERSION)).toEqual({
+        kind: 'enqueue',
+        need: 3,
+      });
+    });
+
+    it('keeps refilling a free-writing cell whose last run gave up nothing', () => {
+      const job = makeRecentJob({ approvedCount: 4, requestedCount: 4, dedupGivenUpCount: 0 });
+      expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION)).toEqual({ kind: 'enqueue', need: 3 });
+    });
+
+    it('re-opens on a point edit or after the staleness lapse', () => {
+      const job = makeRecentJob({ approvedCount: 1, requestedCount: 4, dedupGivenUpCount: 3 });
+      expect(
+        decideEnqueue(FW_CELL, 2, 5, { ...job, grammarPointFingerprint: 'edited' }, CURRENT_VERSION),
+      ).toEqual({ kind: 'enqueue', need: 3 });
+      const now = new Date(job.finishedAt.getTime() + (SUPPRESSION_LAPSE_DAYS + 1) * 86_400_000);
+      expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION, false, { now })).toEqual({
+        kind: 'enqueue',
+        need: 3,
+      });
+    });
+  });
+
   it('case 6: saturated-dedup + curriculum match → skip-saturated-dedup (R6.2)', () => {
     // requestedCount=20 → ceil(0.5 * 20) = 10, ceil(0.3 * 20) = 6.
     // dedupGivenUp=12 ≥ 10 AND approvedCount=5 < 6 → saturated.

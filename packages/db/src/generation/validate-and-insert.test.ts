@@ -31,7 +31,12 @@ import type {
   LlmTraceContext,
   ValidateDraftResult,
 } from '@language-drill/ai';
-import { GENERATION_MODEL, VALIDATION_MODEL, estimateCostUsdFor } from '@language-drill/ai';
+import {
+  FREE_WRITING_DEDUP_MODEL,
+  GENERATION_MODEL,
+  VALIDATION_MODEL,
+  estimateCostUsdFor,
+} from '@language-drill/ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Db } from '../client';
@@ -61,6 +66,7 @@ vi.mock('./free-writing-dedup', () => ({
 }));
 
 import {
+  ValidationParseError,
   generateBatch,
   getCurrentLlmTraceContext,
   validateDraft,
@@ -1118,9 +1124,71 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
     expect(outcome.terminalStatus).toBe('dedup-given-up');
     expect(outcome.insertedExerciseId).toBeUndefined();
     expect(mockGenerateBatch).toHaveBeenCalledTimes(3);
+    // Every draft was a duplicate, so the validator never ran.
+    expect(mockValidateDraft).not.toHaveBeenCalled();
+    expect(outcome.validatedCount).toBe(0);
     for (const call of mockGenerateBatch.mock.calls) {
       expect(call[1].priorPoolSurfaces).toEqual(['Fresh — Just inserted.']);
     }
+  });
+
+  it('judges before validating, so a duplicate draft is never validated', async () => {
+    const JUDGE_USAGE = { inputTokens: 400, outputTokens: 40, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
+    const RETRY_USAGE = { inputTokens: 900, outputTokens: 300, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    const order: string[] = [];
+    mockValidateDraft.mockImplementation(async () => {
+      order.push('validate');
+      return PASSING_VALIDATION;
+    });
+    mockFwCheck
+      .mockImplementationOnce(async () => {
+        order.push('judge');
+        return { status: 'duplicate', detail: 'duplicate of "X"', usage: JUDGE_USAGE };
+      })
+      .mockImplementationOnce(async () => {
+        order.push('judge');
+        return { status: 'distinct', detail: 'new', usage: JUDGE_USAGE };
+      });
+    mockFwSummaries.mockResolvedValue([]);
+    mockGenerateBatch.mockResolvedValue({ drafts: [makeFwDraft('fw-retry')], malformedDrafts: [], tokenUsage: RETRY_USAGE } satisfies GenerateBatchResult);
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+
+    expect(order).toEqual(['judge', 'judge', 'validate']);
+    expect(outcome.terminalStatus).toBe('first-attempt-dedup-then-success');
+    expect(outcome.validatedCount).toBe(1);
+    expect(outcome.insertedExerciseId).toBe('fw-retry');
+    expect(mockGenerateBatch).toHaveBeenCalledTimes(1);
+    // Each call priced at its own model: two judges, one retry generation, one validation.
+    expect(outcome.extraCostUsd).toBeCloseTo(
+      2 * estimateCostUsdFor(FREE_WRITING_DEDUP_MODEL, JUDGE_USAGE) +
+        estimateCostUsdFor(GENERATION_MODEL, RETRY_USAGE) +
+        estimateCostUsdFor(VALIDATION_MODEL, PASSING_VALIDATION.tokenUsage),
+      6,
+    );
+  });
+
+  it('isolates a validator parse failure on an unprevalidated first draft to the ordinal', async () => {
+    mockFwCheck.mockResolvedValue({ status: 'distinct', detail: 'new', usage: NO_USAGE });
+    // A synchronous throw: vitest 4 fails a test on a rejected vi.fn even when it is caught.
+    mockValidateDraft.mockImplementationOnce(() => {
+      throw new ValidationParseError('bad tool call');
+    });
+    const capture: { exercise?: Record<string, unknown> } = {};
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeInsertSucceedsDb(capture), client: mockClient, spec: fwSpec, draft: makeFwDraft(),
+      ordinal: 0, cell: fwCell, args, generatedAt,
+    });
+
+    expect(outcome.terminalStatus).toBe('rejected');
+    expect(outcome.validatorParseFailedAtFirst).toBe(true);
+    expect(capture.exercise).toBeUndefined();
   });
 
   it('inserts flagged with dedup-check-unavailable when the judge is unavailable', async () => {

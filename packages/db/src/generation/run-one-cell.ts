@@ -1114,13 +1114,21 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     // failure (network, 429, SIGINT); the outer try/catch routes that into
     // the existing failClosed path. Dedup-retry iterations inside
     // validateAndInsertWithRetry stay sequential and call validateDraft live.
-    const firstValidations = await runValidatorPool({
-      drafts: batch.drafts,
-      client,
-      spec,
-      signal,
-      concurrency: MAX_VALIDATOR_CONCURRENCY,
-    });
+    //
+    // Free-writing cells skip Phase A: their duplicate judge runs before the
+    // validator (validate-and-insert), and a duplicate draft never needs
+    // validating. Pre-validating in parallel would pay the validator for every
+    // duplicate — about two in three free-writing drafts on 2026-10-10.
+    const firstValidations =
+      cell.exerciseType === ExerciseType.FREE_WRITING
+        ? new Map()
+        : await runValidatorPool({
+            drafts: batch.drafts,
+            client,
+            spec,
+            signal,
+            concurrency: MAX_VALIDATOR_CONCURRENCY,
+          });
 
     // Phase B — parallel outcome resolution. The pool dispatches one
     // `validateAndInsertWithRetry` call per ordinal up to N at a time. Each
