@@ -46,7 +46,8 @@ import {
   ZERO_USAGE,
   addUsage,
   createClaudeClient,
-  estimateCostUsd,
+  VALIDATION_MODEL,
+  estimateCostUsdFor,
   validateDraft,
   type ClaudeUsageBreakdown,
   type ExerciseDraft,
@@ -451,10 +452,10 @@ async function main(): Promise<void> {
 
         // Soft cap: up to (concurrency - 1) in-flight tasks may overshoot before
         // the flag is observed; the accumulated cost figure stays accurate.
-        if (estimateCostUsd(usage) > args.maxCostUsd) {
+        if (estimateCostUsdFor(VALIDATION_MODEL, usage) > args.maxCostUsd) {
           stopped = true;
           process.stderr.write(
-            `\n[cost-cap] estimated cost ($${estimateCostUsd(usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
+            `\n[cost-cap] estimated cost ($${estimateCostUsdFor(VALIDATION_MODEL, usage).toFixed(4)}) > --max-cost-usd ($${args.maxCostUsd.toFixed(2)}); stopping new validator calls.\n`,
           );
         }
 
@@ -489,7 +490,7 @@ async function main(): Promise<void> {
       (stopped ? ' (stopped at cost cap)' : ''),
   );
   console.log(`[backfill-coverage-tags] per-axis: ${JSON.stringify(axisCounts)}`);
-  console.log(`[backfill-coverage-tags] est. cost: $${estimateCostUsd(usage).toFixed(4)}`);
+  console.log(`[backfill-coverage-tags] est. cost: $${estimateCostUsdFor(VALIDATION_MODEL, usage).toFixed(4)}`);
 }
 
 // Skip auto-execution when this module is imported by tests.

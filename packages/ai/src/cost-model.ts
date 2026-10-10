@@ -1,10 +1,11 @@
 import { capabilityFor } from "./model-request.js";
 
 /**
- * Sonnet 4.6 list pricing ($3 / $15 per MTok), used by the production
- * `generation_jobs.cost_usd_estimate` (the generator and validator run on
- * Sonnet 4.6). For other models use `estimateCostUsdFor(model, usage)`, which
- * reads `capabilityFor(model).pricing` (Sonnet 5 / 5.5 list at $2 / $10).
+ * Sonnet 4.6 list pricing ($3 / $15 per MTok), behind `estimateCostUsd` — a
+ * rough single-rate estimate for dry-run quotes and Sonnet-4.6-only tools.
+ * Anything that mixes models (the generation job's `cost_usd_estimate`, the
+ * cell-cost metric, validator-only sweeps) prices each call with
+ * `estimateCostUsdFor(model, usage)`, which reads `capabilityFor(model).pricing`.
  */
 export const SONNET_4_5_PRICING = Object.freeze({
   inputUsdPerToken: 3.0 / 1_000_000, // base

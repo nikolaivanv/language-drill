@@ -136,6 +136,7 @@ function makeApprovedOutcome(): DraftOutcome {
     terminalStatus: 'inserted-approved',
     terminalReviewStatus: 'auto-approved',
     extraUsage: ZERO_USAGE,
+    extraCostUsd: 0,
     extraProduced: 0,
     validatedCount: 1,
   };

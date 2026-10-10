@@ -130,6 +130,7 @@ function makeRejectedOutcome(
   return {
     terminalStatus: 'rejected',
     extraUsage: ZERO_USAGE,
+    extraCostUsd: 0,
     extraProduced: parserFailedAtFinal ? 3 : 0,
     validatedCount: 1,
     ...(parserFailedAtFinal ? { parserFailedAtFinal: true as const } : {}),
@@ -141,6 +142,7 @@ function makeApprovedOutcome(): DraftOutcome {
     terminalStatus: 'inserted-approved',
     terminalReviewStatus: 'auto-approved',
     extraUsage: ZERO_USAGE,
+    extraCostUsd: 0,
     extraProduced: 0,
     validatedCount: 1,
   };

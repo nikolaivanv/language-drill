@@ -31,6 +31,12 @@ import type {
   LlmTraceContext,
   ValidateDraftResult,
 } from '@language-drill/ai';
+import {
+  FREE_WRITING_DEDUP_MODEL,
+  GENERATION_MODEL,
+  VALIDATION_MODEL,
+  estimateCostUsdFor,
+} from '@language-drill/ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { Db } from '../client';
@@ -296,6 +302,35 @@ describe('validateAndInsertWithRetry — R5 malformed-retry recovery', () => {
     expect(outcome.extraUsage.cacheReadInputTokens).toBeGreaterThanOrEqual(
       PARSER_FAIL_USAGE.cacheReadInputTokens,
     );
+  });
+
+  it('prices extraUsage per model: validator calls at VALIDATION_MODEL, retry generations at GENERATION_MODEL', async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [],
+      malformedDrafts: [{ ordinal: 0, errorMessage: 'parser err' }],
+      tokenUsage: PARSER_FAIL_USAGE,
+    } satisfies GenerateBatchResult);
+
+    const outcome = await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(),
+      client: mockClient,
+      spec,
+      draft: makeDraft(),
+      ordinal: 0,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    const validatorCalls = mockValidateDraft.mock.calls.length;
+    const retryGenerations = mockGenerateBatch.mock.calls.length;
+    expect(validatorCalls).toBeGreaterThan(0);
+    expect(retryGenerations).toBeGreaterThan(0);
+    const expected =
+      validatorCalls * estimateCostUsdFor(VALIDATION_MODEL, PASSING_VALIDATION.tokenUsage) +
+      retryGenerations * estimateCostUsdFor(GENERATION_MODEL, PARSER_FAIL_USAGE);
+    expect(outcome.extraCostUsd).toBeCloseTo(expected, 6);
   });
 
   it('returns terminalStatus="rejected" with parserFailedAtFinal=true after retries exhaust on parser failures', async () => {
@@ -1098,6 +1133,8 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
   });
 
   it('judges before validating, so a duplicate draft is never validated', async () => {
+    const JUDGE_USAGE = { inputTokens: 400, outputTokens: 40, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
+    const RETRY_USAGE = { inputTokens: 900, outputTokens: 300, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
     mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
     const order: string[] = [];
     mockValidateDraft.mockImplementation(async () => {
@@ -1107,14 +1144,14 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
     mockFwCheck
       .mockImplementationOnce(async () => {
         order.push('judge');
-        return { status: 'duplicate', detail: 'duplicate of "X"', usage: NO_USAGE };
+        return { status: 'duplicate', detail: 'duplicate of "X"', usage: JUDGE_USAGE };
       })
       .mockImplementationOnce(async () => {
         order.push('judge');
-        return { status: 'distinct', detail: 'new', usage: NO_USAGE };
+        return { status: 'distinct', detail: 'new', usage: JUDGE_USAGE };
       });
     mockFwSummaries.mockResolvedValue([]);
-    mockGenerateBatch.mockResolvedValue({ drafts: [makeFwDraft('fw-retry')], malformedDrafts: [], tokenUsage: NO_USAGE } satisfies GenerateBatchResult);
+    mockGenerateBatch.mockResolvedValue({ drafts: [makeFwDraft('fw-retry')], malformedDrafts: [], tokenUsage: RETRY_USAGE } satisfies GenerateBatchResult);
     const capture: { exercise?: Record<string, unknown> } = {};
 
     const outcome = await validateAndInsertWithRetry({
@@ -1127,6 +1164,13 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
     expect(outcome.validatedCount).toBe(1);
     expect(outcome.insertedExerciseId).toBe('fw-retry');
     expect(mockGenerateBatch).toHaveBeenCalledTimes(1);
+    // Each call priced at its own model: two judges, one retry generation, one validation.
+    expect(outcome.extraCostUsd).toBeCloseTo(
+      2 * estimateCostUsdFor(FREE_WRITING_DEDUP_MODEL, JUDGE_USAGE) +
+        estimateCostUsdFor(GENERATION_MODEL, RETRY_USAGE) +
+        estimateCostUsdFor(VALIDATION_MODEL, PASSING_VALIDATION.tokenUsage),
+      6,
+    );
   });
 
   it('isolates a validator parse failure on an unprevalidated first draft to the ordinal', async () => {

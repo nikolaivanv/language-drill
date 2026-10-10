@@ -46,12 +46,11 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
-  OPUS_4_8_PRICING,
   THEORY_GENERATION_MODEL,
+  THEORY_VALIDATION_MODEL,
   ZERO_USAGE,
   addUsage,
-  estimateCostUsd,
-  estimateCostUsdAt,
+  estimateCostUsdFor,
   generateTheoryTopic,
   TheoryDraftMalformedError,
   validateTheoryDraft,
@@ -79,15 +78,16 @@ import {
 const ERROR_MESSAGE_MAX_LENGTH = 1000;
 
 /**
- * Mixed-model cost: generator tokens bill at Opus list pricing
- * (`THEORY_GENERATION_MODEL` = claude-opus-4-8), validator tokens at Sonnet.
+ * Mixed-model cost: generator tokens at `THEORY_GENERATION_MODEL`'s list
+ * price, validator tokens at `THEORY_VALIDATION_MODEL`'s.
  */
 function theoryCellCostUsd(
   genUsage: ClaudeUsageBreakdown,
   valUsage: ClaudeUsageBreakdown,
 ): number {
   const raw =
-    estimateCostUsdAt(OPUS_4_8_PRICING, genUsage) + estimateCostUsd(valUsage);
+    estimateCostUsdFor(THEORY_GENERATION_MODEL, genUsage) +
+    estimateCostUsdFor(THEORY_VALIDATION_MODEL, valUsage);
   return Math.round(raw * 10000) / 10000;
 }
 

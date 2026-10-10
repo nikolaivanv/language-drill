@@ -142,6 +142,7 @@ function makeOutcome(ordinal: number): DraftOutcome {
       cacheReadInputTokens: 0,
       outputTokens: 200 + ordinal,
     },
+    extraCostUsd: 0,
     extraProduced: 0,
     validatedCount: 1,
   };
@@ -158,6 +159,7 @@ function makeDedupGivenUp(): DraftOutcome {
       cacheReadInputTokens: 0,
       outputTokens: 0,
     },
+    extraCostUsd: 0,
     extraProduced: 0,
     validatedCount: 1,
   };
