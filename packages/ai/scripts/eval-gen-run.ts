@@ -901,8 +901,10 @@ export async function runGenEval(opts: {
         grammarPoint,
         // Baseline stays unseeded — it must reproduce today's real behaviour
         // so the candidate's seeding is the only variable under test. Under
-        // `--pool-history` both arms instead share `explicitSeeds`.
-        seedConstructionVariants: false,
+        // `--pool-history` both arms instead share `explicitSeeds`. A MODEL
+        // A/B (`--candidate-model`) seeds both arms like production does, so
+        // the generator model is the only thing that differs.
+        seedConstructionVariants: args.candidateModel !== undefined,
         explicitSeeds,
         systemPromptOverride: baselinePrompt,
         draftsPerCell: args.draftsPerCell,

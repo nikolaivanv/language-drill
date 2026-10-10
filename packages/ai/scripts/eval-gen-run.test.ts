@@ -1558,6 +1558,28 @@ describe("eval-gen candidate model/effort (Task 6)", () => {
     expect(seen[1].generatorEffort).toBe("low");
   });
 
+  it("seeds BOTH arms in a model A/B, so the generator model is the only variable", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+    await runGenEval(
+      runOpts({ executor, dataset: TR_CELLS.slice(0, 1), args: { candidateModel: "claude-haiku-5-5" } }),
+    );
+    expect(seen.map((p) => p.seedConstructionVariants)).toEqual([true, true]);
+  });
+
+  it("keeps the baseline unseeded in a prompt A/B (no --candidate-model)", async () => {
+    const seen: GenCellArmExecutorParams[] = [];
+    const executor: GenCellArmExecutor = vi.fn(async (p) => {
+      seen.push(p);
+      return armResult();
+    });
+    await runGenEval(runOpts({ executor, dataset: TR_CELLS.slice(0, 1) }));
+    expect(seen.map((p) => p.seedConstructionVariants)).toEqual([false, true]);
+  });
+
   it("computeArmStats prefers an ArmResult's own costUsd", () => {
     const stats = computeArmStats([
       { outcomes: [], usage: ZERO_USAGE, costUsd: 1.25 },

@@ -1,0 +1,116 @@
+[
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "cloze",
+    "grammarPointKey": "es-b1-nominalizers"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "sentence_construction",
+    "grammarPointKey": "es-b1-relative-clauses"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A2",
+    "exerciseType": "sentence_construction",
+    "grammarPointKey": "de-a2-perfekt-with-haben"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A2",
+    "exerciseType": "sentence_construction",
+    "grammarPointKey": "de-a2-weil-deshalb"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "B2",
+    "exerciseType": "cloze",
+    "grammarPointKey": "tr-b2-participle-mis"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "A2",
+    "exerciseType": "cloze",
+    "grammarPointKey": "es-a2-hace-ago"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A1",
+    "exerciseType": "translation",
+    "grammarPointKey": "de-a1-dative"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "B2",
+    "exerciseType": "translation",
+    "grammarPointKey": "tr-b2-participle-aorist"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B2",
+    "exerciseType": "translation",
+    "grammarPointKey": "es-b2-nuanced-ser-estar"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "A1",
+    "exerciseType": "translation",
+    "grammarPointKey": "es-a1-locative-prepositions"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "A2",
+    "exerciseType": "sentence_construction",
+    "grammarPointKey": "tr-a2-aorist"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A1",
+    "exerciseType": "sentence_construction",
+    "grammarPointKey": "de-a1-questions"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "A1",
+    "exerciseType": "cloze",
+    "grammarPointKey": "tr-a1-locative"
+  },
+  {
+    "language": "TR",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "tr-a1-present-continuous"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "cloze",
+    "grammarPointKey": "es-b1-conditional"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "es-b1-environment-vocab"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "A1",
+    "exerciseType": "vocab_recall",
+    "grammarPointKey": "de-a1-vocab-home-objects"
+  },
+  {
+    "language": "ES",
+    "cefrLevel": "B1",
+    "exerciseType": "free_writing",
+    "grammarPointKey": "es-b1-fw-daily-routine"
+  },
+  {
+    "language": "DE",
+    "cefrLevel": "B1",
+    "exerciseType": "free_writing",
+    "grammarPointKey": "de-b1-fw-complaint"
+  }
+]
