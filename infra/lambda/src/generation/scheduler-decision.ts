@@ -14,7 +14,8 @@
  *   2. approvedInPool ≥ target → `skip-target-reached`
  *   3. Curriculum-version mismatch → clears suppression → `enqueue` (R6.4)
  *   3b. Free-writing cell whose last run gave up any slot to duplicates →
- *      `skip-saturated-dedup` (2026-10-10)
+ *      `skip-saturated-dedup` (2026-10-10); checked before the staleness
+ *      lapse, so only a point edit re-opens it (2026-10-11)
  *   4. Predictive saturation (near target + dedup-heavy last run) →
  *      `skip-saturated-dedup` on the same tick (R4.1)
  *   5. Saturated-dedup (reactive: low approved + dedup-heavy) →
@@ -335,18 +336,6 @@ export function decideEnqueue(
     return { kind: 'enqueue', need };
   }
 
-  // 4b. Staleness lapse. Suppression is evidence-based, and evidence ages out:
-  //     the run that justified it may predate a prompt, model or seed-pool fix
-  //     that the point's fingerprint cannot see. Placed after the target-reached
-  //     check (step 2) so it only ever re-opens a cell that is still SHORT —
-  //     never a finished one — and before the suppression branches so it clears
-  //     low-yield and saturated-dedup alike.
-  const lapseDays = options.suppressionLapseDays ?? SUPPRESSION_LAPSE_DAYS;
-  const ageMs = (options.now ?? new Date()).getTime() - recentJob.finishedAt.getTime();
-  if (ageMs >= lapseDays * MS_PER_DAY) {
-    return { kind: 'enqueue', need };
-  }
-
   // 4c. Free-writing topic exhaustion (2026-10-10). A free-writing slot is
   //     only given up after the semantic duplicate judge rejected four drafts
   //     in a row, each generated with the cell's full prompt list in view —
@@ -357,13 +346,30 @@ export function decideEnqueue(
   //     duplicate drafts per slot. So for free writing ONE give-up ends
   //     refills, i.e. the cell's effective target drops to what it holds.
   //     Breadth comes from more topic umbrellas, not more questions per topic.
-  //     A curriculum edit to the point (step 4) or the staleness lapse (4b)
-  //     still re-opens it.
+  //     Only a curriculum edit to the point (step 4) re-opens it. It runs
+  //     BEFORE the staleness lapse (4b) on purpose (2026-10-11): a topic does
+  //     not regain distinct questions with time, so a lapse would only re-run
+  //     the exhausted topic once a month — 2026-10-11's first post-#776 night
+  //     spent $8.69 on 31 such cells for 63 approvals, 83% of judge verdicts
+  //     duplicates. Breadth comes from new topics, not re-asking old ones.
   if (
     cell.exerciseType === ExerciseType.FREE_WRITING &&
     recentJob.dedupGivenUpCount > 0
   ) {
     return { kind: 'skip-saturated-dedup' };
+  }
+
+  // 4b. Staleness lapse. Suppression is evidence-based, and evidence ages out:
+  //     the run that justified it may predate a prompt, model or seed-pool fix
+  //     that the point's fingerprint cannot see. Placed after the target-reached
+  //     check (step 2) so it only ever re-opens a cell that is still SHORT —
+  //     never a finished one — and before the suppression branches so it clears
+  //     low-yield and saturated-dedup alike — except free-writing topic
+  //     exhaustion (4c, above), which only a point edit re-opens.
+  const lapseDays = options.suppressionLapseDays ?? SUPPRESSION_LAPSE_DAYS;
+  const ageMs = (options.now ?? new Date()).getTime() - recentJob.finishedAt.getTime();
+  if (ageMs >= lapseDays * MS_PER_DAY) {
+    return { kind: 'enqueue', need };
   }
 
   // 5. Predictive saturation (R4.1). The cell is within a small margin of its

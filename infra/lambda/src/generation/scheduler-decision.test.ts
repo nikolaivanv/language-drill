@@ -400,11 +400,26 @@ describe('decideEnqueue — table-driven cases', () => {
       expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION)).toEqual({ kind: 'enqueue', need: 3 });
     });
 
-    it('re-opens on a point edit or after the staleness lapse', () => {
+    it('re-opens on a point edit', () => {
       const job = makeRecentJob({ approvedCount: 1, requestedCount: 4, dedupGivenUpCount: 3 });
       expect(
         decideEnqueue(FW_CELL, 2, 5, { ...job, grammarPointFingerprint: 'edited' }, CURRENT_VERSION),
       ).toEqual({ kind: 'enqueue', need: 3 });
+    });
+
+    // A topic does not regain distinct essay questions with time, so the
+    // staleness lapse must not re-run an exhausted topic every month (the
+    // 2026-10-11 night spent $8.69 on 31 such cells for 63 approvals).
+    it('stays suppressed past the staleness lapse', () => {
+      const job = makeRecentJob({ approvedCount: 1, requestedCount: 4, dedupGivenUpCount: 3 });
+      const now = new Date(job.finishedAt.getTime() + (SUPPRESSION_LAPSE_DAYS * 3) * 86_400_000);
+      expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION, false, { now })).toEqual({
+        kind: 'skip-saturated-dedup',
+      });
+    });
+
+    it('the lapse still re-opens a free-writing cell suppressed for another reason (low yield, no give-up)', () => {
+      const job = makeRecentJob({ approvedCount: 1, requestedCount: 4, dedupGivenUpCount: 0 });
       const now = new Date(job.finishedAt.getTime() + (SUPPRESSION_LAPSE_DAYS + 1) * 86_400_000);
       expect(decideEnqueue(FW_CELL, 2, 5, job, CURRENT_VERSION, false, { now })).toEqual({
         kind: 'enqueue',
