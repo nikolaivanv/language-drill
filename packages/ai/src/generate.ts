@@ -77,19 +77,23 @@ export const FAST_GENERATION_MODEL = "claude-haiku-5-5" as const;
 /** Languages, levels and exercise types `generationModelFor` routes to FAST_GENERATION_MODEL. */
 const FAST_GENERATION_LANGUAGES: ReadonlySet<string> = new Set([Language.ES, Language.DE]);
 const FAST_GENERATION_LEVELS: ReadonlySet<string> = new Set(["A1", "A2", "B1"]);
+// Narrowed 2026-10-11 after the first production night (#780): Haiku-generated
+// cloze passed the validator on 10/36 calls and vocab_recall on 20/54, with
+// real defects — wrong answer keys, off-umbrella headwords, its own topic
+// scaffolding leaked into learner-visible definitions — and some got past the
+// validator. Translation (23/36) and free writing held up. Sentence
+// construction was already weaker in the A/B, so it goes back too.
 const FAST_GENERATION_TYPES: ReadonlySet<string> = new Set([
-  ExerciseType.CLOZE,
   ExerciseType.TRANSLATION,
-  ExerciseType.SENTENCE_CONSTRUCTION,
-  ExerciseType.VOCAB_RECALL,
   ExerciseType.FREE_WRITING,
 ]);
 
 /**
  * The generator model for one production cell: FAST_GENERATION_MODEL for
- * Spanish and German at A1–B1 on the five types the A/B measured, and
- * GENERATION_MODEL everywhere else (Turkish, B2+, and untested types such as
- * dictation, conjugation and contextual paraphrase). A partial switch, so each
+ * Spanish and German translation and free writing at A1–B1, and
+ * GENERATION_MODEL everywhere else (Turkish, B2+, cloze, vocab recall, sentence
+ * construction, and untested types such as dictation, conjugation and
+ * contextual paraphrase). A partial switch, so each
  * night's per-model costs and approval can confirm it before it widens.
  */
 export function generationModelFor(cell: {

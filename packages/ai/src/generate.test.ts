@@ -1964,17 +1964,19 @@ describe("topicHint schema constraint", () => {
 
 describe("generationModelFor (partial Haiku 5.5 switch)", () => {
   it.each([
-    [Language.ES, "A1", ExerciseType.CLOZE],
-    [Language.ES, "B1", ExerciseType.SENTENCE_CONSTRUCTION],
+    [Language.ES, "A1", ExerciseType.TRANSLATION],
     [Language.DE, "A2", ExerciseType.TRANSLATION],
-    [Language.DE, "B1", ExerciseType.VOCAB_RECALL],
     [Language.ES, "B1", ExerciseType.FREE_WRITING],
+    [Language.DE, "A1", ExerciseType.FREE_WRITING],
   ])("%s %s %s → Haiku 5.5", (language, cefrLevel, exerciseType) => {
     expect(generationModelFor({ language, cefrLevel, exerciseType })).toBe(FAST_GENERATION_MODEL);
   });
 
   it.each([
     [Language.TR, "A1", ExerciseType.CLOZE, "Turkish stays on Sonnet"],
+    [Language.ES, "A1", ExerciseType.CLOZE, "cloze regressed on Haiku in production (2026-10-11)"],
+    [Language.DE, "B1", ExerciseType.VOCAB_RECALL, "vocab recall regressed on Haiku in production"],
+    [Language.ES, "B1", ExerciseType.SENTENCE_CONSTRUCTION, "sentence construction weaker in the A/B"],
     [Language.ES, "B2", ExerciseType.CLOZE, "B2+ stays on Sonnet"],
     [Language.DE, "C1", ExerciseType.TRANSLATION, "B2+ stays on Sonnet"],
     [Language.ES, "A2", ExerciseType.DICTATION, "untested type stays on Sonnet"],
