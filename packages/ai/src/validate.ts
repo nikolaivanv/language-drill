@@ -69,10 +69,12 @@ import {
  */
 export const VALIDATION_MODEL = "claude-sonnet-5-5" as const;
 
-/** Sized for `candidateFillers` (~150-250 tokens) plus the seven verdict
- *  fields; 1024 was the pre-enumeration budget and risks truncating the
- *  forced tool call mid-JSON. Mirrors evaluate.ts's bump for the same reason. */
-export const VALIDATION_MAX_TOKENS = 2048;
+/** Sized for `candidateFillers` (~150-250 tokens), the seven verdict fields
+ *  AND Sonnet 5.5's `between_tools` reasoning, which shares the budget. At 2048
+ *  one call in ~740 (2026-10-12) spent it all on text before reaching the tool
+ *  and failed its cell; output runs p50 ~900 / p95 ~1300, so 4096 is headroom,
+ *  not cost — only generated tokens are billed. */
+export const VALIDATION_MAX_TOKENS = 4096;
 
 /** Strict reviewer: zero diversity, deterministic output. */
 export const VALIDATION_TEMPERATURE = 0.0;

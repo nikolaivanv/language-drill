@@ -26,7 +26,7 @@ vi.mock('@language-drill/ai', async () => {
   };
 });
 
-import { validateDraft, ValidationParseError } from '@language-drill/ai';
+import { ContentRejectedError, NoToolCallError, validateDraft, ValidationParseError } from '@language-drill/ai';
 
 import { runValidatorPool } from './validator-pool';
 
@@ -289,6 +289,25 @@ describe('runValidatorPool', () => {
     for (const i of [0, 1, 3, 4]) {
       expect(results.get(i)).toEqual(makeResult(i));
     }
+  });
+
+  it.each([
+    ['a missing tool call (reply hit max_tokens)', () => new NoToolCallError('Validator did not return a tool use block. Stop reason: max_tokens. Content types: text', 'max_tokens')],
+    ['a refusal', () => new ContentRejectedError('Validator refused the request.', 'refusal')],
+  ])('isolates %s to its ordinal, like a parse failure (2026-10-12 failed a whole cell)', async (_label, makeErr) => {
+    const badOrdinal = 1;
+    mockValidateDraft.mockImplementation(async (_client, draft) => {
+      const ordinal = Number(draft.id.split('-')[1]);
+      if (ordinal === badOrdinal) throw makeErr();
+      await delay(5);
+      return makeResult(ordinal);
+    });
+
+    const results = await runValidatorPool({ drafts: makeDrafts(4), client: mockClient, spec, concurrency: 2 });
+
+    expect(results.size).toBe(4);
+    expect(results.get(badOrdinal)).toMatchObject({ kind: 'parse-failed' });
+    for (const i of [0, 2, 3]) expect(results.get(i)).toEqual(makeResult(i));
   });
 
   it('still rejects the pool on a non-parse (transport) error', async () => {

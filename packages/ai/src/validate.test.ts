@@ -552,8 +552,8 @@ describe("validateDraft", () => {
       expect(callArgs.thinking).toEqual({ type: "disabled" });
     });
 
-    it("budgets 2048 max_tokens so candidateFillers cannot truncate the tool call", () => {
-      expect(VALIDATION_MAX_TOKENS).toBe(2048);
+    it("budgets 4096 max_tokens so reasoning + candidateFillers cannot truncate the tool call", () => {
+      expect(VALIDATION_MAX_TOKENS).toBe(4096);
     });
 
     it("keeps VALIDATION_TEMPERATURE exported at 0.0", () => {
