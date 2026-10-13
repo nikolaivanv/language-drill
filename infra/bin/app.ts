@@ -46,6 +46,17 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-10-13): pause the nightly exercise pre-generation cron.
+  // The backlog is the hard tail: on 10-12/10-13 about 90 of the 120 enqueued
+  // cells asked for ONE draft, approval ran ~32%, and ~55 rows/night cost
+  // ~$13 ($0.23-0.25 each, double the prior night), with 598 cells already at
+  // target. Free-writing exhaustion is handled (#776/#782) and the validator
+  // max_tokens cell failure is fixed separately (#783).
+  // This drops only the exercise-refill EventBridge rule; the weekly
+  // theory-generation cron, the nightly mastery rebuild and the email cron
+  // stay on `enableScheduledJobs`, and POST /admin/generate still works.
+  // Resume by deleting this line.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   // Free-tier global brake, with the value COMMITTED rather than env-only.
