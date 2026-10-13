@@ -39,7 +39,6 @@ import {
   generateBatch,
   getCurrentLlmTraceContext,
   loadFrequency,
-  ValidationParseError,
   validateDraft,
   withLlmTrace,
   type ClaudeUsageBreakdown,
@@ -63,6 +62,7 @@ import {
   type FreeWritingDuplicateCheck,
 } from './free-writing-dedup';
 import { routeValidationResult } from './routing';
+import { isPerDraftValidatorFailure } from './validator-pool';
 import { vocabSeedMismatch } from './vocab-seed-check';
 
 const MAX_DEDUP_RETRIES = 3;
@@ -466,7 +466,7 @@ export async function validateAndInsertWithRetry(
         // A first validation that skipped Phase A (free-writing cells, see
         // run-one-cell) keeps Phase A's R8 contract: a malformed validator
         // response costs this ordinal, never the whole cell.
-        if (attempt === 0 && err instanceof ValidationParseError) {
+        if (attempt === 0 && isPerDraftValidatorFailure(err)) {
           return { ...validatorParseFailedOutcome(), extraUsage, extraCostUsd, extraProduced };
         }
         throw err;

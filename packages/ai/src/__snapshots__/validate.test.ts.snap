@@ -2,7 +2,7 @@
 
 exports[`validateDraft > request shape for claude-sonnet-5 is unchanged (model-request shaping guard) 1`] = `
 {
-  "max_tokens": 2048,
+  "max_tokens": 4096,
   "model": "claude-sonnet-5",
   "output_config": null,
   "system": [
@@ -191,7 +191,7 @@ exports[`validateDraft > request shape for claude-sonnet-5 is unchanged (model-r
 
 exports[`validateDraft > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
 {
-  "max_tokens": 2048,
+  "max_tokens": 4096,
   "model": "claude-sonnet-5-5",
   "output_config": null,
   "system": [

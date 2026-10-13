@@ -19,12 +19,28 @@
 
 import type Anthropic from '@anthropic-ai/sdk';
 import {
+  ContentRejectedError,
+  NoToolCallError,
   ValidationParseError,
   validateDraft,
   type ExerciseDraft,
   type GenerationSpec,
   type ValidateDraftResult,
 } from '@language-drill/ai';
+
+/**
+ * True for a validator call that answered but produced no usable verdict for
+ * THIS draft: an unparseable tool input, no tool call at all (e.g. the reply
+ * hit max_tokens — 2026-10-12 failed a whole cell this way), or a refusal. Each
+ * costs one ordinal, never the cell. Transport errors and aborts are not this.
+ */
+export function isPerDraftValidatorFailure(err: unknown): err is Error {
+  return (
+    err instanceof ValidationParseError ||
+    err instanceof NoToolCallError ||
+    err instanceof ContentRejectedError
+  );
+}
 
 /**
  * Sentinel stored in the result map when a single ordinal's first-validation
@@ -79,7 +95,7 @@ export async function runValidatorPool(opts: {
     } catch (err) {
       // R8.2/R8.4: a malformed validator response is isolated to this
       // ordinal; everything else (transport, abort) rejects the pool.
-      if (err instanceof ValidationParseError) {
+      if (isPerDraftValidatorFailure(err)) {
         results.set(ordinal, { kind: 'parse-failed', message: err.message });
       } else {
         throw err;
