@@ -371,8 +371,27 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * than more questions per topic. The additions favour exam text types the set
  * lacked (messages, invitations, recommendations, formal complaints and cover
  * letters) over further personal-essay themes.
+ *
+ * `2026-10-15`: verb-model gaps against WordReference's -ar/-er/-ir irregular
+ * model tables, closed for intermediate-relevant models only (rare, literary
+ * and defective ones — asir, abolir, erguir, yacer, raer, roer, tañer,
+ * degollar, mullir, pudrir, delinquir, argüir — stay out on purpose):
+ * - es-a1-present-yo-go: valgo, agradezco, ofrezco and the -go compounds
+ *   (mantengo, obtengo, propongo); seeds 12 → 18, 1sg floor and
+ *   targetOverride 12 → 18.
+ * - es-a2-present-irregular-stem-changes: +2 variants (`atypical-diphthong`
+ *   for juego/adquiero/huelo, `boot-hiatus-accent` for río/reúno/prohíbo/
+ *   aíslo); quepo, elijo/corrijo and venzo added to existing directives;
+ *   +9 conjugation seeds.
+ * - es-a2-preterite-strong-stems: andar (anduve) and a
+ *   `compound-strong-preterite` variant (mantuve, propuso, previno); +5 seeds.
+ * - es-a2-preterite-stem-spelling: eligió, corrigió, sonrió, mintió seeds.
+ * - es-b1-futuro-simple: valdr-, cabr-, habr- and compound stems.
+ * Existing variant ids are unchanged, so labelled rows stay valid. The new
+ * variants are inert in cells already at target until slots are freed
+ * (generation is also paused, #784).
  */
-export const CURRICULUM_VERSION_ES = '2026-10-10';
+export const CURRICULUM_VERSION_ES = '2026-10-15';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -976,7 +995,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Present irregular yo-forms (-go, -zco)',
     description:
-      'Verbs with an irregular first-person singular in the present: -go forms hago, pongo, salgo, tengo, vengo, digo, oigo, traigo, and -zco forms of -cer/-cir verbs (conozco, conduzco); the other persons follow the regular or stem-changing pattern (hago / haces, tengo / tienes).',
+      'Verbs with an irregular first-person singular in the present: -go forms hago, pongo, salgo, tengo, vengo, digo, oigo, traigo, valgo, kept by compounds (mantengo, obtengo, propongo), and -zco forms of -cer/-cir verbs (conozco, agradezco, conduzco); the other persons follow the regular or stem-changing pattern (hago / haces, tengo / tienes).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: [
@@ -988,6 +1007,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Regularizing the yo-form, producing "*haco", "*pono", or "*salo" instead of "hago", "pongo", and "salgo".',
       'Missing the -zco of -cer/-cir verbs, producing "*conoco" or "*conozo" instead of "conozco".',
+      'Regularizing a compound of a -go verb, producing "*mantieno" or "*propono" instead of "mantengo" and "propongo".',
       'Spreading the irregular yo-form into other persons, producing "*tú digas" or "*él pongue" instead of "tú dices" and "él pone".',
     ],
     prerequisiteKeys: ['es-a1-present-indicative-regular'],
@@ -996,18 +1016,24 @@ const esCurriculum: readonly GrammarPoint[] = [
       // yo-form; 3sg/3pl are regular (hace, conoce) and don't exercise the point,
       // so the 2026-07-09 run approved 0/13 non-1sg conjugation drafts. Contrast
       // with the other persons is carried by this point's cloze/translation cells.
-      axes: [{ name: 'person', floors: { '1sg': 12 } }],
+      axes: [{ name: 'person', floors: { '1sg': 18 } }],
     },
     // Closed target-verb set: the conjugation generator drew random verbs from the
     // frequency band and picked off-target ones (e.g. valer, or regular 3sg forms),
     // so 18/20 drafts were rejected on 2026-07-09. This curated list replaces the
     // band (see buildSeedWords). targetOverride sizes the point to the list so no
     // conjugation ordinal is left unseeded (point-wide: also caps cloze/translation).
+    //
+    // 2026-10-15: valer, agradecer, ofrecer and the -go compounds mantener,
+    // obtener, proponer added (the WordReference -er/-ir model gaps). valer was
+    // off-target in 2026-07-09 only because the description never named valgo;
+    // it does now. The 1sg floor and targetOverride grow with the list (12 → 18).
     conjugationSeedWords: [
       'tener', 'hacer', 'poner', 'salir', 'venir', 'decir',
       'traer', 'oír', 'conocer', 'caer', 'parecer', 'conducir',
+      'valer', 'agradecer', 'ofrecer', 'mantener', 'obtener', 'proponer',
     ],
-    targetOverride: 12,
+    targetOverride: 18,
     conjugationSuitable: true,
   },
   {
@@ -1646,6 +1672,13 @@ const esCurriculum: readonly GrammarPoint[] = [
     // was 0 — the pool taught the vowel alternation and none of the spelling.
     // The nosotros/vosotros exemption is a property of all seven, not a
     // construction of its own, so it stays out of the variant axis.
+    //
+    // 2026-10-15 (WordReference verb-model gaps): two variants added for boot
+    // patterns the pool never reached — the atypical diphthongs (jugar,
+    // adquirir, oler → huelo) and the hiatus accent outside -iar/-uar (reír →
+    // río, reunir → reúno, prohibir → prohíbo, aislar → aíslo). caber (quepo),
+    // elegir/corregir (elijo) and -cer/-cir after a consonant (venzo) extend
+    // existing directives; their ids are unchanged, so labelled rows stay valid.
     constructionVariants: [
       {
         id: 'stem-change-e-ie',
@@ -1665,12 +1698,12 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'irregular-yo-saber-dar',
         directive:
-          'the irregular yo-form of saber (sé) or dar (doy), contrasted with its regular other persons (Yo sé la respuesta pero él no sabe)',
+          'the irregular yo-form of saber (sé), dar (doy) or caber (quepo), contrasted with its regular other persons (Yo sé la respuesta pero él no sabe; En el coche no quepo, pero tú sí cabes)',
       },
       {
         id: 'orthographic-yo-ger-gir-guir',
         directive:
-          'an orthographic yo-form change before o: -ger/-gir → -jo (coger → cojo; dirigir → dirijo) or -guir → -go (seguir → sigo; distinguir → distingo)',
+          'an orthographic yo-form change before o: -ger/-gir → -jo (coger → cojo; dirigir → dirijo; elegir → elijo and corregir → corrijo, which also change e→i), -guir → -go (seguir → sigo; distinguir → distingo), or -cer/-cir after a consonant → -zo (vencer → venzo; convencer → convenzo; ejercer → ejerzo)',
       },
       {
         id: 'boot-iar-uar-accent',
@@ -1682,11 +1715,21 @@ const esCurriculum: readonly GrammarPoint[] = [
         directive:
           'a -uir verb inserting y inside the boot (construir → construyo, construyes, construye, construyen; incluir → incluyo)',
       },
+      {
+        id: 'atypical-diphthong',
+        directive:
+          'one of the atypical boot diphthongs: jugar u→ue (juego, juegas), adquirir i→ie (adquiero, adquieren), or oler o→ue spelled with an initial h (huelo, hueles, huele, huelen — but olemos)',
+      },
+      {
+        id: 'boot-hiatus-accent',
+        directive:
+          'a verb outside the -iar/-uar class whose stressed i/u inside the boot takes a written accent to break the diphthong: reír/sonreír (río, sonríes, ríe), reunir (reúno, reúnen), prohibir (prohíbo, prohíbe), aislar (aíslo) — the nosotros form has no accent (reunimos, prohibimos)',
+      },
     ],
     kind: 'grammar',
     name: 'Present indicative — irregular stem changes',
     description:
-      'Present-tense stem changes e→ie (pensar), o→ue (poder), and e→i (pedir) in all persons except nosotros/vosotros; the irregular yo-forms of saber (sé) and dar (doy); orthographic yo-form changes before o/a (coger → cojo, seguir → sigo); and the same boot pattern in -iar/-uar verbs that stress the í/ú (envío, actúo — but cambio) and -uir verbs that insert y (construyo).',
+      'Present boot changes (all persons but nosotros/vosotros): e→ie (pensar), o→ue (poder), e→i (pedir), and jugar/adquirir/oler (juego, adquiero, huelo); the yo-forms sé, doy, quepo; yo spelling changes before o (cojo, elijo, sigo, venzo); a written accent on a stressed í/ú (envío, actúo, río, reúno, prohíbo — but cambio); and y-insertion in -uir verbs (construyo).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -1696,6 +1739,8 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Yo sé cocinar, pero no sé bailar.',
       'Te doy mi número de teléfono.',
       'Te envío las fotos y ellos construyen la casa.',
+      'La cocina huele a pan y los niños se ríen.',
+      'Los viernes reúno a todo el equipo.',
     ],
     examplesNegative: ['*Ella piensa que nosotros piensamos lo mismo.', '*Yo sabo la respuesta.', '*Te envio las fotos.'],
     commonErrors: [
@@ -1703,6 +1748,8 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Regularizing an irregular yo-form, producing "*yo sabo" or "*yo do" instead of "sé" and "doy".',
       'Missing the orthographic g→j or gu→g change in the yo-form of -ger/-gir/-guir verbs, producing "*cogo" or "*seguo" instead of "cojo" and "sigo".',
       'Missing the stressed accent or y-insertion inside the boot of -iar/-uar/-uir verbs, producing "*envio", "*actuo", or "*construo" instead of "envío", "actúo", and "construyo".',
+      'Dropping the h of oler\'s diphthong or regularizing it, producing "*uelo" or "*olo" instead of "huelo".',
+      'Writing the hiatus without its accent, producing "*sonrio", "*reuno", or "*prohibo" instead of "sonrío", "reúno", and "prohíbo".',
     ],
     coverageSpec: {
       // 1pl DROPPED (2026-07-11b): the stem change vanishes in nosotros/vosotros
@@ -1731,6 +1778,10 @@ const esCurriculum: readonly GrammarPoint[] = [
       'pedir', 'seguir',
       // u→ue
       'jugar',
+      // 2026-10-15: atypical diphthongs, e→i + g→j, and the hiatus accent —
+      // every one changes in all four floored persons (huelo/hueles/huele/
+      // huelen, elijo/eliges/elige/eligen, río/ríes/ríe/ríen).
+      'adquirir', 'oler', 'elegir', 'corregir', 'reír', 'sonreír', 'reunir', 'prohibir', 'aislar',
     ],
     conjugationSuitable: true,
   },
@@ -1832,11 +1883,16 @@ const esCurriculum: readonly GrammarPoint[] = [
     //
     // The `person` coverageSpec below is KEPT — the stem classes are lexical and
     // orthogonal to person, so the two mechanisms do not touch.
+    //
+    // 2026-10-15 (WordReference verb-model gaps): andar (anduve) joins the
+    // u-stems, and a fourth variant covers compounds, which inherit the strong
+    // stem of their base verb (mantuve, propuso, deshizo, previno, predijo) —
+    // the pool and the drill had never named one.
     constructionVariants: [
       {
         id: 'u-stem-preterite',
         directive:
-          'the preterite of a U-stem strong verb — poder (pude), poner (puse), saber (supe), caber (cupe), estar (estuve), tener (tuve) (No pude dormir anoche; Puso la mesa sin decir nada)',
+          'the preterite of a U-stem strong verb — poder (pude), poner (puse), saber (supe), caber (cupe), andar (anduve), estar (estuve), tener (tuve) (No pude dormir anoche; Anduvimos dos horas por el bosque)',
         share: 3,
       },
       {
@@ -1851,11 +1907,17 @@ const esCurriculum: readonly GrammarPoint[] = [
           'the preterite of a J-stem strong verb — decir (dije), traer (traje), conducir (conduje), traducir (traduje); its third-person plural ends in -eron, never *-ieron (Me lo dijeron ayer; Trajeron un pastel)',
         share: 3,
       },
+      {
+        id: 'compound-strong-preterite',
+        directive:
+          'the preterite of a compound that inherits its base verb\'s strong stem — mantener (mantuve), obtener (obtuvo), proponer (propuso), componer (compusieron), deshacer (deshizo), prevenir (previno), predecir (predijeron) (La empresa obtuvo buenos resultados; Nadie previno el problema)',
+        share: 2,
+      },
     ],
     kind: 'grammar',
     name: 'Preterite — strong stems (pude, puse, dije...)',
     description:
-      'The remaining strong preterites: u-stems poder (pude), poner (puse), saber (supe), caber (cupe), i-stems querer (quise) and venir (vine), and j-stems decir (dije), traer (traje), conducir (conduje); all take unstressed -e/-o endings, and j-stems take -eron, not -ieron (dijeron, trajeron).',
+      'The remaining strong preterites: u-stems poder (pude), poner (puse), saber (supe), caber (cupe), andar (anduve), i-stems querer (quise) and venir (vine), and j-stems decir (dije), traer (traje), conducir (conduje), plus compounds that keep the stem (mantuve, propuso, previno); all take unstressed -e/-o endings, and j-stems take -eron, not -ieron (dijeron, trajeron).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -1869,6 +1931,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Regularizing the strong stem, producing "*podí", "*ponió", or "*vení" instead of "pude", "puso", and "vine".',
       'Using -ieron after a j-stem, producing "*dijieron" or "*trajieron" instead of "dijeron" and "trajeron".',
       'Stressing and accenting the 1sg/3sg endings by analogy with regular preterites, producing "*pudé" or "*vinó" instead of "pude" and "vino".',
+      'Regularizing andar or a compound of a strong verb, producing "*andé", "*mantení", or "*proponió" instead of "anduve", "mantuve", and "propuso".',
     ],
     prerequisiteKeys: ['es-a2-preterite-irregular'],
     coverageSpec: {
@@ -1882,6 +1945,8 @@ const esCurriculum: readonly GrammarPoint[] = [
     conjugationSeedWords: [
       'poder', 'poner', 'saber', 'querer', 'venir',
       'decir', 'traer', 'conducir', 'producir',
+      // 2026-10-15: andar and the strong-stem compounds.
+      'andar', 'mantener', 'obtener', 'proponer', 'prevenir',
     ],
     conjugationSuitable: true,
   },
@@ -1896,7 +1961,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Preterite — third-person vowel and y changes',
     description:
-      'Third-person preterite changes: e→i / o→u stem-vowel shift in -ir verbs (pidió/pidieron, durmió/durmieron, sintió, siguió) and y between vowels in vowel-stem -er/-ir verbs (leyó/leyeron, oyó, cayó, construyó). Only 3sg/3pl are affected; the other persons are regular.',
+      'Third-person preterite changes: e→i / o→u stem-vowel shift in -ir verbs (pidió/pidieron, durmió/durmieron, sintió, siguió, eligió, sonrió) and y between vowels in vowel-stem -er/-ir verbs (leyó/leyeron, oyó, cayó, construyó). Only 3sg/3pl are affected; the other persons are regular.',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -1920,6 +1985,11 @@ const esCurriculum: readonly GrammarPoint[] = [
     conjugationSeedWords: [
       'pedir', 'servir', 'seguir', 'repetir', 'sentir', 'preferir', 'dormir',
       'morir', 'leer', 'creer', 'oír', 'caer', 'construir', 'huir',
+      // 2026-10-15: e→i verbs from the WordReference -ir models. reír itself is
+      // left out on purpose: its 3sg is written rio since the 2010 Ortografía
+      // but rió is still everywhere, so an exact-form drill would be ambiguous.
+      // sonrió/sonrieron is unaffected (two syllables either way).
+      'elegir', 'corregir', 'sonreír', 'mentir',
     ],
     targetOverride: 16,
     conjugationSuitable: true,
@@ -4192,7 +4262,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'futuro-simple-irregular',
         directive:
-          'an irregular future stem: tendr-, saldr-, sabr-, podr-, har-, dir-, pondr-, vendr-, querr- (El lunes tendremos una reunión; ¿Qué harás el fin de semana?)',
+          'an irregular future stem: tendr-, saldr-, sabr-, podr-, har-, dir-, pondr-, vendr-, querr-, valdr-, cabr-, habr-, or a compound that keeps it — mantendr-, obtendr-, propondr-, deshar- (El lunes tendremos una reunión; ¿Cuánto valdrá el piso?; No cabremos todos en el coche)',
         share: 3,
       },
       {
@@ -4205,13 +4275,13 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Future simple',
     description:
-      'Futuro imperfecto: regular endings on the infinitive (hablaré, comerás) and the irregular stems tendr-, saldr-, sabr-, podr-, har-, dir-; absolute future statements and the future of probability (Serán las once).',
+      'Futuro imperfecto: regular endings on the infinitive (hablaré, comerás) and the irregular stems tendr-, saldr-, sabr-, podr-, har-, dir-, valdr-, cabr-, habr-, kept by compounds (mantendré, propondré); absolute future statements and the future of probability (Serán las once).',
     cefrLevel: B1,
     language: ES,
     examplesPositive: ['Mañana iré al médico a primera hora.', '¿Qué hora es? — Serán las once.'],
     examplesNegative: ['*Mañana teneré una reunión importante.'],
     commonErrors: [
-      'Regularising irregular stems ("*teneré", "*saliré" instead of "tendré", "saldré").',
+      'Regularising irregular stems ("*teneré", "*saliré", "*valeré", "*caberé" instead of "tendré", "saldré", "valdré", "cabré"), including in compounds ("*manteneré" instead of "mantendré").',
       'Reaching for ir a + infinitive in formal writing where the simple future is expected.',
       'Missing the written accent on the endings ("*hablare" instead of "hablaré").',
     ],
