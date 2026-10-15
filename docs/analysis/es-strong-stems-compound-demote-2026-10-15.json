@@ -1,0 +1,22 @@
+{
+  "purpose": "Rollback record for a pool-hygiene demote freeing slots in es-a2-preterite-strong-stems cloze and translation for the `compound-strong-preterite` variant added in #785 (prod, 2026-10-15). demote:pool writes no rollback artifact, so the prior state is recorded here.",
+  "sizing": "Both cells sat at 30 approved / target 30. The compound variant's fair share is 30 x 2/11 = ~5.5, so 6 slots per cell were freed from variants above fair share (~8.2): cloze 2 each of u/i/j (10 -> 8); translation 3 each of j/u (10 -> 7), i-stem left at 5 because it is already below share. Oldest rows first within each variant.",
+  "reason": "pool-hygiene (rows are correct; learner credit preserved, no backfill:mastery needed)",
+  "database": "prod — Neon project twilight-smoke-01114337, branch br-green-waterfall-ancrvpr5",
+  "priorState": { "review_status": "auto-approved", "demotion_reason": null },
+  "rollback": "UPDATE exercises SET review_status = 'auto-approved', demotion_reason = NULL WHERE id IN (<ids below>);",
+  "rows": [
+    { "id": "ba02a28c-c07a-5bf8-98ff-85741eb82539", "type": "cloze", "variant": "i-stem-preterite" },
+    { "id": "bb02a41f-4197-59bd-99ff-87119d9b8768", "type": "cloze", "variant": "i-stem-preterite" },
+    { "id": "608d1a7c-2d24-5866-9203-7c6a72d60783", "type": "cloze", "variant": "j-stem-preterite" },
+    { "id": "bb349f3f-93e6-508b-9ab4-a4b7d4fc975a", "type": "cloze", "variant": "j-stem-preterite" },
+    { "id": "bc34a0d2-1091-573c-97b4-9fe053dff989", "type": "cloze", "variant": "u-stem-preterite" },
+    { "id": "bd34a265-91ad-5501-98b4-a17dd2c35bb8", "type": "cloze", "variant": "u-stem-preterite" },
+    { "id": "f1f016f1-295d-5bfb-91db-f4e72df3e69e", "type": "translation", "variant": "j-stem-preterite" },
+    { "id": "eef01238-a608-52ac-8edb-f010acd748cd", "type": "translation", "variant": "j-stem-preterite" },
+    { "id": "f2f01884-a195-5b98-92db-f684a864d189", "type": "translation", "variant": "j-stem-preterite" },
+    { "id": "2051e4b4-b332-5304-9ed9-7828abb7126d", "type": "translation", "variant": "u-stem-preterite" },
+    { "id": "1e51e18e-b0f9-577a-a4d9-81d6a97dd6cb", "type": "translation", "variant": "u-stem-preterite" },
+    { "id": "1b51dcd5-3f6d-5a7b-99d9-701723eec1b6", "type": "translation", "variant": "u-stem-preterite" }
+  ]
+}
