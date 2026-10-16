@@ -270,6 +270,34 @@ export type ValidateAndInsertOpts = {
 };
 
 /**
+ * The one-draft spec a dedup retry generates from. `generateBatch` reads the
+ * per-ordinal inputs (`seedWords`, `coverageTargets`, `topicTargets`) by the
+ * index WITHIN its own batch, and a retry is a batch of one — so passing the
+ * cell spec through unchanged regenerated every retry under ORDINAL 0's seed,
+ * person target and topic, while the row was still labelled with the retried
+ * ordinal's own `seedWord`. Seen on prod 2026-10-16: the
+ * es-a2-present-irregular-stem-changes conjugation ordinals seeded `pedir`
+ * and `poder` both came back as ordinal 0's `corregir` 3pl. Each array is
+ * narrowed to this ordinal's entry so index 0 of the retry IS this ordinal.
+ */
+export function retrySpecForOrdinal(
+  spec: GenerationSpec,
+  ordinal: number,
+  retryN: number,
+): GenerationSpec {
+  const coverageTarget = spec.coverageTargets?.[ordinal];
+  const topicTarget = spec.topicTargets?.[ordinal];
+  return {
+    ...spec,
+    count: 1,
+    batchSeed: `${spec.batchSeed}::retry-${retryN}`,
+    seedWords: spec.seedWords ? [spec.seedWords[ordinal] ?? null] : undefined,
+    coverageTargets: coverageTarget !== undefined ? [coverageTarget] : undefined,
+    topicTargets: topicTarget !== undefined ? [topicTarget] : undefined,
+  };
+}
+
+/**
  * Issue a single-draft regeneration with a bumped batchSeed so the
  * deterministic UUID derivation produces a fresh id distinct from the
  * original/prior retry attempts.
@@ -283,16 +311,12 @@ export type ValidateAndInsertOpts = {
 async function runRetryGeneration(
   client: Anthropic,
   spec: GenerationSpec,
+  ordinal: number,
   retryN: number,
   signal: AbortSignal | undefined,
 ): Promise<RetryOutcome> {
   if (signal?.aborted) throw new Error('Aborted by user (SIGINT)');
-  const retrySpec: GenerationSpec = {
-    ...spec,
-    count: 1,
-    batchSeed: `${spec.batchSeed}::retry-${retryN}`,
-  };
-  const result = await generateBatch(client, retrySpec);
+  const result = await generateBatch(client, retrySpecForOrdinal(spec, ordinal, retryN));
   if (result.drafts.length === 0) {
     // Parser failure: Claude responded but the tool call did not yield a
     // valid draft (malformed `correctAnswer`, missing required field, etc.).
@@ -380,6 +404,7 @@ export async function validateAndInsertWithRetry(
     const retry = await runRetryGeneration(
       opts.client,
       await retrySpec(),
+      opts.ordinal,
       attempt + 1,
       opts.signal,
     );

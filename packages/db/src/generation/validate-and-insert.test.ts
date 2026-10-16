@@ -76,6 +76,7 @@ import {
 import {
   PARSER_FAILURE_REASON,
   VOCAB_MAX_PER_WORD,
+  retrySpecForOrdinal,
   validateAndInsertWithRetry,
 } from './validate-and-insert';
 import { checkFreeWritingDuplicate, fetchFreeWritingPromptSummaries } from './free-writing-dedup';
@@ -1270,5 +1271,74 @@ describe('validateAndInsertWithRetry — free-writing semantic dedup', () => {
       ordinal: 0, cell, args, generatedAt,
     });
     expect(mockFwCheck).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A dedup retry is a one-draft batch, and `generateBatch` reads per-ordinal
+// inputs by index within its batch — so the retry spec must carry THIS
+// ordinal's seed / coverage target / topic at index 0, not the cell's index 0
+// (prod 2026-10-16: seeds `pedir` and `poder` regenerated as ordinal 0's
+// `corregir`).
+// ---------------------------------------------------------------------------
+
+describe('retrySpecForOrdinal', () => {
+  const cellSpec: GenerationSpec = {
+    ...spec,
+    count: 3,
+    seedWords: ['corregir', null, 'pedir'],
+    coverageTargets: [{ person: '3pl' }, { person: '1sg' }, { person: '2sg' }],
+    topicTargets: ['food', 'work', 'travel'],
+  };
+
+  it("narrows every per-ordinal input to the retried ordinal's own entry", () => {
+    const retry = retrySpecForOrdinal(cellSpec, 2, 1);
+    expect(retry.count).toBe(1);
+    expect(retry.batchSeed).toBe('test-seed::retry-1');
+    expect(retry.seedWords).toEqual(['pedir']);
+    expect(retry.coverageTargets).toEqual([{ person: '2sg' }]);
+    expect(retry.topicTargets).toEqual(['travel']);
+  });
+
+  it('keeps an unseeded ordinal unseeded rather than borrowing ordinal 0', () => {
+    expect(retrySpecForOrdinal(cellSpec, 1, 1).seedWords).toEqual([null]);
+  });
+
+  it('leaves absent per-ordinal inputs absent', () => {
+    const retry = retrySpecForOrdinal(spec, 4, 2);
+    expect(retry.seedWords).toBeUndefined();
+    expect(retry.coverageTargets).toBeUndefined();
+    expect(retry.topicTargets).toBeUndefined();
+  });
+
+  it('drops a target array shorter than the ordinal instead of misindexing it', () => {
+    const retry = retrySpecForOrdinal({ ...cellSpec, coverageTargets: [{ person: '3pl' }] }, 2, 1);
+    expect(retry.coverageTargets).toBeUndefined();
+  });
+
+  it("is what validateAndInsertWithRetry hands generateBatch on a dedup retry", async () => {
+    mockValidateDraft.mockResolvedValue(PASSING_VALIDATION);
+    mockGenerateBatch.mockResolvedValue({
+      drafts: [],
+      malformedDrafts: [{ ordinal: 0, errorMessage: 'parser err' }],
+      tokenUsage: PARSER_FAIL_USAGE,
+    } satisfies GenerateBatchResult);
+
+    await validateAndInsertWithRetry({
+      db: makeDedupAlwaysCollidesDb(),
+      client: mockClient,
+      spec: cellSpec,
+      draft: makeDraft(),
+      ordinal: 2,
+      cell,
+      args,
+      generatedAt,
+    });
+
+    expect(mockGenerateBatch).toHaveBeenCalled();
+    for (const [, retrySpec] of mockGenerateBatch.mock.calls) {
+      expect((retrySpec as GenerationSpec).seedWords).toEqual(['pedir']);
+      expect((retrySpec as GenerationSpec).coverageTargets).toEqual([{ person: '2sg' }]);
+    }
   });
 });
