@@ -390,8 +390,17 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * Existing variant ids are unchanged, so labelled rows stay valid. The new
  * variants are inert in cells already at target until slots are freed
  * (generation is also paused, #784).
+ *
+ * `2026-10-16`: es-a2-preterite-strong-stems `compound-strong-preterite`
+ * directive rewritten after its first night. 7 of 8 approved rows used
+ * mantener, the first verb the directive listed (the copied-example failure),
+ * several with unnatural objects ("obtuve la receta… durante horas"), and two
+ * flagged translations admitted the imperfect. The directive now excludes
+ * mantener, lists other compounds without leading on one, and requires a
+ * natural object plus a bounded past anchor. Directive text only; the id and
+ * share are unchanged, so no relabel.
  */
-export const CURRICULUM_VERSION_ES = '2026-10-15';
+export const CURRICULUM_VERSION_ES = '2026-10-16';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1910,7 +1919,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'compound-strong-preterite',
         directive:
-          'the preterite of a compound that inherits its base verb\'s strong stem — mantener (mantuve), obtener (obtuvo), proponer (propuso), componer (compusieron), deshacer (deshizo), prevenir (previno), predecir (predijeron) (La empresa obtuvo buenos resultados; Nadie previno el problema)',
+          'the preterite of a compound that inherits its base verb\'s strong stem, chosen from compounds of poner, hacer, venir, tener or decir — e.g. proponer (propuso), suponer (supuse), deshacer (deshizo), prevenir (previno), detener (detuvieron), contener (contuvo), predecir (predijo) — but NOT mantener, which the pool already over-represents. Pick a compound whose everyday meaning fits the sentence, with an object it naturally takes, and anchor the event to a bounded past moment (ayer, el lunes pasado, en 2019, de repente) so the preterite, not the imperfect, is the only natural tense',
         share: 2,
       },
     ],
