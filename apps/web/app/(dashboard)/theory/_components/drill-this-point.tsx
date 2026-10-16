@@ -117,12 +117,28 @@ export function DrillThisPoint({ grammarPointKey, fetchFn }: DrillThisPointProps
 
       {modes.length > 0 && (
         <>
-          <div className="t-micro" style={{ color: 'var(--color-ink-mute)', marginTop: 16, marginBottom: 8 }}>
+          <div className="t-micro" style={{ color: 'var(--color-ink-mute)', marginTop: 20, marginBottom: 10 }}>
             or pick one mode
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+          {/* Equal-width card buttons spanning the row, so the single-mode
+              drills read as real launch targets rather than small tags — still
+              a step below the ink-filled mixed-drill CTA above. */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: 10,
+              marginBottom: 10,
+            }}
+          >
             {modes.map((type) => (
-              <Button key={type} href={chipHref(type, grammarPointKey)} variant="ghost" size="sm">
+              <Button
+                key={type}
+                href={chipHref(type, grammarPointKey)}
+                variant="chip"
+                size="lg"
+                className="w-full shadow-1 hover:shadow-2"
+              >
                 {typeLabel(type)}
               </Button>
             ))}
