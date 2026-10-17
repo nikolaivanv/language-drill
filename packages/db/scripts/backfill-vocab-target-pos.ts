@@ -14,7 +14,7 @@
  * --out-dir <path> sets the artifact directory (default ./backfill-runs).
  * Required env: DATABASE_URL; ANTHROPIC_API_KEY unless --no-llm.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
@@ -84,6 +84,13 @@ export function posFromUd(
   if (tokens.length > 1 || !posAll || posAll.length === 0) return null;
   const classes = new Set(posAll.map((t) => UD_TO_POS[t]).filter((p): p is VocabPos => p !== undefined));
   return classes.size === 1 ? [...classes][0] : null;
+}
+
+/** Write via a temp file + rename so a kill mid-write never leaves a truncated artifact. */
+export function writeArtifactAtomic(file: string, data: unknown): void {
+  const tmp = `${file}.tmp`;
+  writeFileSync(tmp, JSON.stringify(data, null, 2));
+  renameSync(tmp, file);
 }
 
 export interface PosArtifact {
@@ -294,14 +301,13 @@ async function main(): Promise<void> {
   mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `vocab-target-pos-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
   const save = (writtenIds: string[]) =>
-    writeFileSync(
-      file,
-      JSON.stringify(
-        { applied: args.apply, written: writtenIds.length, writtenIds, planned, unresolved },
-        null,
-        2,
-      ),
-    );
+    writeArtifactAtomic(file, {
+      applied: args.apply,
+      written: writtenIds.length,
+      writtenIds,
+      planned,
+      unresolved,
+    });
   save([]);
   let written = 0;
   if (args.apply) {

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { acceptLlmPos, parseArgs, posFromUd, revertTargets } from './backfill-vocab-target-pos';
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import {
+  acceptLlmPos,
+  parseArgs,
+  posFromUd,
+  revertTargets,
+  writeArtifactAtomic,
+} from './backfill-vocab-target-pos';
 
 describe('posFromUd', () => {
   it('treats an ES/DE article display form as a noun regardless of corpus tags', () => {
@@ -63,5 +72,17 @@ describe('acceptLlmPos', () => {
     expect(acceptLlmPos('acordarse de', 'acordarse de', 'verb')).toBe('verb');
     expect(acceptLlmPos('rápido', 'rápido', 'adjective')).toBe('adjective');
     expect(acceptLlmPos('rápido', 'rápido', null)).toBeNull();
+  });
+});
+
+describe('writeArtifactAtomic', () => {
+  it('leaves a parseable file and no .tmp behind, including on overwrite', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'pos-artifact-'));
+    const file = path.join(dir, 'a.json');
+    writeArtifactAtomic(file, { writtenIds: [] });
+    writeArtifactAtomic(file, { writtenIds: ['x'] });
+    expect(JSON.parse(readFileSync(file, 'utf8'))).toEqual({ writtenIds: ['x'] });
+    expect(existsSync(`${file}.tmp`)).toBe(false);
+    expect(readdirSync(dir)).toEqual(['a.json']);
   });
 });
