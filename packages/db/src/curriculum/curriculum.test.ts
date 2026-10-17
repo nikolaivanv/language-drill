@@ -149,6 +149,46 @@ describe('curriculum clozeUnsuitable flag', () => {
   });
 });
 
+describe('curriculum vocabGroup', () => {
+  const vocabEntry = (vocabGroup: unknown, kind: 'vocab' | 'grammar' = 'vocab'): GrammarPoint =>
+    ({
+      key: 'tr-a2-synthetic-vg',
+      kind,
+      name: 'Synthetic vocab group',
+      description: 'Synthetic vocab entry for vocabGroup invariant testing.',
+      cefrLevel: 'A2',
+      language: Language.TR,
+      examplesPositive: ['a', 'b'],
+      examplesNegative: ['*c'],
+      commonErrors: ['e'],
+      vocabGroup,
+    }) as GrammarPoint;
+
+  it('accepts a well-formed group', () => {
+    expect(() =>
+      assertCurriculumInvariants([...ALL_CURRICULA, vocabEntry({ label: 'verbs', pos: ['verb'] })]),
+    ).not.toThrow();
+  });
+
+  it('throws when a non-vocab entry declares vocabGroup', () => {
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: ['verb'] }, 'grammar')])).toThrow(
+      "'tr-a2-synthetic-vg' has vocabGroup but is not kind 'vocab'",
+    );
+  });
+
+  it('throws on an unknown label, an empty class list and an unknown class', () => {
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'nouns', pos: ['noun'] })])).toThrow(
+      "vocabGroup.label 'nouns' is not one of",
+    );
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: [] })])).toThrow(
+      'vocabGroup.pos must be non-empty',
+    );
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: ['adj'] })])).toThrow(
+      "vocabGroup.pos has unknown class 'adj'",
+    );
+  });
+});
+
 describe('curriculum sentenceConstructionSuitable flag', () => {
   it('throws when a vocab umbrella is flagged sentenceConstructionSuitable', () => {
     expect(() =>

@@ -2,6 +2,8 @@ import {
   COVERAGE_AXIS_VALUES,
   Language,
   MIN_PER_VARIANT,
+  VOCAB_GROUP_LABELS,
+  VOCAB_POS,
   variantSeededTypeSet,
   type LearningLanguage,
 } from '@language-drill/shared';
@@ -447,6 +449,29 @@ export function assertCurriculumInvariants(
               `Curriculum invariant violated: '${entry.key}' coverageSpec axis '${axis.name}' floor for '${value}' must be a positive integer`,
             );
           }
+        }
+      }
+    }
+
+    // 9m. vocabGroup (vocab expansion, 2026-10-17): word-class groups are vocab
+    //     umbrellas only, with a known label and a non-empty, known class list.
+    if (entry.vocabGroup) {
+      if (entry.kind !== 'vocab') {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' has vocabGroup but is not kind 'vocab'`,
+        );
+      }
+      if (!(VOCAB_GROUP_LABELS as readonly string[]).includes(entry.vocabGroup.label)) {
+        throw new Error(
+          `Curriculum invariant violated: '${entry.key}' vocabGroup.label '${entry.vocabGroup.label}' is not one of ${VOCAB_GROUP_LABELS.join(', ')}`,
+        );
+      }
+      if (entry.vocabGroup.pos.length === 0) {
+        throw new Error(`Curriculum invariant violated: '${entry.key}' vocabGroup.pos must be non-empty`);
+      }
+      for (const p of entry.vocabGroup.pos) {
+        if (!(VOCAB_POS as readonly string[]).includes(p)) {
+          throw new Error(`Curriculum invariant violated: '${entry.key}' vocabGroup.pos has unknown class '${p}'`);
         }
       }
     }
