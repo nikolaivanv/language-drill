@@ -16,7 +16,9 @@
 // class itself — any level-appropriate word of that class qualifies", which
 // licensed off-topic words for narrow groups ("Verbs with prepositions",
 // "Case-governed verbs"). It now requires the declared class AND a fit with
-// the umbrella description.
+// the umbrella description. The avoid list now tags each word with its class
+// ("yemek (noun)"), so a homograph of another class (the verb "yemek") is no
+// longer blocked.
 export const VOCAB_TARGET_GENERATION_PROMPT_VERSION =
   'vocab-target-generate@2026-10-18';
 
@@ -40,14 +42,26 @@ export type VocabTargetRequest =
   | { kind: 'only'; verb: number; adjectiveOrAdverb: number }
   | { kind: 'group'; pos: readonly string[] };
 
+/**
+ * An already-listed word. With a `pos` it blocks only that class, so a
+ * homograph of another class (the verb "yemek" beside the noun) stays open;
+ * a bare string or a null `pos` blocks the lemma in every class.
+ */
+export type VocabAvoidWord = string | { lemma: string; pos: string | null };
+
 export type VocabTargetUserPromptInput = {
   umbrellaName: string;
   umbrellaDescription: string;
   wordCount: number;
   freqAnchorWords: readonly string[];
-  avoidWords: readonly string[];
+  avoidWords: readonly VocabAvoidWord[];
   request: VocabTargetRequest;
 };
+
+function formatAvoidWord(w: VocabAvoidWord): string {
+  if (typeof w === 'string') return w;
+  return w.pos ? `${w.lemma} (${w.pos})` : w.lemma;
+}
 
 function requestLine(request: VocabTargetRequest): string {
   switch (request.kind) {
@@ -71,9 +85,13 @@ export function buildVocabTargetUserPrompt(
     input.freqAnchorWords.length > 0
       ? `High-frequency candidate lemmas from our corpus (use as inspiration, not a hard constraint): ${input.freqAnchorWords.join(', ')}.`
       : '';
+  const classTagged = input.avoidWords.some((w) => typeof w !== 'string' && w.pos);
   const avoid =
     input.avoidWords.length > 0
-      ? `Do NOT propose any of these already-listed words: ${input.avoidWords.join(', ')}.`
+      ? `Do NOT propose any of these already-listed words: ${input.avoidWords.map(formatAvoidWord).join(', ')}.` +
+        (classTagged
+          ? ' A class in parentheses blocks only that class: the same lemma as a different class (e.g. the verb of a listed noun) is allowed; an untagged word is blocked in every class.'
+          : '')
       : '';
   return [
     `Topic: ${input.umbrellaName}`,

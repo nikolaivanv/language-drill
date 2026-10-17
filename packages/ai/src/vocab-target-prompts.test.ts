@@ -76,6 +76,22 @@ describe('vocab-target prompt — word classes', () => {
     expect(p).toContain('Every word MUST be one of: adverb, phrase');
   });
 
+  it('tags class-scoped avoid words and explains that homographs of another class are allowed', () => {
+    const p = buildVocabTargetUserPrompt({
+      ...base,
+      avoidWords: [{ lemma: 'yemek', pos: 'noun' }, { lemma: 'su', pos: null }, 'ekmek'],
+      request: { kind: 'themed' },
+    });
+    expect(p).toContain('already-listed words: yemek (noun), su, ekmek.');
+    expect(p).toContain('the same lemma as a different class');
+  });
+
+  it('keeps the plain avoid line when no word carries a class', () => {
+    const p = buildVocabTargetUserPrompt({ ...base, avoidWords: ['leche', { lemma: 'pan', pos: null }], request: { kind: 'themed' } });
+    expect(p).toContain('already-listed words: leche, pan.');
+    expect(p).not.toContain('different class');
+  });
+
   it('holds a word-class group to its topic description, not just the class', () => {
     const p = buildVocabTargetUserPrompt({
       ...base,

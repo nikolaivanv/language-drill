@@ -108,12 +108,81 @@ describe('runOneUmbrella', () => {
       client: client as never,
       umbrella: nounGroup,
       wordCount: 3,
-      avoidWords: ['LECHE'],
+      avoidWords: [{ lemma: 'LECHE', pos: null }],
     });
 
     expect(out.rawCount).toBe(3);
     expect(out.keptCount).toBe(1);
     expect(out.rows.map((r) => r.lemma)).toEqual(['pan']);
+  });
+
+  describe('homographs across word classes', () => {
+    const trUmbrella = {
+      ...umbrella,
+      key: 'tr-a1-vocab-everyday-verbs',
+      language: 'TR',
+      vocabGroup: { label: 'verbs', pos: ['verb', 'noun'] },
+    } as unknown as GrammarPoint;
+    const yemekVerb = { displayForm: 'yemek', lemma: 'yemek', gloss: 'to eat', exampleSentence: 'Yemek istiyorum.', pos: 'verb' };
+    const yemekNoun = { displayForm: 'yemek', lemma: 'yemek', gloss: 'food', exampleSentence: 'Bu yemek güzel.', pos: 'noun' };
+
+    it('a curated noun in another umbrella does not block a proposed verb homograph', async () => {
+      const client = mockClient([yemekVerb]);
+      const out = await runOneUmbrella({
+        db: mockDb({}) as never,
+        client: client as never,
+        umbrella: trUmbrella,
+        wordCount: 1,
+        avoidWords: [{ lemma: 'yemek', pos: 'noun', umbrellaKey: 'tr-a1-vocab-food-drink' }],
+      });
+      expect(out.rows.map((r) => [r.lemma, r.pos])).toEqual([['yemek', 'verb']]);
+      const user = client.messages.create.mock.calls[0][0].messages[0].content as string;
+      expect(user).toContain('yemek (noun)');
+    });
+
+    it('a curated noun still blocks the same noun', async () => {
+      const out = await runOneUmbrella({
+        db: mockDb({}) as never,
+        client: mockClient([yemekNoun]) as never,
+        umbrella: trUmbrella,
+        wordCount: 1,
+        avoidWords: [{ lemma: 'Yemek', pos: 'noun', umbrellaKey: 'tr-a1-vocab-food-drink' }],
+      });
+      expect(out.rows).toEqual([]);
+    });
+
+    it('an untagged (null-pos) row blocks every class', async () => {
+      const out = await runOneUmbrella({
+        db: mockDb({}) as never,
+        client: mockClient([yemekVerb]) as never,
+        umbrella: trUmbrella,
+        wordCount: 1,
+        avoidWords: [{ lemma: 'yemek', pos: null, umbrellaKey: 'tr-a1-vocab-food-drink' }],
+      });
+      expect(out.rows).toEqual([]);
+    });
+
+    it('an existing row of the same umbrella blocks a homograph (the unique index is per umbrella + lemma)', async () => {
+      const out = await runOneUmbrella({
+        db: mockDb({}) as never,
+        client: mockClient([yemekVerb]) as never,
+        umbrella: trUmbrella,
+        wordCount: 1,
+        avoidWords: [{ lemma: 'yemek', pos: 'noun', umbrellaKey: 'tr-a1-vocab-everyday-verbs' }],
+      });
+      expect(out.rows).toEqual([]);
+    });
+
+    it('keeps the first of a same-umbrella noun/verb homograph pair and drops the second', async () => {
+      const out = await runOneUmbrella({
+        db: mockDb({}) as never,
+        client: mockClient([yemekNoun, yemekVerb]) as never,
+        umbrella: trUmbrella,
+        wordCount: 2,
+        avoidWords: [],
+      });
+      expect(out.rows.map((r) => [r.lemma, r.pos])).toEqual([['yemek', 'noun']]);
+    });
   });
 
   it('parses words out of prose wrapped around the JSON payload', async () => {
