@@ -8,7 +8,7 @@ import {
   loadLanguageLemmas,
   parseFillMix,
   parseWordCount,
-  preflightFillMix,
+  preflightPosTagged,
   selectFillMixUmbrellas,
   parseLanguage,
   parseLevel,
@@ -171,6 +171,13 @@ describe('fill-mix selection and preflight', () => {
     let call = 0;
     const db = { select: () => ({ from: () => ({ where: () => Promise.resolve(results[call++]) }) }) };
     const us = [{ key: 'a' }, { key: 'b' }] as never[];
-    await expect(preflightFillMix(db as never, 'ES', us)).rejects.toThrow('b has 2 rows without pos');
+    await expect(preflightPosTagged(db as never, 'ES', us)).rejects.toThrow('b has 2 rows without pos');
+  });
+  it('skips word-class groups in the preflight (they are restricted, not mixed)', async () => {
+    const select = vi.fn();
+    const db = { select };
+    const out = await preflightPosTagged(db as never, 'ES', [group]);
+    expect(out.size).toBe(0);
+    expect(select).not.toHaveBeenCalled();
   });
 });

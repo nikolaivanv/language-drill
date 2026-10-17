@@ -120,17 +120,21 @@ export function selectFillMixUmbrellas(
 }
 
 /**
- * Check every selected umbrella is fully tagged BEFORE any authoring call, so a
+ * Check every selected themed umbrella is fully tagged BEFORE any authoring call
+ * (fill-mix or not — untagged legacy rows would otherwise be ignored and the mix
+ * measured as if the umbrella were empty), so a
  * refusal on a later umbrella cannot follow spend/inserts on earlier ones.
  * Returns each umbrella's class counts.
  */
-export async function preflightFillMix(
+export async function preflightPosTagged(
   db: Db,
   language: LearningLanguage,
   umbrellas: readonly GrammarPoint[],
 ): Promise<Map<string, PosCounts>> {
   const out = new Map<string, PosCounts>();
   for (const u of umbrellas) {
+    // Word-class groups are restricted, not mixed, so they need no tagged baseline.
+    if (u.vocabGroup) continue;
     const { counts, untagged } = await loadUmbrellaPosCounts(db, language, u.key);
     assertFillMixReady(u.key, untagged);
     out.set(u.key, counts);
@@ -249,7 +253,7 @@ async function main(): Promise<void> {
   );
   // --fill-mix tops up themed topics only; word-class groups are skipped.
   const umbrellas = fillMix ? selectFillMixUmbrellas(resolved, umbrellaKey) : resolved;
-  const preflight = fillMix ? await preflightFillMix(db, language, umbrellas) : null;
+  const preflight = await preflightPosTagged(db, language, umbrellas);
 
   process.stdout.write(
     `Authoring ${umbrellas.length} ${language} ${level} vocab umbrella(s)` +

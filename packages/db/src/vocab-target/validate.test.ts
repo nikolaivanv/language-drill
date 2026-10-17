@@ -44,6 +44,41 @@ describe('validateProposedWord', () => {
     ).toBeNull();
   });
 
+  it.each([
+    ['iyi ki', 'Hava güzel, iyi ki geldin.'],
+    ['por eso', 'Llegué tarde, por eso no comí.'],
+    ['her gün', 'Her gün okuyorum.'],
+    ['ab und zu', 'Ab und zu gehe ich ins Kino.'],
+    ['o sea', 'No vino, o sea, se quedó en casa.'],
+  ])('keeps the all-short-token phrase %s when the example contains it', (lemma, exampleSentence) => {
+    expect(
+      validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    ['iyi ki', 'Hava güzel, geldin.'],
+    ['por eso', 'Llegué tarde, no comí por la noche.'],
+    ['ab und zu', 'Ich gehe ins Kino und zu Hause.'],
+    ['o sea', 'No vino, se quedó en casa.'],
+  ])('drops the all-short-token phrase %s when the example lacks it', (lemma, exampleSentence) => {
+    expect(
+      validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),
+    ).toBeNull();
+  });
+
+  it('matches a Turkish dotted capital İ against its lower-case lemma', () => {
+    expect(
+      validateProposedWord({
+        displayForm: 'iyi',
+        lemma: 'iyi',
+        gloss: 'good',
+        exampleSentence: 'İyi bir gün.',
+        pos: 'adjective',
+      }),
+    ).not.toBeNull();
+  });
+
   it('rejects missing/empty fields and non-objects', () => {
     expect(validateProposedWord({ lemma: 'x' })).toBeNull();
     expect(validateProposedWord(null)).toBeNull();
