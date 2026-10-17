@@ -1,8 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { CefrLevel, Language } from '@language-drill/shared';
 import { ALL_CURRICULA } from '../src/curriculum';
 import {
+  assertFillMixReady,
   filterUmbrellaByKey,
+  formatUmbrellaLog,
+  loadLanguageLemmas,
+  parseFillMix,
+  parseWordCount,
   parseLanguage,
   parseLevel,
   parseUmbrella,
@@ -89,5 +94,62 @@ describe('parseLevel', () => {
   });
   it('rejects an unknown level', () => {
     expect(() => parseLevel(['--level', 'Z9'])).toThrow();
+  });
+});
+
+describe('--fill-mix', () => {
+  it('parses the flag and switches the default word count', () => {
+    expect(parseFillMix(['--fill-mix'])).toBe(true);
+    expect(parseFillMix([])).toBe(false);
+    expect(parseWordCount([], true)).toBe(12);
+    expect(parseWordCount([], false)).toBe(30);
+    expect(parseWordCount(['--word-count', '8'], true)).toBe(8);
+  });
+
+  it('refuses an umbrella with untagged rows', () => {
+    expect(() => assertFillMixReady('es-a1-vocab-food-drink', 3)).toThrow(
+      'es-a1-vocab-food-drink has 3 rows without pos — run backfill:vocab-target-pos first',
+    );
+    expect(() => assertFillMixReady('es-a1-vocab-food-drink', 0)).not.toThrow();
+  });
+});
+
+describe('loadLanguageLemmas', () => {
+  it('reads every umbrella of the language, so a word curated elsewhere is avoided', async () => {
+    const where = vi.fn().mockResolvedValue([{ lemma: 'cena' }, { lemma: 'comer' }]);
+    const db = { select: () => ({ from: () => ({ where }) }) };
+    const out = await loadLanguageLemmas(db as never, 'ES');
+    expect(out).toEqual(['cena', 'comer']);
+    expect(where).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('formatUmbrellaLog', () => {
+  const base = {
+    umbrellaKey: 'u',
+    fillMix: false,
+    requestedNothing: false,
+    rawCount: 10,
+    keptCount: 8,
+    keptRows: 8,
+    inserted: 8,
+    followUp: false,
+    remainingShortfall: { verb: 0, adjectiveOrAdverb: 0 },
+  };
+  it('prints a plain success line', () => {
+    expect(formatUmbrellaLog(base)).toBe('[u] proposed 10, kept 8, inserted 8\n');
+  });
+  it('flags a remaining shortfall and follow-up', () => {
+    const line = formatUmbrellaLog({ ...base, followUp: true, remainingShortfall: { verb: 2, adjectiveOrAdverb: 1 } });
+    expect(line).toContain('1 follow-up');
+    expect(line).toContain('STILL SHORT verbs 2 / adj+adv 1');
+  });
+  it('marks a run that kept nothing', () => {
+    expect(formatUmbrellaLog({ ...base, keptCount: 0, keptRows: 0, inserted: 0 })).toContain('NO WORDS KEPT');
+  });
+  it('says already balanced when fill-mix requested nothing', () => {
+    expect(
+      formatUmbrellaLog({ ...base, fillMix: true, requestedNothing: true, rawCount: 0, keptCount: 0, keptRows: 0, inserted: 0 }),
+    ).toBe('[u] already balanced\n');
   });
 });

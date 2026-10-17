@@ -20,13 +20,14 @@ describe('formatFlaggedRow', () => {
       umbrellaKey: 'es-a1-vocab-food-drink',
       displayForm: 'la manzana',
       lemma: 'manzana',
+      pos: 'noun',
       gloss: 'apple',
       tier: 'core',
       freqRank: 800,
       exampleSentence: 'Como una manzana.',
     });
     expect(line).toContain('es-a1-vocab-food-drink');
-    expect(line).toContain('la manzana');
+    expect(line).toContain('la manzana {noun} (manzana)');
     expect(line).toContain('manzana');
     expect(line).toContain('apple');
     expect(line).toContain('core');
@@ -39,11 +40,13 @@ describe('formatFlaggedRow', () => {
       umbrellaKey: 'es-a1-vocab-food-drink',
       displayForm: 'el zumo',
       lemma: 'zumo',
+      pos: null,
       gloss: 'juice',
       tier: 'extended',
       freqRank: null,
       exampleSentence: 'Bebo zumo.',
     });
     expect(line).toContain('n/a');
+    expect(line).toContain('el zumo {?}');
   });
 });
