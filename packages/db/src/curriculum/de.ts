@@ -349,7 +349,10 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // than more questions per topic. The additions favour exam text types the set
 // lacked (messages, invitations, recommendations, formal complaints and cover
 // letters) over further personal-essay themes.
-export const CURRICULUM_VERSION_DE = '2026-10-10';
+//
+// `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2 word-class
+// groups per level; opens 20 new vocab_recall cells.
+export const CURRICULUM_VERSION_DE = '2026-10-18';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4632,6 +4635,301 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Mismatching article gender/case on culture nouns ("*der Ausstellung" as a nominative subject instead of "die Ausstellung").',
       'Confusing "die Kritik" (criticism/review) with "die Kunst" (art, the general field).',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // Vocab expansion (2026-10-17): +3 themed topics and +2 word-class groups per
+  // level. Themed topics author under the word-class mix (≤60% nouns); groups
+  // carry `vocabGroup` and author only their declared classes. coverageSpec:
+  // none — the curated target list fixes the class mix, so a wordClass floor on
+  // the exercise pool would only duplicate it. No theory-categories entry.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'de-a1-vocab-free-time',
+    kind: 'vocab',
+    name: 'Free time and hobbies (A1)',
+    description: 'Core A1 vocabulary for hobbies, sports, and free-time activities, including the verbs used to talk about them (spielen, schwimmen, tanzen).',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['das Hobby', 'schwimmen'],
+    examplesNegative: ['*der Hobby'],
+    commonErrors: [
+      'Mismatching article gender on loanwords ("*der Hobby" for "das Hobby").',
+      'Using "spielen" for every activity — swimming, dancing and cycling take their own verbs ("schwimmen", "tanzen", "Rad fahren").',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-time-calendar',
+    kind: 'vocab',
+    name: 'Time and calendar (A1)',
+    description: 'Core A1 vocabulary for days, months, seasons, parts of the day, and telling the time.',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['der Montag', 'am Morgen'],
+    examplesNegative: ['*die Montag'],
+    commonErrors: [
+      'Using "in" with days ("*in Montag") instead of "am" ("am Montag").',
+      'Forgetting that days, months and seasons are masculine ("der Montag", "der Mai", "der Winter").',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-greetings-phrases',
+    kind: 'vocab',
+    name: 'Greetings and everyday phrases (A1)',
+    description: 'Core A1 fixed expressions for greeting, thanking, apologizing, and polite requests (guten Morgen, bitte, danke schön, Entschuldigung).',
+    cefrLevel: A1,
+    language: DE,
+    examplesPositive: ['guten Morgen', 'Entschuldigung'],
+    examplesNegative: ['*gute Morgen'],
+    commonErrors: [
+      'Dropping the accusative ending in greetings ("*gute Morgen" for "guten Morgen").',
+      'Confusing "Entschuldigung" (excuse me / sorry) with "Es tut mir leid" (I am sorry, expressing regret).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-everyday-verbs',
+    kind: 'vocab',
+    name: 'Everyday verbs (A1)',
+    description: 'Core A1 verbs for daily actions — eating, sleeping, working, buying, living, speaking — in the infinitive, including common separable verbs (aufstehen, einkaufen).',
+    cefrLevel: A1,
+    language: DE,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['essen', 'aufstehen'],
+    examplesNegative: ['*Ich aufstehe um sieben'],
+    commonErrors: [
+      'Not separating the prefix in a main clause ("*Ich aufstehe um sieben" for "Ich stehe um sieben auf").',
+      'Confusing "kennen" (know a person or place) with "wissen" (know a fact).',
+    ],
+  },
+  {
+    key: 'de-a1-vocab-describing-words',
+    kind: 'vocab',
+    name: 'Describing words (A1)',
+    description: 'Core A1 adjectives for describing people, things, and places — size, colour, age, character, price — in the uninflected dictionary form.',
+    cefrLevel: A1,
+    language: DE,
+    vocabGroup: { label: 'describing', pos: ['adjective'] },
+    examplesPositive: ['groß', 'billig'],
+    examplesNegative: ['*ein großer Haus'],
+    commonErrors: [
+      'Wrong adjective ending after an article ("*ein großer Haus" for "ein großes Haus").',
+      'Confusing "alt" (old) with the comparative "älter" (older).',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-technology-communication',
+    kind: 'vocab',
+    name: 'Technology and communication (A2)',
+    description: 'A2 vocabulary for phones, computers, the internet, messages, and the verbs used with them (schicken, herunterladen, anrufen).',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['das Handy', 'anrufen'],
+    examplesNegative: ['*Ich rufe dir an'],
+    commonErrors: [
+      'Using a dative object with "anrufen" ("*Ich rufe dir an") — it takes the accusative ("Ich rufe dich an").',
+      'Mismatching gender on loanwords ("*der Handy").',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-time-daily-routine',
+    kind: 'vocab',
+    name: 'Time and daily routine (A2)',
+    description: 'A2 vocabulary for daily routines, schedules, and household tasks, including separable and reflexive verbs (sich anziehen, aufräumen, der Feierabend).',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['sich anziehen', 'der Feierabend'],
+    examplesNegative: ['*Ich aufräume mein Zimmer'],
+    commonErrors: [
+      'Dropping the reflexive pronoun ("*Ich ziehe an" for "Ich ziehe mich an").',
+      'Leaving the separable prefix attached in a main clause ("*Ich aufräume mein Zimmer").',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-cooking-restaurants',
+    kind: 'vocab',
+    name: 'Cooking and restaurants (A2)',
+    description: 'A2 vocabulary for cooking methods, kitchen tools, ordering in a restaurant, and describing taste (braten, kochen, die Rechnung, scharf).',
+    cefrLevel: A2,
+    language: DE,
+    examplesPositive: ['braten', 'die Rechnung'],
+    examplesNegative: ['*der Rechnung'],
+    commonErrors: [
+      'Confusing "kochen" (cook, boil) with "backen" (bake).',
+      'Confusing the noun "das Essen" (food, meal) with the verb "essen" (to eat) — only the noun is capitalized.',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-movement-change-verbs',
+    kind: 'vocab',
+    name: 'Verbs of movement and change (A2)',
+    description: 'A2 verbs for moving and changing state — going, arriving, leaving, returning, becoming — in the infinitive (ankommen, zurückkommen, werden, sich verändern).',
+    cefrLevel: A2,
+    language: DE,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['ankommen', 'sich verändern'],
+    examplesNegative: ['*Ich habe angekommen'],
+    commonErrors: [
+      'Using "haben" instead of "sein" in the perfect of movement verbs ("*Ich habe angekommen").',
+      'Confusing "bringen" (bring, take) with "holen" (fetch).',
+    ],
+  },
+  {
+    key: 'de-a2-vocab-time-frequency-adverbs',
+    kind: 'vocab',
+    name: 'Time and frequency words (A2)',
+    description: 'A2 adverbs and short fixed phrases for time and frequency — schon, noch, immer, oft, ab und zu, nie.',
+    cefrLevel: A2,
+    language: DE,
+    vocabGroup: { label: 'adverbs', pos: ['adverb', 'phrase'] },
+    examplesPositive: ['noch nicht', 'ab und zu'],
+    examplesNegative: ['*Ich oft gehe ins Kino'],
+    commonErrors: [
+      'Confusing "schon" (already) with "noch" (still), and "noch nicht" (not yet) with "nicht mehr" (no longer).',
+      'Placing the adverb before the verb in a main clause ("*Ich oft gehe ins Kino").',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-travel-tourism',
+    kind: 'vocab',
+    name: 'Travel and tourism (B1)',
+    description: 'B1 vocabulary for planning and booking trips, accommodation, transport problems, and travel experiences (buchen, die Unterkunft, die Verspätung).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['die Unterkunft', 'buchen'],
+    examplesNegative: ['*der Unterkunft'],
+    commonErrors: [
+      'Confusing "verpassen" (miss a train) with "vermissen" (miss a person).',
+      'Confusing "die Reise" (a trip) with "das Reisen" (travelling, the activity).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-money-consumers',
+    kind: 'vocab',
+    name: 'Money and consumers (B1)',
+    description: 'B1 vocabulary for banking, paying, saving, prices, complaints, and consumer rights (sparen, überweisen, die Rückerstattung, sich beschweren).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['sparen', 'sich beschweren'],
+    examplesNegative: ['*sich beschweren an (for "complain about": sich beschweren über)'],
+    commonErrors: [
+      'Using "bekommen" as "become" — it means "get"; "become" is "werden".',
+      'Confusing "das Konto" (account) with "die Rechnung" (bill).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-health-lifestyle',
+    kind: 'vocab',
+    name: 'Health and lifestyle (B1)',
+    description: 'B1 vocabulary for healthy habits, diet, exercise, stress, and sleep, including verbs and adjectives (abnehmen, sich ernähren, gesund, der Stress).',
+    cefrLevel: B1,
+    language: DE,
+    examplesPositive: ['abnehmen', 'sich ernähren'],
+    examplesNegative: ['*Ich ernähre gesund (missing the reflexive: Ich ernähre mich gesund)'],
+    commonErrors: [
+      'Dropping the reflexive pronoun on "sich ernähren" and "sich bewegen".',
+      'Confusing "abnehmen" (lose weight) with "zunehmen" (gain weight).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-prepositional-verbs',
+    kind: 'vocab',
+    name: 'Verbs with prepositions (B1)',
+    description: 'B1 verbs with a fixed preposition, given as the verb plus its preposition (sich freuen auf, warten auf, denken an, sich interessieren für, teilnehmen an).',
+    cefrLevel: B1,
+    language: DE,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['sich freuen auf', 'warten auf'],
+    examplesNegative: ['*warten für'],
+    commonErrors: [
+      'Calquing English prepositions ("*warten für", "*denken über" for "denken an").',
+      'Confusing "sich freuen auf" (look forward to) with "sich freuen über" (be pleased about).',
+    ],
+  },
+  {
+    key: 'de-b1-vocab-connectors',
+    kind: 'vocab',
+    name: 'Connectors and discourse markers (B1)',
+    description: 'B1 connectors and discourse markers for linking ideas — contrast, cause, consequence, addition (trotzdem, deshalb, außerdem, obwohl, das heißt).',
+    cefrLevel: B1,
+    language: DE,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['trotzdem', 'deshalb'],
+    examplesNegative: ['*Trotzdem ich bin müde'],
+    commonErrors: [
+      'Wrong word order after an adverbial connector — the verb comes second ("Trotzdem bin ich müde").',
+      'Confusing "obwohl" (subordinating, verb-final) with "trotzdem" (adverb, verb-second).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-law-justice',
+    kind: 'vocab',
+    name: 'Law and justice (B2)',
+    description: 'B2 vocabulary for the legal system, crime, trials, and rights, including verbs (anzeigen, verurteilen, klagen) and nouns (das Gericht, die Strafe).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['das Gericht', 'verurteilen'],
+    examplesNegative: ['*der Gericht'],
+    commonErrors: [
+      'Confusing "der Richter" (judge) with "der Anwalt" (lawyer).',
+      'Confusing "anzeigen" (report to the police) with "verklagen" (sue).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-economy-business',
+    kind: 'vocab',
+    name: 'Economy and business (B2)',
+    description: 'B2 vocabulary for the economy, companies, markets, and finance (die Investition, der Gewinn, investieren, rentabel).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['der Gewinn', 'rentabel'],
+    examplesNegative: ['*das Gewinn'],
+    commonErrors: [
+      'Confusing "der Gewinn" (profit) with "der Umsatz" (turnover).',
+      'Confusing "die Firma" (the company) with "der Betrieb" (the operation, plant).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-psychology-behaviour',
+    kind: 'vocab',
+    name: 'Psychology and behaviour (B2)',
+    description: 'B2 vocabulary for personality, emotions, mental health, and behaviour, with verbs and adjectives (bewältigen, das Selbstwertgefühl, rücksichtslos, misstrauisch).',
+    cefrLevel: B2,
+    language: DE,
+    examplesPositive: ['bewältigen', 'misstrauisch'],
+    examplesNegative: ['*die Selbstwertgefühl'],
+    commonErrors: [
+      'Using "sensibel" for English "sensible" — "sensibel" means sensitive; sensible is "vernünftig".',
+      'Confusing "sich verhalten" (behave, act) with "sich benehmen" (behave well or badly, manners).',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-collocations-idioms',
+    kind: 'vocab',
+    name: 'Collocations and idioms (B2)',
+    description: 'B2 fixed collocations and idiomatic expressions in their citation form (eine Entscheidung treffen, in Frage kommen, zur Verfügung stehen, Bescheid sagen).',
+    cefrLevel: B2,
+    language: DE,
+    vocabGroup: { label: 'expressions', pos: ['phrase', 'verb'] },
+    examplesPositive: ['eine Entscheidung treffen', 'zur Verfügung stehen'],
+    examplesNegative: ['*eine Entscheidung machen'],
+    commonErrors: [
+      'Calquing English collocations ("*eine Entscheidung machen", "*ein Foto nehmen" for "ein Foto machen").',
+      'Dropping the contracted article of a fixed phrase ("*zu Verfügung stehen").',
+    ],
+  },
+  {
+    key: 'de-b2-vocab-formal-connectors',
+    kind: 'vocab',
+    name: 'Formal connectors and hedging (B2)',
+    description: 'B2 formal connectors and hedging expressions for argumentative writing (dennoch, folglich, hingegen, es ist anzumerken, angeblich).',
+    cefrLevel: B2,
+    language: DE,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['dennoch', 'folglich'],
+    examplesNegative: ['*Folglich wir müssen handeln'],
+    commonErrors: [
+      'Using informal connectors ("aber", "also") where formal register calls for "dennoch", "folglich".',
+      'Wrong word order after an adverbial connector ("*Folglich wir müssen handeln" for "Folglich müssen wir handeln").',
     ],
   },
   // ---------------------------------------------------------------------------

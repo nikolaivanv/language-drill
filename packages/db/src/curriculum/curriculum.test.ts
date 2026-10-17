@@ -1137,7 +1137,7 @@ describe('per-language counts', () => {
     }
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
@@ -1146,7 +1146,7 @@ describe('per-language counts', () => {
     // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
     // each level keeps its original broad umbrella (housing / environment /
     // academic-noun) as one of its themes.
-    expect(vocab).toBe(20);
+    expect(vocab).toBe(40);
     // de-a1 + de-a2 + de-b1 + de-b2 dictation (2026-09-04): the follow-up the
     // 2026-07-12 plan doc deferred. German was the only language with zero
     // dictation / free-writing / paraphrase cells, so a DE learner had no
@@ -1161,6 +1161,13 @@ describe('per-language counts', () => {
     expect(freeWriting).toBe(30);
     // de-b1-paraphrase + de-b2-paraphrase.
     expect(paraphrase).toBe(2);
+  });
+
+  it('DE has 2 word-class groups per level A1–B2', () => {
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = deCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(2);
+    }
   });
 
   it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
