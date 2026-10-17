@@ -87,6 +87,7 @@ export async function runOneUmbrella(
     wordCount,
     freqAnchorWords,
     avoidWords,
+    request: { kind: 'themed' },
   });
 
   const msg = await client.messages.create({
