@@ -4752,7 +4752,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     cefrLevel: A2,
     language: DE,
     examplesPositive: ['braten', 'die Rechnung'],
-    examplesNegative: ['*der Rechnung'],
+    examplesNegative: ['*der Rechnung (as nominative)'],
     commonErrors: [
       'Confusing "kochen" (cook, boil) with "backen" (bake).',
       'Confusing the noun "das Essen" (food, meal) with the verb "essen" (to eat) — only the noun is capitalized.',
@@ -4796,7 +4796,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     cefrLevel: B1,
     language: DE,
     examplesPositive: ['die Unterkunft', 'buchen'],
-    examplesNegative: ['*der Unterkunft'],
+    examplesNegative: ['*der Unterkunft (as nominative)'],
     commonErrors: [
       'Confusing "verpassen" (miss a train) with "vermissen" (miss a person).',
       'Confusing "die Reise" (a trip) with "das Reisen" (travelling, the activity).',
@@ -4841,7 +4841,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesPositive: ['sich freuen auf', 'warten auf'],
     examplesNegative: ['*warten für'],
     commonErrors: [
-      'Calquing English prepositions ("*warten für", "*denken über" for "denken an").',
+      'Calquing English prepositions ("*warten für", "*sich interessieren in" for "sich interessieren für").',
       'Confusing "sich freuen auf" (look forward to) with "sich freuen über" (be pleased about).',
     ],
   },

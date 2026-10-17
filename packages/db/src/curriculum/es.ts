@@ -4836,7 +4836,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       '*Los niños juegan fútbol en el patio.',
     ],
     commonErrors: [
-      'Calquing English "think of/about" as "*pensar de" instead of the correct "pensar en".',
+      '"pensar en" = have someone/something in mind; "pensar de" = hold an opinion about ("¿Qué piensas de la película?") — do not use "pensar de" for "think about" in the first sense ("*Pienso de ti todo el día").',
       'Using "de" instead of "con" after "soñar" ("*soñé de mi antiguo colegio" instead of "soñé con mi antiguo colegio").',
       'Omitting the "a" before the infinitive after "invitar" ("*me invitó cenar" instead of "me invitó a cenar").',
       'Dropping the governed preposition before a que-clause — queísmo ("*me di cuenta que llovía" instead of "me di cuenta de que llovía") — or adding a spurious de after verbs of saying — dequeísmo ("*dice de que no viene" instead of "dice que no viene").',
@@ -7482,7 +7482,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesPositive: ['buenos días', 'lo siento'],
     examplesNegative: ['*de nadas'],
     commonErrors: [
-      'Using "perdón" and "lo siento" interchangeably: "perdón" gets attention or excuses, "lo siento" expresses regret.',
+      'Using "perdón" and "lo siento" interchangeably: "perdón" is a quick apology or attention-getter, while "lo siento" expresses sorrow or regret.',
       'Inflecting fixed expressions ("*de nadas", "*buenas día").',
     ],
   },
@@ -7639,7 +7639,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     language: ES,
     vocabGroup: { label: 'verbs', pos: ['verb'] },
     examplesPositive: ['acordarse de', 'soñar con'],
-    examplesNegative: ['*pensar de (for "think about": pensar en)'],
+    examplesNegative: ['*soñar en (for "dream of": soñar con)'],
     commonErrors: [
       'Calquing English prepositions ("*soñar de", "*depender en").',
       'Dropping "se" on pronominal prepositional verbs ("*acordar de").',
@@ -7654,10 +7654,10 @@ const esCurriculum: readonly GrammarPoint[] = [
     language: ES,
     vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
     examplesPositive: ['sin embargo', 'por eso'],
-    examplesNegative: ['*Porque llovía, no salimos (sentence-initial cause: Como llovía, no salimos)'],
+    examplesNegative: ['*sin embargo de (sin embargo takes no preposition)'],
     commonErrors: [
       'Confusing "sino" (but rather, after a negative) with "pero".',
-      'Starting a sentence with causal "porque" where "como" is required ("*Porque llovía, no salimos").',
+      'Adding a preposition to "sin embargo" ("*sin embargo de"); and, for a cause placed first, "como" is the natural choice ("Como llovía, no salimos") — sentence-initial "porque" is marked.',
     ],
   },
   {
@@ -7699,7 +7699,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*el autoestima'],
     commonErrors: [
       'Using "sensible" for English "sensible" — Spanish "sensible" means sensitive; sensible is "sensato".',
-      'Mismatching gender on "la autoestima" (feminine despite the stressed-a pattern not applying).',
+      'Mismatching gender on "la autoestima" (la autoestima: au- is unstressed, so the el-before-stressed-a rule does not apply).',
     ],
   },
   {

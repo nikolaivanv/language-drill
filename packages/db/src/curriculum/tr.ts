@@ -5056,7 +5056,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     language: TR,
     vocabGroup: { label: 'adverbs', pos: ['adverb', 'phrase'] },
     examplesPositive: ['hâlâ', 'ara sıra'],
-    examplesNegative: ['*Hiç gittim (hiç needs a negative verb: Hiç gitmedim)'],
+    examplesNegative: ["*Hiç gittim (in statements, hiç needs a negative verb: Hiç gitmedim; in questions it means 'ever': Hiç İstanbul'a gittin mi?)"],
     commonErrors: [
       'Using "hiç" with an affirmative verb ("*Hiç gittim" for "Hiç gitmedim").',
       'Confusing "hâlâ" (still) with "artık" (anymore, from now on).',
@@ -5098,7 +5098,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     cefrLevel: B1,
     language: TR,
     examplesPositive: ['kilo vermek', 'sağlıklı'],
-    examplesNegative: ['*kilo vermek (for "put on weight": kilo almak)'],
+    examplesNegative: ['*kilo yapmak (for "put on weight": kilo almak)'],
     commonErrors: [
       'Confusing "kilo vermek" (lose weight) with "kilo almak" (put on weight).',
       'Confusing "sağlık" (health, noun) with "sağlıklı" (healthy, adjective).',
@@ -5200,9 +5200,9 @@ const trCurriculum: readonly GrammarPoint[] = [
     language: TR,
     vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
     examplesPositive: ['dolayısıyla', 'bununla birlikte'],
-    examplesNegative: ['*o yüzden (in a formal essay, where dolayısıyla fits)'],
+    examplesNegative: ['*yandan öte (the fixed order is öte yandan)'],
     commonErrors: [
-      'Using informal connectors ("ama", "o yüzden") where formal register calls for "ancak", "dolayısıyla".',
+      'Using informal connectors ("ama", "o yüzden" — fine in speech, but too casual) where formal register calls for "ancak", "dolayısıyla".',
       'Confusing "öte yandan" (on the other hand) with "ayrıca" (in addition).',
     ],
   },
