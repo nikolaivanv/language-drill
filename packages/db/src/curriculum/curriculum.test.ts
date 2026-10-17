@@ -1170,7 +1170,7 @@ describe('per-language counts', () => {
     }
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -1186,7 +1186,7 @@ describe('per-language counts', () => {
     // vocab umbrellas added 2026-07-17.
     expect(grammar.B2).toBe(17);
     // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
-    expect(vocab).toBe(20);
+    expect(vocab).toBe(40);
     // tr-a1 + tr-a2 + tr-b1 + tr-b2 dictation (B2 added 2026-09-04).
     expect(dictation).toBe(4);
     // 3 free-writing topic umbrellas per level, B2 included (2026-09-04);
@@ -1196,6 +1196,13 @@ describe('per-language counts', () => {
     // cycle was grammar-only, which left B2 as the one TR level with no
     // dictation, free-writing or paraphrase cell.
     expect(paraphrase).toBe(2);
+  });
+
+  it('TR has 2 word-class groups per level A1–B2', () => {
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = trCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(2);
+    }
   });
 });
 
