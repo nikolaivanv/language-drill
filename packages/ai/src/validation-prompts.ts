@@ -232,7 +232,8 @@ function renderBulletList(items: readonly string[]): string {
 // generate@2026-10-17. Word-class groups (topic = a word class) judge
 // grammarPointMatch on the class, and citation-form variants (ES adjective
 // feminine, expression word order) in acceptableAnswers are the same
-// headword, not distinct referents. Template edit → Langfuse push per env.
+// headword, not distinct referents. User-prompt only (vocabRecallScoringNote):
+// no Langfuse push for validation.
 export const VALIDATION_PROMPT_VERSION = "validate@2026-10-17";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.

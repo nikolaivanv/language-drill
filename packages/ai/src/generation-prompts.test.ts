@@ -530,7 +530,7 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("accusative doubling is not free");
   });
 
-  it("bumps the generation prompt version to 2026-10-07", () => {
+  it("bumps the generation prompt version to 2026-10-17", () => {
     // 2026-10-07: cell-history ("Already in this cell") prompt section for
     // cloze / translation / sentence_construction. Prompt edit → Langfuse push per env.
     expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");

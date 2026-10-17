@@ -262,6 +262,7 @@ describe("vocab_recall citation-form rule (evaluate@2026-10-17a)", () => {
     const out = buildUserPrompt(verb as any, "acordarse", "ES" as any, "B1" as any);
     expect(out).toContain("CITATION FORM");
     expect(out).toContain("score 0.8");
+    expect(out).toContain("A valid synonym is held to the same citation-form rule.");
     expect(out).toMatch(/listed in \*\*Acceptable Answers\*\* is fully correct/);
   });
 
