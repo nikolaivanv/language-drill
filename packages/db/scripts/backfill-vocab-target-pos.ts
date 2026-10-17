@@ -7,9 +7,10 @@
  * step still runs); --apply writes `pos` only where it is still null;
  * --revert <artifact> --apply nulls exactly the rows an applied run wrote
  * (artifact `writtenIds`), and only where pos still holds the planned value.
- * The artifact is written BEFORE applying and rewritten every 50 updates, so a
- * run that dies partway still lists every id it wrote; a re-run is also safe
- * because writes are guarded by `pos IS NULL`.
+ * The artifact is written BEFORE applying and rewritten after every successful
+ * write, so a run that dies partway still lists every id it wrote except the
+ * single in-flight update; a re-run is also safe because writes are guarded by
+ * `pos IS NULL`.
  * --out-dir <path> sets the artifact directory (default ./backfill-runs).
  * Required env: DATABASE_URL; ANTHROPIC_API_KEY unless --no-llm.
  */
@@ -234,14 +235,16 @@ async function applyPlanned(
   checkpoint: (writtenIds: string[]) => void,
 ): Promise<string[]> {
   const writtenIds: string[] = [];
-  for (const [i, p] of planned.entries()) {
+  for (const p of planned) {
     const res = await db
       .update(vocabTarget)
       .set({ pos: p.pos })
       .where(and(eq(vocabTarget.id, p.id), isNull(vocabTarget.pos)))
       .returning({ id: vocabTarget.id });
-    for (const r of res) writtenIds.push(r.id);
-    if ((i + 1) % 50 === 0) checkpoint(writtenIds);
+    if (res.length > 0) {
+      for (const r of res) writtenIds.push(r.id);
+      checkpoint(writtenIds);
+    }
   }
   return writtenIds;
 }
