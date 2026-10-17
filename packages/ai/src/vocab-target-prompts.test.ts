@@ -62,6 +62,15 @@ describe('vocab-target prompt — word classes', () => {
     expect(p).toContain('No nouns');
   });
 
+  it('omits a class whose requested count is 0', () => {
+    const v = buildVocabTargetUserPrompt({ ...base, request: { kind: 'only', verb: 0, adjectiveOrAdverb: 3 } });
+    expect(v).toContain('exactly 3 adjectives or adverbs');
+    expect(v).not.toContain('0 verbs');
+    const a = buildVocabTargetUserPrompt({ ...base, request: { kind: 'only', verb: 4, adjectiveOrAdverb: 0 } });
+    expect(a).toContain('exactly 4 verbs');
+    expect(a).not.toContain('0 adjectives');
+  });
+
   it('restricts a word-class group', () => {
     const p = buildVocabTargetUserPrompt({ ...base, request: { kind: 'group', pos: ['adverb', 'phrase'] } });
     expect(p).toContain('Every word MUST be one of: adverb, phrase');

@@ -47,8 +47,12 @@ function requestLine(request: VocabTargetRequest): string {
   switch (request.kind) {
     case 'themed':
       return 'Word-class mix: at most 60% nouns, at least 20% verbs, at least 15% adjectives or adverbs, and at most 10% fixed phrases.';
-    case 'only':
-      return `Propose exactly ${request.verb} verbs and ${request.adjectiveOrAdverb} adjectives or adverbs. No nouns.`;
+    case 'only': {
+      const parts: string[] = [];
+      if (request.verb > 0) parts.push(`${request.verb} verbs`);
+      if (request.adjectiveOrAdverb > 0) parts.push(`${request.adjectiveOrAdverb} adjectives or adverbs`);
+      return `Propose exactly ${parts.join(' and ')}. No nouns.`;
+    }
     case 'group':
       return `Every word MUST be one of: ${request.pos.join(', ')}. The topic is the word class itself — any level-appropriate word of that class qualifies.`;
   }
