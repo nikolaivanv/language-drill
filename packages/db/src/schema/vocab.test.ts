@@ -18,6 +18,7 @@ describe('vocab_target schema', () => {
         'id',
         'language',
         'lemma',
+        'pos',
         'source',
         'status',
         'tier',

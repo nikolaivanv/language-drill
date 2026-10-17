@@ -129,7 +129,7 @@ describe('WordsTab — level sections', () => {
   it('tags word-class groups', () => {
     render(
       <WordsTab
-        data={loaded([topic({ umbrellaKey: 'v', name: 'Everyday verbs (A1)', group: 'describing' })])}
+        data={loaded([topic({ umbrellaKey: 'v', name: 'Describing words (A1)', group: 'describing' })])}
         isLoading={false}
         isError={false}
         onRetry={mockRetry}
