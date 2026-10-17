@@ -74,7 +74,8 @@ export function matchTargetDisplayForm(
  * than failing the insert — a missing `articleForm` only means the article is
  * not required for that row. A matched target tagged with a non-noun `pos`
  * (connectors like "das heißt") never carries an article requirement, and gets
- * no fallback to `expectedWord`.
+ * no fallback to `expectedWord`; nor does an unmatched word when every approved
+ * target of the umbrella is a tagged non-noun.
  */
 export async function resolveArticleForm(
   db: Db,
@@ -104,6 +105,11 @@ export async function resolveArticleForm(
       : [];
     const hit = matchTarget(targets, expectedWord);
     if (hit && hit.pos !== null && hit.pos !== 'noun') return null;
+    // An all-non-noun umbrella (a verbs or expressions group) has no noun to
+    // carry an article, so an unmatched "das macht nichts" gets none either.
+    if (!hit && targets.length > 0 && targets.every((t) => t.pos !== null && t.pos !== 'noun')) {
+      return null;
+    }
     displayForm = hit?.displayForm ?? null;
   } catch (err) {
     console.warn('resolveArticleForm: vocab_target lookup failed', {

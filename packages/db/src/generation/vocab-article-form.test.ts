@@ -78,6 +78,19 @@ describe('resolveArticleForm pos gate', () => {
       await run('DE', { lemma: 'die Küche', displayForm: 'kochen', pos: 'verb' }, 'die Küche'),
     ).toBeNull();
   });
+  it('does not fall back to expectedWord when nothing matches and every target is a tagged non-noun', async () => {
+    const rows = [
+      { lemma: 'laufen', displayForm: 'laufen', pos: 'verb' },
+      { lemma: 'das heißt', displayForm: 'das heißt', pos: 'phrase' },
+    ];
+    expect(await resolveArticleForm(dbReturning(rows), 'DE', 'u', 'das macht nichts')).toBeNull();
+  });
+  it('keeps the fallback when any target is a noun or untagged, or the umbrella has none', async () => {
+    const verb = { lemma: 'laufen', displayForm: 'laufen', pos: 'verb' };
+    const untagged = { lemma: 'Schule', displayForm: 'die Schule', pos: null };
+    expect(await resolveArticleForm(dbReturning([verb, untagged]), 'DE', 'u', 'die Küche')).toBe('die Küche');
+    expect(await resolveArticleForm(dbReturning([]), 'DE', 'u', 'die Küche')).toBe('die Küche');
+  });
   it('still falls back to expectedWord when nothing matches', async () => {
     expect(
       await run('DE', { lemma: 'Schule', displayForm: 'die Schule', pos: 'noun' }, 'die Küche'),
