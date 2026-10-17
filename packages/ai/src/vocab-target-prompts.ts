@@ -11,8 +11,14 @@
 // conjugated. Each word now carries "pos", the requested mix (or class
 // restriction) rides in the user prompt, fixed expressions up to 4 words are
 // allowed, and the example must contain the citation form verbatim.
+//
+// 2026-10-18: the word-class-group request line said "the topic is the word
+// class itself — any level-appropriate word of that class qualifies", which
+// licensed off-topic words for narrow groups ("Verbs with prepositions",
+// "Case-governed verbs"). It now requires the declared class AND a fit with
+// the umbrella description.
 export const VOCAB_TARGET_GENERATION_PROMPT_VERSION =
-  'vocab-target-generate@2026-10-17';
+  'vocab-target-generate@2026-10-18';
 
 export const VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are a lexicographer building a curated vocabulary list for {{languageName}} learners at CEFR {{cefrLevel}}.
 
@@ -54,7 +60,7 @@ function requestLine(request: VocabTargetRequest): string {
       return `Propose exactly ${parts.join(' and ')}. No nouns.`;
     }
     case 'group':
-      return `Every word MUST be one of: ${request.pos.join(', ')}. The topic is the word class itself — any level-appropriate word of that class qualifies.`;
+      return `Every word MUST be one of: ${request.pos.join(', ')}, AND fit the topic description above — when it names a narrower set (verbs that govern a stated preposition or case, verbs of movement), every word must belong to that set, not merely to the class.`;
   }
 }
 

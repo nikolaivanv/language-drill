@@ -42,8 +42,8 @@ describe('vocab-target prompts', () => {
 describe('vocab-target prompt — word classes', () => {
   const base = { umbrellaName: 'Food (A1)', umbrellaDescription: 'd', wordCount: 30, freqAnchorWords: [], avoidWords: [] };
 
-  it('is versioned 2026-10-17 and asks for pos + citation-form examples', () => {
-    expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toBe('vocab-target-generate@2026-10-17');
+  it('is versioned 2026-10-18 and asks for pos + citation-form examples', () => {
+    expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toBe('vocab-target-generate@2026-10-18');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('"pos"');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toContain('concrete');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/must contain the lemma.*verbatim/);
@@ -74,5 +74,18 @@ describe('vocab-target prompt — word classes', () => {
   it('restricts a word-class group', () => {
     const p = buildVocabTargetUserPrompt({ ...base, request: { kind: 'group', pos: ['adverb', 'phrase'] } });
     expect(p).toContain('Every word MUST be one of: adverb, phrase');
+  });
+
+  it('holds a word-class group to its topic description, not just the class', () => {
+    const p = buildVocabTargetUserPrompt({
+      ...base,
+      umbrellaName: 'Verbs with prepositions (B1)',
+      umbrellaDescription: 'Verbs that govern a fixed preposition (sich freuen auf, warten auf).',
+      request: { kind: 'group', pos: ['verb'] },
+    });
+    expect(p).toContain('AND fit the topic description above');
+    expect(p).not.toContain('any level-appropriate word of that class qualifies');
+    // The description the line points back to sits above it.
+    expect(p.indexOf('Verbs that govern a fixed preposition')).toBeLessThan(p.indexOf('AND fit the topic'));
   });
 });
