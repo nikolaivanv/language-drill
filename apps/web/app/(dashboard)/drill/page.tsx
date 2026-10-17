@@ -255,7 +255,7 @@ function PracticePageContent() {
     if (state.kind !== 'inSession') return;
     const item = selectCurrentItem(state);
     const trimmed = answer.trim();
-    if (!item || !trimmed) return;
+    if (!item || (!trimmed && !meta.gaveUp)) return;
     lastSubmissionRef.current = { answer: trimmed, meta };
     dispatch({ type: 'ITEM_SUBMITTING' });
     submitMutation.mutate(
@@ -269,6 +269,7 @@ function PracticePageContent() {
         // stored option list was on screen and marks valid off-list answers
         // wrong, citing options the learner never saw.
         optionsRevealed: meta.usedMc ?? false,
+        gaveUp: meta.gaveUp,
       },
       {
         onSuccess: (result) => {

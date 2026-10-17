@@ -15,6 +15,9 @@ export const VocabTopicSummarySchema = z.object({
   wordCount: z.number().int().min(0),
   available: z.number().int().min(0),
   practiced: z.number().int().min(0),
+  // Words practiced to a strong best score. Defaulted so a response from an
+  // API deployed before the field existed still parses.
+  strong: z.number().int().min(0).default(0),
 });
 export type VocabTopicSummary = z.infer<typeof VocabTopicSummarySchema>;
 

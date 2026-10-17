@@ -64,6 +64,7 @@ import {
 import { routeValidationResult } from './routing';
 import { isPerDraftValidatorFailure } from './validator-pool';
 import { vocabSeedMismatch } from './vocab-seed-check';
+import { resolveArticleForm } from './vocab-article-form';
 
 const MAX_DEDUP_RETRIES = 3;
 
@@ -565,8 +566,20 @@ export async function validateAndInsertWithRetry(
     // (task 15) reads it back via `content_json->>'seedWord'` to build the
     // cross-run "already anchored" exclude set.
     const dedupKey = canonicalSurface(currentDraft.contentJson);
+    // ES/DE vocab nouns are answered WITH their article; stamp the curated
+    // article form the grader + evaluator check against (vocab-article.ts).
+    const articleForm =
+      currentDraft.contentJson.type === ExerciseType.VOCAB_RECALL
+        ? await resolveArticleForm(
+            opts.db,
+            opts.cell.language,
+            opts.cell.grammarPoint.key,
+            currentDraft.contentJson.expectedWord,
+          )
+        : null;
     const contentWithKey = {
       ...currentDraft.contentJson,
+      ...(articleForm ? { articleForm } : {}),
       _dedupKey: dedupKey,
       ...(seedWord ? { seedWord } : {}),
       // The variant the validator says the draft ACTUALLY realizes, as opposed

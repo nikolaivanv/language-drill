@@ -65,6 +65,10 @@ export const DebriefResponseSchema = z.object({
   // Banded per-grammar-point mastery movement for the points practiced this
   // session (design spec 2026-06-16). `.default([])` keeps older payloads valid.
   skillMovements: z.array(SkillMovementSchema).default([]),
+  // Targeting the session was created with; null for untargeted quick drills.
+  // Optional so a cached pre-column response still parses.
+  grammarPointKey: z.string().nullable().optional(),
+  exerciseType: z.nativeEnum(ExerciseType).nullable().optional(),
 });
 
 export type DebriefResponse = z.infer<typeof DebriefResponseSchema>;

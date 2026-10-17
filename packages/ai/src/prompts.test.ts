@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-09-22");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17");
   });
 
   // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the

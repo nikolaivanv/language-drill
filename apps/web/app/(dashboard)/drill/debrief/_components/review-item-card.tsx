@@ -9,6 +9,7 @@ import {
   isSentenceConstructionContent,
   isTranslationContent,
   isVocabRecallContent,
+  bareVocabWord,
   type ClozeContent,
   type ConjugationContent,
   type ContextualParaphraseContent,
@@ -372,7 +373,7 @@ function VocabBody({ item, content }: VocabBodyProps) {
               color: isCorrect ? 'var(--color-ok)' : 'var(--color-accent-2)',
             }}
           >
-            {item.userAnswer ?? ''}
+            {item.userAnswer ? item.userAnswer : '(revealed)'}
           </div>
         </div>
         <div
@@ -392,11 +393,14 @@ function VocabBody({ item, content }: VocabBodyProps) {
               fontWeight: 500,
             }}
           >
-            {content.expectedWord}
+            {content.articleForm ?? content.expectedWord}
           </div>
           {content.exampleSentence.length > 0 && (
             <p className="t-small mt-s-2">
-              {revealWordInExample(content.exampleSentence, content.expectedWord)}
+              {revealWordInExample(
+                content.exampleSentence,
+                bareVocabWord(content.articleForm ?? content.expectedWord),
+              )}
             </p>
           )}
         </div>

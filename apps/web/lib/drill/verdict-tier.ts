@@ -34,8 +34,15 @@ export function vocabVerdict(
 ): VerdictResult {
   const hasGrammarError = errors.some((e) => e.type === 'grammar');
   const hasSpellingError = errors.some((e) => e.type === 'spelling');
+  const code = (c: NonNullable<EvaluationError['code']>) => errors.some((e) => e.code === c);
 
-  if (score === 1.0) {
+  if (code('revealed')) {
+    return { tier: 'terracotta', label: 'answer revealed' };
+  } else if (code('missing-article')) {
+    return { tier: 'yellow', label: 'right word · missing article' };
+  } else if (code('wrong-article')) {
+    return { tier: 'yellow', label: 'right word · wrong gender' };
+  } else if (score === 1.0) {
     return { tier: 'sage', label: 'exact' };
   } else if (score >= CORRECT_THRESHOLD && score < 1.0 && hasGrammarError) {
     return { tier: 'yellow', label: 'right word · wrong inflection' };

@@ -11,6 +11,7 @@ import {
   isVocabRecallContent,
   isConjugationContent,
 } from "./index";
+import { gradeVocabArticle } from "./vocab-article";
 
 // ---------------------------------------------------------------------------
 // Fluency mode — locked constants (single source of truth)
@@ -92,6 +93,9 @@ export function gradeFluencyAnswer(content: ExerciseContent, answer: string): bo
   }
 
   if (isVocabRecallContent(content)) {
+    // Article-bearing nouns: only the word WITH a right-gender article is an
+    // exact answer (see vocab-article.ts for the policy).
+    if (content.articleForm) return gradeVocabArticle(content, answer) === "exact";
     const accepted = [content.expectedWord, ...(content.acceptableAnswers ?? [])];
     return accepted.some((a) => matchesAccepted(a, answer));
   }

@@ -59,6 +59,7 @@ const EvaluationErrorSchema = z.object({
   text: z.string(),
   correction: z.string(),
   explanation: z.string(),
+  code: z.enum(['missing-article', 'wrong-article', 'revealed']).optional(),
 });
 
 // Evaluation result from POST /exercises/:id/submit

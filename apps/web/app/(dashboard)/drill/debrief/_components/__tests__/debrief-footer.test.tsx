@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { ExerciseType } from '@language-drill/shared';
 import { DebriefFooter } from '../debrief-footer';
 
 // Mock next/navigation's useRouter so we can capture push calls.
@@ -86,6 +87,35 @@ describe('DebriefFooter — router push targets', () => {
     render(<DebriefFooter />);
     fireEvent.click(screen.getByRole('button', { name: 'done' }));
     expect(pushMock).toHaveBeenCalledExactlyOnceWith('/');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Targeted sessions repeat their filters
+// ---------------------------------------------------------------------------
+
+describe('DebriefFooter — targeted session', () => {
+  it('"practice more" restarts the same vocab group', () => {
+    render(<DebriefFooter grammarPointKey="es-a2-vocab-body" exerciseType={ExerciseType.VOCAB_RECALL} />);
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledExactlyOnceWith(
+      '/drill?start=quick&grammarPoint=es-a2-vocab-body&exerciseType=vocab_recall',
+    );
+  });
+
+  it('a vocab session links progress to the Words tab', () => {
+    render(<DebriefFooter grammarPointKey="es-a2-vocab-body" exerciseType={ExerciseType.VOCAB_RECALL} />);
+    expect(screen.getByRole('link', { name: /see your progress/ })).toHaveAttribute(
+      'href',
+      '/progress?tab=words',
+    );
+  });
+
+  it('a grammar-point-only session keeps the overview progress link', () => {
+    render(<DebriefFooter grammarPointKey="es-a2-preterite" />);
+    fireEvent.click(screen.getByRole('button', { name: 'practice more' }));
+    expect(pushMock).toHaveBeenCalledExactlyOnceWith('/drill?start=quick&grammarPoint=es-a2-preterite');
+    expect(screen.getByRole('link', { name: /see your progress/ })).toHaveAttribute('href', '/progress');
   });
 });
 

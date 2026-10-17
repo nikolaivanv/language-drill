@@ -43,6 +43,6 @@ describe('summarizeCoverage', () => {
   it('counts available and practiced', () => {
     expect(
       summarizeCoverage(['not-yet', 'untested', 'practiced-weak', 'practiced-strong']),
-    ).toEqual({ total: 4, available: 3, practiced: 2 });
+    ).toEqual({ total: 4, available: 3, practiced: 2, strong: 1 });
   });
 });

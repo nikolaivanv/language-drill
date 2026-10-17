@@ -39,12 +39,16 @@ export function summarizeCoverage(states: readonly CoverageState[]): {
   total: number;
   available: number;
   practiced: number;
+  /** Words whose best score reached STRONG_SCORE — the Words-tab mastery bar. */
+  strong: number;
 } {
   let available = 0;
   let practiced = 0;
+  let strong = 0;
   for (const s of states) {
     if (s !== 'not-yet') available += 1;
     if (s === 'practiced-weak' || s === 'practiced-strong') practiced += 1;
+    if (s === 'practiced-strong') strong += 1;
   }
-  return { total: states.length, available, practiced };
+  return { total: states.length, available, practiced, strong };
 }

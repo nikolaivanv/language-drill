@@ -5,6 +5,8 @@ export type SubmissionMeta = {
   hintLevel?: 0 | 1 | 2 | 3;
   hintCount?: number;
   hintUsage?: { wordsRevealed: number; fullAnswerRevealed: boolean };
+  /** Vocab recall: the learner asked to see the answer after every hint. */
+  gaveUp?: boolean;
 };
 
 /**

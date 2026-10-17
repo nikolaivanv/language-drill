@@ -2411,6 +2411,45 @@ describe('POST /exercises/:id/submit — deterministic match branch', () => {
     expect(mockEvaluateAnswer).not.toHaveBeenCalled();
   });
 
+  it('vocab give-up records a deterministic score-0 reveal with no Claude call', async () => {
+    queueExerciseAndMastery(vocabExercise);
+    const res = await app.request(
+      '/exercises/vocab-tr-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: '', gaveUp: true }),
+      },
+      authEnv,
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json() as AnyJson;
+    expect(body.score).toBe(0);
+    expect(body.evaluationSource).toBe('deterministic');
+    expect(body.errors[0].code).toBe('revealed');
+    expect(mockEvaluateAnswer).not.toHaveBeenCalled();
+  });
+
+  it('rejects an empty answer without gaveUp', async () => {
+    const res = await submit('vocab-tr-001', '   ');
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects gaveUp on a non-vocab exercise', async () => {
+    mockLimit.mockResolvedValueOnce([clozeExercise]);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    const res = await app.request(
+      '/exercises/cloze-tr-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: '', gaveUp: true }),
+      },
+      authEnv,
+    );
+    expect(res.status).toBe(400);
+  });
+
   it('cloze NON-match falls through to the LLM path and stamps evaluationSource: llm', async () => {
     // exercise fetch
     mockLimit.mockResolvedValueOnce([clozeExercise]);
