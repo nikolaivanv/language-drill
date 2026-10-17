@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   VocabTopicsResponseSchema,
   VocabTopicDetailSchema,
+  VocabTopicSummarySchema,
 } from './vocab';
 
 describe('vocab schemas', () => {
@@ -35,5 +36,13 @@ describe('vocab schemas', () => {
         words: [{ lemma: 'a', displayForm: 'a', gloss: 'a', exampleSentence: 'a', freqRank: 1, tier: 'core', state: 'bogus' }],
       }),
     ).toThrow();
+  });
+});
+
+describe('VocabTopicSummarySchema group', () => {
+  it('defaults group to null for responses from an older API', () => {
+    const base = { umbrellaKey: 'k', name: 'n', cefrLevel: 'A1', wordCount: 1, available: 1, practiced: 0 };
+    expect(VocabTopicSummarySchema.parse(base).group).toBeNull();
+    expect(VocabTopicSummarySchema.parse({ ...base, group: 'connectors' }).group).toBe('connectors');
   });
 });

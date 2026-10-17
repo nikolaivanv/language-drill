@@ -28,6 +28,7 @@ function topic(o: Partial<VocabTopicSummary> & { umbrellaKey: string }): VocabTo
     available: o.available ?? 0,
     practiced: o.practiced ?? 0,
     strong: o.strong ?? 0,
+    group: o.group ?? null,
     ...o,
   };
 }

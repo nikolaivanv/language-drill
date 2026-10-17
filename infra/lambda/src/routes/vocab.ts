@@ -166,6 +166,7 @@ vocab.get('/vocab/topics', async (c) => {
       available,
       practiced,
       strong,
+      group: point.vocabGroup?.label ?? null,
     });
   }
 
