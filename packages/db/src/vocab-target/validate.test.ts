@@ -50,6 +50,8 @@ describe('validateProposedWord', () => {
     ['her gün', 'Her gün okuyorum.'],
     ['ab und zu', 'Ab und zu gehe ich ins Kino.'],
     ['o sea', 'No vino, o sea, se quedó en casa.'],
+    ['¿qué tal?', 'Hola, ¿qué tal?'],
+    ['¿qué tal?', 'Hola, qué tal, Ana.'],
   ])('keeps the all-short-token phrase %s when the example contains it', (lemma, exampleSentence) => {
     expect(
       validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),
@@ -61,6 +63,7 @@ describe('validateProposedWord', () => {
     ['por eso', 'Llegué tarde, no comí por la noche.'],
     ['ab und zu', 'Ich gehe ins Kino und zu Hause.'],
     ['o sea', 'No vino, se quedó en casa.'],
+    ['¿qué tal?', '¿Qué haces hoy?'],
   ])('drops the all-short-token phrase %s when the example lacks it', (lemma, exampleSentence) => {
     expect(
       validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),

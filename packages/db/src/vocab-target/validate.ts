@@ -61,14 +61,18 @@ export function validateProposedWord(
   // displayForm's last token drops a leading article (e.g. "la manzana" -> "manzana")
   const displayTok = lower(r.displayForm.trim()).split(/\s+/).pop() ?? '';
   // Short-token phrases ("por eso", "ab und zu") have no stem to match on, so
-  // they must appear whole, as whole words.
-  const hasStemmable = tokens.some((t) => t.length >= 4);
-  const exampleWords = ` ${example.replace(/[^\p{L}\p{N}]+/gu, ' ').trim()} `;
+  // they must appear whole, as whole words. Both sides drop punctuation the
+  // same way, so "¿qué tal?" matches "Hola, qué tal" and its "¿"/"?" never
+  // count toward a token's length.
+  const words = (s: string): string => s.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const bareTokens = words(lemmaTok).split(' ').filter(Boolean);
+  const hasStemmable = bareTokens.some((t) => t.length >= 4);
+  const exampleWords = ` ${words(example)} `;
   const exampleHasWord =
     tokens.length > 1
       ? hasStemmable
-        ? tokens.some((t) => t.length >= 4 && example.includes(exampleStem(t)))
-        : exampleWords.includes(` ${lemmaTok} `)
+        ? bareTokens.some((t) => t.length >= 4 && example.includes(exampleStem(t)))
+        : exampleWords.includes(` ${bareTokens.join(' ')} `)
       : example.includes(lemmaTok) || (pos === 'noun' && example.includes(displayTok));
   if (!exampleHasWord) return null;
 
