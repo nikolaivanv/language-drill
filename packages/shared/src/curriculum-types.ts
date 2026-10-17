@@ -12,6 +12,7 @@
 import type { CefrLevel, ExerciseType } from './index';
 import type { LearningLanguage } from './onboarding';
 import type { CoverageSpec } from './coverage';
+import type { VocabGroup } from './vocab-pos';
 
 /**
  * The CEFR levels covered by the round-1 curriculum. C1/C2 are intentionally
@@ -262,6 +263,13 @@ export type GrammarPoint = Readonly<{
    * `person`/`polarity`/`sentenceType` on grammar points.
    */
   coverageSpec?: CoverageSpec;
+  /**
+   * Word-class group marker (vocab expansion, 2026-10-17). Present only on
+   * `kind: 'vocab'` umbrellas whose words are chosen by class (core verbs,
+   * connectors …) instead of by theme; enforced by curriculum invariant 9m.
+   * Absent → a themed topic, authored under the word-class mix.
+   */
+  vocabGroup?: VocabGroup;
   /**
    * Free-writing topic config (Phase 2). REQUIRED in practice on every
    * `kind: 'free-writing'` umbrella and meaningless on any other kind: it carries

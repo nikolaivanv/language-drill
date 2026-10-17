@@ -58,6 +58,7 @@ export const vocabTarget = pgTable(
     exampleSentence: text('example_sentence').notNull(),
     freqRank: integer('freq_rank'), // from vocab_lemma.rank; null if unmatched
     tier: text('tier').notNull(), // core | common | extended (TS-enforced)
+    pos: text('pos'), // noun | verb | adjective | adverb | phrase | other (VocabPos); null until backfilled
     status: text('status').notNull().default('flagged'), // flagged | approved
     source: text('source').notNull().default('llm'), // llm | edited
     createdAt: timestamp('created_at', { withTimezone: true })

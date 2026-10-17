@@ -672,6 +672,7 @@ export * from "./construction-variant-seed";
 
 export * from "./fluency";
 export * from "./vocab-article";
+export * from "./vocab-pos";
 
 // ---------------------------------------------------------------------------
 // Session debrief — banded grammar-point skill movements
