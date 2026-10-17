@@ -6,7 +6,7 @@
  * the same answer.
  */
 
-import { normalizeWord, splitArticle } from '@language-drill/shared';
+import { bareVocabWord, normalizeWord, splitArticle } from '@language-drill/shared';
 import { and, eq } from 'drizzle-orm';
 import type { Db } from '../client';
 import { vocabTarget } from '../schema/index';
@@ -33,16 +33,31 @@ export function articleFormFor(expectedWord: string, displayForm: string | null)
   return null;
 }
 
-/** The curated target whose lemma or display form matches `expectedWord`. */
-export function matchTarget<T extends { lemma: string; displayForm: string }>(
+/**
+ * The curated target whose lemma or display form matches `expectedWord`.
+ * Noun/verb homographs ("das Essen" / "essen", "el deber" / "deber") all match
+ * case-folded, so: an exact-case match (article aside) wins, then — among the
+ * remaining candidates — a noun or untagged target only when `expectedWord`
+ * itself carries an article, a non-noun otherwise. A verb exercise "essen" thus
+ * never inherits "das Essen" as its article form.
+ */
+export function matchTarget<T extends { lemma: string; displayForm: string; pos?: string | null }>(
   targets: readonly T[],
   expectedWord: string,
 ): T | null {
   const key = normalizeWord(expectedWord);
-  return (
-    targets.find((t) => normalizeWord(t.lemma) === key || normalizeWord(t.displayForm) === key) ??
-    null
+  const folded = targets.filter(
+    (t) => normalizeWord(t.lemma) === key || normalizeWord(t.displayForm) === key,
   );
+  if (folded.length <= 1) return folded[0] ?? null;
+  const exact = bareVocabWord(expectedWord);
+  const exactHits = folded.filter(
+    (t) => bareVocabWord(t.lemma) === exact || bareVocabWord(t.displayForm) === exact,
+  );
+  const candidates = exactHits.length > 0 ? exactHits : folded;
+  const wantNoun = splitArticle(expectedWord).article !== null;
+  const nounish = (t: T): boolean => t.pos == null || t.pos === 'noun';
+  return candidates.find((t) => nounish(t) === wantNoun) ?? candidates[0];
 }
 
 /** Display form of the matching curated target (see `matchTarget`). */
