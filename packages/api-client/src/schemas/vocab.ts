@@ -20,8 +20,9 @@ export const VocabTopicSummarySchema = z.object({
   // API deployed before the field existed still parses.
   strong: z.number().int().min(0).default(0),
   // Word-class group tag ("verbs", "connectors" ...) or null for a themed topic.
-  // Defaulted so a response from an API deployed before the field still parses.
-  group: z.enum(VOCAB_GROUP_LABELS).nullable().default(null),
+  // Defaulted + caught so a response from an API deployed before the field, or
+  // carrying a label this build does not know, still parses (group -> null).
+  group: z.enum(VOCAB_GROUP_LABELS).nullable().catch(null).default(null),
 });
 export type VocabTopicSummary = z.infer<typeof VocabTopicSummarySchema>;
 
