@@ -92,7 +92,11 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // ONE was a clear evaluator error (3 were genuine item defects already
 // rejected, 1 correct, 1 borderline) — so this is a ~0.2 % correction, not a
 // systemic repair. SYSTEM-prompt edit — needs a Langfuse push per env.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-10-17";
+// 2026-10-17a: vocab_recall citation-form rule (user-prompt builder only, no
+// Langfuse push). The curated pool now includes verbs, adjectives and fixed
+// expressions; the right word in a non-citation form scores 0.8 with a minor
+// error, mirroring the 0.8 missing-article rule from evaluate@2026-10-17.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-10-17a";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -250,7 +254,9 @@ ARTICLE RULE — this noun must be answered WITH its article, and the learner wa
 - The right word with a wrong-gender article: score 0.6, one grammar error of severity "major" whose correction is the Required Form.
 - Common-gender nouns take either article ("el periodista" / "la periodista", "el estudiante" / "la estudiante"): when the noun genuinely has both genders with this meaning, the other article is fully correct, even though the Required Form shows only one.
 - Combine these with any other genuine errors (e.g. a spelling slip) as usual. A valid synonym is held to the same rule with its OWN gender.`
-    : `There is no article requirement for this item. An article the learner adds is NOT an error when it is correct, and its absence is never an error — do not ask for one.`;
+    : `There is no article requirement for this item. An article the learner adds is NOT an error when it is correct, and its absence is never an error — do not ask for one.
+
+CITATION FORM — the **Expected Word** is the dictionary form the learner was asked for (a verb's infinitive with any reflexive pronoun or preposition that belongs to it, an adjective's dictionary form, a fixed expression in full). A form listed in **Acceptable Answers** is fully correct. The right word in a different form — a conjugated verb ("comí" for "comer"), a declined or agreeing adjective not listed, or an expression missing an obligatory part ("acordarse" for "acordarse de", "freuen" for "sich freuen auf") — is NOT wrong: score 0.8 with one grammar error of severity "minor" whose correction is the **Expected Word**.`;
 
   return `## Exercise Type: Vocabulary Recall
 **Language:** ${language}
