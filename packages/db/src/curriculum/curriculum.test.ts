@@ -1111,7 +1111,7 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 40 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
@@ -1120,7 +1120,7 @@ describe('per-language counts', () => {
     // 5 A1 + 5 A2 themed umbrellas + 4 B1 + 4 B2 themed umbrellas (2026-07-17
     // expansion) + es-b1-environment-vocab + es-b2-abstract-noun-vocab kept as
     // one theme of their levels.
-    expect(vocab).toBe(20);
+    expect(vocab).toBe(40);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
     // 6 × A1 + 6 × A2 + 9 × B1 + 9 × B2 free-writing topic umbrellas: the
@@ -1128,6 +1128,13 @@ describe('per-language counts', () => {
     expect(freeWriting).toBe(30);
     // es-b1-paraphrase + es-b2-paraphrase (Phase 2 contextual-paraphrase generation).
     expect(paraphrase).toBe(2);
+  });
+
+  it('ES has 2 word-class groups per level A1–B2', () => {
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = esCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(2);
+    }
   });
 
   it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {

@@ -399,8 +399,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * mantener, lists other compounds without leading on one, and requires a
  * natural object plus a bounded past anchor. Directive text only; the id and
  * share are unchanged, so no relabel.
+ *
+ * `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2
+ * word-class groups per level; opens 20 new vocab_recall cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-10-16';
+export const CURRICULUM_VERSION_ES = '2026-10-18';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -7432,6 +7435,301 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Mismatching article gender on -ión nouns ("*el exposición" instead of "la exposición").',
       'Confusing "la obra" (a work, e.g. of art) with "el trabajo" (work/job, in the general sense).',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // Vocab expansion (2026-10-17): +3 themed topics and +2 word-class groups per
+  // level. Themed topics author under the word-class mix (≤60% nouns); groups
+  // carry `vocabGroup` and author only their declared classes. coverageSpec:
+  // none — the curated target list fixes the class mix, so a wordClass floor on
+  // the exercise pool would only duplicate it. No theory-categories entry.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'es-a1-vocab-free-time',
+    kind: 'vocab',
+    name: 'Free time and hobbies (A1)',
+    description: 'Core A1 vocabulary for hobbies, sports, and free-time activities, including the verbs used to talk about them (jugar, nadar, bailar).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['jugar al fútbol', 'la película'],
+    examplesNegative: ['*jugar la guitarra (instruments take tocar: tocar la guitarra)'],
+    commonErrors: [
+      'Using "jugar" for instruments — instruments take "tocar" ("tocar la guitarra"), games and sports take "jugar".',
+      'Confusing "el deporte" (sport) with "el ejercicio" (exercise).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-time-calendar',
+    kind: 'vocab',
+    name: 'Time and calendar (A1)',
+    description: 'Core A1 vocabulary for days, months, seasons, parts of the day, and telling the time.',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['el lunes', 'por la mañana'],
+    examplesNegative: ['*en lunes (days take the article: el lunes)'],
+    commonErrors: [
+      'Capitalizing days and months ("*Lunes", "*Enero") — Spanish writes them in lower case.',
+      'Using "en" with days ("*en lunes") instead of the article ("el lunes").',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-greetings-phrases',
+    kind: 'vocab',
+    name: 'Greetings and everyday phrases (A1)',
+    description: 'Core A1 fixed expressions for greeting, thanking, apologizing, and polite requests (buenos días, por favor, lo siento, de nada).',
+    cefrLevel: A1,
+    language: ES,
+    examplesPositive: ['buenos días', 'lo siento'],
+    examplesNegative: ['*de nadas'],
+    commonErrors: [
+      'Using "perdón" and "lo siento" interchangeably: "perdón" gets attention or excuses, "lo siento" expresses regret.',
+      'Inflecting fixed expressions ("*de nadas", "*buenas día").',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-everyday-verbs',
+    kind: 'vocab',
+    name: 'Everyday verbs (A1)',
+    description: 'Core A1 verbs for daily actions — eating, sleeping, working, buying, living, speaking — in the infinitive, including common reflexive verbs (levantarse, llamarse).',
+    cefrLevel: A1,
+    language: ES,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['comer', 'levantarse'],
+    examplesNegative: ['*levantar (for "to get up": the reflexive levantarse)'],
+    commonErrors: [
+      'Dropping the reflexive pronoun on pronominal verbs ("*levanto a las siete" for "me levanto").',
+      'Confusing "saber" (know a fact / how to) with "conocer" (know a person or place).',
+    ],
+  },
+  {
+    key: 'es-a1-vocab-describing-words',
+    kind: 'vocab',
+    name: 'Describing words (A1)',
+    description: 'Core A1 adjectives for describing people, things, and places — size, colour, age, character, price — in the masculine singular dictionary form.',
+    cefrLevel: A1,
+    language: ES,
+    vocabGroup: { label: 'describing', pos: ['adjective'] },
+    examplesPositive: ['grande', 'barato'],
+    examplesNegative: ['*la casa blanco'],
+    commonErrors: [
+      'Missing gender agreement with the noun ("*la casa blanco").',
+      'Confusing "bueno" (good, adjective) with "bien" (well, adverb).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-technology-communication',
+    kind: 'vocab',
+    name: 'Technology and communication (A2)',
+    description: 'A2 vocabulary for phones, computers, the internet, messages, and the verbs used with them (enviar, descargar, llamar).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['el móvil', 'descargar'],
+    examplesNegative: ['*la móvil'],
+    commonErrors: [
+      'Mismatching gender on clipped or loan nouns ("*la móvil", "*el red").',
+      'Confusing "la contraseña" (password) with "la cuenta" (account).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-celebrations-traditions',
+    kind: 'vocab',
+    name: 'Celebrations and traditions (A2)',
+    description: 'A2 vocabulary for holidays, festivals, birthdays, weddings, and the verbs and phrases used to celebrate (celebrar, felicitar, feliz cumpleaños).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['la boda', 'felicitar'],
+    examplesNegative: ['*el boda'],
+    commonErrors: [
+      'Dropping the final -s of "cumpleaños" ("*feliz cumpleaño") — the noun is invariable.',
+      'Confusing "la fiesta" (party, public holiday) with "el festival" (an organised event such as a music festival).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-cooking-restaurants',
+    kind: 'vocab',
+    name: 'Cooking and restaurants (A2)',
+    description: 'A2 vocabulary for cooking methods, kitchen tools, ordering in a restaurant, and describing taste (freír, hervir, la cuenta, picante).',
+    cefrLevel: A2,
+    language: ES,
+    examplesPositive: ['freír', 'la cuenta'],
+    examplesNegative: ['*el cuenta'],
+    commonErrors: [
+      'Confusing "la cuenta" (the restaurant bill) with "la factura" (an invoice).',
+      'Confusing "cocinar" (to cook) with "la cocina" (kitchen, cuisine).',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-movement-change-verbs',
+    kind: 'vocab',
+    name: 'Verbs of movement and change (A2)',
+    description: 'A2 verbs for moving and changing state — going, arriving, leaving, returning, becoming, getting better — in the infinitive (llegar, volver, ponerse, quedarse).',
+    cefrLevel: A2,
+    language: ES,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['volver', 'quedarse'],
+    examplesNegative: ['*quedar (for "to stay somewhere": quedarse)'],
+    commonErrors: [
+      'Confusing "llevar" (take somewhere) with "traer" (bring here).',
+      'Dropping "se" on change-of-state verbs ("*pongo nervioso" for "me pongo nervioso").',
+    ],
+  },
+  {
+    key: 'es-a2-vocab-time-frequency-adverbs',
+    kind: 'vocab',
+    name: 'Time and frequency words (A2)',
+    description: 'A2 adverbs and short fixed phrases for time and frequency — ya, todavía, siempre, a menudo, de vez en cuando, nunca.',
+    cefrLevel: A2,
+    language: ES,
+    vocabGroup: { label: 'adverbs', pos: ['adverb', 'phrase'] },
+    examplesPositive: ['todavía', 'de vez en cuando'],
+    examplesNegative: ['*Siempre no como carne (for "I never eat meat": Nunca como carne)'],
+    commonErrors: [
+      'Confusing "ya" (already) with "todavía" (still; "todavía no" = not yet).',
+      'Putting "nunca" after the verb without "no" ("*Como nunca carne" for "No como nunca carne" / "Nunca como carne").',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-travel-tourism',
+    kind: 'vocab',
+    name: 'Travel and tourism (B1)',
+    description: 'B1 vocabulary for planning and booking trips, accommodation, transport problems, and travel experiences (reservar, el alojamiento, el equipaje).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['el equipaje', 'reservar'],
+    examplesNegative: ['*la equipaje'],
+    commonErrors: [
+      'Mismatching gender on -aje nouns, which are masculine ("*la equipaje").',
+      'Confusing "el billete" / "el boleto" (travel ticket) with "la entrada" (admission ticket).',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-money-consumers',
+    kind: 'vocab',
+    name: 'Money and consumers (B1)',
+    description: 'B1 vocabulary for banking, paying, saving, prices, complaints, and consumer rights (ahorrar, la tarjeta, el reembolso, reclamar).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['ahorrar', 'el reembolso'],
+    examplesNegative: ['*la reembolso'],
+    commonErrors: [
+      'Confusing "cobrar" (charge, get paid) with "pagar" (pay).',
+      'Confusing "la tarjeta" (card) with "la carta" (letter, menu).',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-health-lifestyle',
+    kind: 'vocab',
+    name: 'Health and lifestyle (B1)',
+    description: 'B1 vocabulary for healthy habits, diet, exercise, stress, and sleep, including verbs and adjectives (adelgazar, sedentario, el estrés).',
+    cefrLevel: B1,
+    language: ES,
+    examplesPositive: ['adelgazar', 'sedentario'],
+    examplesNegative: ['*la estrés'],
+    commonErrors: [
+      'Confusing "adelgazar" (lose weight) with "engordar" (put on weight).',
+      'Using "sano" (healthy, of a person or food) and "saludable" (health-giving) as if every context took both.',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-prepositional-verbs',
+    kind: 'vocab',
+    name: 'Verbs with prepositions (B1)',
+    description: 'B1 verbs that govern a fixed preposition, given as the verb plus its preposition (acordarse de, pensar en, depender de, soñar con, tratar de).',
+    cefrLevel: B1,
+    language: ES,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['acordarse de', 'soñar con'],
+    examplesNegative: ['*pensar de (for "think about": pensar en)'],
+    commonErrors: [
+      'Calquing English prepositions ("*soñar de", "*depender en").',
+      'Dropping "se" on pronominal prepositional verbs ("*acordar de").',
+    ],
+  },
+  {
+    key: 'es-b1-vocab-connectors',
+    kind: 'vocab',
+    name: 'Connectors and discourse markers (B1)',
+    description: 'B1 connectors and discourse markers for linking ideas — contrast, cause, consequence, addition (sin embargo, por eso, además, aunque, es decir).',
+    cefrLevel: B1,
+    language: ES,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['sin embargo', 'por eso'],
+    examplesNegative: ['*Porque llovía, no salimos (sentence-initial cause: Como llovía, no salimos)'],
+    commonErrors: [
+      'Confusing "sino" (but rather, after a negative) with "pero".',
+      'Starting a sentence with causal "porque" where "como" is required ("*Porque llovía, no salimos").',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-law-justice',
+    kind: 'vocab',
+    name: 'Law and justice (B2)',
+    description: 'B2 vocabulary for the legal system, crime, trials, and rights, including verbs (denunciar, juzgar, condenar) and nouns (el juicio, la pena).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['el juicio', 'denunciar'],
+    examplesNegative: ['*la juicio'],
+    commonErrors: [
+      'Confusing "el juez" (judge) with "el jurado" (jury).',
+      'Confusing "denunciar" (report a crime) with "demandar" (sue).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-economy-business',
+    kind: 'vocab',
+    name: 'Economy and business (B2)',
+    description: 'B2 vocabulary for the economy, companies, markets, and finance (la inversión, el beneficio, invertir, rentable).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['la inversión', 'rentable'],
+    examplesNegative: ['*el inversión'],
+    commonErrors: [
+      'Mismatching article gender on -ión nouns ("*el inversión").',
+      'Confusing "el presupuesto" (budget) with "el precio" (price).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-psychology-behaviour',
+    kind: 'vocab',
+    name: 'Psychology and behaviour (B2)',
+    description: 'B2 vocabulary for personality, emotions, mental health, and behaviour, with verbs and adjectives (superar, la autoestima, egoísta, desconfiado).',
+    cefrLevel: B2,
+    language: ES,
+    examplesPositive: ['la autoestima', 'superar'],
+    examplesNegative: ['*el autoestima'],
+    commonErrors: [
+      'Using "sensible" for English "sensible" — Spanish "sensible" means sensitive; sensible is "sensato".',
+      'Mismatching gender on "la autoestima" (feminine despite the stressed-a pattern not applying).',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-collocations-idioms',
+    kind: 'vocab',
+    name: 'Collocations and idioms (B2)',
+    description: 'B2 fixed collocations and idiomatic expressions in their citation form (tomar una decisión, echar de menos, darse cuenta de, estar de acuerdo, a fin de cuentas).',
+    cefrLevel: B2,
+    language: ES,
+    vocabGroup: { label: 'expressions', pos: ['phrase', 'verb'] },
+    examplesPositive: ['echar de menos', 'darse cuenta de'],
+    examplesNegative: ['*hacer una decisión (calque: tomar una decisión)'],
+    commonErrors: [
+      'Calquing English collocations ("*hacer una decisión", "*hacer sentido" for "tener sentido").',
+      'Dropping the preposition of a fixed expression ("*darse cuenta que" in careful writing, for "darse cuenta de que").',
+    ],
+  },
+  {
+    key: 'es-b2-vocab-formal-connectors',
+    kind: 'vocab',
+    name: 'Formal connectors and hedging (B2)',
+    description: 'B2 formal connectors and hedging expressions for argumentative writing (no obstante, por consiguiente, en cambio, cabe destacar, al parecer).',
+    cefrLevel: B2,
+    language: ES,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['no obstante', 'por consiguiente'],
+    examplesNegative: ['*a cambio (for "by contrast": en cambio)'],
+    commonErrors: [
+      'Using informal connectors ("pero", "así que") where formal register calls for "no obstante", "por consiguiente".',
+      'Confusing "en cambio" (by contrast) with "a cambio" (in exchange).',
     ],
   },
 
