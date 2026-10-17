@@ -1117,9 +1117,11 @@ describe('per-language counts', () => {
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
     expect(grammar.B2).toBeGreaterThanOrEqual(32);
-    // 5 A1 + 5 A2 themed umbrellas + 4 B1 + 4 B2 themed umbrellas (2026-07-17
-    // expansion) + es-b1-environment-vocab + es-b2-abstract-noun-vocab kept as
-    // one theme of their levels.
+    // 10 per level A1–B2. The original 20: 5 A1 + 5 A2 + 4 B1 + 4 B2 themed
+    // umbrellas (2026-07-17 expansion) + es-b1-environment-vocab +
+    // es-b2-abstract-noun-vocab kept as one theme of their levels. The
+    // 2026-10-17 vocab expansion added 5 per level: 3 themed + 2 word-class
+    // groups (A1: 2 themed + 3 groups, the greetings umbrella being one).
     expect(vocab).toBe(40);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
@@ -1149,9 +1151,11 @@ describe('per-language counts', () => {
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
     expect(grammar.B1).toBeGreaterThanOrEqual(27);
     expect(grammar.B2).toBeGreaterThanOrEqual(27);
-    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
-    // each level keeps its original broad umbrella (housing / environment /
-    // academic-noun) as one of its themes.
+    // 10 per level A1–B2. The original 20: 5 themed umbrellas per level
+    // (2026-07-17 expansion), each level keeping its original broad umbrella
+    // (housing / environment / academic-noun) as one of its themes. The
+    // 2026-10-17 vocab expansion added 5 per level: 3 themed + 2 word-class
+    // groups (A1: 2 themed + 3 groups, the greetings umbrella being one).
     expect(vocab).toBe(40);
     // de-a1 + de-a2 + de-b1 + de-b2 dictation (2026-09-04): the follow-up the
     // 2026-07-12 plan doc deferred. German was the only language with zero
@@ -1197,7 +1201,10 @@ describe('per-language counts', () => {
     // book-coverage cycle). B2 dictation/free-writing remain out of scope; B2
     // vocab umbrellas added 2026-07-17.
     expect(grammar.B2).toBe(17);
-    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
+    // 10 per level A1–B2. The original 20: 5 themed umbrellas per level
+    // (2026-07-17 expansion). The 2026-10-17 vocab expansion added 5 per
+    // level: 3 themed + 2 word-class groups (A1: 2 themed + 3 groups, the
+    // greetings umbrella being one).
     expect(vocab).toBe(40);
     // tr-a1 + tr-a2 + tr-b1 + tr-b2 dictation (B2 added 2026-09-04).
     expect(dictation).toBe(4);
