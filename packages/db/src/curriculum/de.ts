@@ -4638,9 +4638,11 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
   },
   // ---------------------------------------------------------------------------
-  // Vocab expansion (2026-10-17): +3 themed topics and +2 word-class groups per
-  // level. Themed topics author under the word-class mix (≤60% nouns); groups
-  // carry `vocabGroup` and author only their declared classes. coverageSpec:
+  // Vocab expansion (2026-10-17): +5 umbrellas per level — 3 themed topics and
+  // 2 word-class groups, except A1, whose greetings umbrella is a third group
+  // (fixed expressions the themed ≤10% phrase cap would gut). Themed topics
+  // author under the word-class mix (≤60% nouns); groups carry `vocabGroup`
+  // and author only their declared classes. coverageSpec:
   // none — the curated target list fixes the class mix, so a wordClass floor on
   // the exercise pool would only duplicate it. No theory-categories entry.
   // ---------------------------------------------------------------------------
@@ -4679,6 +4681,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     description: 'Core A1 fixed expressions for greeting, thanking, apologizing, and polite requests (guten Morgen, bitte, danke schön, Entschuldigung).',
     cefrLevel: A1,
     language: DE,
+    vocabGroup: { label: 'expressions', pos: ['phrase', 'other'] },
     examplesPositive: ['guten Morgen', 'Entschuldigung'],
     examplesNegative: ['*gute Morgen'],
     commonErrors: [

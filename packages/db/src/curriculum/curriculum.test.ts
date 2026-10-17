@@ -1130,11 +1130,17 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('ES has 2 word-class groups per level A1–B2', () => {
+  it('ES has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
     for (const level of ['A1', 'A2', 'B1', 'B2']) {
       const groups = esCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
-      expect(groups).toHaveLength(2);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
     }
+    expect(esCurriculum.find((p) => p.key === 'es-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
   });
 
   it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
@@ -1163,11 +1169,17 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('DE has 2 word-class groups per level A1–B2', () => {
+  it('DE has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
     for (const level of ['A1', 'A2', 'B1', 'B2']) {
       const groups = deCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
-      expect(groups).toHaveLength(2);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
     }
+    expect(deCurriculum.find((p) => p.key === 'de-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
   });
 
   it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
@@ -1198,11 +1210,17 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('TR has 2 word-class groups per level A1–B2', () => {
+  it('TR has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
     for (const level of ['A1', 'A2', 'B1', 'B2']) {
       const groups = trCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
-      expect(groups).toHaveLength(2);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
     }
+    expect(trCurriculum.find((p) => p.key === 'tr-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
   });
 });
 
