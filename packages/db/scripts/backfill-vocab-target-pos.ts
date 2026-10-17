@@ -5,7 +5,12 @@
  * class from vocab_lemma.pos_all → that class; anything else → a batched
  * Claude classification (skip with --no-llm). Dry-run by default (the Claude
  * step still runs); --apply writes `pos` only where it is still null;
- * --revert <artifact> --apply nulls exactly the rows an applied run wrote.
+ * --revert <artifact> --apply nulls exactly the rows an applied run wrote
+ * (artifact `writtenIds`), and only where pos still holds the planned value.
+ * The artifact is written BEFORE applying and rewritten every 50 updates, so a
+ * run that dies partway still lists every id it wrote; a re-run is also safe
+ * because writes are guarded by `pos IS NULL`.
+ * --out-dir <path> sets the artifact directory (default ./backfill-runs).
  * Required env: DATABASE_URL; ANTHROPIC_API_KEY unless --no-llm.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -44,10 +49,11 @@ export interface Args {
   apply: boolean;
   noLlm: boolean;
   revert: string | null;
+  outDir: string;
 }
 
 export function parseArgs(argv: readonly string[]): Args {
-  const args: Args = { apply: false, noLlm: false, revert: null };
+  const args: Args = { apply: false, noLlm: false, revert: null, outDir: 'backfill-runs' };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--apply') args.apply = true;
@@ -56,6 +62,10 @@ export function parseArgs(argv: readonly string[]): Args {
       const v = argv[++i];
       if (!v) throw new Error('--revert requires an artifact path');
       args.revert = v;
+    } else if (a === '--out-dir') {
+      const v = argv[++i];
+      if (!v) throw new Error('--out-dir requires a path');
+      args.outDir = v;
     } else throw new Error(`Unknown argument: ${a}`);
   }
   return args;
@@ -73,6 +83,34 @@ export function posFromUd(
   if (tokens.length > 1 || !posAll || posAll.length === 0) return null;
   const classes = new Set(posAll.map((t) => UD_TO_POS[t]).filter((p): p is VocabPos => p !== undefined));
   return classes.size === 1 ? [...classes][0] : null;
+}
+
+export interface PosArtifact {
+  applied: boolean;
+  planned: PlannedPos[];
+  writtenIds?: string[];
+}
+
+/** The (id, pos) pairs a revert may reset: only rows the applied run wrote. */
+export function revertTargets(artifact: PosArtifact): { id: string; pos: VocabPos }[] {
+  if (!artifact.applied) throw new Error('artifact is a dry-run artifact; nothing to revert');
+  if (!Array.isArray(artifact.writtenIds)) {
+    throw new Error('artifact has no writtenIds field; refusing to revert');
+  }
+  const written = new Set(artifact.writtenIds);
+  return artifact.planned.filter((p) => written.has(p.id)).map((p) => ({ id: p.id, pos: p.pos }));
+}
+
+/** A multi-token item is only ever a phrase or a verb (reflexive / light-verb); anything else is a misread. */
+export function acceptLlmPos(
+  lemma: string,
+  displayForm: string,
+  pos: VocabPos | null,
+): VocabPos | null {
+  if (!pos) return null;
+  const multi = lemma.trim().split(/\s+/).length > 1 || displayForm.trim().split(/\s+/).length > 1;
+  if (multi && pos !== 'phrase' && pos !== 'verb') return null;
+  return pos;
 }
 
 interface Row {
@@ -152,7 +190,7 @@ async function classifyBatch(
   const items = (block.input as { items?: { index: number; pos: string }[] }).items ?? [];
   for (const it of items) {
     const row = batch[it.index];
-    if (row) out.set(row.id, parseVocabPos(it.pos));
+    if (row) out.set(row.id, acceptLlmPos(row.lemma, row.displayForm, parseVocabPos(it.pos)));
   }
   return out;
 }
@@ -190,34 +228,38 @@ async function plan(db: Db, noLlm: boolean): Promise<{ planned: PlannedPos[]; un
   return { planned, unresolved };
 }
 
-async function applyPlanned(db: Db, planned: readonly PlannedPos[]): Promise<number> {
-  let n = 0;
-  for (const p of planned) {
+async function applyPlanned(
+  db: Db,
+  planned: readonly PlannedPos[],
+  checkpoint: (writtenIds: string[]) => void,
+): Promise<string[]> {
+  const writtenIds: string[] = [];
+  for (const [i, p] of planned.entries()) {
     const res = await db
       .update(vocabTarget)
       .set({ pos: p.pos })
       .where(and(eq(vocabTarget.id, p.id), isNull(vocabTarget.pos)))
       .returning({ id: vocabTarget.id });
-    n += res.length;
+    for (const r of res) writtenIds.push(r.id);
+    if ((i + 1) % 50 === 0) checkpoint(writtenIds);
   }
-  return n;
+  return writtenIds;
 }
 
 async function revert(db: Db, artifactPath: string, apply: boolean): Promise<void> {
-  const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as { applied: boolean; planned: PlannedPos[] };
-  if (!artifact.applied) throw new Error(`${artifactPath} is a dry-run artifact; nothing to revert`);
-  const ids = artifact.planned.map((p) => p.id);
-  console.log(`revert: ${ids.length} rows listed in ${artifactPath}`);
+  const artifact = JSON.parse(readFileSync(artifactPath, 'utf8')) as PosArtifact;
+  const targets = revertTargets(artifact);
+  console.log(`revert: ${targets.length} written rows listed in ${artifactPath}`);
   if (!apply) {
     console.log('dry-run — pass --apply to null pos on these rows');
     return;
   }
   let n = 0;
-  for (let i = 0; i < ids.length; i += 500) {
+  for (const t of targets) {
     const res = await db
       .update(vocabTarget)
       .set({ pos: null })
-      .where(inArray(vocabTarget.id, ids.slice(i, i + 500)))
+      .where(and(eq(vocabTarget.id, t.id), eq(vocabTarget.pos, t.pos)))
       .returning({ id: vocabTarget.id });
     n += res.length;
   }
@@ -245,11 +287,25 @@ async function main(): Promise<void> {
   }
   for (const r of unresolved.slice(0, 20)) console.log(`  none ${r.language} ${r.displayForm}`);
 
-  const written = args.apply ? await applyPlanned(db, planned) : 0;
-  const dir = path.resolve('backfill-runs');
+  const dir = path.resolve(args.outDir);
   mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `vocab-target-pos-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-  writeFileSync(file, JSON.stringify({ applied: args.apply, written, planned, unresolved }, null, 2));
+  const save = (writtenIds: string[]) =>
+    writeFileSync(
+      file,
+      JSON.stringify(
+        { applied: args.apply, written: writtenIds.length, writtenIds, planned, unresolved },
+        null,
+        2,
+      ),
+    );
+  save([]);
+  let written = 0;
+  if (args.apply) {
+    const ids = await applyPlanned(db, planned, save);
+    save(ids);
+    written = ids.length;
+  }
   console.log(args.apply ? `wrote ${written} rows` : 'dry-run — pass --apply to write');
   console.log(`artifact: ${file}`);
 }
