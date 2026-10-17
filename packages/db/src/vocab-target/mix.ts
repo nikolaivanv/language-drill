@@ -62,29 +62,34 @@ export function fitToMix<T extends { pos: VocabPos }>(
   batch: readonly T[],
   quota: MixQuota = THEMED_MIX,
 ): T[] {
-  const phraseCap = Math.max(
-    0,
-    floorShare(quota.maxPhraseShare * (total(existing) + batch.length)) - existing.phrase,
-  );
-  let phrases = 0;
-  const afterPhrases = batch.filter((w) => {
-    if (w.pos !== 'phrase') return true;
-    phrases += 1;
-    return phrases <= phraseCap;
-  });
+  const nounRatio = quota.maxNounShare / (1 - quota.maxNounShare);
+  const keepFirst = (rows: readonly T[], pos: VocabPos, cap: number): T[] => {
+    let seen = 0;
+    return rows.filter((w) => {
+      if (w.pos !== pos) return true;
+      seen += 1;
+      return seen <= cap;
+    });
+  };
 
-  const others =
-    total(existing) - existing.noun + afterPhrases.filter((w) => w.pos !== 'noun').length;
-  const nounCap = Math.max(
-    0,
-    floorShare((quota.maxNounShare / (1 - quota.maxNounShare)) * others) - existing.noun,
-  );
-  let nouns = 0;
-  return afterPhrases.filter((w) => {
-    if (w.pos !== 'noun') return true;
-    nouns += 1;
-    return nouns <= nounCap;
-  });
+  // Trimming nouns shrinks the total, which tightens the phrase cap (and vice
+  // versa), so iterate until neither pass removes anything. Strictly shrinking,
+  // so it terminates.
+  let kept: T[] = [...batch];
+  for (;;) {
+    const before = kept.length;
+    const phraseCap = Math.max(
+      0,
+      floorShare(quota.maxPhraseShare * (total(existing) + kept.length)) - existing.phrase,
+    );
+    kept = keepFirst(kept, 'phrase', phraseCap);
+
+    const others = total(existing) - existing.noun + kept.filter((w) => w.pos !== 'noun').length;
+    const nounCap = Math.max(0, floorShare(nounRatio * others) - existing.noun);
+    kept = keepFirst(kept, 'noun', nounCap);
+
+    if (kept.length === before) return kept;
+  }
 }
 
 /** `--fill-mix`: non-noun request for `growth` new words that also closes the shortfall. */
@@ -93,8 +98,20 @@ export function planFillMixRequest(
   growth: number,
   quota: MixQuota = THEMED_MIX,
 ): Shortfall {
-  const short = mixShortfall(existing, total(existing) + growth, quota);
+  const base = total(existing);
+  const short = mixShortfall(existing, base + growth, quota);
   const verb = Math.max(short.verb, Math.round(growth * 0.6));
-  const adjectiveOrAdverb = Math.max(short.adjectiveOrAdverb, growth - verb);
-  return { verb, adjectiveOrAdverb };
+  let req: Shortfall = { verb, adjectiveOrAdverb: Math.max(short.adjectiveOrAdverb, growth - verb) };
+  // The request itself grows the final total, which raises the quota; re-measure
+  // against the size the request produces until stable (capped).
+  for (let i = 0; i < 5; i++) {
+    const next = mixShortfall(existing, base + req.verb + req.adjectiveOrAdverb, quota);
+    const grown: Shortfall = {
+      verb: Math.max(req.verb, next.verb),
+      adjectiveOrAdverb: Math.max(req.adjectiveOrAdverb, next.adjectiveOrAdverb),
+    };
+    if (grown.verb === req.verb && grown.adjectiveOrAdverb === req.adjectiveOrAdverb) break;
+    req = grown;
+  }
+  return req;
 }

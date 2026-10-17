@@ -52,6 +52,19 @@ describe('fitToMix', () => {
     expect(kept.map((k) => k.pos)).toEqual(['verb', 'verb']);
   });
 
+  it('keeps phrases at or under 10% after nouns are trimmed', () => {
+    const batch = [
+      ...Array.from({ length: 20 }, (_, i) => w('noun', i)),
+      ...Array.from({ length: 5 }, (_, i) => w('verb', i)),
+      ...Array.from({ length: 5 }, (_, i) => w('phrase', i)),
+    ];
+    const kept = fitToMix(emptyPosCounts(), batch);
+    const n = (p: string) => kept.filter((k) => k.pos === p).length;
+    expect(n('phrase')).toBeLessThanOrEqual(Math.floor(0.1 * kept.length));
+    expect(n('noun')).toBeLessThanOrEqual(Math.floor(0.6 * kept.length));
+    expect(n('verb')).toBe(5);
+  });
+
   it('caps phrases at 10% of the resulting total', () => {
     const batch = [
       ...Array.from({ length: 10 }, (_, i) => w('verb', i)),
@@ -67,6 +80,15 @@ describe('planFillMixRequest', () => {
     const existing = { ...emptyPosCounts(), noun: 26, verb: 2, adjective: 2 };
     // target total 42 → need ceil(8.4)=9 verbs (7 short), ceil(6.3)=7 adj/adv (5 short)
     expect(planFillMixRequest(existing, 12)).toEqual({ verb: 7, adjectiveOrAdverb: 5 });
+  });
+
+  it('re-measures against the grown total so the verb quota holds', () => {
+    const existing = { ...emptyPosCounts(), noun: 30 };
+    const req = planFillMixRequest(existing, 12);
+    const finalTotal = 30 + req.verb + req.adjectiveOrAdverb;
+    expect(req.verb).toBeGreaterThanOrEqual(Math.ceil(0.2 * finalTotal - 1e-9));
+    expect(req.adjectiveOrAdverb).toBeGreaterThanOrEqual(Math.ceil(0.15 * finalTotal - 1e-9));
+    expect(req).toEqual({ verb: 10, adjectiveOrAdverb: 8 });
   });
 
   it('never asks for less than the growth', () => {
