@@ -97,7 +97,7 @@ export async function resolveArticleForm(
             ): r is {
               lemma: string;
               displayForm: string;
-              pos?: string | null;
+              pos: string | null;
             } =>
               typeof r?.lemma === "string" &&
               typeof r?.displayForm === "string",
