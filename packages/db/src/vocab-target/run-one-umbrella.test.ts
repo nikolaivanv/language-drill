@@ -205,6 +205,7 @@ describe('runOneUmbrella — word-class mix', () => {
     expect(out.rows.map((r) => r.lemma)).not.toContain('nZ');
     expect(out.rows.map((r) => r.pos)).toContain('phrase');
     expect(out.followUp).toBe(false);
+    expect(out.requestedNothing).toBe(false);
   });
 
   it('fill-mix asks for the plan total in both prompts when it exceeds wordCount', async () => {
@@ -228,5 +229,18 @@ describe('runOneUmbrella — word-class mix', () => {
     expect(client.messages.create).not.toHaveBeenCalled();
     expect(out.rows).toEqual([]);
     expect(out.followUp).toBe(false);
+    expect(out.requestedNothing).toBe(true);
+  });
+
+  it('requestedNothing is false when a real plan gets an empty reply', async () => {
+    const existing = { noun: 40, verb: 0, adjective: 0, adverb: 0, phrase: 0, other: 0 };
+    const client = {
+      messages: { create: vi.fn().mockResolvedValue({ content: [{ type: 'text', text: '' }] }) },
+    };
+    const out = await runOneUmbrella({ db: mockDb({}) as never, client: client as never, umbrella, wordCount: 12, avoidWords: [], existing, fillMix: true });
+    expect(client.messages.create).toHaveBeenCalled();
+    expect(out.rows).toEqual([]);
+    expect(out.rawCount).toBe(0);
+    expect(out.requestedNothing).toBe(false);
   });
 });

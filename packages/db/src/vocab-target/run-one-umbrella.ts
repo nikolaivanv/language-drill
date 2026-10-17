@@ -67,6 +67,8 @@ export type RunOneUmbrellaResult = {
   keptCount: number;
   followUp: boolean;
   remainingShortfall: Shortfall;
+  /** True only for a fill-mix themed umbrella whose plan asked for nothing (no call made). */
+  requestedNothing: boolean;
 };
 
 function extractText(msg: Anthropic.Messages.Message): string {
@@ -152,6 +154,7 @@ export async function runOneUmbrella(
 
   let deduped: ProposedWord[];
   let followUp = false;
+  let requestedNothing = false;
   if (group) {
     deduped = await propose(wordCount, { kind: 'group', pos: group.pos }, group.pos);
   } else {
@@ -161,6 +164,7 @@ export async function runOneUmbrella(
       const plan = planFillMixRequest(existing, wordCount);
       // Nothing to ask for: no model call (an "exactly 0" request is meaningless).
       nothingToAsk = plan.verb + plan.adjectiveOrAdverb === 0;
+      requestedNothing = nothingToAsk;
       // The plan can total more than wordCount (it grows to meet the quota at
       // the final size); the prompts must ask for what the plan says.
       first = nothingToAsk
@@ -226,5 +230,6 @@ export async function runOneUmbrella(
     keptCount: targetRows.length,
     followUp,
     remainingShortfall,
+    requestedNothing,
   };
 }

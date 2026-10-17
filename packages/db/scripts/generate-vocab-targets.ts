@@ -102,6 +102,42 @@ export function assertFillMixReady(umbrellaKey: string, untagged: number): void 
   }
 }
 
+/**
+ * Fill-mix tops up themed topics only. Narrowing to a single word-class group
+ * with `--umbrella` is a usage error, not a silent empty run.
+ */
+export function selectFillMixUmbrellas(
+  resolved: readonly GrammarPoint[],
+  umbrellaKey: string | undefined,
+): GrammarPoint[] {
+  const themed = resolved.filter((u) => !u.vocabGroup);
+  if (themed.length === 0 && umbrellaKey !== undefined) {
+    throw new Error(
+      `--fill-mix skips word-class groups, and "${umbrellaKey}" is one; run it without --fill-mix to author it`,
+    );
+  }
+  return themed;
+}
+
+/**
+ * Check every selected umbrella is fully tagged BEFORE any authoring call, so a
+ * refusal on a later umbrella cannot follow spend/inserts on earlier ones.
+ * Returns each umbrella's class counts.
+ */
+export async function preflightFillMix(
+  db: Db,
+  language: LearningLanguage,
+  umbrellas: readonly GrammarPoint[],
+): Promise<Map<string, PosCounts>> {
+  const out = new Map<string, PosCounts>();
+  for (const u of umbrellas) {
+    const { counts, untagged } = await loadUmbrellaPosCounts(db, language, u.key);
+    assertFillMixReady(u.key, untagged);
+    out.set(u.key, counts);
+  }
+  return out;
+}
+
 const FILL_MIX_WORD_COUNT = 12;
 
 export function parseWordCount(argv: readonly string[], fillMix: boolean): number {
@@ -212,7 +248,8 @@ async function main(): Promise<void> {
     umbrellaKey,
   );
   // --fill-mix tops up themed topics only; word-class groups are skipped.
-  const umbrellas = fillMix ? resolved.filter((u) => !u.vocabGroup) : resolved;
+  const umbrellas = fillMix ? selectFillMixUmbrellas(resolved, umbrellaKey) : resolved;
+  const preflight = fillMix ? await preflightFillMix(db, language, umbrellas) : null;
 
   process.stdout.write(
     `Authoring ${umbrellas.length} ${language} ${level} vocab umbrella(s)` +
@@ -220,11 +257,11 @@ async function main(): Promise<void> {
   );
 
   for (const umbrella of umbrellas) {
-    const { counts, untagged } = await loadUmbrellaPosCounts(db, language, umbrella.key);
-    if (fillMix) assertFillMixReady(umbrella.key, untagged);
+    const counts =
+      preflight?.get(umbrella.key) ?? (await loadUmbrellaPosCounts(db, language, umbrella.key)).counts;
     // Reloaded per umbrella so words inserted earlier in this run are avoided.
     const avoidWords = await loadLanguageLemmas(db, language);
-    const { rows, rawCount, keptCount, followUp, remainingShortfall } = await runOneUmbrella({
+    const { rows, rawCount, keptCount, followUp, remainingShortfall, requestedNothing } = await runOneUmbrella({
       db,
       client,
       umbrella,
@@ -253,7 +290,7 @@ async function main(): Promise<void> {
       formatUmbrellaLog({
         umbrellaKey: umbrella.key,
         fillMix,
-        requestedNothing: rawCount === 0,
+        requestedNothing,
         rawCount,
         keptCount,
         keptRows: rows.length,

@@ -8,6 +8,8 @@ import {
   loadLanguageLemmas,
   parseFillMix,
   parseWordCount,
+  preflightFillMix,
+  selectFillMixUmbrellas,
   parseLanguage,
   parseLevel,
   parseUmbrella,
@@ -151,5 +153,24 @@ describe('formatUmbrellaLog', () => {
     expect(
       formatUmbrellaLog({ ...base, fillMix: true, requestedNothing: true, rawCount: 0, keptCount: 0, keptRows: 0, inserted: 0 }),
     ).toBe('[u] already balanced\n');
+  });
+});
+
+describe('fill-mix selection and preflight', () => {
+  const themed = { key: 't', kind: 'vocab' } as never;
+  const group = { key: 'g', kind: 'vocab', vocabGroup: { label: 'verbs', pos: ['verb'] } } as never;
+
+  it('skips word-class groups', () => {
+    expect(selectFillMixUmbrellas([themed, group], undefined)).toEqual([themed]);
+  });
+  it('errors clearly when --umbrella names a word-class group', () => {
+    expect(() => selectFillMixUmbrellas([group], 'g')).toThrow('--fill-mix skips word-class groups');
+  });
+  it('preflight refuses before any umbrella is authored', async () => {
+    const results = [[{ pos: 'noun' }], [{ pos: null }, { pos: null }]];
+    let call = 0;
+    const db = { select: () => ({ from: () => ({ where: () => Promise.resolve(results[call++]) }) }) };
+    const us = [{ key: 'a' }, { key: 'b' }] as never[];
+    await expect(preflightFillMix(db as never, 'ES', us)).rejects.toThrow('b has 2 rows without pos');
   });
 });
