@@ -274,7 +274,16 @@ sessions.post('/sessions', async (c) => {
     );
   }
 
-  return c.json(await insertSessionAndBuildManifest({ userId, language, difficulty, rows }));
+  return c.json(
+    await insertSessionAndBuildManifest({
+      userId,
+      language,
+      difficulty,
+      rows,
+      grammarPointKey,
+      exerciseType,
+    }),
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -301,6 +310,8 @@ async function insertSessionAndBuildManifest(params: {
   language: string;
   difficulty: string;
   rows: ManifestRow[];
+  grammarPointKey?: string;
+  exerciseType?: string;
 }) {
   const { userId, language, difficulty, rows } = params;
 
@@ -312,6 +323,9 @@ async function insertSessionAndBuildManifest(params: {
       difficulty,
       exerciseCount: rows.length,
       exerciseIds: rows.map((r) => r.id),
+      // Targeting filters, so the debrief's "practice more" can repeat them.
+      ...(params.grammarPointKey ? { grammarPointKey: params.grammarPointKey } : {}),
+      ...(params.exerciseType ? { exerciseType: params.exerciseType } : {}),
     })
     .returning({ id: practiceSessions.id });
 
@@ -1190,6 +1204,8 @@ sessions.get('/sessions/:id/debrief', async (c) => {
     skippedCount,
     items,
     skillMovements,
+    grammarPointKey: session.grammarPointKey ?? null,
+    exerciseType: session.exerciseType ?? null,
   });
 });
 

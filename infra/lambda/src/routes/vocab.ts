@@ -156,7 +156,7 @@ vocab.get('/vocab/topics', async (c) => {
     if (!point || point.kind !== 'vocab') continue;
     const byWord = await loadWordStats(userId, language, umbrellaKey);
     const states = rows.map((r) => deriveWordCoverage(pickWordStat(r, byWord)));
-    const { total, available, practiced } = summarizeCoverage(states);
+    const { total, available, practiced, strong } = summarizeCoverage(states);
     topics.push({
       umbrellaKey,
       name: point.name,
@@ -165,6 +165,7 @@ vocab.get('/vocab/topics', async (c) => {
       wordCount: total,
       available,
       practiced,
+      strong,
     });
   }
 

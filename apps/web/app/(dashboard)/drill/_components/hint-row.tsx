@@ -5,17 +5,29 @@ import { hideWordInExample } from '../../../../lib/drill/example-sentence';
 import { letterCountLabel } from '../../../../lib/drill/syllabify';
 
 export interface HintRowProps {
+  /** The bare headword the first-letter / letter-count hints describe. */
   expectedWord: string;
+  /** The article form ("la espalda") to mask first in the example sentence, so
+   *  the visible article cannot give away the gender being tested. */
+  articleForm?: string;
   exampleSentence?: string;
   level: 0 | 1 | 2 | 3;
   onAdvance: () => void;
+  /** When set, a "show answer" chip replaces the hint chip once every hint has
+   *  been shown — the learner can give up instead of typing a throwaway guess. */
+  onGiveUp?: () => void;
+  /** Disables the give-up chip (e.g. while a submit is in flight). */
+  disabled?: boolean;
 }
 
 export function HintRow({
   expectedWord,
+  articleForm,
   exampleSentence,
   level,
   onAdvance,
+  onGiveUp,
+  disabled = false,
 }: HintRowProps) {
   const showL3 = Boolean(exampleSentence);
   // first letter → letter count → (example sentence, if one exists). A single
@@ -25,7 +37,10 @@ export function HintRow({
   const maxLevel = showL3 ? 3 : 2;
   const maskedExampleSentence =
     level >= 3 && exampleSentence
-      ? hideWordInExample(exampleSentence, expectedWord)
+      ? hideWordInExample(
+          articleForm ? hideWordInExample(exampleSentence, articleForm) : exampleSentence,
+          expectedWord,
+        )
       : '';
 
   return (
@@ -38,6 +53,17 @@ export function HintRow({
           onClick={onAdvance}
         >
           show me a hint
+        </Button>
+      )}
+      {level >= maxLevel && onGiveUp && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          onClick={onGiveUp}
+          disabled={disabled}
+        >
+          show answer
         </Button>
       )}
       {level >= 1 && (

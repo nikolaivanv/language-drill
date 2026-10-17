@@ -92,7 +92,7 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // ONE was a clear evaluator error (3 were genuine item defects already
 // rejected, 1 correct, 1 borderline) — so this is a ~0.2 % correction, not a
 // systemic repair. SYSTEM-prompt edit — needs a Langfuse push per env.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-09-22";
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-10-17";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -241,22 +241,33 @@ function buildVocabRecallUserPrompt(
   language: Language,
   difficulty: CefrLevel,
 ): string {
+  const articleRule = content.articleForm
+    ? `**Required Form:** ${content.articleForm}
+
+ARTICLE RULE — this noun must be answered WITH its article, and the learner was told so on screen ("include the article"). Apply it consistently:
+- The right word with a definite article of the right gender (or an indefinite article of the same gender) is fully correct.
+- The right word with NO article: score 0.8, one grammar error of severity "minor" whose correction is the Required Form.
+- The right word with a wrong-gender article: score 0.6, one grammar error of severity "major" whose correction is the Required Form.
+- Common-gender nouns take either article ("el periodista" / "la periodista", "el estudiante" / "la estudiante"): when the noun genuinely has both genders with this meaning, the other article is fully correct, even though the Required Form shows only one.
+- Combine these with any other genuine errors (e.g. a spelling slip) as usual. A valid synonym is held to the same rule with its OWN gender.`
+    : `There is no article requirement for this item. An article the learner adds is NOT an error when it is correct, and its absence is never an error — do not ask for one.`;
+
   return `## Exercise Type: Vocabulary Recall
 **Language:** ${language}
 **Target CEFR Level:** ${difficulty}
 
-**Instructions:** ${content.instructions}
 **Prompt:** ${content.prompt}
 **Expected Word:** ${content.expectedWord}
-**Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only `Expected Word` is the target headword)"}
-**Hints:** ${content.hints.join("; ")}
+**Acceptable Answers:** ${content.acceptableAnswers && content.acceptableAnswers.length > 0 ? content.acceptableAnswers.join(", ") : "(none — only \`Expected Word\` is the target headword)"}
 **Example Sentence:** ${content.exampleSentence}
 
 **User's Answer:** ${userAnswer}
 
-Evaluate the user's answer. If it matches **Expected Word** or any entry in **Acceptable Answers**, it is fully correct. Otherwise check whether it is a valid synonym used appropriately. Consider spelling accuracy.
+Evaluate the user's answer. If it matches **Expected Word** or any entry in **Acceptable Answers** (subject to the article rule below), it is fully correct. Otherwise check whether it is a valid synonym used appropriately. Consider spelling accuracy.
 
-The learner saw ONLY the **Prompt** and **Hints** — NOT the **Expected Word** or **Acceptable Answers**. A word the learner produces that genuinely fits the prompt/definition and is used appropriately is fully correct even if it is not the **Expected Word** and not listed in **Acceptable Answers**; judge it on whether it satisfies what the learner saw, not on whether it matches the reference. Do NOT mark a valid synonym wrong merely for differing from the **Expected Word**.`;
+${articleRule}
+
+The learner saw ONLY the **Prompt**, plus — only if they asked — the first letter, the letter count, and the **Example Sentence** with the word masked. They did NOT see the **Expected Word**, the **Acceptable Answers**, or any authoring notes; never tell them a hint "said" or "reminded" them of anything. A word the learner produces that genuinely fits the prompt/definition and is used appropriately is fully correct even if it is not the **Expected Word** and not listed in **Acceptable Answers**; judge it on whether it satisfies what the learner saw, not on whether it matches the reference. Do NOT mark a valid synonym wrong merely for differing from the **Expected Word**.`;
 }
 
 function buildSentenceConstructionUserPrompt(

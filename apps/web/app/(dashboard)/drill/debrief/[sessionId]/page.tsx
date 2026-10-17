@@ -74,7 +74,10 @@ export default function DebriefPage({ params }: DebriefPageProps) {
             ))}
           </div>
 
-          <DebriefFooter />
+          <DebriefFooter
+            grammarPointKey={query.data.grammarPointKey}
+            exerciseType={query.data.exerciseType}
+          />
         </>
       )}
     </div>

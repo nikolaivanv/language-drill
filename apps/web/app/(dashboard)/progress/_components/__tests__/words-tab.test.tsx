@@ -27,6 +27,7 @@ function topic(o: Partial<VocabTopicSummary> & { umbrellaKey: string }): VocabTo
     wordCount: o.wordCount ?? 0,
     available: o.available ?? 0,
     practiced: o.practiced ?? 0,
+    strong: o.strong ?? 0,
     ...o,
   };
 }
@@ -55,6 +56,35 @@ describe('WordsTab', () => {
     );
     const link = screen.getByRole('link', { name: /food and drink/i });
     expect(link).toHaveAttribute('href', '/vocab/es-a1-vocab-food-drink');
+  });
+
+  it('shows a mastery bar split into strong and shaky words', () => {
+    render(
+      <WordsTab
+        data={loaded([
+          topic({ umbrellaKey: 'es-a2-body', wordCount: 20, available: 15, practiced: 8, strong: 5 }),
+        ])}
+        isLoading={false}
+        isError={false}
+        onRetry={mockRetry}
+      />,
+    );
+    expect(screen.getByTestId('mastery-strong')).toHaveStyle({ width: '25%' });
+    expect(screen.getByTestId('mastery-shaky')).toHaveStyle({ width: '15%' });
+    expect(screen.getByText('5 / 20 strong · 3 shaky')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '5 of 20 words strong, 3 shaky' })).toBeInTheDocument();
+  });
+
+  it('marks an unstarted topic as not started', () => {
+    render(
+      <WordsTab
+        data={loaded([topic({ umbrellaKey: 'es-a2-home', wordCount: 30, available: 12 })])}
+        isLoading={false}
+        isError={false}
+        onRetry={mockRetry}
+      />,
+    );
+    expect(screen.getByText('30 words · 12 drillable · not started')).toBeInTheDocument();
   });
 
   it('shows the loading state', () => {

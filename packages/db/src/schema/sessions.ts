@@ -14,6 +14,11 @@ export const practiceSessions = pgTable(
     exerciseCount: smallint('exercise_count').notNull(),
     correctCount: smallint('correct_count').notNull().default(0),
     exerciseIds: jsonb('exercise_ids').$type<string[]>().notNull(),
+    // Targeting filters the session was created with (POST /sessions). NULL for
+    // untargeted quick drills. Read by the debrief so "practice more" can start
+    // another session for the same group instead of dropping to the drill hub.
+    grammarPointKey: text('grammar_point_key'),
+    exerciseType: text('exercise_type'),
     startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
   },

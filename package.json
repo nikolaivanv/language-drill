@@ -29,6 +29,7 @@
     "backfill:coverage-tags": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:coverage-tags",
     "backfill:conjugation": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:conjugation",
     "backfill:mastery": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:mastery",
+    "backfill:vocab-article-form": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:vocab-article-form",
     "backfill:demotion-reason": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:demotion-reason",
     "backfill:variant-seeds": "dotenv -e .env -- pnpm --filter @language-drill/db backfill:variant-seeds",
     "bootstrap-prompts": "dotenv -e .env -- pnpm --filter @language-drill/ai bootstrap-prompts",

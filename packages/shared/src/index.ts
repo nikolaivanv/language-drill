@@ -200,6 +200,12 @@ export type VocabRecallContent = {
    * `expectedWord` is NOT auto-included in this list.
    */
   acceptableAnswers?: string[];
+  /**
+   * Optional. The noun with its definite article ("la espalda", "die Schule")
+   * when the answer must include it (ES/DE nouns). Absent → no article
+   * requirement (verbs, adjectives, Turkish). Graded by `gradeVocabArticle`.
+   */
+  articleForm?: string;
   hints: string[];
   exampleSentence: string;
   topicHint?: string;
@@ -432,6 +438,12 @@ export type EvaluationError = {
    * dictation path leaves it unset.
    */
   grammarPointKey?: string | null;
+  /**
+   * Machine-readable tag for deterministic vocab outcomes, so the UI can label
+   * them precisely ("missing article", "wrong gender", "answer revealed")
+   * instead of inferring from the score. Absent on Claude-graded errors.
+   */
+  code?: "missing-article" | "wrong-article" | "revealed";
 };
 
 export type EvaluationResult = {
@@ -659,6 +671,7 @@ export * from "./construction-variant-seed";
 // ---------------------------------------------------------------------------
 
 export * from "./fluency";
+export * from "./vocab-article";
 
 // ---------------------------------------------------------------------------
 // Session debrief — banded grammar-point skill movements

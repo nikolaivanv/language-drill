@@ -400,3 +400,79 @@ describe('VocabExercise — Enter submits', () => {
     expect(onSubmit).toHaveBeenCalledWith('aprovechar', expect.anything());
   });
 });
+
+describe('VocabExercise — article nouns and giving up', () => {
+  const nounContent: VocabRecallContent = {
+    ...baseContent,
+    prompt: 'The part of your body behind your chest.',
+    expectedWord: 'espalda',
+    articleForm: 'la espalda',
+    exampleSentence: 'Me duele la espalda.',
+  };
+
+  it('tells the learner to include the article', () => {
+    renderVocab({ content: nounContent });
+    expect(screen.getByText('include the article (el/la)')).toBeInTheDocument();
+  });
+
+  it('says nothing about articles for a word without an article form', () => {
+    renderVocab();
+    expect(screen.queryByText(/include the article/)).not.toBeInTheDocument();
+  });
+
+  it('bases the first-letter hint on the bare word, not the article', () => {
+    renderVocab({ content: { ...nounContent, expectedWord: 'la espalda' } });
+    fireEvent.click(screen.getByRole('button', { name: 'show me a hint' }));
+    expect(screen.getByText('e')).toBeInTheDocument();
+  });
+
+  it('offers "show answer" after every hint and submits a give-up', () => {
+    const onSubmit = vi.fn();
+    renderVocab({ content: nounContent, onSubmit });
+    expect(screen.queryByRole('button', { name: 'show answer' })).not.toBeInTheDocument();
+    for (let i = 0; i < 3; i++) {
+      fireEvent.click(screen.getByRole('button', { name: 'show me a hint' }));
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'show answer' }));
+    expect(onSubmit).toHaveBeenCalledWith('', { hintLevel: 3, gaveUp: true });
+  });
+
+  it('reveals the article form and labels a revealed answer', () => {
+    renderVocab({
+      content: nounContent,
+      submission: evaluatedAt(0, {
+        errors: [
+          {
+            type: 'vocabulary',
+            severity: 'major',
+            text: '',
+            correction: 'la espalda',
+            explanation: '',
+            code: 'revealed',
+          },
+        ],
+      }),
+    });
+    expect(screen.getByText('la espalda')).toBeInTheDocument();
+    expect(screen.getByText('answer revealed')).toBeInTheDocument();
+  });
+
+  it('labels a missing article distinctly', () => {
+    renderVocab({
+      content: nounContent,
+      submission: evaluatedAt(0.8, {
+        errors: [
+          {
+            type: 'grammar',
+            severity: 'minor',
+            text: 'espalda',
+            correction: 'la espalda',
+            explanation: '',
+            code: 'missing-article',
+          },
+        ],
+      }),
+    });
+    expect(screen.getByText('right word · missing article')).toBeInTheDocument();
+  });
+});

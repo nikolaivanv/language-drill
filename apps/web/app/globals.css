@@ -1377,3 +1377,22 @@ button:hover .lk-arr {
     transition: none;
   }
 }
+
+/* ─── Vocab: topic mastery bar ───
+   Words-tab topic row (VocabTopicCard). Strong / shaky segments reuse the
+   ok / hilite tokens of the word-cell states above; the unfilled track is the
+   rule color, i.e. "not practiced yet". */
+.vocab-mastery-bar {
+  display: flex;
+  height: 6px;
+  max-width: 280px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-rule);
+}
+.vocab-mastery-bar__strong {
+  background: var(--color-ok);
+}
+.vocab-mastery-bar__shaky {
+  background: var(--color-hilite);
+}

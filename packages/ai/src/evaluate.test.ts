@@ -203,8 +203,25 @@ describe("buildUserPrompt", () => {
     expect(prompt).toContain("Language:** EN");
     expect(prompt).toContain("Prompt:** A place where you borrow books");
     expect(prompt).toContain("Expected Word:** library");
-    expect(prompt).toContain("Hints:** starts with L; has 7 letters");
+    // Authoring hints are never rendered in the drill UI, so they must not
+    // reach the evaluator as something the learner "saw".
+    expect(prompt).not.toContain("Hints:**");
     expect(prompt).toContain("User's Answer:** library");
+    expect(prompt).toContain("There is no article requirement");
+  });
+
+  it("states the article rule when the vocab item carries an articleForm", () => {
+    const prompt = buildUserPrompt(
+      { ...vocabRecallContent, expectedWord: "mano", articleForm: "la mano" },
+      "mano",
+      Language.ES,
+      CefrLevel.A2,
+    );
+
+    expect(prompt).toContain("Required Form:** la mano");
+    expect(prompt).toContain("ARTICLE RULE");
+    expect(prompt).toContain("score 0.8");
+    expect(prompt).toContain('never tell them a hint "said"');
   });
 
   it("appends an authoritative grammar reference block when grammarGuidance is provided", () => {
@@ -300,7 +317,9 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // 2026-08-01: cloze Options render only when revealed; user-builder-only.
     // 2026-08-12: cloze glossEn renders as a **Meaning** line and is binding;
     // user-builder-only.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-09-22");
+    // 2026-10-17: vocab recall states the article rule + stops claiming the
+    // (never-rendered) authoring hints were visible — user-builder-only.
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17");
   });
 });
 

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import type { LearningLanguage, VocabRecallContent } from '@language-drill/shared';
+import { bareVocabWord, type LearningLanguage, type VocabRecallContent } from '@language-drill/shared';
 import type { AuthenticatedFetch } from '@language-drill/api-client';
 import { AccentPicker, Button, Input } from '../../../../components/ui';
 import { VocabPromptCard } from '../../../../components/drill/vocab-prompt';
@@ -61,6 +61,10 @@ export function VocabExercise({
   }, []);
 
   const isLocked = submission.kind !== 'idle';
+  // The answer to reveal ("la espalda" for an article-bearing noun) and the
+  // bare headword the letter hints describe ("espalda", not "l…").
+  const answerForm = content.articleForm ?? content.expectedWord;
+  const bareWord = bareVocabWord(answerForm);
   const showAccentPicker = isAccentLanguage(language);
 
   function handleAdvanceHint() {
@@ -73,6 +77,12 @@ export function VocabExercise({
   function handleSubmit() {
     if (!answer.trim() || isLocked) return;
     onSubmit(answer, { hintLevel });
+    clearDraft();
+  }
+
+  function handleGiveUp() {
+    if (isLocked) return;
+    onSubmit('', { hintLevel, gaveUp: true });
     clearDraft();
   }
 
@@ -94,7 +104,9 @@ export function VocabExercise({
   }, [active, setPrimaryAction, submission.kind, canSubmit, isLocked, answer, hintLevel]);
 
   return (
-    <div className="flex flex-col gap-s-4">
+    // Capped at a reading width: the prompt is one or two lines of prose, and
+    // at the drill layout's full ~1000px it ran almost edge to edge.
+    <div className="flex w-full max-w-[680px] flex-col gap-s-4">
       <VocabPromptCard content={content} />
 
       <div className="flex flex-col gap-s-3">
@@ -116,12 +128,17 @@ export function VocabExercise({
         )}
       </div>
 
-      <HintRow
-        expectedWord={content.expectedWord}
-        exampleSentence={content.exampleSentence}
-        level={hintLevel}
-        onAdvance={handleAdvanceHint}
-      />
+      {submission.kind !== 'evaluated' && (
+        <HintRow
+          expectedWord={bareWord}
+          articleForm={content.articleForm}
+          exampleSentence={content.exampleSentence}
+          level={hintLevel}
+          onAdvance={handleAdvanceHint}
+          onGiveUp={handleGiveUp}
+          disabled={isLocked}
+        />
+      )}
 
       {!active && submission.kind !== 'evaluated' && (
         <div className="mt-s-6 flex justify-end">
@@ -154,17 +171,16 @@ export function VocabExercise({
               nextLabel={nextLabel}
             >
               <div className="flex flex-col gap-s-4">
-                <p className="t-display-m">{content.expectedWord}</p>
+                <p className="t-display-m">{answerForm}</p>
                 {content.exampleSentence && (
                   <p className="t-body-l">
-                    {revealWordInExample(
-                      content.exampleSentence,
-                      content.expectedWord,
-                    )}
+                    {revealWordInExample(content.exampleSentence, bareWord)}
                   </p>
                 )}
                 {submission.result.feedback &&
+                  // A revealed answer has nothing to explain — the word is shown.
                   (submission.result.evaluationSource === 'deterministic' &&
+                  !submission.meta.gaveUp &&
                   submission.submissionId &&
                   exerciseId &&
                   fetchFn ? (

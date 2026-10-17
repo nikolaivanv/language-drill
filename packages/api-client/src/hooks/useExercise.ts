@@ -114,6 +114,11 @@ export type SubmitAnswerParams = {
    * visible sentence. Never send `true` unless the chips were actually shown.
    */
   optionsRevealed?: boolean;
+  /**
+   * VOCAB_RECALL only: the learner used every hint and asked to see the
+   * answer. Recorded server-side as a score-0 attempt; `answer` may be empty.
+   */
+  gaveUp?: boolean;
 };
 
 export type UseSubmitAnswerOptions = {
@@ -123,16 +128,18 @@ export type UseSubmitAnswerOptions = {
 export function useSubmitAnswer({ fetchFn }: UseSubmitAnswerOptions) {
   const queryClient = useQueryClient();
   return useMutation<SubmitResultResponse, Error, SubmitAnswerParams>({
-    mutationFn: async ({ exerciseId, answer, sessionId, hintUsage, optionsRevealed }) => {
+    mutationFn: async ({ exerciseId, answer, sessionId, hintUsage, optionsRevealed, gaveUp }) => {
       const body: {
         answer: string;
         sessionId?: string;
         hintUsage?: SubmitAnswerParams['hintUsage'];
         optionsRevealed?: boolean;
+        gaveUp?: boolean;
       } = { answer };
       if (sessionId !== undefined) body.sessionId = sessionId;
       if (hintUsage !== undefined) body.hintUsage = hintUsage;
       if (optionsRevealed !== undefined) body.optionsRevealed = optionsRevealed;
+      if (gaveUp) body.gaveUp = true;
       const response = await fetchFn(`/exercises/${exerciseId}/submit`, {
         method: 'POST',
         body: JSON.stringify(body),

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { deterministicFluencyResult, tagWrongArticle } from '../lib/deterministic-grade';
 import { Hono } from 'hono';
 import type { Context } from 'hono';
 import { z } from 'zod';
@@ -85,8 +86,12 @@ export const SubmitAnswerSchema = z.object({
   // an unbounded answer is a cost-amplification lever (and very long prompts
   // push against the eval timeout). See EXERCISE_ANSWER_MAX_CHARS for the
   // rationale.
-  answer: z.string().min(1).max(EXERCISE_ANSWER_MAX_CHARS),
+  answer: z.string().max(EXERCISE_ANSWER_MAX_CHARS),
   sessionId: z.string().uuid().optional(),
+  // VOCAB_RECALL only: the learner used every hint and asked to see the answer
+  // instead of guessing. Recorded as a deterministic score-0 attempt (so mastery
+  // sees the miss) with no Claude call; `answer` may then be empty.
+  gaveUp: z.boolean().optional(),
   hintUsage: z.object({
     wordsRevealed: z.number().int().nonnegative(),
     fullAnswerRevealed: z.boolean(),
@@ -96,6 +101,9 @@ export const SubmitAnswerSchema = z.object({
   // chose from a list unless they actually saw it. Absent → false (the UI
   // default), which makes the evaluator judge the answer as free production.
   optionsRevealed: z.boolean().optional(),
+}).refine((b) => b.gaveUp === true || b.answer.trim().length > 0, {
+  message: 'answer must not be empty',
+  path: ['answer'],
 });
 
 // ---------------------------------------------------------------------------
@@ -372,7 +380,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
       400,
     );
   }
-  const { answer: userAnswer, sessionId, hintUsage, optionsRevealed = false } = bodyResult.data;
+  const { answer: userAnswer, sessionId, hintUsage, optionsRevealed = false, gaveUp = false } =
+    bodyResult.data;
   const evidenceWeight = evidenceWeightFromHints(hintUsage);
 
   // 2. Fetch exercise by ID. Deliberately no `audioReadyFilter` here: grading
@@ -493,42 +502,39 @@ exercises.post('/exercises/:id/submit', async (c) => {
     return c.json({ ...result, submissionId });
   }
 
+  // A "show answer" give-up is only defined for vocab recall.
+  if (gaveUp && exercise.type !== ExerciseType.VOCAB_RECALL) {
+    return c.json(
+      { error: 'gaveUp is only supported for vocab_recall', code: 'VALIDATION_ERROR' },
+      400,
+    );
+  }
+
   // Deterministic, zero-Claude short-circuit for exact-match cloze/vocab
-  // answers. The evaluation prompt already mandates score 1.0 with no errors
-  // for these matches, so the LLM call is a latency+cost rubber stamp.
-  // Same policy as the conjugation branch above: no ai_evaluation spend, no
-  // capacity/daily-cap gate, no Claude call, no Langfuse trace. NON-matching
-  // answers fall through to the LLM path — acceptable-answers lists are
-  // non-exhaustive, so an unlisted answer may still be valid.
+  // answers, the vocab article rule, and vocab give-ups. The evaluation prompt
+  // already mandates score 1.0 with no errors for exact matches, so the LLM
+  // call is a latency+cost rubber stamp. Same policy as the conjugation branch
+  // above: no ai_evaluation spend, no capacity/daily-cap gate, no Claude call,
+  // no Langfuse trace. NON-matching answers fall through to the LLM path —
+  // acceptable-answers lists are non-exhaustive, so an unlisted answer may
+  // still be valid.
   if (
     exercise.type === ExerciseType.CLOZE ||
     exercise.type === ExerciseType.VOCAB_RECALL
   ) {
     const content = exercise.contentJson as ExerciseContent;
-    if (
-      (isClozeContent(content) || isVocabRecallContent(content)) &&
-      gradeFluencyAnswer(content, userAnswer)
-    ) {
-      const result: EvaluationResult = {
-        score: 1,
-        grammarAccuracy: 1,
-        // Deterministic path has no vocabulary/CEFR judgment; echo the
-        // exercise difficulty (same convention as the conjugation branch).
-        vocabularyRange: exercise.difficulty ?? '',
-        taskAchievement: 1,
-        feedback: `Correct — ${userAnswer.trim()}`,
-        errors: [],
-        estimatedCefrEvidence: exercise.difficulty ?? '',
-        evaluationSource: 'deterministic',
-      };
-
+    const result =
+      isClozeContent(content) || isVocabRecallContent(content)
+        ? deterministicFluencyResult(content, userAnswer, gaveUp, exercise.difficulty ?? '')
+        : null;
+    if (result) {
       const submissionId = randomUUID();
       await db.insert(userExerciseHistory).values({
         id: submissionId,
         userId,
         exerciseId: id,
         sessionId,
-        score: 1,
+        score: result.score,
         // `optionsRevealed` rides along so a later /explain re-evaluation of
         // this deterministic submission builds the same prompt the learner's
         // view justifies (see the explain route below).
@@ -542,7 +548,7 @@ exercises.post('/exercises/:id/submit', async (c) => {
         language: exercise.language as Language,
         grammarPointKey: exercise.grammarPointKey,
         difficulty: exercise.difficulty as CefrLevel,
-        score: 1,
+        score: result.score,
         evidenceWeight,
       });
 
@@ -698,7 +704,10 @@ exercises.post('/exercises/:id/submit', async (c) => {
               optionsRevealed,
             }),
     );
-    const stamped = { ...result, evaluationSource: 'llm' as const };
+    const stamped = {
+      ...(isVocabRecallContent(content) ? tagWrongArticle(content, userAnswer, result) : result),
+      evaluationSource: 'llm' as const,
+    };
 
     // 6. Record history and usage on success — `id: submissionId` makes the
     // history row id equal to the Langfuse trace tag (see step 4 above).

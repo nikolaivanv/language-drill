@@ -96,4 +96,36 @@ describe('HintRow', () => {
       expect(onAdvance).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('show answer chip', () => {
+    it('appears only once every hint is shown', () => {
+      const onGiveUp = vi.fn();
+      const { rerender } = render(
+        <HintRow {...PROPS} level={2} onAdvance={() => {}} onGiveUp={onGiveUp} />,
+      );
+      expect(screen.queryByRole('button', { name: 'show answer' })).not.toBeInTheDocument();
+      rerender(<HintRow {...PROPS} level={3} onAdvance={() => {}} onGiveUp={onGiveUp} />);
+      fireEvent.click(screen.getByRole('button', { name: 'show answer' }));
+      expect(onGiveUp).toHaveBeenCalledOnce();
+    });
+
+    it('is absent without an onGiveUp handler', () => {
+      render(<HintRow {...PROPS} level={3} onAdvance={() => {}} />);
+      expect(screen.queryByRole('button', { name: 'show answer' })).not.toBeInTheDocument();
+    });
+  });
+
+  it('masks the article with the word so the example cannot leak the gender', () => {
+    render(
+      <HintRow
+        expectedWord="espalda"
+        articleForm="la espalda"
+        exampleSentence="Me duele la espalda."
+        level={3}
+        onAdvance={() => {}}
+      />,
+    );
+    expect(screen.getByText('Me duele ___.')).toBeInTheDocument();
+  });
 });
+
