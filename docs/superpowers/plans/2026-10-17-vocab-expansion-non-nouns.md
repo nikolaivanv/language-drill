@@ -2784,15 +2784,13 @@ it('<LANG> has 2 word-class groups per level A1–B2', () => {
 
 ---
 
-## Rollout (prod, after each deploy — not code tasks)
+## Rollout (prod — not code tasks)
 
-All commands from `packages/db` of a worktree on fresh main; `DBURL=$(aws --region eu-central-1 secretsmanager get-secret-value --secret-id language-drill/DATABASE_URL --query SecretString --output text)`.
+`DBURL=$(aws --region eu-central-1 secretsmanager get-secret-value --secret-id language-drill/DATABASE_URL --query SecretString --output text)`. Commands run from `packages/db`.
 
-1. **After PR 1 deploys:**
-   - Langfuse: `push-prompts --dry-run` then `push-prompts` then `bootstrap-prompts --check`, for prod and dev (CLAUDE.md "Prompt Editing" block), from fresh main.
-   - `DATABASE_URL="$DBURL" npx tsx scripts/backfill-vocab-target-pos.ts` (dry-run, classifier included) → review counts and the llm sample → `--apply`. Copy the applied artifact to `/Users/seal/dev/language-drill/.claude/backfill-artifacts-prod-2026-10/`.
-   - Verify: `select language, pos, count(*) from vocab_target where status='approved' group by 1,2` — no null `pos`.
-2. **Pilot ES A2 + B1:** `generate:vocab-targets --language ES --level A2 --fill-mix`, same for B1. After PR 2 deploys, `generate:vocab-targets --language ES --level A2` and `--level B1` (new umbrellas only get rows; existing ones get a themed run — pass `--umbrella <key>` per new umbrella to avoid growing existing ones). Claude triage of `review:flagged-vocab --language ES` output → user spot-check → `--approve-all`. After one nightly run, compare `vocab_recall` approval rates by target `pos` (join `generation_jobs`/`exercises` on `content_json->>'seedWord'` = `vocab_target.lemma`). Gap > 15pp vs nouns → fix the generation/validation prompt before step 3.
-3. **Scale:** the same per remaining scope (`--fill-mix` per level for existing topics; `--umbrella <key>` per new umbrella), triage → spot-check → approve per language.
-   New umbrellas need `skill_topics` rows; `deploy.yml` runs `seed:exercises` for prod and dev, which plans them from `ALL_CURRICULA`, so this is automatic after PR 2 deploys (a local generation run before then needs `pnpm db:seed:exercises` first).
-4. **Fill:** nightly scheduler, 1–2 weeks; watch the generation-run stats for flag-loop spikes on the new cells.
+1. **Merge PR 1 and deploy.** From fresh main:
+   - Langfuse: `push-prompts --dry-run` → `push-prompts` → `bootstrap-prompts --check`, prod and dev (CLAUDE.md "Prompt Editing").
+   - `DATABASE_URL="$DBURL" npx tsx scripts/backfill-vocab-target-pos.ts` (dry run, classifier included) → review counts and the llm sample → `--apply`. Copy the artifact to `/Users/seal/dev/language-drill/.claude/backfill-artifacts-prod-2026-10/`. Verify: `select language, pos, count(*) from vocab_target where status='approved' group by 1,2` shows no null `pos`.
+2. **Pilot ES A2 + B1:** `generate:vocab-targets --language ES --level A2 --fill-mix`, same for B1 → Claude triage of `review:flagged-vocab --language ES` → user spot-check → `--approve-all`. After one nightly run, compare `vocab_recall` approval rates by target `pos` (join on `content_json->>'seedWord'` = `vocab_target.lemma`). A gap > 15pp vs nouns → fix the generation/validation prompt before going on.
+3. **Author the PR 2 umbrellas against prod from the PR 2 branch, BEFORE merging it.** `vocab_target.umbrella_key` has no FK and the CLI resolves umbrellas from code, so the branch can write their targets while prod does not know the umbrellas yet. Approving them first means the 60 new `vocab_recall` cells never free-generate untargeted rows once they exist. Per new umbrella: `DATABASE_URL="$DBURL" pnpm generate:vocab-targets --language <L> --level <X> --umbrella <key>` (never a whole level without `--umbrella`, which would also grow the existing themed topics; use `--fill-mix` per level for those) → triage → spot-check → approve, per language. The branch carries `vocab-target-generate@2026-10-18` (group request line, class-tagged avoid list); both changes are in the code-built user prompt, so the CLI uses them directly.
+4. **Merge PR 2 and deploy.** From fresh main, `push-prompts --dry-run` / `push-prompts` / `bootstrap-prompts --check` for prod and dev to record `vocab-target-generate@2026-10-18` (expect no body drift: the Langfuse system template did not change). `deploy.yml` runs `seed:exercises`, which adds the new umbrellas' `skill_topics` rows. The nightly scheduler then fills the cells over 1–2 weeks; watch the generation-run stats for flag-loop spikes on the new cells.
