@@ -359,7 +359,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-07");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -533,7 +533,7 @@ describe("buildGenerationSystemPrompt", () => {
   it("bumps the generation prompt version to 2026-10-07", () => {
     // 2026-10-07: cell-history ("Already in this cell") prompt section for
     // cloze / translation / sentence_construction. Prompt edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-07");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
@@ -1915,5 +1915,14 @@ describe("historyStem", () => {
     expect(historyStem({ type: ExerciseType.CLOZE, sentence: "   " })).toBeNull();
     expect(historyStem({ type: ExerciseType.SENTENCE_CONSTRUCTION, prompt: 7, modelAnswers: ["x"] })).toBeNull();
     expect(historyStem({ type: ExerciseType.VOCAB_RECALL, prompt: "x", expectedWord: "casa" })).toBeNull();
+  });
+});
+
+describe("vocab_recall citation forms (2026-10-17)", () => {
+  it("teaches vocab_recall citation forms for non-nouns", () => {
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("vocab_recall citation forms");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("acordarse de");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/feminine.*acceptableAnswers/);
   });
 });
