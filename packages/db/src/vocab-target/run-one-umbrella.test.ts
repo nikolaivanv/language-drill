@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { GrammarPoint } from '@language-drill/shared';
 import { runOneUmbrella } from './run-one-umbrella';
+import { planFillMixRequest } from './mix';
 
 const umbrella = {
   key: 'es-a1-vocab-food-drink',
@@ -174,10 +175,10 @@ describe('runOneUmbrella — word-class mix', () => {
   });
 
   it('never makes a second follow-up', async () => {
-    const client = mockClientSeq([noun('n0'), noun('n1')], [noun('n2')]);
+    const client = mockClientSeq([verb('v0'), noun('n0'), noun('n1')], [noun('n2')]);
     const out = await runOneUmbrella({ db: mockDb({}) as never, client: client as never, umbrella, wordCount: 10, avoidWords: [] });
     expect(client.messages.create).toHaveBeenCalledTimes(2);
-    expect(out.remainingShortfall.verb).toBeGreaterThan(0);
+    expect(out.remainingShortfall.adjectiveOrAdverb).toBeGreaterThan(0); // measured on the kept set (v0, n0)
   });
 
   it('restricts a word-class group and skips the mix', async () => {
@@ -185,6 +186,7 @@ describe('runOneUmbrella — word-class mix', () => {
     const client = mockClientSeq([verb('comer'), noun('pan'), adj('rápido')]);
     const out = await runOneUmbrella({ db: mockDb({}) as never, client: client as never, umbrella: group, wordCount: 3, avoidWords: [] });
     expect(client.messages.create).toHaveBeenCalledTimes(1);
+    expect(out.remainingShortfall).toEqual({ verb: 0, adjectiveOrAdverb: 0 });
     expect(out.rows.map((r) => r.lemma)).toEqual(['comer']);
     const user = client.messages.create.mock.calls[0][0].messages[0].content as string;
     expect(user).toContain('Every word MUST be one of: verb');
@@ -193,13 +195,30 @@ describe('runOneUmbrella — word-class mix', () => {
   it('fill-mix asks for non-nouns only, counting existing rows', async () => {
     const existing = { noun: 26, verb: 2, adjective: 2, adverb: 0, phrase: 0, other: 0 };
     const client = mockClientSeq(
-      [verb('v1'), verb('v2'), verb('v3'), verb('v4'), verb('v5'), verb('v6'), verb('v7'), adj('a1'), adj('a2'), adj('a3'), adj('a4'), adj('a5')],
+      [verb('v1'), verb('v2'), verb('v3'), verb('v4'), verb('v5'), verb('v6'), verb('v7'), adj('a1'), adj('a2'), adj('a3'), adj('a4'), adj('a5'), noun('nZ'),
+        { displayForm: 'por favor', lemma: 'por favor', pos: 'phrase', gloss: 'g', exampleSentence: 'Agua, por favor.' }],
     );
     const out = await runOneUmbrella({ db: mockDb({}) as never, client: client as never, umbrella, wordCount: 12, avoidWords: [], existing, fillMix: true });
     const user = client.messages.create.mock.calls[0][0].messages[0].content as string;
     expect(user).toContain('exactly 7 verbs and 5 adjectives or adverbs');
-    expect(out.rows).toHaveLength(12);
+    expect(out.rows).toHaveLength(13); // 12 verbs/adjectives + the phrase; the noun is dropped
+    expect(out.rows.map((r) => r.lemma)).not.toContain('nZ');
+    expect(out.rows.map((r) => r.pos)).toContain('phrase');
     expect(out.followUp).toBe(false);
+  });
+
+  it('fill-mix asks for the plan total in both prompts when it exceeds wordCount', async () => {
+    const existing = { noun: 40, verb: 0, adjective: 0, adverb: 0, phrase: 0, other: 0 };
+    const plan = planFillMixRequest(existing, 12);
+    const total = plan.verb + plan.adjectiveOrAdverb;
+    expect(total).toBeGreaterThan(12);
+    const client = mockClientSeq([], []); // empty first batch also triggers the one follow-up
+    await runOneUmbrella({ db: mockDb({}) as never, client: client as never, umbrella, wordCount: 12, avoidWords: [], existing, fillMix: true });
+    const call = client.messages.create.mock.calls[0][0];
+    expect(call.messages[0].content).toContain(`Propose ${total} words`);
+    expect(call.messages[0].content).toContain(`exactly ${plan.verb} verbs`);
+    expect(call.system).toContain(`exactly ${total} `);
+    expect(call.system).not.toContain('exactly 12 ');
   });
 
   it('fill-mix makes no model call when the plan requests nothing', async () => {
