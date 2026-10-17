@@ -46,9 +46,9 @@ function mockDb(rankByLemma: Record<string, number>) {
 describe('runOneUmbrella', () => {
   it('drops invalid words, joins freq rank, sets tier + flagged status', async () => {
     const client = mockClient([
-      { displayForm: 'la manzana', lemma: 'manzana', gloss: 'apple', exampleSentence: 'Como una manzana.' },
-      { displayForm: 'buenos días', lemma: 'buenos días', gloss: 'hi', exampleSentence: 'Buenos días.' }, // multi-token → dropped
-      { displayForm: 'el pan', lemma: 'pan', gloss: 'bread', exampleSentence: 'Compro pan.' },
+      { displayForm: 'la manzana', lemma: 'manzana', gloss: 'apple', exampleSentence: 'Como una manzana.', pos: 'noun' },
+      { displayForm: 'buenos días', lemma: 'buenos días', gloss: 'hi', exampleSentence: 'Buenos días.', pos: 'noun' }, // multi-token → dropped
+      { displayForm: 'el pan', lemma: 'pan', gloss: 'bread', exampleSentence: 'Compro pan.', pos: 'noun' },
     ]);
     const db = mockDb({ manzana: 800, pan: 300 });
 
@@ -77,7 +77,7 @@ describe('runOneUmbrella', () => {
 
   it('leaves freqRank null (tier extended) for lemmas absent from vocab_lemma', async () => {
     const client = mockClient([
-      { displayForm: 'el zumo', lemma: 'zumo', gloss: 'juice', exampleSentence: 'Bebo zumo.' },
+      { displayForm: 'el zumo', lemma: 'zumo', gloss: 'juice', exampleSentence: 'Bebo zumo.', pos: 'noun' },
     ]);
     const db = mockDb({}); // no matches
     const out = await runOneUmbrella({
@@ -92,9 +92,9 @@ describe('runOneUmbrella', () => {
 
   it('dedups a case-variant lemma and drops words matching the avoid-list case-insensitively', async () => {
     const client = mockClient([
-      { displayForm: 'el pan', lemma: 'pan', gloss: 'bread', exampleSentence: 'Compro pan fresco.' },
-      { displayForm: 'el Pan', lemma: 'Pan', gloss: 'bread', exampleSentence: 'Me gusta el Pan.' }, // case-variant dup → dropped
-      { displayForm: 'la leche', lemma: 'leche', gloss: 'milk', exampleSentence: 'Bebo leche fría.' }, // avoid-listed → dropped
+      { displayForm: 'el pan', lemma: 'pan', gloss: 'bread', exampleSentence: 'Compro pan fresco.', pos: 'noun' },
+      { displayForm: 'el Pan', lemma: 'Pan', gloss: 'bread', exampleSentence: 'Me gusta el Pan.', pos: 'noun' }, // case-variant dup → dropped
+      { displayForm: 'la leche', lemma: 'leche', gloss: 'milk', exampleSentence: 'Bebo leche fría.', pos: 'noun' }, // avoid-listed → dropped
     ]);
     const db = mockDb({ pan: 400 });
 
@@ -118,7 +118,7 @@ describe('runOneUmbrella', () => {
           content: [
             {
               type: 'text',
-              text: 'Here are the words:\n{"words":[{"displayForm":"el pan","lemma":"pan","gloss":"bread","exampleSentence":"Compro pan fresco."}]}\nHope that helps!',
+              text: 'Here are the words:\n{"words":[{"displayForm":"el pan","lemma":"pan","gloss":"bread","exampleSentence":"Compro pan fresco.","pos":"noun"}]}\nHope that helps!',
             },
           ],
         }),

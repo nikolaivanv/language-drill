@@ -1,16 +1,35 @@
+import { parseVocabPos, type VocabPos } from '@language-drill/shared';
+
 export type ProposedWord = {
   displayForm: string;
   lemma: string;
   gloss: string;
   exampleSentence: string;
+  pos: VocabPos;
 };
+
+/** Longest fixed expression / prepositional verb accepted as one target. */
+export const MAX_LEMMA_TOKENS = 4;
 
 function nonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
-/** Structural gate before human review. Returns a trimmed word or null. */
-export function validateProposedWord(w: unknown): ProposedWord | null {
+const norm = (s: string): string => s.trim().replace(/\s+/g, ' ').toLowerCase();
+
+/** A token minus its last two characters — survives inflection ("acordarse" → "acordar…", "freuen" → "freu…"). */
+function exampleStem(token: string): string {
+  return token.toLowerCase().slice(0, token.length - 2);
+}
+
+/**
+ * Structural gate before human review. Returns a trimmed word or null.
+ * `allowedPos` restricts the class (word-class groups, follow-up calls).
+ */
+export function validateProposedWord(
+  w: unknown,
+  allowedPos?: readonly VocabPos[],
+): ProposedWord | null {
   if (typeof w !== 'object' || w === null) return null;
   const r = w as Record<string, unknown>;
   if (
@@ -21,20 +40,35 @@ export function validateProposedWord(w: unknown): ProposedWord | null {
   ) {
     return null;
   }
-  const lemma = r.lemma.trim();
-  if (/\s/.test(lemma)) return null; // single lexical item only
+  const pos = parseVocabPos(r.pos);
+  if (pos === null) return null;
+  if (allowedPos && !allowedPos.includes(pos)) return null;
+
+  const lemma = r.lemma.trim().replace(/\s+/g, ' ');
+  const tokens = lemma.split(' ');
+  if (tokens.length > 1 && pos !== 'phrase' && pos !== 'verb') return null;
+  if (tokens.length > MAX_LEMMA_TOKENS) return null;
+
+  // A non-noun's learner-facing form IS its citation form; the generator seeds
+  // on `lemma`, so the two must agree ("acordarse de", not "acordarse").
+  if (pos !== 'noun' && norm(r.displayForm) !== norm(lemma)) return null;
 
   const example = r.exampleSentence.toLowerCase();
   const lemmaTok = lemma.toLowerCase();
   // displayForm's last token drops a leading article (e.g. "la manzana" -> "manzana")
   const displayTok = r.displayForm.trim().toLowerCase().split(/\s+/).pop() ?? '';
-  if (!example.includes(lemmaTok) && !example.includes(displayTok)) return null;
+  const exampleHasWord =
+    tokens.length > 1
+      ? tokens.some((t) => t.length >= 4 && example.includes(exampleStem(t)))
+      : example.includes(lemmaTok) || (pos === 'noun' && example.includes(displayTok));
+  if (!exampleHasWord) return null;
 
   return {
-    displayForm: r.displayForm.trim(),
+    displayForm: r.displayForm.trim().replace(/\s+/g, ' '),
     lemma,
     gloss: r.gloss.trim(),
     exampleSentence: r.exampleSentence.trim(),
+    pos,
   };
 }
 

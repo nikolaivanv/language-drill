@@ -91,8 +91,12 @@ things — not a raw word count.
 
 - `validateProposedWord`: a lemma may contain whitespace only when
   `pos = 'phrase'` or `pos = 'verb'` (reflexive/prepositional verb), and is
-  capped at 4 tokens. The example-sentence check matches the phrase's first
-  content token, since inflection changes later tokens.
+  capped at 4 tokens. A single-word target's example sentence must
+  contain the citation form verbatim (the prompt asks for 'Quiero comer pan.', not
+  'Como pan.' — a conjugated example was the main way verbs were dropped before).
+  A multi-word target passes when one of its ≥4-character tokens appears minus
+  its last two characters, since natural sentences reorder and inflect fixed
+  expressions.
 - Phrases rarely match `vocab_lemma`: `freqRank` stays null as today; tier
   derivation is unchanged (null → `extended`) — tier is not learner-visible.
 
