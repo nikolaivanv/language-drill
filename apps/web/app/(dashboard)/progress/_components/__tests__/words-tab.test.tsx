@@ -105,3 +105,36 @@ describe('WordsTab', () => {
     expect(screen.getByText(/no vocab topics/i)).toBeInTheDocument();
   });
 });
+
+describe('WordsTab — level sections', () => {
+  it('sections topics A1→B2 regardless of API order and keeps unknown levels last', () => {
+    render(
+      <WordsTab
+        data={loaded([
+          topic({ umbrellaKey: 'b1', cefrLevel: 'B1' }),
+          topic({ umbrellaKey: 'a1', cefrLevel: 'A1' }),
+          topic({ umbrellaKey: 'x', cefrLevel: 'Z9' }),
+          topic({ umbrellaKey: 'a1b', cefrLevel: 'A1' }),
+        ])}
+        isLoading={false}
+        isError={false}
+        onRetry={mockRetry}
+      />,
+    );
+    const headings = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+    expect(headings).toEqual(['A1', 'B1', 'Z9']);
+    expect(screen.getAllByRole('link')).toHaveLength(4);
+  });
+
+  it('tags word-class groups', () => {
+    render(
+      <WordsTab
+        data={loaded([topic({ umbrellaKey: 'v', name: 'Everyday verbs (A1)', group: 'describing' })])}
+        isLoading={false}
+        isError={false}
+        onRetry={mockRetry}
+      />,
+    );
+    expect(screen.getByText('adjectives')).toBeDefined();
+  });
+});

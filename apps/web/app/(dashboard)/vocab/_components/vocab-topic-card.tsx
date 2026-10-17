@@ -6,6 +6,14 @@ type VocabTopicCardProps = {
   topic: VocabTopicSummary;
 };
 
+const GROUP_TAG: Record<NonNullable<VocabTopicSummary['group']>, string> = {
+  verbs: 'verbs',
+  describing: 'adjectives',
+  adverbs: 'adverbs',
+  connectors: 'connectors',
+  expressions: 'expressions',
+};
+
 /**
  * One topic row in the vocab index: a link to the topic's word list showing
  * its name, CEFR chip, a mastery bar and a one-line summary (mirrors
@@ -29,6 +37,7 @@ export function VocabTopicCard({ topic }: VocabTopicCardProps) {
         <div className="flex items-baseline gap-2">
           <span className="text-[14px] font-medium">{topic.name}</span>
           <Chip className="t-mono">{topic.cefrLevel}</Chip>
+          {topic.group ? <Chip>{GROUP_TAG[topic.group]}</Chip> : null}
         </div>
         <div
           className="vocab-mastery-bar mt-2"
