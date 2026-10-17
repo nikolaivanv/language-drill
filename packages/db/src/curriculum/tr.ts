@@ -5058,7 +5058,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     examplesPositive: ['hâlâ', 'ara sıra'],
     examplesNegative: ["*Hiç gittim (in statements, hiç needs a negative verb: Hiç gitmedim; in questions it means 'ever': Hiç İstanbul'a gittin mi?)"],
     commonErrors: [
-      'Using "hiç" with an affirmative verb ("*Hiç gittim" for "Hiç gitmedim").',
+      'In statements, using "hiç" with an affirmative verb ("*Hiç gittim" for "Hiç gitmedim").',
       'Confusing "hâlâ" (still) with "artık" (anymore, from now on).',
     ],
   },
@@ -5098,7 +5098,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     cefrLevel: B1,
     language: TR,
     examplesPositive: ['kilo vermek', 'sağlıklı'],
-    examplesNegative: ['*kilo yapmak (for "put on weight": kilo almak)'],
+    examplesNegative: ['*sağlık bir yaşam (for "a healthy life": sağlıklı bir yaşam)'],
     commonErrors: [
       'Confusing "kilo vermek" (lose weight) with "kilo almak" (put on weight).',
       'Confusing "sağlık" (health, noun) with "sağlıklı" (healthy, adjective).',

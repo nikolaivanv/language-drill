@@ -7654,10 +7654,10 @@ const esCurriculum: readonly GrammarPoint[] = [
     language: ES,
     vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
     examplesPositive: ['sin embargo', 'por eso'],
-    examplesNegative: ['*sin embargo de (sin embargo takes no preposition)'],
+    examplesNegative: ['*sin embargo de (in modern Spanish, sin embargo takes no preposition)'],
     commonErrors: [
       'Confusing "sino" (but rather, after a negative) with "pero".',
-      'Adding a preposition to "sin embargo" ("*sin embargo de"); and, for a cause placed first, "como" is the natural choice ("Como llovía, no salimos") — sentence-initial "porque" is marked.',
+      'Adding a preposition to "sin embargo" ("*sin embargo de", an archaic locution); and, for a cause placed first, "como" is the natural choice ("Como llovía, no salimos") — sentence-initial "porque" is marked.',
     ],
   },
   {
