@@ -260,7 +260,10 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // than more questions per topic. The additions favour exam text types the set
 // lacked (messages, invitations, recommendations, formal complaints and cover
 // letters) over further personal-essay themes.
-export const CURRICULUM_VERSION_TR = '2026-10-10';
+//
+// `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2 word-class
+// groups per level; opens 20 new vocab_recall cells.
+export const CURRICULUM_VERSION_TR = '2026-10-18';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -4906,6 +4909,304 @@ const trCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Mis-segmenting the -lIk suffix on a long derived adjective (sürdürülebilirlik, not *sürdürülebilir lik).',
       'Confusing göç (migration, native Turkish, general sense) with hicret (migration, Arabic loan, narrow religious/historical register) — not interchangeable.',
+    ],
+  },
+  // ---------------------------------------------------------------------------
+  // Vocab expansion (2026-10-17): +5 umbrellas per level — 3 themed topics and
+  // 2 word-class groups, except A1, whose greetings umbrella is a third group
+  // (fixed expressions the themed ≤10% phrase cap would gut). Themed topics
+  // author under the word-class mix (≤60% nouns); groups carry `vocabGroup`
+  // and author only their declared classes. coverageSpec:
+  // none — the curated target list fixes the class mix, so a wordClass floor on
+  // the exercise pool would only duplicate it. No theory-categories entry.
+  // ---------------------------------------------------------------------------
+  {
+    key: 'tr-a1-vocab-free-time',
+    kind: 'vocab',
+    name: 'Free time and hobbies (A1)',
+    description: 'Core A1 vocabulary for hobbies, sports, and free-time activities, including the verbs used to talk about them (oynamak, yüzmek, dans etmek).',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['futbol oynamak', 'yüzmek'],
+    examplesNegative: ['*gitar oynamak (instruments take çalmak: gitar çalmak)'],
+    commonErrors: [
+      'Using "oynamak" for instruments — instruments take "çalmak" ("gitar çalmak").',
+      'Using "oynamak" for sport in general — the general verb is "spor yapmak".',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-time-calendar',
+    kind: 'vocab',
+    name: 'Time and calendar (A1)',
+    description: 'Core A1 vocabulary for days, months, seasons, parts of the day, and telling the time.',
+    cefrLevel: A1,
+    language: TR,
+    examplesPositive: ['pazartesi', 'sabah'],
+    examplesNegative: ['*üç saat (for "three o\'clock": saat üç)'],
+    commonErrors: [
+      'Confusing "saat üç" (three o\'clock) with "üç saat" (three hours).',
+      'Confusing "gün" (day) with "gündüz" (daytime).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-greetings-phrases',
+    kind: 'vocab',
+    name: 'Greetings and everyday phrases (A1)',
+    description: 'Core A1 fixed expressions for greeting, thanking, apologizing, and polite requests (merhaba, teşekkür ederim, özür dilerim, lütfen, kolay gelsin).',
+    cefrLevel: A1,
+    language: TR,
+    vocabGroup: { label: 'expressions', pos: ['phrase', 'other'] },
+    examplesPositive: ['teşekkür ederim', 'kolay gelsin'],
+    examplesNegative: ['*afiyet olsun (said before a trip — it is for meals; for a trip: iyi yolculuklar)'],
+    commonErrors: [
+      'Using "afiyet olsun" (enjoy your meal) where "iyi yolculuklar" (have a good trip) fits.',
+      'Confusing "özür dilerim" (I apologize) with "pardon" (excuse me, to get attention).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-everyday-verbs',
+    kind: 'vocab',
+    name: 'Everyday verbs (A1)',
+    description: 'Core A1 verbs for daily actions — eating, sleeping, working, buying, living, speaking — in the -mek/-mak infinitive (yemek, uyumak, çalışmak, almak).',
+    cefrLevel: A1,
+    language: TR,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['uyumak', 'çalışmak'],
+    examplesNegative: ['*içmak (vowel harmony: içmek)'],
+    commonErrors: [
+      'Breaking vowel harmony in the infinitive ("*içmak" for "içmek").',
+      'Confusing "bilmek" (know a fact) with "tanımak" (know a person).',
+    ],
+  },
+  {
+    key: 'tr-a1-vocab-describing-words',
+    kind: 'vocab',
+    name: 'Describing words (A1)',
+    description: 'Core A1 adjectives for describing people, things, and places — size, colour, age, character, price (büyük, ucuz, yeni, güzel).',
+    cefrLevel: A1,
+    language: TR,
+    vocabGroup: { label: 'describing', pos: ['adjective'] },
+    examplesPositive: ['büyük', 'ucuz'],
+    examplesNegative: ['*yaşlı ev (for an old house: eski ev)'],
+    commonErrors: [
+      'Confusing "eski" (old, of things) with "yaşlı" (old, of people).',
+      'Placing "bir" before the adjective in neutral description — the unmarked order is "kırmızı bir araba".',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-technology-communication',
+    kind: 'vocab',
+    name: 'Technology and communication (A2)',
+    description: 'A2 vocabulary for phones, computers, the internet, messages, and the verbs used with them (mesaj göndermek, indirmek, aramak).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['cep telefonu', 'indirmek'],
+    examplesNegative: ['*cep telefon'],
+    commonErrors: [
+      'Dropping the compound marker on noun compounds ("*cep telefon" for "cep telefonu").',
+      'Confusing "aramak" (call, search) with "çağırmak" (summon, call over).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-celebrations-traditions',
+    kind: 'vocab',
+    name: 'Celebrations and traditions (A2)',
+    description: 'A2 vocabulary for holidays, festivals, birthdays, weddings, and the phrases used to celebrate (bayram, düğün, kutlamak, iyi bayramlar).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['düğün', 'kutlamak'],
+    examplesNegative: ['*bayram (for a summer vacation: tatil)'],
+    commonErrors: [
+      'Confusing "bayram" (religious or national holiday) with "tatil" (vacation, day off).',
+      'Using the informal possessive in formal wishes ("doğum günün kutlu olsun" vs formal "doğum gününüz kutlu olsun").',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-cooking-restaurants',
+    kind: 'vocab',
+    name: 'Cooking and restaurants (A2)',
+    description: 'A2 vocabulary for cooking methods, kitchen tools, ordering in a restaurant, and describing taste (kızartmak, haşlamak, hesap, acı).',
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: ['kızartmak', 'hesap'],
+    examplesNegative: ['*hesapı (consonant softening: hesabı)'],
+    commonErrors: [
+      'Missing consonant softening before a vowel suffix ("*hesapı" for "hesabı").',
+      'Confusing "pişirmek" (cook something) with "pişmek" (be cooked).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-movement-change-verbs',
+    kind: 'vocab',
+    name: 'Verbs of movement and change (A2)',
+    description: 'A2 verbs for moving and changing state — going, arriving, leaving, returning, becoming — in the -mek/-mak infinitive (varmak, dönmek, ayrılmak, olmak).',
+    cefrLevel: A2,
+    language: TR,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['varmak', 'ayrılmak'],
+    examplesNegative: ['*okulu ayrılmak (ayrılmak takes the ablative: okuldan ayrılmak)'],
+    commonErrors: [
+      'Wrong case with movement verbs ("*okulu ayrılmak" for "okuldan ayrılmak", "*evde dönmek" for "eve dönmek").',
+      'Confusing "gelmek" (come) with "girmek" (enter).',
+    ],
+  },
+  {
+    key: 'tr-a2-vocab-time-frequency-adverbs',
+    kind: 'vocab',
+    name: 'Time and frequency words (A2)',
+    description: 'A2 adverbs and short fixed phrases for time and frequency — hâlâ, henüz, artık, her zaman, sık sık, ara sıra.',
+    cefrLevel: A2,
+    language: TR,
+    vocabGroup: { label: 'adverbs', pos: ['adverb', 'phrase'] },
+    examplesPositive: ['hâlâ', 'ara sıra'],
+    examplesNegative: ["*Hiç gittim (in statements, hiç needs a negative verb: Hiç gitmedim; in questions it means 'ever': Hiç İstanbul'a gittin mi?)"],
+    commonErrors: [
+      'In statements, using "hiç" with an affirmative verb ("*Hiç gittim" for "Hiç gitmedim").',
+      'Confusing "hâlâ" (still) with "artık" (anymore, from now on).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-travel-tourism',
+    kind: 'vocab',
+    name: 'Travel and tourism (B1)',
+    description: 'B1 vocabulary for planning and booking trips, accommodation, transport problems, and travel experiences (rezervasyon yaptırmak, konaklama, rötar).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['konaklama', 'rezervasyon yaptırmak'],
+    examplesNegative: ['*rezervasyon etmek'],
+    commonErrors: [
+      'Using the wrong light verb ("*rezervasyon etmek" for "rezervasyon yapmak / yaptırmak").',
+      'Confusing "kaçırmak" (miss a bus) with "özlemek" (miss a person).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-money-consumers',
+    kind: 'vocab',
+    name: 'Money and consumers (B1)',
+    description: 'B1 vocabulary for banking, paying, saving, prices, complaints, and consumer rights (biriktirmek, havale, iade, şikâyet etmek).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['biriktirmek', 'iade'],
+    examplesNegative: ['*şikâyet yapmak'],
+    commonErrors: [
+      'Using the wrong light verb ("*şikâyet yapmak" for "şikâyet etmek").',
+      'Confusing "borç almak" (borrow) with "borç vermek" (lend).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-health-lifestyle',
+    kind: 'vocab',
+    name: 'Health and lifestyle (B1)',
+    description: 'B1 vocabulary for healthy habits, diet, exercise, stress, and sleep, including verbs and adjectives (kilo vermek, beslenmek, sağlıklı, hareketsiz).',
+    cefrLevel: B1,
+    language: TR,
+    examplesPositive: ['kilo vermek', 'sağlıklı'],
+    examplesNegative: ['*sağlık bir yaşam (for "a healthy life": sağlıklı bir yaşam)'],
+    commonErrors: [
+      'Confusing "kilo vermek" (lose weight) with "kilo almak" (put on weight).',
+      'Confusing "sağlık" (health, noun) with "sağlıklı" (healthy, adjective).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-case-governed-verbs',
+    kind: 'vocab',
+    name: 'Verbs with case government (B1)',
+    description: 'B1 verbs that require a fixed case on their object, in the -mek/-mak infinitive with the case named in the gloss (güvenmek -e, korkmak -den, bahsetmek -den, inanmak -e).',
+    cefrLevel: B1,
+    language: TR,
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
+    examplesPositive: ['güvenmek', 'bahsetmek'],
+    examplesNegative: ['*onu güvenmek (güvenmek takes the dative: ona güvenmek)'],
+    commonErrors: [
+      'Using the accusative where the verb governs the dative or ablative ("*köpeği korkmak" for "köpekten korkmak").',
+      'Confusing "bahsetmek" (mention, with -den) with "anlatmak" (tell, with -i).',
+    ],
+  },
+  {
+    key: 'tr-b1-vocab-connectors',
+    kind: 'vocab',
+    name: 'Connectors and discourse markers (B1)',
+    description: 'B1 connectors and discourse markers for linking ideas — contrast, cause, consequence, addition (ama, ancak, bu yüzden, ayrıca, yani, çünkü).',
+    cefrLevel: B1,
+    language: TR,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['bu yüzden', 'ayrıca'],
+    examplesNegative: ['*Yağmura rağmen ama çıktık (rağmen already marks the contrast)'],
+    commonErrors: [
+      'Doubling contrast markers ("*-e rağmen … ama").',
+      'Confusing "yani" (that is, I mean) with "yoksa" (or else, otherwise).',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-law-justice',
+    kind: 'vocab',
+    name: 'Law and justice (B2)',
+    description: 'B2 vocabulary for the legal system, crime, trials, and rights, including verbs (dava açmak, yargılamak, cezalandırmak) and nouns (mahkeme, ceza).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['mahkeme', 'dava açmak'],
+    examplesNegative: ['*dava yapmak'],
+    commonErrors: [
+      'Using the wrong light verb ("*dava yapmak" for "dava açmak").',
+      'Confusing "hâkim" (judge) with "avukat" (lawyer) and "savcı" (prosecutor).',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-economy-business',
+    kind: 'vocab',
+    name: 'Economy and business (B2)',
+    description: 'B2 vocabulary for the economy, companies, markets, and finance (yatırım, kâr, yatırım yapmak, kârlı).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['yatırım yapmak', 'kârlı'],
+    examplesNegative: ['*yatırım etmek'],
+    commonErrors: [
+      'Using the wrong light verb ("*yatırım etmek" for "yatırım yapmak").',
+      'Writing "kâr" (profit) without its circumflex, which reads as "kar" (snow).',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-psychology-behaviour',
+    kind: 'vocab',
+    name: 'Psychology and behaviour (B2)',
+    description: 'B2 vocabulary for personality, emotions, mental health, and behaviour, with verbs and adjectives (üstesinden gelmek, özgüven, bencil, kuşkucu).',
+    cefrLevel: B2,
+    language: TR,
+    examplesPositive: ['özgüven', 'üstesinden gelmek'],
+    examplesNegative: ['*sorunu üstesinden gelmek (the object takes the genitive: sorunun üstesinden gelmek)'],
+    commonErrors: [
+      'Wrong case with "üstesinden gelmek" — the object takes the genitive ("sorunun üstesinden gelmek").',
+      'Confusing "duygusal" (emotional) with "hassas" (sensitive).',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-collocations-idioms',
+    kind: 'vocab',
+    name: 'Collocations and idioms (B2)',
+    description: 'B2 fixed collocations and idiomatic expressions in their citation form (karar vermek, göz önünde bulundurmak, aklına gelmek, iyi ki, ne de olsa).',
+    cefrLevel: B2,
+    language: TR,
+    vocabGroup: { label: 'expressions', pos: ['phrase', 'verb'] },
+    examplesPositive: ['karar vermek', 'göz önünde bulundurmak'],
+    examplesNegative: ['*karar yapmak'],
+    commonErrors: [
+      'Using the wrong light verb in a collocation ("*karar yapmak", "*fotoğraf almak" for "fotoğraf çekmek").',
+      'Breaking the fixed word order of an idiom ("*bulundurmak göz önünde").',
+    ],
+  },
+  {
+    key: 'tr-b2-vocab-formal-connectors',
+    kind: 'vocab',
+    name: 'Formal connectors and hedging (B2)',
+    description: 'B2 formal connectors and hedging expressions for argumentative writing (dolayısıyla, bununla birlikte, öte yandan, söz konusu, görünüşe göre).',
+    cefrLevel: B2,
+    language: TR,
+    vocabGroup: { label: 'connectors', pos: ['adverb', 'phrase', 'other'] },
+    examplesPositive: ['dolayısıyla', 'bununla birlikte'],
+    examplesNegative: ['*yandan öte (the fixed order is öte yandan)'],
+    commonErrors: [
+      'Using informal connectors ("ama", "o yüzden" — fine in speech, but too casual) where formal register calls for "ancak", "dolayısıyla".',
+      'Confusing "öte yandan" (on the other hand) with "ayrıca" (in addition).',
     ],
   },
 

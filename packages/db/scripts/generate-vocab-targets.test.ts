@@ -118,11 +118,28 @@ describe('--fill-mix', () => {
 
 describe('loadLanguageLemmas', () => {
   it('reads every umbrella of the language, so a word curated elsewhere is avoided', async () => {
-    const where = vi.fn().mockResolvedValue([{ lemma: 'cena' }, { lemma: 'comer' }]);
+    const where = vi.fn().mockResolvedValue([
+      { lemma: 'cena', pos: 'noun', umbrellaKey: 'es-a1-vocab-food-drink' },
+      { lemma: 'comer', pos: 'verb', umbrellaKey: 'es-a1-vocab-everyday-verbs' },
+    ]);
     const db = { select: () => ({ from: () => ({ where }) }) };
     const out = await loadLanguageLemmas(db as never, 'ES');
-    expect(out).toEqual(['cena', 'comer']);
+    expect(out).toEqual([
+      { lemma: 'cena', pos: 'noun', umbrellaKey: 'es-a1-vocab-food-drink' },
+      { lemma: 'comer', pos: 'verb', umbrellaKey: 'es-a1-vocab-everyday-verbs' },
+    ]);
     expect(where).toHaveBeenCalledTimes(1);
+  });
+
+  it('carries the class so a homograph of another class stays open; untagged and unknown pos become null (wildcard)', async () => {
+    const where = vi.fn().mockResolvedValue([
+      { lemma: 'yemek', pos: 'noun', umbrellaKey: 'tr-a1-vocab-food-drink' },
+      { lemma: 'su', pos: null, umbrellaKey: 'tr-a1-vocab-food-drink' },
+      { lemma: 'çay', pos: 'bogus', umbrellaKey: 'tr-a1-vocab-food-drink' },
+    ]);
+    const db = { select: () => ({ from: () => ({ where }) }) };
+    const out = await loadLanguageLemmas(db as never, 'TR');
+    expect(out.map((w) => w.pos)).toEqual(['noun', null, null]);
   });
 });
 

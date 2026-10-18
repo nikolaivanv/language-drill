@@ -149,6 +149,46 @@ describe('curriculum clozeUnsuitable flag', () => {
   });
 });
 
+describe('curriculum vocabGroup', () => {
+  const vocabEntry = (vocabGroup: unknown, kind: 'vocab' | 'grammar' = 'vocab'): GrammarPoint =>
+    ({
+      key: 'tr-a2-synthetic-vg',
+      kind,
+      name: 'Synthetic vocab group',
+      description: 'Synthetic vocab entry for vocabGroup invariant testing.',
+      cefrLevel: 'A2',
+      language: Language.TR,
+      examplesPositive: ['a', 'b'],
+      examplesNegative: ['*c'],
+      commonErrors: ['e'],
+      vocabGroup,
+    }) as GrammarPoint;
+
+  it('accepts a well-formed group', () => {
+    expect(() =>
+      assertCurriculumInvariants([...ALL_CURRICULA, vocabEntry({ label: 'verbs', pos: ['verb'] })]),
+    ).not.toThrow();
+  });
+
+  it('throws when a non-vocab entry declares vocabGroup', () => {
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: ['verb'] }, 'grammar')])).toThrow(
+      "'tr-a2-synthetic-vg' has vocabGroup but is not kind 'vocab'",
+    );
+  });
+
+  it('throws on an unknown label, an empty class list and an unknown class', () => {
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'nouns', pos: ['noun'] })])).toThrow(
+      "vocabGroup.label 'nouns' is not one of",
+    );
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: [] })])).toThrow(
+      'vocabGroup.pos must be non-empty',
+    );
+    expect(() => assertCurriculumInvariants([vocabEntry({ label: 'verbs', pos: ['adj'] })])).toThrow(
+      "vocabGroup.pos has unknown class 'adj'",
+    );
+  });
+});
+
 describe('curriculum sentenceConstructionSuitable flag', () => {
   it('throws when a vocab umbrella is flagged sentenceConstructionSuitable', () => {
     expect(() =>
@@ -1071,16 +1111,18 @@ describe('per-language counts', () => {
   // full Yedi İklim A1+A2 parity (26 A1 + 14 A2 grammar + 10 themed vocab
   // umbrellas); B1/B2 remain disabled.
 
-  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('Spanish is at full PCIC A1–B2 parity (+ B&B gap audit), has 40 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(esCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(24);
     expect(grammar.A2).toBeGreaterThanOrEqual(34);
     expect(grammar.B1).toBeGreaterThanOrEqual(25);
     expect(grammar.B2).toBeGreaterThanOrEqual(32);
-    // 5 A1 + 5 A2 themed umbrellas + 4 B1 + 4 B2 themed umbrellas (2026-07-17
-    // expansion) + es-b1-environment-vocab + es-b2-abstract-noun-vocab kept as
-    // one theme of their levels.
-    expect(vocab).toBe(20);
+    // 10 per level A1–B2. The original 20: 5 A1 + 5 A2 + 4 B1 + 4 B2 themed
+    // umbrellas (2026-07-17 expansion) + es-b1-environment-vocab +
+    // es-b2-abstract-noun-vocab kept as one theme of their levels. The
+    // 2026-10-17 vocab expansion added 5 per level: 3 themed + 2 word-class
+    // groups (A1: 2 themed + 3 groups, the greetings umbrella being one).
+    expect(vocab).toBe(40);
     // es-a1-dictation + es-a2-dictation + es-b1-dictation + es-b2-dictation (Phase 2 dictation generation pipeline).
     expect(dictation).toBe(4);
     // 6 × A1 + 6 × A2 + 9 × B1 + 9 × B2 free-writing topic umbrellas: the
@@ -1090,16 +1132,31 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('ES has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = esCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
+    }
+    expect(esCurriculum.find((p) => p.key === 'es-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
+  });
+
+  it('German is at full Menschen A1–B1 / Sicher! B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 30 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(deCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(19);
     expect(grammar.A2).toBeGreaterThanOrEqual(31);
     expect(grammar.B1).toBeGreaterThanOrEqual(27);
     expect(grammar.B2).toBeGreaterThanOrEqual(27);
-    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion):
-    // each level keeps its original broad umbrella (housing / environment /
-    // academic-noun) as one of its themes.
-    expect(vocab).toBe(20);
+    // 10 per level A1–B2. The original 20: 5 themed umbrellas per level
+    // (2026-07-17 expansion), each level keeping its original broad umbrella
+    // (housing / environment / academic-noun) as one of its themes. The
+    // 2026-10-17 vocab expansion added 5 per level: 3 themed + 2 word-class
+    // groups (A1: 2 themed + 3 groups, the greetings umbrella being one).
+    expect(vocab).toBe(40);
     // de-a1 + de-a2 + de-b1 + de-b2 dictation (2026-09-04): the follow-up the
     // 2026-07-12 plan doc deferred. German was the only language with zero
     // dictation / free-writing / paraphrase cells, so a DE learner had no
@@ -1116,7 +1173,20 @@ describe('per-language counts', () => {
     expect(paraphrase).toBe(2);
   });
 
-  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 20 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
+  it('DE has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = deCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
+    }
+    expect(deCurriculum.find((p) => p.key === 'de-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
+  });
+
+  it('Turkish is at full Yedi İklim A1 + A2 + B1 + B2 parity, has 40 vocab umbrellas, 4 dictation umbrellas, 24 free-writing umbrellas, and 2 paraphrase umbrellas', () => {
     const { grammar, vocab, dictation, freeWriting, paraphrase } = countsFor(trCurriculum);
     expect(grammar.A1).toBeGreaterThanOrEqual(26);
     // A2 gained 5 G&K reverse-audit points (2026-07-10): spatial postpositions,
@@ -1131,8 +1201,11 @@ describe('per-language counts', () => {
     // book-coverage cycle). B2 dictation/free-writing remain out of scope; B2
     // vocab umbrellas added 2026-07-17.
     expect(grammar.B2).toBe(17);
-    // 5 A1 + 5 A2 + 5 B1 + 5 B2 themed umbrellas (2026-07-17 expansion).
-    expect(vocab).toBe(20);
+    // 10 per level A1–B2. The original 20: 5 themed umbrellas per level
+    // (2026-07-17 expansion). The 2026-10-17 vocab expansion added 5 per
+    // level: 3 themed + 2 word-class groups (A1: 2 themed + 3 groups, the
+    // greetings umbrella being one).
+    expect(vocab).toBe(40);
     // tr-a1 + tr-a2 + tr-b1 + tr-b2 dictation (B2 added 2026-09-04).
     expect(dictation).toBe(4);
     // 3 free-writing topic umbrellas per level, B2 included (2026-09-04);
@@ -1142,6 +1215,19 @@ describe('per-language counts', () => {
     // cycle was grammar-only, which left B2 as the one TR level with no
     // dictation, free-writing or paraphrase cell.
     expect(paraphrase).toBe(2);
+  });
+
+  it('TR has 3 word-class groups at A1 and 2 per level A2–B2', () => {
+    // A1's third group is the greetings umbrella: fixed expressions, which the
+    // themed mix would trim to ≤10% phrases.
+    for (const level of ['A1', 'A2', 'B1', 'B2']) {
+      const groups = trCurriculum.filter((p) => p.kind === 'vocab' && p.cefrLevel === level && p.vocabGroup);
+      expect(groups).toHaveLength(level === 'A1' ? 3 : 2);
+    }
+    expect(trCurriculum.find((p) => p.key === 'tr-a1-vocab-greetings-phrases')?.vocabGroup).toEqual({
+      label: 'expressions',
+      pos: ['phrase', 'other'],
+    });
   });
 });
 

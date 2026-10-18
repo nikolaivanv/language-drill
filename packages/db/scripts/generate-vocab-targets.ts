@@ -4,7 +4,8 @@
  * `(language, level)` scope, proposes words, validates them structurally,
  * joins corpus frequency, and inserts rows `status='flagged'` for human review
  * (`pnpm review:flagged-vocab`). Idempotent: re-runs skip lemmas already
- * present for the umbrella (avoid-list + onConflictDoNothing).
+ * present for the umbrella (avoid-list keyed on lemma + class, plus
+ * onConflictDoNothing).
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  * Usage: pnpm --filter @language-drill/db generate:vocab-targets \
@@ -34,7 +35,7 @@ import { ALL_CURRICULA } from '../src/curriculum';
 import { requireEnv } from '../src/lib/env';
 import { vocabTarget } from '../src/schema/vocab';
 import { countPos, type PosCounts, type Shortfall } from '../src/vocab-target/mix';
-import { runOneUmbrella } from '../src/vocab-target/run-one-umbrella';
+import { runOneUmbrella, type AvoidWord } from '../src/vocab-target/run-one-umbrella';
 
 const DEFAULT_WORD_COUNT = 30;
 const DEFAULT_LANGUAGE: LearningLanguage = Language.ES;
@@ -60,14 +61,16 @@ export function resolveEsA1VocabUmbrellas(
 
 /**
  * Every curated lemma in the language, any umbrella, any status — the
- * avoid-list, so one word lives in exactly one group per language.
+ * avoid-list, so one (lemma, class) lives in exactly one group per language.
+ * The class lets a homograph of another class through (the verb "yemek"
+ * beside the noun); an untagged row (`pos` null) blocks every class.
  */
-export async function loadLanguageLemmas(db: Db, language: LearningLanguage): Promise<string[]> {
+export async function loadLanguageLemmas(db: Db, language: LearningLanguage): Promise<AvoidWord[]> {
   const rows = await db
-    .select({ lemma: vocabTarget.lemma })
+    .select({ lemma: vocabTarget.lemma, pos: vocabTarget.pos, umbrellaKey: vocabTarget.umbrellaKey })
     .from(vocabTarget)
     .where(eq(vocabTarget.language, language));
-  return rows.map((r) => r.lemma);
+  return rows.map((r) => ({ lemma: r.lemma, pos: parseVocabPos(r.pos), umbrellaKey: r.umbrellaKey }));
 }
 
 /** Class counts of an umbrella's live (flagged + approved) rows; untagged = pos null. */

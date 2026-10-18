@@ -12,6 +12,7 @@ import {
   VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE,
   buildVocabTargetUserPrompt,
   cefrRankWindow,
+  type VocabAvoidWord,
   type VocabTargetRequest,
 } from '@language-drill/ai';
 import type { CefrLevel, GrammarPoint, LearningLanguage, VocabPos } from '@language-drill/shared';
@@ -40,12 +41,20 @@ const LANGUAGE_NAME: Record<LearningLanguage, string> = {
 /** Max anchor lemmas fed to the model as frequency inspiration. */
 const ANCHOR_WORD_LIMIT = 40;
 
+/**
+ * An already-curated word of the language. Dedup keys on (lemma, pos): a noun
+ * does not block its verb homograph (TR "yemek", DE "Essen"/"essen"). A null
+ * `pos` (legacy, untagged row) blocks every class, and so does any row of the
+ * umbrella being authored — the unique index is (language, umbrella, lemma).
+ */
+export type AvoidWord = { lemma: string; pos: VocabPos | null; umbrellaKey?: string };
+
 export type RunOneUmbrellaDeps = {
   db: Db;
   client: Pick<Anthropic, 'messages'>;
   umbrella: GrammarPoint;
   wordCount: number;
-  avoidWords: readonly string[];
+  avoidWords: readonly AvoidWord[];
   /** Class counts of the umbrella's existing (flagged + approved) rows. */
   existing?: PosCounts;
   /** Top up an existing themed umbrella with non-nouns only. */
@@ -110,11 +119,26 @@ export async function runOneUmbrella(
     .replace(/\{\{umbrellaDescription\}\}/g, umbrella.description)
     .replace(/\{\{wordCount\}\}/g, String(count));
 
-  const seen = new Set(avoidWords.map((w) => w.toLowerCase()));
+  // Case-insensitive throughout (stricter than the DB's case-sensitive unique
+  // index, by design). `blockedLemma` blocks every class; `blockedPair` one.
+  const blockedLemma = new Set<string>();
+  const blockedPair = new Set<string>();
+  const pairKey = (lemma: string, pos: VocabPos): string => `${lemma}\u0000${pos}`;
+  const promptAvoid: VocabAvoidWord[] = [];
+  for (const w of avoidWords) {
+    const lk = w.lemma.toLowerCase();
+    if (w.pos === null || w.umbrellaKey === umbrella.key) {
+      blockedLemma.add(lk);
+      promptAvoid.push({ lemma: w.lemma, pos: null });
+    } else {
+      blockedPair.add(pairKey(lk, w.pos));
+      promptAvoid.push({ lemma: w.lemma, pos: w.pos });
+    }
+  }
   let rawCount = 0;
 
-  // One Claude call -> validated words not yet seen (case-insensitive; stricter
-  // than the DB's case-sensitive unique index, by design).
+  // One Claude call -> validated words not yet seen. A kept word blocks its
+  // lemma in every class: a later homograph would land in this same umbrella.
   async function propose(
     count: number,
     request: VocabTargetRequest,
@@ -125,7 +149,7 @@ export async function runOneUmbrella(
       umbrellaDescription: umbrella.description,
       wordCount: count,
       freqAnchorWords,
-      avoidWords: [...seen],
+      avoidWords: promptAvoid,
       request,
     });
     const msg = await client.messages.create({
@@ -140,9 +164,10 @@ export async function runOneUmbrella(
     for (const w of raw) {
       const v = validateProposedWord(w, allowedPos);
       if (!v) continue;
-      const k = v.lemma.toLowerCase();
-      if (seen.has(k)) continue;
-      seen.add(k);
+      const lk = v.lemma.toLowerCase();
+      if (blockedLemma.has(lk) || blockedPair.has(pairKey(lk, v.pos))) continue;
+      blockedLemma.add(lk);
+      promptAvoid.push({ lemma: v.lemma, pos: null });
       out.push(v);
     }
     return out;
