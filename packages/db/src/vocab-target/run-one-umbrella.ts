@@ -154,7 +154,9 @@ export async function runOneUmbrella(
     });
     const msg = await client.messages.create({
       model: GENERATION_MODEL,
-      max_tokens: 2000,
+      // 30 words with example sentences run to ~1,900 output tokens; 2000 truncated
+      // the JSON (no words parsed) on 2 of 60 umbrellas in the 2026-10-18 run.
+      max_tokens: 4000,
       system: buildSystem(count),
       messages: [{ role: 'user', content: user }],
     });

@@ -48,6 +48,7 @@ describe('vocab-target prompt — word classes', () => {
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toContain('concrete');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('fully grammatical');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('No quiero arrepentirme');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('Voy a hacer la tarea.');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toMatch(/must contain the lemma.*verbatim/);
   });
 

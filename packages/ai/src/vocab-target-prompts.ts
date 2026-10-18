@@ -25,6 +25,8 @@
 // sentence needs. Asking for the citation form verbatim produced
 // "*No quiero arrepentirse" / "*Me alegro de alegrarse de" on the first
 // prepositional-verb run; the validator now accepts a verb/adjective on its stem.
+// Irregular / stem-changing verbs ("voy", "puedo", "me acuesto") never show
+// their stem, so the prompt asks for the infinitive after a modal for those.
 export const VOCAB_TARGET_GENERATION_PROMPT_VERSION =
   'vocab-target-generate@2026-10-18a';
 
@@ -38,7 +40,7 @@ Rules:
 - "lemma" is the citation form. Nouns: bare singular, no article. Verbs: the infinitive, keeping a reflexive pronoun or governed preposition that belongs to the verb ("levantarse", "acordarse de", "sich freuen auf", "futbol oynamak"). Adjectives: the dictionary form (Spanish masculine singular, German uninflected). Phrases: the whole fixed expression ("de vez en cuando", "iyi ki").
 - "displayForm" is how a learner sees it: nouns include their article where the language has one ("la manzana", "der Apfel"); for every other class it is identical to "lemma".
 - Multi-word items are allowed ONLY as fixed expressions (pos "phrase") or verbs with their pronoun/preposition (pos "verb"), at most 4 words. No free combinations ("red apple").
-- "gloss" is a 1-4 word English meaning. "exampleSentence" is one short, natural, fully grammatical {{languageName}} sentence that uses the word exactly once, inflected as the sentence requires: conjugate verbs and make reflexive pronouns agree with the subject ("No quiero arrepentirme.", "Me levanto a las siete.", "Ich freue mich auf den Urlaub."), make adjectives agree ("una casa blanca"). Never force the dictionary form where the grammar needs another form ("*No quiero arrepentirse" is wrong). Keep the word's stem recognisable: prefer a form that starts with the lemma's stem (for Turkish, a form that keeps the verb stem, e.g. "Okula gitmek istiyorum." rather than "gidiyorum").
+- "gloss" is a 1-4 word English meaning. "exampleSentence" is one short, natural, fully grammatical {{languageName}} sentence that uses the word exactly once, inflected as the sentence requires: conjugate verbs and make reflexive pronouns agree with the subject ("No quiero arrepentirme.", "Me levanto a las siete.", "Ich freue mich auf den Urlaub."), make adjectives agree ("una casa blanca"). Never force the dictionary form where the grammar needs another form ("*No quiero arrepentirse" is wrong). Keep the word's stem recognisable: prefer a form that starts with the lemma's stem (for Turkish, a form that keeps the verb stem, e.g. "Okula gitmek istiyorum." rather than "gidiyorum"). For an irregular or stem-changing verb (ir, ser, hacer, poder, volver, acostarse; sein, gehen), use the infinitive after a modal or "ir a" / "möchten" ("Voy a hacer la tarea.", "Quiero acostarme pronto.", "Ich möchte nach Hause gehen.").
 - No proper nouns, no duplicates. Prefer the words a learner at this level most needs first.
 
 Return ONLY minified JSON: {"words":[{"displayForm":"...","lemma":"...","pos":"...","gloss":"...","exampleSentence":"..."}]}`;
