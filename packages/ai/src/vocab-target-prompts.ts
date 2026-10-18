@@ -10,7 +10,8 @@
 // and the structural validator dropped verbs whose example sentence was
 // conjugated. Each word now carries "pos", the requested mix (or class
 // restriction) rides in the user prompt, fixed expressions up to 4 words are
-// allowed, and the example must contain the citation form verbatim.
+// allowed, and the example must contain the citation form verbatim (relaxed
+// 2026-10-18a, below).
 //
 // 2026-10-18: the word-class-group request line said "the topic is the word
 // class itself — any level-appropriate word of that class qualifies", which
@@ -19,8 +20,13 @@
 // the umbrella description. The avoid list now tags each word with its class
 // ("yemek (noun)"), so a homograph of another class (the verb "yemek") is no
 // longer blocked.
+//
+// 2026-10-18a: examples must be grammatical with the word inflected as the
+// sentence needs. Asking for the citation form verbatim produced
+// "*No quiero arrepentirse" / "*Me alegro de alegrarse de" on the first
+// prepositional-verb run; the validator now accepts a verb/adjective on its stem.
 export const VOCAB_TARGET_GENERATION_PROMPT_VERSION =
-  'vocab-target-generate@2026-10-18';
+  'vocab-target-generate@2026-10-18a';
 
 export const VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE = `You are a lexicographer building a curated vocabulary list for {{languageName}} learners at CEFR {{cefrLevel}}.
 
@@ -32,7 +38,7 @@ Rules:
 - "lemma" is the citation form. Nouns: bare singular, no article. Verbs: the infinitive, keeping a reflexive pronoun or governed preposition that belongs to the verb ("levantarse", "acordarse de", "sich freuen auf", "futbol oynamak"). Adjectives: the dictionary form (Spanish masculine singular, German uninflected). Phrases: the whole fixed expression ("de vez en cuando", "iyi ki").
 - "displayForm" is how a learner sees it: nouns include their article where the language has one ("la manzana", "der Apfel"); for every other class it is identical to "lemma".
 - Multi-word items are allowed ONLY as fixed expressions (pos "phrase") or verbs with their pronoun/preposition (pos "verb"), at most 4 words. No free combinations ("red apple").
-- "gloss" is a 1-4 word English meaning. "exampleSentence" is one natural {{languageName}} sentence that uses the word. For a single word, the sentence must contain the lemma (or, for a noun, the displayForm's noun) verbatim — use a verb in its infinitive ("Quiero comer pan.", "Ich möchte früh aufstehen.", "Okula gitmek istiyorum.") and an adjective in its dictionary form. A multi-word item may be inflected and reordered as the grammar requires ("Ich freue mich auf den Urlaub.").
+- "gloss" is a 1-4 word English meaning. "exampleSentence" is one short, natural, fully grammatical {{languageName}} sentence that uses the word exactly once, inflected as the sentence requires: conjugate verbs and make reflexive pronouns agree with the subject ("No quiero arrepentirme.", "Me levanto a las siete.", "Ich freue mich auf den Urlaub."), make adjectives agree ("una casa blanca"). Never force the dictionary form where the grammar needs another form ("*No quiero arrepentirse" is wrong). Keep the word's stem recognisable: prefer a form that starts with the lemma's stem (for Turkish, a form that keeps the verb stem, e.g. "Okula gitmek istiyorum." rather than "gidiyorum").
 - No proper nouns, no duplicates. Prefer the words a learner at this level most needs first.
 
 Return ONLY minified JSON: {"words":[{"displayForm":"...","lemma":"...","pos":"...","gloss":"...","exampleSentence":"..."}]}`;
