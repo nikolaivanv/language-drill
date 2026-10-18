@@ -3,6 +3,7 @@ import { CefrLevel, Language } from '@language-drill/shared';
 import { ALL_CURRICULA } from '../src/curriculum';
 import {
   assertFillMixReady,
+  avoidForFamily,
   filterUmbrellaByKey,
   formatUmbrellaLog,
   loadLanguageLemmas,
@@ -140,6 +141,31 @@ describe('loadLanguageLemmas', () => {
     const db = { select: () => ({ from: () => ({ where }) }) };
     const out = await loadLanguageLemmas(db as never, 'TR');
     expect(out.map((w) => w.pos)).toEqual(['noun', null, null]);
+  });
+});
+
+describe('avoidForFamily', () => {
+  const point = (key: string) => {
+    const p = ALL_CURRICULA.find((g) => g.key === key);
+    if (!p) throw new Error(`missing ${key}`);
+    return p;
+  };
+  const avoid = [
+    { lemma: 'comprar', pos: 'verb' as const, umbrellaKey: 'es-a1-vocab-everyday-verbs' },
+    { lemma: 'barato', pos: 'adjective' as const, umbrellaKey: 'es-a1-vocab-describing-words' },
+    { lemma: 'tienda', pos: 'noun' as const, umbrellaKey: 'es-a2-vocab-city-shopping' },
+    { lemma: 'pagar', pos: 'verb' as const, umbrellaKey: 'es-b1-vocab-money-consumers' },
+    { lemma: 'viejo', pos: null, umbrellaKey: 'es-retired-umbrella' },
+  ];
+
+  it('lets a themed topic take words held by word-class groups, but not by other themed topics', () => {
+    const out = avoidForFamily(avoid, point('es-a2-vocab-city-shopping'), ALL_CURRICULA);
+    expect(out.map((w) => w.lemma)).toEqual(['tienda', 'pagar', 'viejo']);
+  });
+
+  it('lets a word-class group take words held by themed topics, but not by other groups', () => {
+    const out = avoidForFamily(avoid, point('es-a1-vocab-everyday-verbs'), ALL_CURRICULA);
+    expect(out.map((w) => w.lemma)).toEqual(['comprar', 'barato']);
   });
 });
 
