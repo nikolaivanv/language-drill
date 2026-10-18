@@ -88,7 +88,11 @@ export function validateProposedWord(
   const exampleHasWord =
     tokens.length > 1
       ? hasStemmable
-        ? bareTokens.some((t) => t.length >= 4 && example.includes(exampleStem(t)))
+        ? bareTokens.some(
+            (t) =>
+              t.length >= 4 &&
+              (example.includes(exampleStem(t)) || (pos === 'verb' && stemMatches(t, pos, example))),
+          )
         : exampleWords.includes(` ${bareTokens.join(' ')} `)
       : example.includes(lemmaTok) ||
         (pos === 'noun' && example.includes(displayTok)) ||

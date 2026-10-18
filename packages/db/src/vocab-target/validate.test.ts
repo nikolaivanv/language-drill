@@ -201,6 +201,15 @@ describe('validateProposedWord — word class', () => {
     ).not.toBeNull();
   });
 
+  it('accepts a reflexive prepositional verb conjugated in its example', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'alegrarse de', lemma: 'alegrarse de', pos: 'verb', exampleSentence: 'Me alegro de verte.' }),
+    ).not.toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'quejarse de', lemma: 'quejarse de', pos: 'verb', exampleSentence: 'Siempre se queja del ruido.' }),
+    ).not.toBeNull();
+  });
+
   it('still needs the stem: an example without the word is rejected', () => {
     expect(
       validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'verb', exampleSentence: 'Bebo agua.' }),
