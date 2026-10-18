@@ -190,9 +190,41 @@ describe('validateProposedWord — word class', () => {
     expect(validateProposedWord(verb, ['adjective', 'adverb'])).toBeNull();
   });
 
-  it('rejects a conjugated example that never shows the citation form', () => {
+  it('accepts an inflected single-word verb or adjective on its stem', () => {
+    const verb = (lemma: string, exampleSentence: string) =>
+      validateProposedWord({ ...base, displayForm: lemma, lemma, pos: 'verb', exampleSentence });
+    expect(verb('comer', 'Como pan todos los días.')).not.toBeNull();
+    expect(verb('arrepentirse', 'No quiero arrepentirme de nada.')).not.toBeNull();
+    expect(verb('levantarse', 'Me levanto a las siete.')).not.toBeNull();
     expect(
-      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'verb', exampleSentence: 'Como pan.' }),
+      validateProposedWord({ ...base, displayForm: 'blanco', lemma: 'blanco', pos: 'adjective', exampleSentence: 'Tengo una casa blanca.' }),
+    ).not.toBeNull();
+  });
+
+  it('accepts a reflexive prepositional verb conjugated in its example', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'alegrarse de', lemma: 'alegrarse de', pos: 'verb', exampleSentence: 'Me alegro de verte.' }),
+    ).not.toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'quejarse de', lemma: 'quejarse de', pos: 'verb', exampleSentence: 'Siempre se queja del ruido.' }),
+    ).not.toBeNull();
+  });
+
+  it('still needs the stem: an example without the word is rejected', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'verb', exampleSentence: 'Bebo agua.' }),
+    ).toBeNull();
+  });
+
+  it('keeps words under 5 letters verbatim (no safe stem)', () => {
+    const ver = { ...base, displayForm: 'ver', lemma: 'ver', pos: 'verb' };
+    expect(validateProposedWord({ ...ver, exampleSentence: 'Quiero ver la película.' })).not.toBeNull();
+    expect(validateProposedWord({ ...ver, exampleSentence: 'Veo la película.' })).toBeNull();
+  });
+
+  it('does not stem-match nouns or adverbs', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'temprano', lemma: 'temprano', pos: 'adverb', exampleSentence: 'Llegó tempranísimo.' }),
     ).toBeNull();
   });
 });

@@ -20,6 +20,23 @@ const lower = (s: string): string => s.normalize('NFC').toLowerCase().replace(/\
 
 const norm = (s: string): string => lower(s.trim().replace(/\s+/g, ' '));
 
+/**
+ * A single-word verb or adjective may appear inflected in a natural example
+ * ("No quiero arrepentirme" for arrepentirse, "Como pan" for comer, "una casa
+ * blanca" for blanco), so it passes on its stem. Requiring the dictionary form
+ * verbatim pushed the model into ungrammatical sentences ("*No quiero
+ * arrepentirse"). Words under 5 letters ("ir", "ver", "alto") have no safe stem
+ * and must still appear verbatim.
+ */
+const INFLECTED_POS: ReadonlySet<VocabPos> = new Set<VocabPos>(['verb', 'adjective']);
+const MIN_STEMMED_WORD = 5;
+
+/** A Spanish reflexive infinitive drops its "-se" before stemming ("levantarse" → "levant…" matches "me levanto"). */
+function stemMatches(lemmaTok: string, pos: VocabPos, example: string): boolean {
+  const base = pos === 'verb' && lemmaTok.endsWith('se') ? lemmaTok.slice(0, -2) : lemmaTok;
+  return base.length >= MIN_STEMMED_WORD && example.includes(exampleStem(base));
+}
+
 /** A token minus its last two characters — survives inflection ("acordarse" → "acordar…", "freuen" → "freu…"). */
 function exampleStem(token: string): string {
   return lower(token).slice(0, token.length - 2);
@@ -71,9 +88,15 @@ export function validateProposedWord(
   const exampleHasWord =
     tokens.length > 1
       ? hasStemmable
-        ? bareTokens.some((t) => t.length >= 4 && example.includes(exampleStem(t)))
+        ? bareTokens.some(
+            (t) =>
+              t.length >= 4 &&
+              (example.includes(exampleStem(t)) || (pos === 'verb' && stemMatches(t, pos, example))),
+          )
         : exampleWords.includes(` ${bareTokens.join(' ')} `)
-      : example.includes(lemmaTok) || (pos === 'noun' && example.includes(displayTok));
+      : example.includes(lemmaTok) ||
+        (pos === 'noun' && example.includes(displayTok)) ||
+        (INFLECTED_POS.has(pos) && stemMatches(lemmaTok, pos, example));
   if (!exampleHasWord) return null;
 
   return {

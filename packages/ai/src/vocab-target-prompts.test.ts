@@ -8,7 +8,7 @@ import {
 describe('vocab-target prompts', () => {
   it('version is a dated surface tag', () => {
     expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toMatch(
-      /^vocab-target-generate@\d{4}-\d{2}-\d{2}$/,
+      /^vocab-target-generate@\d{4}-\d{2}-\d{2}[a-z]?$/,
     );
   });
 
@@ -42,11 +42,14 @@ describe('vocab-target prompts', () => {
 describe('vocab-target prompt — word classes', () => {
   const base = { umbrellaName: 'Food (A1)', umbrellaDescription: 'd', wordCount: 30, freqAnchorWords: [], avoidWords: [] };
 
-  it('is versioned 2026-10-18 and asks for pos + citation-form examples', () => {
-    expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toBe('vocab-target-generate@2026-10-18');
+  it('is versioned 2026-10-18a and asks for pos + grammatical, inflected examples', () => {
+    expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toBe('vocab-target-generate@2026-10-18a');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('"pos"');
     expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toContain('concrete');
-    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/must contain the lemma.*verbatim/);
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('fully grammatical');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('No quiero arrepentirme');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('Voy a hacer la tarea.');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toMatch(/must contain the lemma.*verbatim/);
   });
 
   it('states the themed mix', () => {
