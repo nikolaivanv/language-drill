@@ -309,6 +309,13 @@
       "when": 1792247604434,
       "tag": "0043_session_targeting",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1792276335624,
+      "tag": "0044_vocab_target_pos",
+      "breakpoints": true
     }
   ]
 }

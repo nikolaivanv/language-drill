@@ -108,6 +108,7 @@ type VocabFixture = {
   cefrLevel: string;
   language: string;
   kind: string;
+  vocabGroup?: { label: string; pos: string[] };
 };
 
 const ES_VOCAB_FIXTURES: VocabFixture[] = [
@@ -124,6 +125,7 @@ const ES_VOCAB_FIXTURES: VocabFixture[] = [
     cefrLevel: 'A1',
     language: 'ES',
     kind: 'vocab',
+    vocabGroup: { label: 'verbs', pos: ['verb'] },
   },
 ];
 
@@ -331,6 +333,8 @@ describe('GET /vocab/topics', () => {
       available: 0,
       practiced: 0,
     });
+    expect(family.group).toBe('verbs');
+    expect(foodDrink.group).toBeNull();
   });
 
   it('returns 401 for unauthenticated requests', async () => {

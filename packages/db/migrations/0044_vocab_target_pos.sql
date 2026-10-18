@@ -1,0 +1,1 @@
+ALTER TABLE "vocab_target" ADD COLUMN "pos" text;

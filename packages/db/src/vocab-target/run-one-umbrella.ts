@@ -12,13 +12,23 @@ import {
   VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE,
   buildVocabTargetUserPrompt,
   cefrRankWindow,
+  type VocabTargetRequest,
 } from '@language-drill/ai';
-import type { CefrLevel, GrammarPoint, LearningLanguage } from '@language-drill/shared';
+import type { CefrLevel, GrammarPoint, LearningLanguage, VocabPos } from '@language-drill/shared';
 
 import type { Db } from '../client';
 import { loadFrequencyBand } from '../generation/vocab-band';
 import { vocabLemma } from '../schema/index';
 import type { NewVocabTarget } from '../schema/vocab';
+import {
+  countPos,
+  emptyPosCounts,
+  fitToMix,
+  mixShortfall,
+  planFillMixRequest,
+  type PosCounts,
+  type Shortfall,
+} from './mix';
 import { deriveTier, validateProposedWord, type ProposedWord } from './validate';
 
 const LANGUAGE_NAME: Record<LearningLanguage, string> = {
@@ -36,12 +46,29 @@ export type RunOneUmbrellaDeps = {
   umbrella: GrammarPoint;
   wordCount: number;
   avoidWords: readonly string[];
+  /** Class counts of the umbrella's existing (flagged + approved) rows. */
+  existing?: PosCounts;
+  /** Top up an existing themed umbrella with non-nouns only. */
+  fillMix?: boolean;
 };
+
+const NON_NOUN: readonly VocabPos[] = ['verb', 'adjective', 'adverb', 'phrase'];
+const FOLLOW_UP_POS: readonly VocabPos[] = ['verb', 'adjective', 'adverb'];
+
+function addCounts(a: PosCounts, b: PosCounts): PosCounts {
+  const c = emptyPosCounts();
+  for (const p of Object.keys(c) as VocabPos[]) c[p] = a[p] + b[p];
+  return c;
+}
 
 export type RunOneUmbrellaResult = {
   rows: NewVocabTarget[];
   rawCount: number;
   keptCount: number;
+  followUp: boolean;
+  remainingShortfall: Shortfall;
+  /** True only for a fill-mix themed umbrella whose plan asked for nothing (no call made). */
+  requestedNothing: boolean;
 };
 
 function extractText(msg: Anthropic.Messages.Message): string {
@@ -72,45 +99,94 @@ export async function runOneUmbrella(
   const anchorAll = await loadFrequencyBand(db, language, rankMin, rankMax);
   const freqAnchorWords = anchorAll.slice(0, ANCHOR_WORD_LIMIT);
 
-  const system = VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE.replace(
+  // Built per call so the system prompt's count always matches that call's request.
+  const buildSystem = (count: number): string =>
+    VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE.replace(
     /\{\{languageName\}\}/g,
     LANGUAGE_NAME[language],
   )
     .replace(/\{\{cefrLevel\}\}/g, cefr)
     .replace(/\{\{umbrellaName\}\}/g, umbrella.name)
     .replace(/\{\{umbrellaDescription\}\}/g, umbrella.description)
-    .replace(/\{\{wordCount\}\}/g, String(wordCount));
+    .replace(/\{\{wordCount\}\}/g, String(count));
 
-  const user = buildVocabTargetUserPrompt({
-    umbrellaName: umbrella.name,
-    umbrellaDescription: umbrella.description,
-    wordCount,
-    freqAnchorWords,
-    avoidWords,
-  });
+  const seen = new Set(avoidWords.map((w) => w.toLowerCase()));
+  let rawCount = 0;
 
-  const msg = await client.messages.create({
-    model: GENERATION_MODEL,
-    max_tokens: 2000,
-    system,
-    messages: [{ role: 'user', content: user }],
-  });
+  // One Claude call -> validated words not yet seen (case-insensitive; stricter
+  // than the DB's case-sensitive unique index, by design).
+  async function propose(
+    count: number,
+    request: VocabTargetRequest,
+    allowedPos: readonly VocabPos[] | undefined,
+  ): Promise<ProposedWord[]> {
+    const user = buildVocabTargetUserPrompt({
+      umbrellaName: umbrella.name,
+      umbrellaDescription: umbrella.description,
+      wordCount: count,
+      freqAnchorWords,
+      avoidWords: [...seen],
+      request,
+    });
+    const msg = await client.messages.create({
+      model: GENERATION_MODEL,
+      max_tokens: 2000,
+      system: buildSystem(count),
+      messages: [{ role: 'user', content: user }],
+    });
+    const raw = parseWords(extractText(msg as Anthropic.Messages.Message));
+    rawCount += raw.length;
+    const out: ProposedWord[] = [];
+    for (const w of raw) {
+      const v = validateProposedWord(w, allowedPos);
+      if (!v) continue;
+      const k = v.lemma.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push(v);
+    }
+    return out;
+  }
 
-  const raw = parseWords(extractText(msg as Anthropic.Messages.Message));
-  const valid: ProposedWord[] = raw
-    .map((w) => validateProposedWord(w))
-    .filter((w): w is ProposedWord => w !== null);
+  const existing = deps.existing ?? emptyPosCounts();
+  const existingTotal = Object.values(existing).reduce((n, x) => n + x, 0);
+  const group = umbrella.vocabGroup;
 
-  // De-dup within this batch and against the avoid-list (case-insensitive);
-  // stricter than the DB's case-sensitive unique index, by design.
-  const avoid = new Set(avoidWords.map((w) => w.toLowerCase()));
-  const seen = new Set<string>();
-  const deduped = valid.filter((w) => {
-    const k = w.lemma.toLowerCase();
-    if (avoid.has(k) || seen.has(k)) return false;
-    seen.add(k);
-    return true;
-  });
+  let deduped: ProposedWord[];
+  let followUp = false;
+  let requestedNothing = false;
+  if (group) {
+    deduped = await propose(wordCount, { kind: 'group', pos: group.pos }, group.pos);
+  } else {
+    let first: ProposedWord[];
+    let nothingToAsk = false;
+    if (deps.fillMix) {
+      const plan = planFillMixRequest(existing, wordCount);
+      // Nothing to ask for: no model call (an "exactly 0" request is meaningless).
+      nothingToAsk = plan.verb + plan.adjectiveOrAdverb === 0;
+      requestedNothing = nothingToAsk;
+      // The plan can total more than wordCount (it grows to meet the quota at
+      // the final size); the prompts must ask for what the plan says.
+      first = nothingToAsk
+        ? []
+        : await propose(plan.verb + plan.adjectiveOrAdverb, { kind: 'only', ...plan }, NON_NOUN);
+    } else {
+      first = await propose(wordCount, { kind: 'themed' }, undefined);
+    }
+    let batch = first;
+    const short = mixShortfall(addCounts(existing, countPos(batch)), existingTotal + batch.length);
+    const moreCount = short.verb + short.adjectiveOrAdverb;
+    if (moreCount > 0 && !nothingToAsk) {
+      followUp = true;
+      const more = await propose(moreCount, { kind: 'only', ...short }, FOLLOW_UP_POS);
+      batch = [...batch, ...more];
+    }
+    deduped = fitToMix(existing, batch);
+  }
+
+  const remainingShortfall = group
+    ? { verb: 0, adjectiveOrAdverb: 0 }
+    : mixShortfall(addCounts(existing, countPos(deduped)), existingTotal + deduped.length);
 
   // Frequency-join: one query for all kept lemmas.
   const rankByLemma = new Map<string, number>();
@@ -144,8 +220,16 @@ export async function runOneUmbrella(
       tier: deriveTier(freqRank),
       status: 'flagged',
       source: 'llm',
+      pos: w.pos,
     };
   });
 
-  return { rows: targetRows, rawCount: raw.length, keptCount: targetRows.length };
+  return {
+    rows: targetRows,
+    rawCount,
+    keptCount: targetRows.length,
+    followUp,
+    remainingShortfall,
+    requestedNothing,
+  };
 }

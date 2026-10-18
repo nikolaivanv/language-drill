@@ -30,10 +30,49 @@ describe('vocab-target prompts', () => {
       wordCount: 30,
       freqAnchorWords: ['pan', 'agua', 'manzana'],
       avoidWords: ['leche'],
+      request: { kind: 'themed' },
     });
     expect(out).toContain('Food and drink (A1)');
     expect(out).toContain('pan, agua, manzana');
     expect(out).toContain('leche');
     expect(out).toMatch(/"words"/);
+  });
+});
+
+describe('vocab-target prompt — word classes', () => {
+  const base = { umbrellaName: 'Food (A1)', umbrellaDescription: 'd', wordCount: 30, freqAnchorWords: [], avoidWords: [] };
+
+  it('is versioned 2026-10-17 and asks for pos + citation-form examples', () => {
+    expect(VOCAB_TARGET_GENERATION_PROMPT_VERSION).toBe('vocab-target-generate@2026-10-17');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain('"pos"');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).not.toContain('concrete');
+    expect(VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/must contain the lemma.*verbatim/);
+  });
+
+  it('states the themed mix', () => {
+    const p = buildVocabTargetUserPrompt({ ...base, request: { kind: 'themed' } });
+    expect(p).toContain('at most 60% nouns');
+    expect(p).toContain('at least 20% verbs');
+  });
+
+  it('asks only for the missing classes in a follow-up', () => {
+    const p = buildVocabTargetUserPrompt({ ...base, wordCount: 7, request: { kind: 'only', verb: 4, adjectiveOrAdverb: 3 } });
+    expect(p).toContain('exactly 4 verbs');
+    expect(p).toContain('3 adjectives or adverbs');
+    expect(p).toContain('No nouns');
+  });
+
+  it('omits a class whose requested count is 0', () => {
+    const v = buildVocabTargetUserPrompt({ ...base, request: { kind: 'only', verb: 0, adjectiveOrAdverb: 3 } });
+    expect(v).toContain('exactly 3 adjectives or adverbs');
+    expect(v).not.toContain('0 verbs');
+    const a = buildVocabTargetUserPrompt({ ...base, request: { kind: 'only', verb: 4, adjectiveOrAdverb: 0 } });
+    expect(a).toContain('exactly 4 verbs');
+    expect(a).not.toContain('0 adjectives');
+  });
+
+  it('restricts a word-class group', () => {
+    const p = buildVocabTargetUserPrompt({ ...base, request: { kind: 'group', pos: ['adverb', 'phrase'] } });
+    expect(p).toContain('Every word MUST be one of: adverb, phrase');
   });
 });

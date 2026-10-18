@@ -27,6 +27,7 @@
     "backfill:conjugation": "npx tsx scripts/backfill-conjugation-structure.ts",
     "backfill:mastery": "npx tsx scripts/backfill-mastery.ts",
     "backfill:vocab-article-form": "npx tsx scripts/backfill-vocab-article-form.ts",
+    "backfill:vocab-target-pos": "npx tsx scripts/backfill-vocab-target-pos.ts",
     "backfill:demotion-reason": "npx tsx scripts/backfill-demotion-reason.ts",
     "backfill:variant-seeds": "tsx scripts/backfill-variant-seeds.ts",
     "backfill:error-observations": "npx tsx scripts/backfill-error-observations.ts",

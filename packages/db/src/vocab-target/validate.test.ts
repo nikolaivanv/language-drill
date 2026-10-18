@@ -9,12 +9,14 @@ describe('validateProposedWord', () => {
         lemma: 'manzana',
         gloss: 'apple',
         exampleSentence: 'Como una manzana roja.',
+        pos: 'noun',
       }),
     ).toEqual({
       displayForm: 'la manzana',
       lemma: 'manzana',
       gloss: 'apple',
       exampleSentence: 'Como una manzana roja.',
+      pos: 'noun',
     });
   });
 
@@ -25,6 +27,7 @@ describe('validateProposedWord', () => {
         lemma: 'buenos días',
         gloss: 'good morning',
         exampleSentence: 'Buenos días a todos.',
+        pos: 'noun',
       }),
     ).toBeNull();
   });
@@ -36,8 +39,44 @@ describe('validateProposedWord', () => {
         lemma: 'manzana',
         gloss: 'apple',
         exampleSentence: 'Como una pera.',
+        pos: 'noun',
       }),
     ).toBeNull();
+  });
+
+  it.each([
+    ['iyi ki', 'Hava güzel, iyi ki geldin.'],
+    ['por eso', 'Llegué tarde, por eso no comí.'],
+    ['her gün', 'Her gün okuyorum.'],
+    ['ab und zu', 'Ab und zu gehe ich ins Kino.'],
+    ['o sea', 'No vino, o sea, se quedó en casa.'],
+  ])('keeps the all-short-token phrase %s when the example contains it', (lemma, exampleSentence) => {
+    expect(
+      validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),
+    ).not.toBeNull();
+  });
+
+  it.each([
+    ['iyi ki', 'Hava güzel, geldin.'],
+    ['por eso', 'Llegué tarde, no comí por la noche.'],
+    ['ab und zu', 'Ich gehe ins Kino und zu Hause.'],
+    ['o sea', 'No vino, se quedó en casa.'],
+  ])('drops the all-short-token phrase %s when the example lacks it', (lemma, exampleSentence) => {
+    expect(
+      validateProposedWord({ displayForm: lemma, lemma, gloss: 'x', exampleSentence, pos: 'phrase' }),
+    ).toBeNull();
+  });
+
+  it('matches a Turkish dotted capital İ against its lower-case lemma', () => {
+    expect(
+      validateProposedWord({
+        displayForm: 'iyi',
+        lemma: 'iyi',
+        gloss: 'good',
+        exampleSentence: 'İyi bir gün.',
+        pos: 'adjective',
+      }),
+    ).not.toBeNull();
   });
 
   it('rejects missing/empty fields and non-objects', () => {
@@ -49,6 +88,7 @@ describe('validateProposedWord', () => {
         lemma: 'x',
         gloss: 'y',
         exampleSentence: 'x here',
+        pos: 'noun',
       }),
     ).toBeNull();
   });
@@ -63,12 +103,14 @@ describe('validateProposedWord', () => {
         lemma: 'pez',
         gloss: 'fish',
         exampleSentence: 'Hay muchos peces en el río.',
+        pos: 'noun',
       }),
     ).toEqual({
       displayForm: 'los peces',
       lemma: 'pez',
       gloss: 'fish',
       exampleSentence: 'Hay muchos peces en el río.',
+      pos: 'noun',
     });
   });
 });
@@ -85,5 +127,69 @@ describe('deriveTier', () => {
   it('bands the exact 2500 boundary (<=2500 common, >2500 extended)', () => {
     expect(deriveTier(2500)).toBe('common');
     expect(deriveTier(2501)).toBe('extended');
+  });
+});
+
+describe('validateProposedWord — word class', () => {
+  const base = { gloss: 'g', exampleSentence: '' };
+
+  it('requires a known pos and normalizes its casing', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'Verb', exampleSentence: 'Quiero comer pan.' }),
+    ).toMatchObject({ pos: 'verb' });
+    expect(
+      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'adj', exampleSentence: 'Quiero comer.' }),
+    ).toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', exampleSentence: 'Quiero comer.' }),
+    ).toBeNull();
+  });
+
+  it('accepts multi-token lemmas only for phrases and verbs, up to 4 tokens', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'echar de menos', lemma: 'echar de menos', pos: 'phrase', exampleSentence: 'Voy a echar de menos a mi familia.' }),
+    ).not.toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'sich freuen auf', lemma: 'sich freuen auf', pos: 'verb', exampleSentence: 'Ich möchte mich auf den Urlaub freuen.' }),
+    ).not.toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'acordarse de', lemma: 'acordarse de', pos: 'verb', exampleSentence: 'No puedo acordarme de su nombre.' }),
+    ).not.toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'echar de menos', lemma: 'echar de menos', pos: 'phrase', exampleSentence: 'Hoy hace sol.' }),
+    ).toBeNull(); // no token of the expression in the example
+    expect(
+      validateProposedWord({ ...base, displayForm: 'la cena fría', lemma: 'cena fría', pos: 'noun', exampleSentence: 'La cena fría.' }),
+    ).toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'a b c d e', lemma: 'a b c d e', pos: 'phrase', exampleSentence: 'a b c d e' }),
+    ).toBeNull();
+  });
+
+  it('requires a non-noun displayForm to equal its lemma', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'rápido/a', lemma: 'rápido', pos: 'adjective', exampleSentence: 'El tren es rápido.' }),
+    ).toBeNull();
+    expect(
+      validateProposedWord({ ...base, displayForm: 'Rápido', lemma: 'rápido', pos: 'adjective', exampleSentence: 'El tren es rápido.' }),
+    ).not.toBeNull();
+  });
+
+  it('keeps article display forms for nouns', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'la manzana', lemma: 'manzana', pos: 'noun', exampleSentence: 'Como una manzana.' }),
+    ).toMatchObject({ displayForm: 'la manzana', pos: 'noun' });
+  });
+
+  it('enforces allowedPos when given', () => {
+    const verb = { ...base, displayForm: 'comer', lemma: 'comer', pos: 'verb', exampleSentence: 'Quiero comer.' };
+    expect(validateProposedWord(verb, ['verb'])).not.toBeNull();
+    expect(validateProposedWord(verb, ['adjective', 'adverb'])).toBeNull();
+  });
+
+  it('rejects a conjugated example that never shows the citation form', () => {
+    expect(
+      validateProposedWord({ ...base, displayForm: 'comer', lemma: 'comer', pos: 'verb', exampleSentence: 'Como pan.' }),
+    ).toBeNull();
   });
 });

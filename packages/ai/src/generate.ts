@@ -357,7 +357,7 @@ export const VOCAB_RECALL_GENERATION_TOOL: Anthropic.Tool = {
         type: "array",
         items: { type: "string" },
         description:
-          "Optional. Every OTHER headword the prompt/definition picks out equally well — true near-synonyms a learner could defend given only the definition (e.g. 'gar' when expectedWord is 'istasyon' and the definition describes a station). Canonical headword forms, same conventions as expectedWord; do NOT repeat expectedWord here. Omit when the definition picks out exactly one headword.",
+          "Optional. Every OTHER headword the prompt/definition picks out equally well — true near-synonyms a learner could defend given only the definition (e.g. 'gar' when expectedWord is 'istasyon' and the definition describes a station). Canonical headword forms, same conventions as expectedWord, plus the citation-form variants the generation rules call for (an ES adjective's feminine singular; a fixed expression's legitimate word-order or clitic-placement variant); do NOT repeat expectedWord here. Omit when the definition picks out exactly one headword.",
       },
       hints: {
         type: "array",

@@ -432,7 +432,7 @@ export {
   VOCAB_TARGET_GENERATION_SYSTEM_PROMPT_TEMPLATE,
   buildVocabTargetUserPrompt,
 } from "./vocab-target-prompts.js";
-export type { VocabTargetUserPromptInput } from "./vocab-target-prompts.js";
+export type { VocabTargetRequest, VocabTargetUserPromptInput } from "./vocab-target-prompts.js";
 
 export {
   renderLearnerView,

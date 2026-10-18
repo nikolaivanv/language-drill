@@ -228,7 +228,13 @@ function renderBulletList(items: readonly string[]): string {
 // approving 7 rows Sonnet 4.6 rejects for exactly this, at least 5 of them
 // genuine spoilers, which blocked the validator's move to Sonnet 5.5.
 // Template edit -> Langfuse push per env.
-export const VALIDATION_PROMPT_VERSION = "validate@2026-10-09";
+// 2026-10-17 (validate@2026-10-17): vocab expansion mirror of
+// generate@2026-10-17. Word-class groups (topic = a word class) judge
+// grammarPointMatch on the class, and citation-form variants (ES adjective
+// feminine, expression word order) in acceptableAnswers are the same
+// headword, not distinct referents. User-prompt only (vocabRecallScoringNote):
+// no Langfuse push for validation.
+export const VALIDATION_PROMPT_VERSION = "validate@2026-10-17";
 
 export const VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language exercises for {{language}} learners at CEFR {{cefrLevel}}. Your job is to validate one already-generated exercise that targets the grammar point: {{grammarPointName}}.
 
@@ -437,7 +443,7 @@ function vocabRecallScoringNote(spec: GenerationSpec): string {
 
 **Scoring note for vocab_recall:** the Prompt is a meaning-based definition whose JOB is to pick out exactly one headword — do NOT set contextSpoilsAnswer=true because the definition identifies the expected word, however precise the definition is. Set contextSpoilsAnswer=true ONLY for orthographic reveals in the PROMPT or HINTS: the expected word (in any inflection) appearing there; first/last-letter or letter-count hints; partial spellings. The exampleSentence is a post-answer usage illustration (the UI masks the word before submission), so the expected word appearing in the example sentence is NOT contextSpoilsAnswer. A precise unambiguous definition with meaning-only hints is a GOOD exercise (0.8+), not a spoiled one.
 
-**grammarPointMatch for vocab_recall:** a vocab umbrella is a SEMANTIC DOMAIN (e.g. food & drink, transport & places), NOT a part of speech. A domain-appropriate verb (içmek "to drink"), adjective (acı "spicy"), or adverb is on-target — set grammarPointMatch=false ONLY when the headword is outside that domain, never merely because it is not a noun. Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.
+**grammarPointMatch for vocab_recall:** a vocab umbrella is a SEMANTIC DOMAIN (e.g. food & drink, transport & places), NOT a part of speech. A domain-appropriate verb (içmek "to drink"), adjective (acı "spicy"), adverb, or fixed expression is on-target — set grammarPointMatch=false ONLY when the headword is outside that domain, never merely because it is not a noun. The exception is a **word-class group**, whose name states a word class rather than a topic ("Everyday verbs (A1)", "Describing words (A1)", "Connectors and discourse markers (B1)", "Collocations and idioms (B2)"): there the headword must belong to that class, and any level-appropriate word of the class is on-target whatever its topic. Citation-form variants are the SAME headword: \`acceptableAnswers\` listing the feminine of an adjective, or a word-order / clitic-placement variant of a fixed expression, is NOT a distinct-referent defect. Judge every other dimension (levelMatch, ambiguous, contextSpoilsAnswer, qualityScore) exactly as defined above, unchanged.
 
 **Kinship definitions for vocab_recall:** when the target language lexicalizes a kin relation more finely than English — most sharply by SIDE of the family (TR \`amca\` father's brother vs \`dayı\` mother's brother; \`hala\` father's sister vs \`teyze\` mother's sister; \`babaanne\` father's mother vs \`anneanne\` mother's mother) — a side-NEUTRAL gloss ("your father's OR mother's brother", "your parent's sister") is true of BOTH terms equally, so it does NOT pick out the single \`expectedWord\`: set ambiguous=true UNLESS the other defensible term is listed in acceptableAnswers. A gloss that names the side ("your MOTHER's brother" → \`dayı\`) is unambiguous — do not flag it. A generic term that is genuinely side-neutral in the target language (TR \`büyükanne\`/\`dede\`, \`kuzen\`, \`akraba\`) legitimately takes a side-neutral gloss — do not flag those. Separately: if the definition describes a DIFFERENT relation than the \`expectedWord\` denotes (glossing \`dayı\` as "the child of your mother's brother" — that is a cousin, \`kuzen\`; or \`hala\` as "your mother's sister" — that is \`teyze\`), the clue is factually wrong for its answer — set ambiguous=true and lower qualityScore below 0.5 (a mislabeled clue is not a servable exercise).`;
 }

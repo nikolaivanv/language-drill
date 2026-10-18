@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
   });
 
   // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the
@@ -245,5 +245,33 @@ describe("cloze meaning gloss", () => {
     };
     const out = buildUserPrompt(bare as any, "deja", "ES" as any, "B1" as any);
     expect(out).toContain('both the present "deja"');
+  });
+});
+
+describe("vocab_recall citation-form rule (evaluate@2026-10-17a)", () => {
+  const verb: VocabRecallContent = {
+    type: ExerciseType.VOCAB_RECALL,
+    instructions: "Recall the word.",
+    prompt: "to remember something or someone",
+    expectedWord: "acordarse de",
+    hints: [],
+    exampleSentence: "No puedo ___ su nombre.",
+  };
+
+  it("states the citation-form rule when there is no article requirement", () => {
+    const out = buildUserPrompt(verb as any, "acordarse", "ES" as any, "B1" as any);
+    expect(out).toContain("CITATION FORM");
+    expect(out).toContain("score 0.8");
+    expect(out).toContain("A valid synonym is held to the same citation-form rule.");
+    expect(out).toMatch(/listed in \*\*Acceptable Answers\*\* is fully correct/);
+  });
+
+  it("omits the citation-form rule for an article-bearing noun", () => {
+    const noun = { ...verb, expectedWord: "espalda", articleForm: "la espalda" };
+    expect(buildUserPrompt(noun as any, "espalda", "ES" as any, "A2" as any)).not.toContain("CITATION FORM");
+  });
+
+  it("pins the evaluator version", () => {
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
   });
 });

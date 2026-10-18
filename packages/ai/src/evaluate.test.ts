@@ -319,7 +319,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // user-builder-only.
     // 2026-10-17: vocab recall states the article rule + stops claiming the
     // (never-rendered) authoring hints were visible — user-builder-only.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
   });
 });
 

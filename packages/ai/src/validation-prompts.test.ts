@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -401,7 +401,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
   });
 });
 
@@ -757,6 +757,17 @@ describe("self-revealing / vocab_recall scoring notes", () => {
     expect(prompt).toContain("self-revealing-target");
   });
 
+  it("accepts word-class groups and citation-form variants for vocab_recall (2026-10-17)", () => {
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
+    const vocabSpec: GenerationSpec = {
+      ...baseSpec,
+      grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
+    };
+    const prompt = buildValidationUserPrompt(makeDraft(vocabRecallContent), vocabSpec);
+    expect(prompt).toContain("word-class group");
+    expect(prompt).toMatch(/feminine of an adjective.*NOT a distinct-referent defect/);
+  });
+
   it("unflagged cloze prompt is unchanged", () => {
     const prompt = buildValidationUserPrompt(makeDraft(clozeContent), baseSpec);
     expect(prompt).not.toContain("self-revealing-target");
@@ -1092,7 +1103,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-09");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
   });
 });
 

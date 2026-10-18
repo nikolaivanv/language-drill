@@ -35,6 +35,7 @@ export type FlaggedRowView = {
   umbrellaKey: string;
   displayForm: string;
   lemma: string;
+  pos: string | null;
   gloss: string;
   tier: string;
   freqRank: number | null;
@@ -43,7 +44,7 @@ export type FlaggedRowView = {
 
 export function formatFlaggedRow(row: FlaggedRowView): string {
   const rank = row.freqRank === null ? 'n/a' : String(row.freqRank);
-  return `${row.umbrellaKey} | ${row.displayForm} (${row.lemma}) — ${row.gloss} [${row.tier}, ${rank}] :: ${row.exampleSentence}`;
+  return `${row.umbrellaKey} | ${row.displayForm} {${row.pos ?? '?'}} (${row.lemma}) — ${row.gloss} [${row.tier}, ${rank}] :: ${row.exampleSentence}`;
 }
 
 async function main(): Promise<void> {
@@ -79,6 +80,7 @@ async function main(): Promise<void> {
       umbrellaKey: vocabTarget.umbrellaKey,
       displayForm: vocabTarget.displayForm,
       lemma: vocabTarget.lemma,
+      pos: vocabTarget.pos,
       gloss: vocabTarget.gloss,
       tier: vocabTarget.tier,
       freqRank: vocabTarget.freqRank,

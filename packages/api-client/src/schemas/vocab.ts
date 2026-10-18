@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { VOCAB_GROUP_LABELS } from '@language-drill/shared';
 
 export const CoverageStateSchema = z.enum([
   'not-yet',
@@ -18,6 +19,10 @@ export const VocabTopicSummarySchema = z.object({
   // Words practiced to a strong best score. Defaulted so a response from an
   // API deployed before the field existed still parses.
   strong: z.number().int().min(0).default(0),
+  // Word-class group tag ("verbs", "connectors" ...) or null for a themed topic.
+  // Defaulted + caught so a response from an API deployed before the field, or
+  // carrying a label this build does not know, still parses (group -> null).
+  group: z.enum(VOCAB_GROUP_LABELS).nullable().catch(null).default(null),
 });
 export type VocabTopicSummary = z.infer<typeof VocabTopicSummarySchema>;
 
