@@ -5,7 +5,8 @@
  * joins corpus frequency, and inserts rows `status='flagged'` for human review
  * (`pnpm review:flagged-vocab`). Idempotent: re-runs skip lemmas already
  * present for the umbrella (avoid-list keyed on lemma + class, plus
- * onConflictDoNothing).
+ * onConflictDoNothing). Themed topics and word-class groups dedup within their
+ * own family, so a word may sit in one of each.
  *
  * Required env: ANTHROPIC_API_KEY, DATABASE_URL.
  * Usage: pnpm --filter @language-drill/db generate:vocab-targets \
@@ -60,8 +61,8 @@ export function resolveEsA1VocabUmbrellas(
 }
 
 /**
- * Every curated lemma in the language, any umbrella, any status — the
- * avoid-list, so one (lemma, class) lives in exactly one group per language.
+ * Every curated lemma in the language, any umbrella, any status — the raw
+ * avoid-list (narrowed per umbrella by `avoidForFamily`).
  * The class lets a homograph of another class through (the verb "yemek"
  * beside the noun); an untagged row (`pos` null) blocks every class.
  */
@@ -71,6 +72,31 @@ export async function loadLanguageLemmas(db: Db, language: LearningLanguage): Pr
     .from(vocabTarget)
     .where(eq(vocabTarget.language, language));
   return rows.map((r) => ({ lemma: r.lemma, pos: parseVocabPos(r.pos), umbrellaKey: r.umbrellaKey }));
+}
+
+/**
+ * The part of the avoid-list that applies to `umbrella`. Themed topics and
+ * word-class groups dedup within their own family only: "comprar" may sit in
+ * both "everyday verbs" and "city and shopping", but never in two themed topics
+ * or two groups. Without this the groups absorbed the theme-fitting verbs and
+ * adjectives, and the 2026-10-18 ES A2+B1 --fill-mix pilot added ~2 words per
+ * topic. The umbrella's own rows always apply. Rows of an umbrella no longer in
+ * the curriculum count as themed.
+ */
+export function avoidForFamily(
+  avoid: readonly AvoidWord[],
+  umbrella: GrammarPoint,
+  curricula: readonly GrammarPoint[],
+): AvoidWord[] {
+  const groupKeys = new Set(
+    curricula.filter((p) => p.kind === 'vocab' && p.vocabGroup).map((p) => p.key),
+  );
+  const isGroup = umbrella.vocabGroup !== undefined;
+  return avoid.filter(
+    (w) =>
+      w.umbrellaKey === umbrella.key ||
+      (w.umbrellaKey !== undefined && groupKeys.has(w.umbrellaKey)) === isGroup,
+  );
 }
 
 /** Class counts of an umbrella's live (flagged + approved) rows; untagged = pos null. */
@@ -267,7 +293,7 @@ async function main(): Promise<void> {
     const counts =
       preflight?.get(umbrella.key) ?? (await loadUmbrellaPosCounts(db, language, umbrella.key)).counts;
     // Reloaded per umbrella so words inserted earlier in this run are avoided.
-    const avoidWords = await loadLanguageLemmas(db, language);
+    const avoidWords = avoidForFamily(await loadLanguageLemmas(db, language), umbrella, ALL_CURRICULA);
     const { rows, rawCount, keptCount, followUp, remainingShortfall, requestedNothing } = await runOneUmbrella({
       db,
       client,
