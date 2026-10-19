@@ -1,6 +1,6 @@
 import { LEGAL } from '../_content/constants';
 
-export const metadata = { title: 'Cookie Policy — drill' };
+export const metadata = { title: 'Cookie Policy' };
 
 export default function CookiesPage() {
   return (

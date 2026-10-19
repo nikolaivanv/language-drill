@@ -184,12 +184,15 @@ describe('isPublicRoute', () => {
   // those files directly and checks each one's SERVED url.
 
   // `sitemap.ts` / `robots.ts` serve a different extension than their source
-  // file (Next's own special-cased convention) — stated explicitly rather than
-  // derived by a general "strip the extension" rule, which would get every
-  // other convention (icon.svg -> /icon.svg, unchanged) wrong.
+  // file (Next's own special-cased convention), and a generated
+  // `opengraph-image.tsx` serves at `/opengraph-image` with no extension —
+  // stated explicitly rather than derived by a general "strip the extension"
+  // rule, which would get every other convention (icon.svg -> /icon.svg,
+  // unchanged) wrong.
   const METADATA_ROUTE_URL: Record<string, string> = {
     'sitemap.ts': '/sitemap.xml',
     'robots.ts': '/robots.txt',
+    'opengraph-image.tsx': '/opengraph-image',
   };
 
   // Every basename Next.js recognises as a file-based metadata-route

@@ -77,6 +77,7 @@ export async function fetchPublicTopic(
   topic: TheoryTopic;
   envelope: PublicTopicEnvelope;
   readingMinutes: number;
+  metaDescription: string;
 }> {
   const body = await getJson(
     `/public/theory/${lang}/${encodeURIComponent(topicId)}`,
@@ -90,7 +91,54 @@ export async function fetchPublicTopic(
     topic: renderTheoryTopicJson(json),
     envelope,
     readingMinutes: Math.max(1, Math.round(countTopicWords(json) / 200)),
+    metaDescription: topicMetaDescription(json),
   };
+}
+
+const META_DESCRIPTION_MAX = 160;
+// A subtitle at least this long is a real sentence and reads well as a
+// snippet; shorter ones are taglines ("buen, gran, algún…", "as / in the
+// capacity of") that tell a searcher nothing.
+const SUBTITLE_AS_DESCRIPTION_MIN = 100;
+
+function inlineText(nodes: TheoryInlineJson[]): string {
+  return nodes.map((n) => (n.kind === 'text' ? n.text : inlineText(n.children))).join('');
+}
+
+// Whole sentences shorter than this leave too much of the snippet unused
+// ("Turkish has no prepositions."), so the text is cut mid-sentence instead.
+const WHOLE_SENTENCES_MIN = 100;
+
+/**
+ * Whole sentences of `text` up to the snippet limit when they fill it well
+ * enough; otherwise the text cut at a word boundary with an ellipsis.
+ */
+export function clampToSnippet(text: string, max = META_DESCRIPTION_MAX): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  let out = '';
+  for (const sentence of clean.split(/(?<=[.!?])\s+/)) {
+    const next = out ? `${out} ${sentence}` : sentence;
+    if (next.length > max) break;
+    out = next;
+  }
+  if (out.length >= WHOLE_SENTENCES_MIN) return out;
+  const cut = clean.slice(0, max - 1);
+  return `${cut.slice(0, cut.lastIndexOf(' ')).replace(/[\s,;:—-]+$/, '')}…`;
+}
+
+/**
+ * The topic page's `<meta name="description">`. The subtitle when it is a
+ * full sentence, otherwise the opening paragraph of the article — its "what
+ * is it?" definition, which is what a searcher wants from the snippet.
+ */
+export function topicMetaDescription(json: TheoryTopicJson): string {
+  if (json.subtitle.length >= SUBTITLE_AS_DESCRIPTION_MIN) return clampToSnippet(json.subtitle);
+  for (const section of json.sections) {
+    const lead = section.body.find((b) => b.kind === 'paragraph');
+    if (lead) return clampToSnippet(inlineText(lead.text));
+  }
+  return clampToSnippet(json.subtitle);
 }
 
 /**

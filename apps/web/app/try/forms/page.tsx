@@ -8,15 +8,16 @@ import {
   type PublicLanguage,
   type PublicLevel,
 } from '@language-drill/api-client';
+import { publicPageMetadata } from '../../../lib/public-metadata';
 
-export const metadata: Metadata = {
-  title: 'drill — type the form',
+export const metadata: Metadata = publicPageMetadata({
+  title: 'Type the form — Spanish, German and Turkish practice',
   description:
     'Practise producing Spanish, German and Turkish forms — verb tenses, cases, ' +
     'adjective endings — typed, not tapped, and graded the moment you press enter. ' +
     'No signup.',
-  alternates: { canonical: '/try/forms' },
-};
+  path: '/try/forms',
+});
 
 const LANGS: PublicLanguage[] = ['ES', 'DE', 'TR'];
 

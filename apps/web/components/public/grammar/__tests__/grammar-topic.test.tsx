@@ -34,6 +34,7 @@ const TOPIC_FIXTURE = {
     quickCheck: [],
   },
   readingMinutes: 1,
+  metaDescription: 'Ser is essence.',
 };
 
 const TOPIC_LIST = [

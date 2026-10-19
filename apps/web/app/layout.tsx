@@ -19,8 +19,14 @@ export const metadata: Metadata = {
   // canonical itself ("Duplicate without user-selected canonical"). Do NOT add
   // a canonical here: it would be inherited by every page that lacks its own.
   metadataBase: new URL('https://www.langdrill.app'),
-  title: 'Language Drill',
+  // The template applies to child segments only — `app/page.tsx` shares this
+  // segment, so the home page's own title is used as-is.
+  title: { default: 'drill', template: '%s · drill' },
   description: 'AI-powered language learning for active production practice',
+  // Fallback for routes that don't set their own (the signed-in app). Public
+  // pages build theirs via `publicPageMetadata` — see why in that helper.
+  openGraph: { type: 'website', siteName: 'drill', locale: 'en' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({

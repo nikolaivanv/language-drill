@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { WhyNotPage } from '../_landing/why-not-chatgpt';
 import { WhyNotMobile } from '../_landing/why-not-chatgpt-mobile';
 import { LandingDarkCanvas } from '../_landing/landing-dark-canvas';
+import { publicPageMetadata } from '../../lib/public-metadata';
 
-export const metadata: Metadata = {
-  title: 'drill — why not just ChatGPT?',
+export const metadata: Metadata = publicPageMetadata({
+  title: 'Why not just use ChatGPT?',
   description:
     'ChatGPT can write and grade exercises — that’s what inspired drill. But daily practice in a chat drifts off your level, repeats itself and forgets your mistakes. Here’s the point-by-point comparison.',
-  alternates: { canonical: '/why-not-chatgpt' },
-};
+  path: '/why-not-chatgpt',
+});
 
 // Standalone marketing deep-dive linked from the landing's "Why not ChatGPT?"
 // section. Public, and (unlike `/`) not redirected for signed-in users — the

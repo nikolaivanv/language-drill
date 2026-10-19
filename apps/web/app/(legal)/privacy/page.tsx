@@ -1,6 +1,6 @@
 import { LEGAL } from '../_content/constants';
 
-export const metadata = { title: 'Privacy Policy — drill' };
+export const metadata = { title: 'Privacy Policy' };
 
 export default function PrivacyPage() {
   return (

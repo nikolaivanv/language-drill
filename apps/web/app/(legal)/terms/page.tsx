@@ -1,6 +1,6 @@
 import { LEGAL } from '../_content/constants';
 
-export const metadata = { title: 'Terms of Service — drill' };
+export const metadata = { title: 'Terms of Service' };
 
 export default function TermsPage() {
   return (
