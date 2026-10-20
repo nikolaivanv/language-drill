@@ -46,6 +46,18 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-10-20): pause the nightly exercise pre-generation cron.
+  // The 60 new vocab topics (#792) are paying for untargeted drafts: the
+  // scheduler counts a curated word covered only by an APPROVED row, but the
+  // seed picker also skips words with a FLAGGED row, so ~410 of 1,331 words
+  // are requested every night yet unseedable. On 10-20, 306 of 380 new-topic
+  // rows were unseeded (approval 34%, $18.49). Resume once the picker stops
+  // free-generating past the curated list.
+  // This drops only the exercise-refill EventBridge rule; the weekly
+  // theory-generation cron, the nightly mastery rebuild and the email cron
+  // stay on `enableScheduledJobs`, and POST /admin/generate still works.
+  // Resume by deleting this line.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   // Free-tier global brake, with the value COMMITTED rather than env-only.
