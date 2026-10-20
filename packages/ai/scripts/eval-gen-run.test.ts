@@ -42,6 +42,7 @@ import { sha8 } from "../src/prompts-registry.js";
 import {
   computeArmStats,
   computeGenDiff,
+  datasetSeedsFor,
   isCellResolutionError,
   loadCellDataset,
   makeRealArmExecutor,
@@ -243,6 +244,38 @@ describe("resolveCell", () => {
     if (isCellResolutionError(resolution)) throw new Error("unexpected error");
     expect(resolution.grammarPoint).toBe(getGrammarPoint("tr-a1-locative"));
     expect(resolution.cell.language).toBe(Language.TR);
+  });
+
+  it("carries dataset seedWords through and spreads them one per ordinal", () => {
+    const resolution = resolveCell({
+      language: "DE",
+      cefrLevel: "A1",
+      exerciseType: "vocab_recall",
+      grammarPointKey: "de-a1-vocab-everyday-verbs",
+      seedWords: ["kaufen", "lesen"],
+    });
+    if (isCellResolutionError(resolution)) throw new Error(resolution.error);
+    expect(resolution.cell.seedWords).toEqual(["kaufen", "lesen"]);
+    expect(datasetSeedsFor(resolution.cell, 3)).toEqual({ seedWords: ["kaufen", "lesen", null] });
+  });
+
+  it("leaves a cell without seedWords unseeded, and rejects non-string seeds", () => {
+    const plain = resolveCell({
+      language: "TR",
+      cefrLevel: "A1",
+      exerciseType: "cloze",
+      grammarPointKey: "tr-a1-locative",
+    });
+    if (isCellResolutionError(plain)) throw new Error(plain.error);
+    expect(datasetSeedsFor(plain.cell, 3)).toBeUndefined();
+    const bad = resolveCell({
+      language: "TR",
+      cefrLevel: "A1",
+      exerciseType: "cloze",
+      grammarPointKey: "tr-a1-locative",
+      seedWords: ["ev", 3],
+    });
+    expect(isCellResolutionError(bad)).toBe(true);
   });
 
   it("records a per-cell error (no throw) for a malformed shape", () => {

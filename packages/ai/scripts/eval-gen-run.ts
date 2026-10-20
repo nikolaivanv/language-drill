@@ -113,6 +113,13 @@ export type CellDescriptor = {
   cefrLevel: CefrLevel;
   exerciseType: ExerciseType;
   grammarPointKey: string;
+  /**
+   * Optional per-ordinal seeds BOTH arms share (e.g. curated vocab targets), so
+   * a vocab_recall A/B measures the prompt on the words production seeds
+   * rather than on whatever the model picks unseeded. Ordinals past the list
+   * are unseeded.
+   */
+  seedWords?: string[];
 };
 
 /** A descriptor that passed shape + curriculum + non-EN validation. */
@@ -184,7 +191,7 @@ export function resolveCell(descriptor: unknown): CellResolution {
   }
 
   const d = descriptor as Record<string, unknown>;
-  const { language, cefrLevel, exerciseType, grammarPointKey } = d;
+  const { language, cefrLevel, exerciseType, grammarPointKey, seedWords } = d;
 
   // Best-effort cell key for the error line, using sentinels for bad fields.
   const cellKey = buildCellKey({
@@ -199,7 +206,10 @@ export function resolveCell(descriptor: unknown): CellResolution {
     !isCefrLevel(cefrLevel) ||
     !isExerciseType(exerciseType) ||
     typeof grammarPointKey !== "string" ||
-    grammarPointKey === ""
+    grammarPointKey === "" ||
+    (seedWords !== undefined &&
+      (!Array.isArray(seedWords) ||
+        !seedWords.every((w) => typeof w === "string" && w !== "")))
   ) {
     return {
       cellKey,
@@ -220,8 +230,28 @@ export function resolveCell(descriptor: unknown): CellResolution {
   }
 
   return {
-    cell: { language, cefrLevel, exerciseType, grammarPointKey },
+    cell: {
+      language,
+      cefrLevel,
+      exerciseType,
+      grammarPointKey,
+      ...(seedWords !== undefined ? { seedWords: seedWords as string[] } : {}),
+    },
     grammarPoint,
+  };
+}
+
+/**
+ * Dataset seeds for one cell, one per ordinal (`null` past the list), or
+ * `undefined` when the cell declares none.
+ */
+export function datasetSeedsFor(
+  cell: CellDescriptor,
+  draftsPerCell: number,
+): { seedWords: (string | null)[] } | undefined {
+  if (cell.seedWords === undefined) return undefined;
+  return {
+    seedWords: Array.from({ length: draftsPerCell }, (_, o) => cell.seedWords![o] ?? null),
   };
 }
 
@@ -861,7 +891,12 @@ export async function runGenEval(opts: {
         }
         pool = await poolContextLoader!(resolution, args.draftsPerCell, batchSeed);
       }
-      const explicitSeeds = pool ? { seedWords: pool.seedWords } : undefined;
+      if (pool && cell.seedWords !== undefined) {
+        throw new Error(`${cellKey}: dataset seedWords cannot be combined with --pool-history`);
+      }
+      const explicitSeeds = pool
+        ? { seedWords: pool.seedWords }
+        : datasetSeedsFor(cell, args.draftsPerCell);
 
       // Dictation cells flow against the in-repo dictation generation prompt,
       // NOT a rendered cloze `systemPromptOverride`. Both prompt sources

@@ -359,7 +359,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -530,10 +530,10 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("accusative doubling is not free");
   });
 
-  it("bumps the generation prompt version to 2026-10-17", () => {
+  it("bumps the generation prompt version to 2026-10-20", () => {
     // 2026-10-07: cell-history ("Already in this cell") prompt section for
     // cloze / translation / sentence_construction. Prompt edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
@@ -1920,9 +1920,18 @@ describe("historyStem", () => {
 
 describe("vocab_recall citation forms (2026-10-17)", () => {
   it("teaches vocab_recall citation forms for non-nouns", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-17");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("vocab_recall citation forms");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("acordarse de");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/feminine.*acceptableAnswers/);
+  });
+});
+
+describe("vocab_recall non-noun rivals (2026-10-20)", () => {
+  it("makes non-noun targets enumerate same-meaning rivals or tighten the definition", () => {
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("vocab_recall non-noun rivals");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("`kostenlos`/`gratis`");
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/list EVERY one in `acceptableAnswers`/);
+    expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("Do not lean on the hints to disambiguate");
   });
 });
