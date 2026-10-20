@@ -33,6 +33,10 @@ export const isPublicRoute = createRouteMatcher([
   // unreachable by Googlebot. See `apps/web/app/sitemap.ts` / `robots.ts`.
   '/sitemap.xml',
   '/robots.txt',
+  // The shared-link card from `app/opengraph-image.tsx`. It has no file
+  // extension in its URL, so the static-file exclusion in `config.matcher`
+  // does not cover it, and a link-preview fetcher has no session.
+  '/opengraph-image',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

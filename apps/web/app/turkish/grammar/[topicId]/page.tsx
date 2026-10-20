@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { GrammarTopic } from '../../../../components/public/grammar/grammar-topic';
 import { fetchPublicTopic } from '../../../../lib/public-theory';
 import { grammarTopicHref } from '../../../../lib/public-paths';
+import { publicPageMetadata } from '../../../../lib/public-metadata';
 
 export const revalidate = 3600;
 
@@ -12,15 +13,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { topicId } = await params;
   const slug = decodeURIComponent(topicId);
-  const { topic } = await fetchPublicTopic('TR', slug);
-  return {
-    title: `${topic.title} in Turkish: ${topic.cefr} grammar explained`,
-    description: topic.subtitle,
+  const { topic, metaDescription } = await fetchPublicTopic('TR', slug);
+  return publicPageMetadata({
+    title: `${topic.title} in Turkish (${topic.cefr})`,
+    description: metaDescription,
     // The URL slug (`a2-aorist`), NOT `topic.id` — that carries the full
     // grammar-point key (`tr-a2-aorist`) and would build a canonical URL
     // that 404s.
-    alternates: { canonical: grammarTopicHref('TR', slug) },
-  };
+    path: grammarTopicHref('TR', slug),
+  });
 }
 
 // `generateMetadata` and the page both call `fetchPublicTopic`; Next dedupes

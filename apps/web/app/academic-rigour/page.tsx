@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { AcademicRigourPage } from '../_landing/academic-rigour';
 import { AcademicRigourMobile } from '../_landing/academic-rigour-mobile';
 import { LandingDarkCanvas } from '../_landing/landing-dark-canvas';
+import { publicPageMetadata } from '../../lib/public-metadata';
 
-export const metadata: Metadata = {
-  title: 'drill — academic rigour',
+export const metadata: Metadata = publicPageMetadata({
+  title: 'Academic rigour',
   description:
     'How drill builds its material and keeps it honest — grounded in official curricula and comprehensive grammars, calibrated to your CEFR level, and rewritten the moment the data says an item fell short.',
-  alternates: { canonical: '/academic-rigour' },
-};
+  path: '/academic-rigour',
+});
 
 // Public marketing deep-dive on how the exercise material is made. Unlike the
 // root landing it does not redirect signed-in visitors; it is reachable from the

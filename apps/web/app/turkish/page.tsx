@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 import { LanguageLanding } from '../../components/public/language-landing';
+import { publicPageMetadata } from '../../lib/public-metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = publicPageMetadata({
   title: 'Turkish forms practice — tenses, cases and possessive suffixes',
   description:
     'Free Turkish practice: present continuous, aorist, definite and evidential past, causative, plus case and possessive suffixes. You type the form and it is graded instantly. No signup, nothing saved.',
-  alternates: { canonical: '/turkish' },
-};
+  path: '/turkish',
+});
 
 // Three explicit routes rather than one `[language]` segment at the app root:
 // a root-level dynamic segment would capture every otherwise-unmatched path and

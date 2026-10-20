@@ -12,7 +12,13 @@ const { notFound } = vi.hoisted(() => ({
 }));
 vi.mock('next/navigation', () => ({ notFound }));
 
-import { fetchPublicTopicList, fetchPublicTopic, countTopicWords } from './public-theory';
+import {
+  fetchPublicTopicList,
+  fetchPublicTopic,
+  countTopicWords,
+  clampToSnippet,
+  topicMetaDescription,
+} from './public-theory';
 
 const TOPIC = {
   id: 'es-a2-ser-vs-estar',
@@ -188,5 +194,58 @@ describe('fetchPublicTopic reading time', () => {
     vi.mocked(fetch).mockResolvedValue(jsonResponse(TOPIC));
     const { readingMinutes } = await fetchPublicTopic('ES', 'a2-ser-vs-estar');
     expect(readingMinutes).toBe(1);
+  });
+});
+
+describe('topicMetaDescription', () => {
+  type TopicJson = Parameters<typeof topicMetaDescription>[0];
+  const lead = (text: string) => ({ kind: 'paragraph', text: [{ kind: 'text', text }] });
+  const topic = (subtitle: string, body: unknown[]) =>
+    ({ ...TOPIC, subtitle, sections: [{ id: 'what-is-it', title: 'what is it?', body }] }) as unknown as TopicJson;
+
+  it('uses a sentence-length subtitle as is', () => {
+    const subtitle = 'How placing an adjective before or after the noun changes what it means, with the common adjectives that shift.';
+    expect(topicMetaDescription(topic(subtitle, [lead('Ignored.')]))).toBe(subtitle);
+  });
+
+  it('replaces a tagline subtitle with the opening paragraph, flattening inline marks', () => {
+    const body = [
+      { kind: 'example', target: [{ kind: 'text', text: 'un buen día' }], en: 'a good day' },
+      {
+        kind: 'paragraph',
+        text: [
+          { kind: 'text', text: 'A few adjectives drop their ending ' },
+          { kind: 'strong', children: [{ kind: 'hilite', children: [{ kind: 'text', text: 'before a noun' }] }] },
+          { kind: 'text', text: '.' },
+        ],
+      },
+    ];
+    expect(topicMetaDescription(topic('buen, gran, algún…', body))).toBe(
+      'A few adjectives drop their ending before a noun.',
+    );
+  });
+
+  it('falls back to the subtitle when the article has no paragraph', () => {
+    expect(topicMetaDescription(topic('as / in the capacity of', []))).toBe('as / in the capacity of');
+  });
+});
+
+describe('clampToSnippet', () => {
+  it('keeps whole sentences within the limit', () => {
+    const text = `${'a'.repeat(80)}. ${'b'.repeat(60)}. ${'c'.repeat(40)}.`;
+    expect(clampToSnippet(text)).toBe(`${'a'.repeat(80)}. ${'b'.repeat(60)}.`);
+  });
+
+  it('cuts mid-sentence when whole sentences would leave the snippet mostly empty', () => {
+    const out = clampToSnippet(`Turkish has no prepositions. ${'Instead, relational nouns '.repeat(10)}`);
+    expect(out.startsWith('Turkish has no prepositions. Instead,')).toBe(true);
+    expect(out.length).toBeGreaterThan(140);
+    expect(out.endsWith('…')).toBe(true);
+  });
+
+  it('cuts one over-long sentence at a word boundary with an ellipsis', () => {
+    const out = clampToSnippet(`${'word '.repeat(40)}end.`);
+    expect(out.length).toBeLessThanOrEqual(160);
+    expect(out).toMatch(/word…$/);
   });
 });

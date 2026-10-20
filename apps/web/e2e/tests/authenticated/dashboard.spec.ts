@@ -10,5 +10,5 @@ test('renders authenticated landing page', async ({ page }) => {
   //      "failed to load your profile" branch when no local API is
   //      running (which is the default Playwright webServer setup).
   await expect(page).not.toHaveURL(/\/sign-in/);
-  await expect(page).toHaveTitle(/Language Drill/i);
+  await expect(page).toHaveTitle('drill');
 });
