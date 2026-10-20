@@ -78,6 +78,7 @@ import { VOCAB_MAX_PER_WORD } from './validate-and-insert';
 import { loadFrequencyBand, loadNounBand, loadVerbBand } from './vocab-band';
 import { runValidatorPool } from './validator-pool';
 import {
+  capToSeededTargets,
   computeUncoveredTargetBand,
   pickTargetSeeds,
 } from './vocab-target-seed';
@@ -1049,13 +1050,26 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
               ? await fetchPriorStems(db, cell)
               : undefined;
 
-    const seedWords = await buildCellSeedWords(
+    const rawSeedWords = await buildCellSeedWords(
       db,
       cell,
       args.count,
       args.batchSeed,
       args.coverageTargets,
     );
+    // A curated vocab_recall cell asks only for the drafts it can seed; the
+    // audit row records that count so a zero-draft run reads as nothing
+    // requested (low-yield threshold 0), not as a failed batch.
+    const { seeds: seedWords, count } =
+      seedKindFor(cell) === 'vocab-target'
+        ? capToSeededTargets(rawSeedWords, args.count)
+        : { seeds: rawSeedWords, count: args.count };
+    if (count !== args.count) {
+      await db
+        .update(generationJobs)
+        .set({ requestedCount: count })
+        .where(eq(generationJobs.id, jobId));
+    }
     seedWordsUsed = seedWords;
 
     spec = {
@@ -1064,7 +1078,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
       exerciseType: cell.exerciseType,
       grammarPoint: cell.grammarPoint,
       topicDomain: args.topicDomain,
-      count: args.count,
+      count,
       batchSeed: args.batchSeed,
       priorPoolSurfaces,
       // Level scope: the grammar points a learner at/below this cell's level
@@ -1086,7 +1100,7 @@ export async function runOneCell(input: RunOneCellInput): Promise<CellResult> {
     const batch = await runGeneratorPool({
       client,
       spec,
-      count: args.count,
+      count,
       signal,
       concurrency: MAX_GENERATOR_CONCURRENCY,
     });

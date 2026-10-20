@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeUncoveredTargetBand, pickTargetSeeds } from './vocab-target-seed';
+import { capToSeededTargets, computeUncoveredTargetBand, pickTargetSeeds } from './vocab-target-seed';
 
 describe('computeUncoveredTargetBand', () => {
   const targets = [
@@ -54,5 +54,25 @@ describe('pickTargetSeeds', () => {
     const a = pickTargetSeeds({ band, count: 4, exclude: new Set() });
     const b = pickTargetSeeds({ band, count: 4, exclude: new Set() });
     expect(a).toEqual(b);
+  });
+});
+
+describe('capToSeededTargets', () => {
+  it('drops the unseeded tail and asks only for the seeded drafts', () => {
+    const seeds = pickTargetSeeds({ band: ['ama', 'fakat'], count: 5, exclude: new Set() });
+    expect(capToSeededTargets(seeds, 5)).toEqual({ seeds: ['ama', 'fakat'], count: 2 });
+  });
+
+  it('requests nothing when every uncovered target is already in flight', () => {
+    const seeds = pickTargetSeeds({ band: ['ama'], count: 3, exclude: new Set(['ama']) });
+    expect(capToSeededTargets(seeds, 3)).toEqual({ seeds: [], count: 0 });
+  });
+
+  it('leaves a fully seeded batch unchanged', () => {
+    expect(capToSeededTargets(['a', 'b'], 2)).toEqual({ seeds: ['a', 'b'], count: 2 });
+  });
+
+  it('leaves a cell without a curated list on free generation', () => {
+    expect(capToSeededTargets(undefined, 4)).toEqual({ seeds: undefined, count: 4 });
   });
 });
