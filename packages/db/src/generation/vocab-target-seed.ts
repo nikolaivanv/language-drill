@@ -69,3 +69,22 @@ export function pickTargetSeeds(opts: PickTargetSeedsOptions): (string | null)[]
   }
   return result;
 }
+
+/**
+ * A curated vocab_recall cell generates only the drafts the picker could seed.
+ * `pickTargetSeeds` returns `null` for slots past the uncovered band, and an
+ * unseeded draft free-generates: off-list words, piled onto the same few
+ * surfaces. The band runs short whenever a target's only row is flagged — the
+ * scheduler counts it uncovered (approved rows only) while the picker excludes
+ * it (live seeds include flagged) — so on 2026-10-20 306 of 380 new-umbrella
+ * rows were unseeded. Nulls are always trailing, so the seeded prefix is kept.
+ * `seeds === undefined` (no curated list) leaves the cell on free generation.
+ */
+export function capToSeededTargets(
+  seeds: readonly (string | null)[] | undefined,
+  count: number,
+): { seeds: readonly (string | null)[] | undefined; count: number } {
+  if (seeds === undefined) return { seeds, count };
+  const seeded = seeds.filter((s): s is string => s !== null);
+  return { seeds: seeded, count: Math.min(count, seeded.length) };
+}
