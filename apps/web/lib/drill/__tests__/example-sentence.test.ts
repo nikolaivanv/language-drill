@@ -57,6 +57,37 @@ describe('hideWordInExample (pre-submit hint)', () => {
     const s = 'Mi ___ trabaja todos los días.';
     expect(hideWordInExample(s, 'padre')).toBe(s);
   });
+
+  it.each([
+    ['Der Kellner bringt das Essen an den Tisch.', 'bringen', 'Der Kellner ___ das Essen an den Tisch.'],
+    ['Necesito levantarme temprano.', 'levantarse', 'Necesito ___ temprano.'],
+    ['Annemi ve babamı çok seviyorum.', 'sevmek', 'Annemi ve babamı çok ___.'],
+    ['Annem her akşam yemek pişirir.', 'pişirmek', 'Annem her akşam yemek ___.'],
+    ['Ich gehe jeden Morgen in die Küche.', 'gehen', 'Ich ___ jeden Morgen in die Küche.'],
+  ])('masks a conjugated verb by its stem: %s', (sentence, word, expected) => {
+    expect(hideWordInExample(sentence, word)).toBe(expected);
+  });
+
+  it('masks a Turkish consonant-mutated form', () => {
+    expect(hideWordInExample('Bu kitabı okudum.', 'kitap')).toBe('Bu ___ okudum.');
+  });
+
+  it('masks every word of a multi-word headword', () => {
+    expect(hideWordInExample('Filme schauen macht mir viel Spaß.', 'Spaß machen')).toBe(
+      'Filme schauen ___ mir viel ___.',
+    );
+  });
+
+  it('matches a one- or two-letter word only whole', () => {
+    expect(hideWordInExample('Voy a la playa con amigos.', 'ir a')).toBe(
+      'Voy ___ la playa con amigos.',
+    );
+  });
+
+  it('leaves a form the stem cannot reach unmasked, so the caller can tell', () => {
+    const out = hideWordInExample('Er spricht jeden Abend im Radio.', 'sprechen');
+    expect(hasBlank(out)).toBe(false);
+  });
 });
 
 describe('hasBlank', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '../../../../components/ui/button';
-import { hideWordInExample } from '../../../../lib/drill/example-sentence';
+import { hasBlank, hideWordInExample } from '../../../../lib/drill/example-sentence';
 import { letterCountLabel } from '../../../../lib/drill/syllabify';
 
 export interface HintRowProps {
@@ -29,19 +29,20 @@ export function HintRow({
   onGiveUp,
   disabled = false,
 }: HintRowProps) {
-  const showL3 = Boolean(exampleSentence);
+  const maskedExampleSentence = exampleSentence
+    ? hideWordInExample(
+        articleForm ? hideWordInExample(exampleSentence, articleForm) : exampleSentence,
+        expectedWord,
+      )
+    : '';
+  // Only offer the sentence when the word was actually blanked: a form the
+  // masking cannot reach ("spricht" for "sprechen") would hand over the answer.
+  const showL3 = hasBlank(maskedExampleSentence);
   // first letter → letter count → (example sentence, if one exists). A single
   // "show me a hint" chip escalates one level per click and hides once the
   // deepest available hint is shown — the same progressive control the
   // translation exercise uses, so every drill type shares one hint affordance.
   const maxLevel = showL3 ? 3 : 2;
-  const maskedExampleSentence =
-    level >= 3 && exampleSentence
-      ? hideWordInExample(
-          articleForm ? hideWordInExample(exampleSentence, articleForm) : exampleSentence,
-          expectedWord,
-        )
-      : '';
 
   return (
     <div className="flex flex-col gap-s-3">
@@ -73,7 +74,7 @@ export function HintRow({
         </p>
       )}
       {level >= 2 && <p className="t-small">{letterCountLabel(expectedWord)}</p>}
-      {level >= 3 && exampleSentence && (
+      {level >= 3 && showL3 && (
         <p className="t-small">{maskedExampleSentence}</p>
       )}
     </div>

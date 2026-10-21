@@ -115,6 +115,34 @@ describe('HintRow', () => {
     });
   });
 
+  it('masks a conjugated verb in the example sentence', () => {
+    render(
+      <HintRow
+        expectedWord="bringen"
+        exampleSentence="Der Kellner bringt das Essen."
+        level={3}
+        onAdvance={() => {}}
+      />,
+    );
+    expect(screen.getByText('Der Kellner ___ das Essen.')).toBeInTheDocument();
+  });
+
+  it('drops the example hint when the word cannot be masked, so it never leaks', () => {
+    const onGiveUp = vi.fn();
+    render(
+      <HintRow
+        expectedWord="sprechen"
+        exampleSentence="Er spricht jeden Abend im Radio."
+        level={2}
+        onAdvance={() => {}}
+        onGiveUp={onGiveUp}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: 'show me a hint' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'show answer' })).toBeInTheDocument();
+    expect(screen.queryByText(/spricht/)).not.toBeInTheDocument();
+  });
+
   it('masks the article with the word so the example cannot leak the gender', () => {
     render(
       <HintRow

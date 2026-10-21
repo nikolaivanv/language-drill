@@ -51,11 +51,51 @@ export function revealWordInExample(sentence: string, word: string): string {
  * fail to anchor around words that start with ç/ş/ğ/ı/ö/ü. Trade-off: a word
  * that is a prefix of an unrelated word can over-mask (e.g. `el` would also mask
  * "elma"); over-masking a hint is acceptable, leaking the answer is not, so we
- * err toward hiding. Consonant-mutation forms (`kitap` → "kitabı") still leak —
- * a known limitation that needs morphology to close.
+ * err toward hiding.
+ *
+ * Verbs are stored as infinitives but the sentence conjugates them ("bringen" →
+ * "bringt", "levantarse" → "levantarme", "sevmek" → "seviyorum"), so each word
+ * of the headword is matched by its stem: a trailing infinitive ending is
+ * dropped, and a Turkish final p/ç/t/k is dropped so consonant mutation
+ * (`kitap` → "kitabı") is caught. A multi-word headword ("Spaß machen") masks
+ * each of its words. One- and two-letter words ("a", "se") match only whole,
+ * so they cannot blank every word that starts with them.
+ *
+ * Forms the stem cannot reach (ablaut "sprechen" → "spricht", a split separable
+ * verb "fliegt … ab") still come back unmasked; `hasBlank` on the result tells
+ * the caller, which should then not show the sentence as a hint.
  */
 export function hideWordInExample(sentence: string, word: string): string {
   if (hasBlank(sentence) || !word) return sentence;
-  const re = new RegExp(`(?<!\\p{L})${escapeRegExp(word)}\\p{L}*`, 'giu');
-  return sentence.replace(re, '___');
+  // The headword as written, as one span ("la espalda" → one blank).
+  const whole = sentence.replace(
+    new RegExp(`(?<!\\p{L})${escapeRegExp(word)}\\p{L}*`, 'giu'),
+    '___',
+  );
+  if (whole !== sentence) return whole;
+  let masked = sentence;
+  for (const token of word.match(/\p{L}+/gu) ?? []) {
+    const re =
+      token.length <= 2
+        ? new RegExp(`(?<!\\p{L})${escapeRegExp(token)}(?!\\p{L})`, 'giu')
+        : new RegExp(`(?<!\\p{L})${escapeRegExp(matchStem(token))}\\p{L}*`, 'giu');
+    masked = masked.replace(re, '___');
+  }
+  return masked;
+}
+
+// Longest first, so "arse" is tried before "ar" and "mek" before "en".
+const INFINITIVE_ENDINGS = ['arse', 'erse', 'irse', 'mek', 'mak', 'ar', 'er', 'ir', 'en', 'n'];
+const MIN_STEM = 3;
+
+/** The prefix an inflected form of `token` still starts with. */
+function matchStem(token: string): string {
+  const lower = token.toLowerCase();
+  for (const ending of INFINITIVE_ENDINGS) {
+    if (lower.endsWith(ending) && token.length - ending.length >= MIN_STEM) {
+      return token.slice(0, token.length - ending.length);
+    }
+  }
+  if (/[pçtk]$/i.test(token) && token.length - 1 > MIN_STEM) return token.slice(0, -1);
+  return token;
 }
