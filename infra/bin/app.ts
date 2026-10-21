@@ -46,6 +46,16 @@ new LanguageDrillStack(app, "LanguageDrillStack", {
     "https://www.langdrill.app",
   ],
   enableScheduledJobs: true,
+  // TEMPORARY (2026-10-21): pause the nightly exercise pre-generation cron for
+  // low return. After the 543 flagged-stuck vocab rows were triaged, 2,925 of
+  // 2,983 curated vocab words are covered and only 58 remain pickable; the
+  // rest of each night is the hard tail. The 10-21 run approved 11 rows for
+  // $4.25 (~$0.39 each).
+  // This drops only the exercise-refill EventBridge rule; the weekly
+  // theory-generation cron, the nightly mastery rebuild and the email cron
+  // stay on `enableScheduledJobs`, and POST /admin/generate still works.
+  // Resume by deleting this line.
+  enableScheduledExerciseGeneration: false,
   adminUserIds: process.env.ADMIN_USER_IDS,
   aiKillSwitch: process.env.AI_KILL_SWITCH,
   // Free-tier global brake, with the value COMMITTED rather than env-only.
