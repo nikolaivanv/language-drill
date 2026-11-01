@@ -19,3 +19,4 @@
 
 export { enumerateTheoryCells, THEORY_ROUND_1_CEFR_LEVELS, type TheoryCell } from './cells';
 export { runOneTheoryCell, type RunOneTheoryCellInput, type TheoryCellResult } from './run-one-cell';
+export { routeTheoryValidationResult, type TheoryRoutingDecision } from './routing';

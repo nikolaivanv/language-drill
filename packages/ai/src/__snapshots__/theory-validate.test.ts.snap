@@ -2,8 +2,8 @@
 
 exports[`validateTheoryDraft > request shape for the default model is unchanged (model-request shaping guard) 1`] = `
 {
-  "max_tokens": 1024,
-  "model": "claude-sonnet-4-6",
+  "max_tokens": 16000,
+  "model": "claude-sonnet-5-5",
   "output_config": null,
   "system": [
     {
@@ -12,16 +12,22 @@ exports[`validateTheoryDraft > request shape for the default model is unchanged 
       },
       "type": "text",
     },
+    {
+      "cache_control": null,
+      "type": "text",
+    },
   ],
-  "temperature": 0,
-  "thinking": null,
+  "temperature": null,
+  "thinking": {
+    "type": "adaptive",
+  },
   "tool_choice": {
-    "name": "submit_theory_validation_result",
-    "type": "tool",
+    "type": "auto",
   },
   "tools": [
     {
       "input_schema": {
+        "additionalProperties": false,
         "properties": {
           "culturalIssues": {
             "description": "Free-text descriptions of cultural concerns: stereotyping, sensitive content, exclusion. A single non-empty entry routes the page to "rejected" regardless of qualityScore — this is intentional. Use sparingly.",
@@ -76,7 +82,7 @@ exports[`validateTheoryDraft > request shape for the default model is unchanged 
         "type": "object",
       },
       "name": "submit_theory_validation_result",
-      "strict": null,
+      "strict": true,
     },
   ],
 }

@@ -4,13 +4,15 @@ import { esCurriculum } from "@language-drill/db";
 import { Language, type TheoryTopicJson } from "@language-drill/shared";
 
 import { GENERATION_MODEL } from "./generate.js";
-import type { TheoryDraft, TheoryGenerationSpec } from "./theory-generate.js";
+import { THEORY_GENERATION_MODEL, type TheoryDraft, type TheoryGenerationSpec } from "./theory-generate.js";
 import {
   parseTheoryValidationResult,
   validateTheoryDraft,
   THEORY_VALIDATION_MAX_TOKENS,
+  THEORY_VALIDATION_THINKING_MAX_TOKENS,
   THEORY_VALIDATION_MODEL,
   THEORY_VALIDATION_TEMPERATURE,
+  THEORY_VALIDATION_THINKING,
   THEORY_VALIDATION_TOOL,
   THEORY_VALIDATION_TOOL_NAME,
   type TheoryValidationResult,
@@ -85,15 +87,13 @@ const validValidationInput: TheoryValidationResult = {
 // ---------------------------------------------------------------------------
 
 describe("THEORY_VALIDATION_MODEL", () => {
-  it("matches GENERATION_MODEL (cross-file invariant, Req 1.6)", () => {
-    expect(THEORY_VALIDATION_MODEL).toBe(GENERATION_MODEL);
+  it("is pinned to Sonnet 5.5 with adaptive thinking (2026-11-01 audit A/B)", () => {
+    expect(THEORY_VALIDATION_MODEL).toBe("claude-sonnet-5-5");
+    expect(THEORY_VALIDATION_THINKING).toBe("adaptive");
   });
 
-  it("matches the literal model pin (three-way invariant)", () => {
-    // Together with the GENERATION_MODEL assertion above, this pins the
-    // generator, the exercise validator (validate.test.ts:91), and the
-    // theory validator to a single Sonnet revision.
-    expect(THEORY_VALIDATION_MODEL).toBe("claude-sonnet-4-6");
+  it("differs from the theory generator (independent reviewer)", () => {
+    expect(THEORY_VALIDATION_MODEL).not.toBe(THEORY_GENERATION_MODEL);
   });
 });
 
@@ -297,6 +297,42 @@ describe("validateTheoryDraft", () => {
     expect(mockCreate.mock.calls[0][0].tool_choice).toEqual({ type: "auto" });
   });
 
+  it("adds a factual error for mixed-script words even when the model returns none", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "t", name: THEORY_VALIDATION_TOOL_NAME, input: validValidationInput }],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 },
+    });
+    const cyrillic: TheoryTopicJson = {
+      ...minimalTopic,
+      sections: [
+        {
+          id: "what-is-it",
+          title: "what is it?",
+          body: [{ kind: "paragraph", text: [{ kind: "text", text: "Example: gelmен." }] }],
+        },
+      ],
+    };
+    const { result } = await validateTheoryDraft(mockClient, makeDraft(cyrillic), baseSpec);
+    expect(result.factualErrors).toHaveLength(1);
+    expect(result.factualErrors[0]).toContain("gelmен");
+  });
+
+  it("options.thinking adaptive raises the output budget and sends adaptive thinking", async () => {
+    mockCreate.mockResolvedValue({
+      content: [{ type: "tool_use", id: "t", name: THEORY_VALIDATION_TOOL_NAME, input: validValidationInput }],
+      stop_reason: "tool_use",
+      usage: { input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 },
+    });
+    await validateTheoryDraft(mockClient, makeDraft(), baseSpec, {
+      model: "claude-opus-5-5",
+      thinking: "adaptive",
+    });
+    const args = mockCreate.mock.calls[0][0];
+    expect(args.thinking).toEqual({ type: "adaptive" });
+    expect(args.max_tokens).toBe(THEORY_VALIDATION_THINKING_MAX_TOKENS);
+  });
+
   it("throws on a refusal reply", async () => {
     mockCreate.mockResolvedValue({
       content: [],
@@ -342,15 +378,16 @@ describe("validateTheoryDraft", () => {
     expect(mockCreate).toHaveBeenCalledOnce();
     const callArgs = mockCreate.mock.calls[0][0];
     expect(callArgs.model).toBe(THEORY_VALIDATION_MODEL);
-    expect(callArgs.temperature).toBe(THEORY_VALIDATION_TEMPERATURE);
-    expect(callArgs.max_tokens).toBe(THEORY_VALIDATION_MAX_TOKENS);
-    expect(callArgs.tools).toEqual([THEORY_VALIDATION_TOOL]);
-    expect(callArgs.tool_choice).toEqual({
-      type: "tool",
-      name: THEORY_VALIDATION_TOOL_NAME,
-    });
-    // Req 1.2: the system block carries cache_control: ephemeral.
-    expect(callArgs.system).toHaveLength(1);
+    // Sonnet 5.5 + adaptive thinking: no sampling params, auto tool choice
+    // with a strict tool, and the larger thinking budget.
+    expect(callArgs.temperature).toBeUndefined();
+    expect(callArgs.thinking).toEqual({ type: "adaptive" });
+    expect(callArgs.max_tokens).toBe(THEORY_VALIDATION_THINKING_MAX_TOKENS);
+    expect(callArgs.tools).toHaveLength(1);
+    expect(callArgs.tools[0].name).toBe(THEORY_VALIDATION_TOOL_NAME);
+    expect(callArgs.tool_choice).toEqual({ type: "auto" });
+    // Req 1.2: the first system block carries cache_control: ephemeral.
+    expect(callArgs.system.length).toBeGreaterThanOrEqual(1);
     expect(callArgs.system[0].type).toBe("text");
     expect(callArgs.system[0].cache_control).toEqual({ type: "ephemeral" });
     // The user message carries the rendered draft.

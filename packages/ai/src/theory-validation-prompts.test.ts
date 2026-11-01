@@ -217,7 +217,7 @@ describe("THEORY_VALIDATION_PROMPT_VERSION", () => {
   // Bumped with the formation-coverage check (thin formation section, prose
   // rule contradicted by the page's own tables) so Langfuse cohorts the traces.
   it("is the dated version for the formation-coverage check", () => {
-    expect(THEORY_VALIDATION_PROMPT_VERSION).toBe("theory-validate@2026-11-01");
+    expect(THEORY_VALIDATION_PROMPT_VERSION).toBe("theory-validate@2026-11-01b");
   });
 });
 

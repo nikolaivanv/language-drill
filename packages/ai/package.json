@@ -28,7 +28,8 @@
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:theory-validator": "tsx scripts/eval-theory-validator.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.1",
