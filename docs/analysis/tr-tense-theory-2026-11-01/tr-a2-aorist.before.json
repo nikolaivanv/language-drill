@@ -1,0 +1,1078 @@
+{
+  "id": "b713d981-1cf8-50d7-9061-891be7fabbf2",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a2-aorist",
+    "cefr": "A2",
+    "title": "Aorist -(I/A)r",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The aorist is a Turkish tense-aspect form built with the suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I/A)r"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (positive) or "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mAz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (negative). It expresses general truths, habitual or characteristic behaviour, and polite offers or requests. It does "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "not"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " describe an action happening right now — that role belongs to the present continuous "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I)yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Habitual actions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Something the subject does regularly or as a routine: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Her sabah kahve içerim."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I drink coffee every morning.)"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "General truths and characteristic behaviour."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Facts that are always or typically true: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Kaplumbağa yavaş yürür."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (A tortoise walks slowly.)"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Offers and polite questions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Asking whether someone would like something: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Çay ister misiniz?"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (Would you like some tea?)"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Negative characteristic."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Describing something the subject never or characteristically does not do: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Ali sigara içmez."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (Ali doesn't smoke — he's a non-smoker.)"
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The suffix that attaches to the verb stem depends on the stem's final sound. For "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "multi-syllable stems ending in a vowel"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", drop the infinitive "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mek/-mak"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " and add "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-r"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". For "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "multi-syllable stems ending in a consonant"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", add "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I)r"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (the vowel follows four-way vowel harmony: ı, i, u, ü). For "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "monosyllabic stems"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", the suffix is "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(A/I)r"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — most take "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " or "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ir"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " and must be learned individually. Personal endings are then added as shown in the table below."
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "positive (içmek — to drink)",
+              "negative (içmek)"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben (I)",
+                "içerim",
+                "içmem"
+              ],
+              [
+                "sen (you sg.)",
+                "içersin",
+                "içmezsin"
+              ],
+              [
+                "o (he/she/it)",
+                "içer",
+                "içmez"
+              ],
+              [
+                "biz (we)",
+                "içeriz",
+                "içmeyiz"
+              ],
+              [
+                "siz (you pl.)",
+                "içersiniz",
+                "içmezsiniz"
+              ],
+              [
+                "onlar (they)",
+                "içerler",
+                "içmezler"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "warn",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "Irregular negative: 1st person."
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " The 1st person singular and plural negative forms are irregular. "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ben"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " uses "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-mAm"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (not "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "*-mAzIm"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "), and "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "biz"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " uses "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-mAyIz"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (not "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "*-mAzIz"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "To form a "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yes/no question"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", insert the question particle "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "mi/mı/mu/mü"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " between the aorist stem and the personal ending: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "içer misiniz?"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Do you drink / Would you like to drink?"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I drink coffee every morning.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Habitual action. "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Her sabah"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (every morning) is a typical time marker that signals the aorist is appropriate here."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Her sabah kahve "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "içerim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "Would you like some tea?",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Polite offer. The question particle "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "mi"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is written separately and takes its own vowel harmony."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Çay "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "ister"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " misiniz?"
+              }
+            ]
+          },
+          {
+            "en": "A tortoise walks slowly.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "General truth / characteristic behaviour. The aorist is the natural choice for statements that are always true."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Kaplumbağa yavaş "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yürür"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "Ali doesn't smoke.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Negative aorist "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mez"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " describes a permanent characteristic — Ali is a non-smoker, not merely not smoking at this moment."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Ali sigara "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "içmez"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "I don't drink, thank you.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Irregular 1sg negative. The form is "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "içmem"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", not "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "*içmezim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "İçmem"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", teşekkürler."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using -(I)yor for habitual statements."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*Her sabah kahve içiyorum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is not wrong in isolation, but it implies you are drinking coffee right now, not that you do so every morning as a habit. Use the aorist "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "içerim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " for the habitual reading."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Wrong suffix on monosyllabic stems."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Monosyllabic stems do not follow a single predictable rule — they split between "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-Ar"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-Ir"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " groups and must be memorised. For example, "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelmek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelir"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", while "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "vermek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "verir"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Learn each high-frequency monosyllabic verb individually."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Forming the negative with *-mAr."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The negative suffix is "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mAz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*-mAr"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*İçmer"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is not a Turkish word; the correct form is "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "içmez"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Regular endings in the 1sg/1pl negative."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Do not apply the standard "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mAz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " stem to the first person. "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*İçmezim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*içmeziz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " are incorrect. The correct forms are "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "içmem"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I don't drink) and "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "içmeyiz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (we don't drink)."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Habits, general truths, and offers"
+  }
+}

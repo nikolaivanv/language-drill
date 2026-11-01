@@ -47,7 +47,7 @@ function renderBulletList(items: readonly string[]): string {
 // system prompt (this file's `buildTheorySystemPrompt`). Drives the
 // Langfuse trace `promptVersion` tag — dashboards cohort old vs. new
 // prompt traces by this string.
-export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-07-18";
+export const THEORY_GENERATION_PROMPT_VERSION = "theory-generate@2026-11-01";
 
 /**
  * Phase-2 Langfuse-registered template. Identical to the body
@@ -77,7 +77,7 @@ export const THEORY_SYSTEM_PROMPT_TEMPLATE = `You are an expert author of gramma
 
 1. what is it? — a single paragraph defining the concept
 2. when to use it — bullets or short paragraphs covering the trigger conditions
-3. formation — how the form is built (use a conjugation-table block when applicable)
+3. formation — how the form is built (use a conjugation-table block when applicable). Show every variant the rule produces, not a single example: one representative word for each stem class or allomorph your prose names (vowel-final vs consonant-final stems, one- vs multi-syllable stems, each vowel-harmony outcome, voiced vs voiceless endings). When a rule has a closed set of exceptions, list its members. Give a full person paradigm for at least two words from different classes, naming each class in the column header (e.g. \`yap- (one syllable → -Ar)\`), not in a cell.
 4. examples in context — at least three example blocks, each with a target line + English + a one-line note where useful
 5. common pitfalls — a list block addressing every entry in commonErrors
 
@@ -89,6 +89,7 @@ Editorial. Concise. Lowercase headings. Treat the reader as an adult. No padding
 
 - Every example sentence and every word in a conjugation table must be valid {{languageName}} at or below CEFR {{cefrLevel}}. If demonstrating the grammar point requires upper-level vocabulary or constructions, choose a different example that stays at {{cefrLevel}}.
 - In conjugation tables, do not include a column whose values are abstract classifications of the stem (e.g. "stem type", "last sound class", "voicing", "vowel class"). Use a flat structure with columns like \`stem | output form | meaning\` only — classification belongs in the surrounding prose, not in a table cell that may not match the row's data. Verify before you write each row: every word in every cell must be valid and accurate for the row's intended meaning.
+- Every rule you state in prose must agree with every form in your tables and examples. Never say exceptions "must be learned individually" when the exceptions form a known closed list — state the list.
 - Example sentences in "examples in context" must use only constructions available at {{cefrLevel}}. For A1, restrict yourself to present simple, copula, basic possession/existence, and short clauses — avoid future tense, aorist/habitual, conditionals, perfect tenses, and complex subordination unless the grammar point being taught itself requires them.
 
 ## Output format

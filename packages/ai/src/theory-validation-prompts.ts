@@ -71,7 +71,7 @@ function renderBulletList(items: readonly string[]): string {
 // THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE. Drives the Langfuse trace
 // `promptVersion` tag — dashboards cohort old vs. new prompt traces by
 // this string.
-export const THEORY_VALIDATION_PROMPT_VERSION = "theory-validate@2026-06-02";
+export const THEORY_VALIDATION_PROMPT_VERSION = "theory-validate@2026-11-01";
 
 export const THEORY_VALIDATION_SYSTEM_PROMPT_TEMPLATE = `You are a strict reviewer of language reference material for adult learners. The page is for CEFR {{cefrLevel}} {{languageName}} and explains the grammar point: {{grammarPointName}}.
 
@@ -97,7 +97,7 @@ Be conservative. Reject anything factually wrong, anything mis-leveled, anything
 
 1. what is it? — a single paragraph defining the concept
 2. when to use it — bullets or short paragraphs covering trigger conditions
-3. formation — how the form is built (often a conjugation-table block)
+3. formation — how the form is built (often a conjugation-table block). It must show a representative form for every stem class or allomorph the rule distinguishes (each vowel-harmony outcome, vowel- vs consonant-final stems, voiced vs voiceless, each stated exception class). A formation section that names several classes but shows a single example word is thin: list "formation" in sectionsIncomplete.
 4. examples in context — at least three example blocks with target + English
 5. common pitfalls — a list addressing every entry in commonErrors
 
@@ -117,7 +117,7 @@ Score conservatively — a flagged page costs a human ~30 seconds of review; an 
 ## Dimensions to score (one-to-one with the tool's required fields)
 
 1. **qualityScore** (0.0–1.0): overall fitness as a reference page.
-2. **factualErrors** (array of strings): wrong rule claims, wrong conjugations, etc. Empty array when the page is accurate.
+2. **factualErrors** (array of strings): wrong rule claims, wrong conjugations, etc. Empty array when the page is accurate. Check every prose rule against the page's own tables and examples: a rule the page's own forms contradict (e.g. prose says a suffix vowel follows the stem while the table shows it fixed) is a factual error, as is calling a closed exception list unpredictable.
 3. **levelMismatch** (boolean): true if vocabulary or concepts drift above/below {{cefrLevel}}.
 4. **sectionsIncomplete** (array of strings): names of required sections that are missing or thin. Empty array when all five sections are adequate.
 5. **examplesUseGrammarPoint** (boolean): do the example blocks actually demonstrate {{grammarPointName}}?

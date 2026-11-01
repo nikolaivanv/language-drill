@@ -214,10 +214,10 @@ describe("buildTheoryValidationSystemPrompt", () => {
 // ---------------------------------------------------------------------------
 
 describe("THEORY_VALIDATION_PROMPT_VERSION", () => {
-  // Bumped in the same change as the R5.1 concise-flaggedReasons edit so
-  // Langfuse dashboards cohort the new prompt traces separately from the old.
-  it("is the dated version for the concise-flaggedReasons edit", () => {
-    expect(THEORY_VALIDATION_PROMPT_VERSION).toBe("theory-validate@2026-06-02");
+  // Bumped with the formation-coverage check (thin formation section, prose
+  // rule contradicted by the page's own tables) so Langfuse cohorts the traces.
+  it("is the dated version for the formation-coverage check", () => {
+    expect(THEORY_VALIDATION_PROMPT_VERSION).toBe("theory-validate@2026-11-01");
   });
 });
 

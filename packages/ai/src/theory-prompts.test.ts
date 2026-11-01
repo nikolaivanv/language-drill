@@ -112,10 +112,10 @@ describe("buildTheorySystemPrompt", () => {
 // ---------------------------------------------------------------------------
 
 describe("THEORY_GENERATION_PROMPT_VERSION", () => {
-  // Bumped in the same change as the R1.5 output-format hardening so Langfuse
-  // dashboards cohort the new prompt traces separately from the old.
-  it("is the dated version for the Opus generator + validator-feedback retry", () => {
-    expect(THEORY_GENERATION_PROMPT_VERSION).toBe("theory-generate@2026-07-18");
+  // Bumped with the formation-coverage rule (every stem class / allomorph
+  // shown, closed exception lists enumerated) so Langfuse cohorts the traces.
+  it("is the dated version for the formation-coverage rule", () => {
+    expect(THEORY_GENERATION_PROMPT_VERSION).toBe("theory-generate@2026-11-01");
   });
 });
 

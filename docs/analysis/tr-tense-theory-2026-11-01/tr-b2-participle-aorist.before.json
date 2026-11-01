@@ -1,0 +1,828 @@
+{
+  "id": "29f86507-73e6-5985-9fb2-f359c6af2488",
+  "quality_score": 0.91,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-b2-participle-aorist",
+    "cefr": "B2",
+    "title": "Aorist participle -Ar / -Ir / -mAz (adjectival)",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The aorist participle is a verb stem extended with the suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ar / -Ir"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (positive) or "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mAz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (negative) that functions as a bare adjective directly before a noun. It carries no tense, no person, and no agreement marking — it simply describes a noun by the action or quality associated with the verb. The result is a compound-like noun phrase that Turkish treats as a fixed or semi-fixed collocation: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "akar su"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " «running water», "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çıkmaz sokak"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " «dead-end street». Because it is not a finite verb, it cannot take tense or agreement suffixes in this attributive role."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Habitual or inherent property."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use the positive aorist participle when the noun is characterised by an ongoing or inherent action: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "akar su"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (water that flows — by its nature), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "çalar saat"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (an alarm clock — a clock that rings)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Permanent impossibility or negation."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use the negative aorist participle "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mAz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " when the noun is defined by something that cannot or does not happen: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "çıkmaz sokak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (a street you cannot exit), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "inanılmaz manzara"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (an unbelievable view — literally «a view that cannot be believed»)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Fixed and semi-fixed collocations."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Many aorist participle + noun pairs have become lexicalised. You will encounter them as vocabulary items, but the pattern is still productive for new combinations."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Recognition: the receding suffix -AsI."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " An older suffix "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-AsI"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («worthy of / deserving to be») survives in frozen forms such as "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "görülesi yerler"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (places worth seeing) and the expletive "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "kahrolası"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". It is not productive at B2 — learn to recognise it, but do not form new words with it."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The suffix choice follows the same allomorphy rules as the finite aorist. For the positive form, monosyllabic stems with certain consonant endings take "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; most other stems take "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ir / -Ur / -Ür"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (vowel harmony applies). Polysyllabic stems almost always take "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ir"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The negative is always "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mAz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (with vowel harmony: -maz / -mez). No personal or agreement suffix is added in the attributive position."
+              }
+            ]
+          },
+          {
+            "head": [
+              "verb (infinitive)",
+              "stem",
+              "positive participle",
+              "negative participle",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "akmak",
+                "ak-",
+                "akar",
+                "akmaz",
+                "flowing / non-flowing"
+              ],
+              [
+                "çalmak",
+                "çal-",
+                "çalar",
+                "çalmaz",
+                "ringing / non-ringing"
+              ],
+              [
+                "çıkmak",
+                "çık-",
+                "çıkar",
+                "çıkmaz",
+                "exiting / dead-end"
+              ],
+              [
+                "gelmek",
+                "gel-",
+                "gelir",
+                "gelmez",
+                "coming / that does not come"
+              ],
+              [
+                "inanmak",
+                "inan-",
+                "inanır",
+                "inanmaz",
+                "believing / unbelievable"
+              ],
+              [
+                "görülmek",
+                "görül-",
+                "görülür",
+                "görülmez",
+                "being seen / unseen"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "When the participle is used attributively (before a noun), it stands alone — no buffer vowel, no case suffix, no plural. The noun that follows is the head of the phrase and takes any required suffixes: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "çıkmaz sokak-ta"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (in the dead-end street)."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "The running water coming from the mountain was very cold.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "ak- + -Ar → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "akar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Monosyllabic stem ending in a consonant; takes -Ar, not -Ir."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Dağdan gelen "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "akar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " su çok soğuktu."
+              }
+            ]
+          },
+          {
+            "en": "That alarm clock wakes me up every morning.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "çal- + -Ar → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çalar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Literally «the clock that rings» — a fully lexicalised collocation."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "O "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çalar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " saat her sabah beni uyandırır."
+              }
+            ]
+          },
+          {
+            "en": "Don't park the car in that dead-end street.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "çık- + -mAz → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çıkmaz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Negative participle: «a street from which one cannot exit»."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Arabayı o "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çıkmaz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " sokağa park etme."
+              }
+            ]
+          },
+          {
+            "en": "We saw an unbelievable view there.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "inan-ıl- (passive stem) + -mAz → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "inanılmaz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The passive voice is built into the stem before -mAz is added."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Orada "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "inanılmaz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " bir manzara gördük."
+              }
+            ]
+          },
+          {
+            "en": "The guide told us about the places worth seeing.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "gör-ül- + -AsI → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "görülesi"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Receding suffix -AsI; recognise it, but do not produce new forms with it."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Rehber bize "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "görülesi"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " yerleri anlattı."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Adding tense or person suffixes to the attributive participle."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The aorist participle in attributive position is not a finite verb. Writing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "çıkmıyor sokak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " or "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "çıkmayan sokak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " for «dead-end street» is wrong in this fixed collocation. The correct form is "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "çıkmaz sokak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — the bare negative aorist participle, with no further suffixation."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Choosing the wrong allomorph."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Learners sometimes apply -Ir to monosyllabic stems that require -Ar, producing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "akır su"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " or "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "aker su"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " instead of the correct "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "akar su"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The allomorph must match the stem class. When in doubt, check the finite aorist form of the same verb — the participle uses the identical stem + suffix combination."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Over-producing the receding suffix -AsI."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Because "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "görülesi"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "kahrolası"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " exist, learners sometimes coin new forms such as "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yenilesi yemek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («a meal worth eating»). This suffix is no longer productive in modern Turkish; native speakers do not form new words with it. Use it only in the frozen expressions you have encountered, and express the «worthy of» meaning through other constructions instead."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Using the aorist stem as a tenseless adjective before a noun"
+  }
+}

@@ -1,0 +1,990 @@
+{
+  "id": "efa8b593-95ce-5763-8cc3-dbff433a1f0a",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-b2-compound-evidential-rivayet",
+    "cefr": "B2",
+    "title": "Compound evidential \"rivayet\" — copula -(y)mIş on all tenses",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Turkish marks the source of information grammatically. The suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(y)mIş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is the evidential copula — the reported-speech or inferential form of the verb «to be». At A2 you met the finite past "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mIş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " on its own (e.g. "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gelmiş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — «he has apparently come»). At B2 the same copula attaches to "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "other tense suffixes"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — present continuous, aorist/habitual, future, and necessity — to signal that the speaker did not witness the situation directly but is reporting it from hearsay, reading, or inference. This compound form is traditionally called "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "rivayet birleşik zamanı"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (the «reported compound tense»). It is tense-neutral in the sense that the tense itself is carried by the inner suffix; -(y)mIş only adds the evidential layer on top."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Use the compound evidential whenever you want to report or infer something about a situation that is framed in a tense other than the simple past. The four main trigger conditions are:"
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Hearsay about an ongoing situation."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " You heard or read that something is happening right now or habitually. Use "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-Iyormuş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " for present continuous or "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-ArmIş / -IrmIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " for habitual/aorist."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Reported future plans or predictions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Someone told you that something will happen. Use "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-AcAkmIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Reported obligation or necessity."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " You are relaying someone else's judgment about what must be done. Use "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mAlIymIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Inference from evidence."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Even without a second-hand source, if you are drawing a conclusion from indirect evidence (e.g. tracks in the snow, a note left behind), the same forms apply."
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "warn",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The compound evidential cannot be built on the simple past suffix "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-DI"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ". For reported past events use the finite "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-mIş"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " alone (e.g. "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gelmiş"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", not "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "*geldimiş"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ")."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "when to use it?"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The structure is always: "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "verb stem + tense suffix + -(y)mIş + person ending (group 2)"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The connecting glide "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-y-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " appears only when the tense suffix ends in a vowel (e.g. aorist "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-Ar/-Ir"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ArmIş, -IrmIş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; future "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-AcAk"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-AcAkmIş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — no glide needed because the tense suffix ends in a consonant). Person endings after -(y)mIş are the "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "group-2 (possessive-type)"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " endings, not the group-1 verb endings."
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Group-2 person endings used after -(y)mIş:"
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "ending",
+              "example (geliyormuş-)"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "1st sg.",
+                "-(y)Im",
+                "geliyormuşum"
+              ],
+              [
+                "2nd sg.",
+                "-sIn",
+                "geliyormuşsun"
+              ],
+              [
+                "3rd sg.",
+                "—",
+                "geliyormuş"
+              ],
+              [
+                "1st pl.",
+                "-(y)Iz",
+                "geliyormuşuz"
+              ],
+              [
+                "2nd pl.",
+                "-sInIz",
+                "geliyormuşsunuz"
+              ],
+              [
+                "3rd pl.",
+                "-lAr",
+                "geliyormuşlar"
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The table below shows the four compound evidential tenses built on the verb "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çalış-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " («to work») in the 3rd person singular, which has no overt ending:"
+              }
+            ]
+          },
+          {
+            "head": [
+              "tense",
+              "suffix sequence",
+              "3rd sg. form",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "present continuous",
+                "-Iyor + muş",
+                "çalışıyormuş",
+                "apparently he/she is working"
+              ],
+              [
+                "aorist / habitual",
+                "-Ir + mIş",
+                "çalışırmış",
+                "apparently he/she works (habitually)"
+              ],
+              [
+                "future",
+                "-AcAk + mIş",
+                "çalışacakmış",
+                "apparently he/she will work"
+              ],
+              [
+                "necessity",
+                "-mAlI + ymIş",
+                "çalışmalıymış",
+                "apparently he/she must work"
+              ]
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "Apparently Ahmet knows German very well.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Present continuous + evidential copula: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "bil-iyor-muş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The speaker learned this from someone else, not by direct observation."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Ahmet çok iyi Almanca "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "biliyormuş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "They say they used to live here.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Aorist/habitual + evidential copula: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "otur-ur-lar-mış"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The 3rd plural aorist "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-lAr"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " precedes the copula here, as is standard for 3rd plural aorist evidential."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Eskiden burada "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "otururlarmış"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "Supposedly he will come tomorrow.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Future + evidential copula: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-ecek-miş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". No glide is needed because "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-AcAk"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " ends in a consonant."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Yarın "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gelecekmiş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "According to her, we ought to work harder.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Necessity + evidential copula + 1st plural: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çalış-malı-ymış-ız"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The glide "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-y-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " links the vowel-final "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-mAlI"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " to the copula."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Ona göre daha çok "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çalışmalıymışız"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Attaching -(y)mIş to -DI."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The simple past suffix "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-DI"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " cannot host the evidential copula. "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*Geldimiş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is not a valid form. To report a past event you did not witness, use the finite evidential past "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " directly on the stem: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelmiş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Double-marking evidentiality."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Because "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is already evidential, stacking it twice — "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*geliyormuşmuş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — is ungrammatical. One instance of -(y)mIş is always sufficient."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using group-1 person endings after -(y)mIş."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " After the evidential copula, person is marked with "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "group-2 endings"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (the same set used after "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-DI"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "). The group-1 first-person singular ending "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-m"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is wrong here: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*geliyormuşdum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is incorrect. The correct form is "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geliyormuşum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (group-2: "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-(y)Im"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ")."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Adding hearsay or inference to any tense with -(y)mIş"
+  }
+}

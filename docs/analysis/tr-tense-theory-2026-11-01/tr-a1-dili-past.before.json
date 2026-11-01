@@ -1,0 +1,1136 @@
+{
+  "id": "54775075-3660-5fd9-9271-0c65d49f60b0",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a1-dili-past",
+    "cefr": "A1",
+    "title": "Definite past -DI",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-DI past"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (also called the "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "dili geçmiş zaman"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " in Turkish grammar) is a simple past tense used to report events that the speaker directly witnessed, experienced, or is certain about. It is the default past tense for straightforward statements about completed actions — equivalent to the English simple past (\"I went\", \"she saw\", \"we arrived\"). The suffix takes one of eight phonological shapes — "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-di / -dı / -du / -dü"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " or "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ti / -tı / -tu / -tü"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — determined by vowel harmony and the final sound of the verb stem."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Direct experience."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use -DI when you personally saw, heard, or did something. If you were there, -DI is the right choice."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Completed actions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The action is finished and located in the past — often with time words such as "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "dün"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (yesterday), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geçen yıl"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (last year), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "sabah"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (this morning)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Certain knowledge."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Even if you were not physically present, use -DI when you have no doubt about the fact (e.g. a historical date you know to be true)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Negation."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Insert the negation suffix "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-me- / -ma-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " between the stem and -DI: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "git-me-di-m"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → \"I didn't go\"."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Yes/no questions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Add the question particle "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "mi / mı / mu / mü"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " after the full verb form (written separately): "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gittin mi?"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → \"Did you go?\""
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The suffix is built in three layers: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "stem + -DI + personal ending"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The suffix vowel follows "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "four-way vowel harmony"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (i / ı / u / ü). The initial consonant of the suffix is "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "d"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after voiced sounds and "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "t"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after voiceless consonants (ç, f, h, k, p, s, ş, t). The personal endings belong to the "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "group-1 (type-1) set"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", the same set used after the copula and some other suffixes."
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "ending",
+              "example (git-)",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "1st sg.",
+                "-m",
+                "gittim",
+                "I went"
+              ],
+              [
+                "2nd sg.",
+                "-n",
+                "gittin",
+                "you went"
+              ],
+              [
+                "3rd sg.",
+                "(none)",
+                "gitti",
+                "he / she / it went"
+              ],
+              [
+                "1st pl.",
+                "-k",
+                "gittik",
+                "we went"
+              ],
+              [
+                "2nd pl.",
+                "-nIz",
+                "gittiniz",
+                "you (pl.) went"
+              ],
+              [
+                "3rd pl.",
+                "-lAr",
+                "gittiler",
+                "they went"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The stem "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "git-"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ends in the voiceless consonant "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "t"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", so the suffix becomes "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-ti"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (not "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-di"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "). Compare with "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gel-"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (voiced final), which takes "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-di"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ": "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "geldim, geldin, geldi …"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "For negation, add "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-me-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (or "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ma-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after back-vowel stems) before the -DI suffix. The negation suffix is always voiced, so the -DI suffix remains "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-di / -dı / -du / -dü"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " regardless of the original stem: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-me-di-m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " → gitmedim."
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I went home yesterday.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Stem "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " ends in voiceless "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "t"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", so the suffix is "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ti"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + 1st sg. "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " → "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gittim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Dün eve "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gittim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "We went to Istanbul last summer.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "1st plural ending is "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ": "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-ti-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Geçen yaz İstanbul'a "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gittik"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "I didn't see him yesterday.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Negation: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gör-me-di-m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". After "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-me-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " the suffix is always "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-di"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (voiced), even though the original stem ends in a voiceless consonant."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Onu dün "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "görmedim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "Did you pass the exam?",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "The question particle "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "mi"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is written separately and follows the fully conjugated verb form."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Sınavı "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geçtin"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " mi?"
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Forgetting consonant assimilation."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " After a voiceless stem-final consonant the suffix must be "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-ti/-tı/-tu/-tü"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-di"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Writing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gitdim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is wrong; the correct form is "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gittim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Voiceless consonants that trigger this change: ç, f, h, k, p, s, ş, t."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Confusing -DI with the -mIş evidential past."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-DI"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " when you witnessed or are certain about the event. Use "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mIş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " when you are reporting something you heard second-hand or inferred. Saying "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geldi"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " means \"he came (I know this)\"; "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelmiş"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " means \"he apparently came (I was told / I inferred)\"."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using the wrong personal endings."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The -DI past takes the "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "group-1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " endings (-m, -n, -k, -nIz), not the group-2 endings used in the present tense. A common mistake is "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gittisin"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " by analogy with "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geliyorsun"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The correct 2nd singular form is "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gittin"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Mixing up verbal -DI with the past copula -(y)DI."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The suffix -DI also appears on nouns and adjectives as a past copula: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "hasta-ydı-m"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (\"I was sick\"), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "evde-ydik"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (\"we were at home\"). This is a different use of the same suffix — it is not a verb in those cases. Do not confuse "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geldim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (verbal past: \"I came\") with "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "hastaydım"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (past copula: \"I was sick\")."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "The \"dili\" past: talking about events you witnessed or experienced directly"
+  }
+}
