@@ -403,7 +403,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
  * `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2
  * word-class groups per level; opens 20 new vocab_recall cells.
  */
-export const CURRICULUM_VERSION_ES = '2026-10-18';
+export const CURRICULUM_VERSION_ES = '2026-11-01';
 
 const esCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -426,7 +426,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'gender-of-e-or-consonant-nouns',
         directive:
-          'a noun ending in -e or a consonant, whose gender has to be learned with the article (el coche, la clase, el árbol, la ciudad)',
+          'a noun ending in -e or a consonant, whose gender has to be learned with the article (el coche, la clase, el árbol, la flor)',
       },
       {
         id: 'gender-exceptions-masc-a-fem-o',
@@ -452,7 +452,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Noun gender',
     description:
-      'Noun gender: masculine -o / feminine -a, nouns in other vowels or consonants learned with their article, common exceptions (el problema, el día, la mano, la foto), and heteronym pairs (el padre / la madre). Profession nouns in -o form the feminine in -a (la arquitecta); some stay invariable, with the article marking sex (el/la juez). Countries in unstressed -a are feminine (la España de hoy); others are masculine (todo México).',
+      'Noun gender: masculine -o / feminine -a, other vowel/consonant endings learned with the article (but -dad/-ción are feminine), common exceptions (el problema, el día, la mano), and heteronym pairs (el padre / la madre). Profession nouns in -o form the feminine in -a (la arquitecta); some stay invariable, with the article marking sex (el/la juez). Countries in unstressed -a are feminine (la España de hoy); others are masculine (todo México).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: [
@@ -508,7 +508,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Noun plural',
     description:
-      'Plural formation: -s after a vowel (mesa → mesas), -es after a consonant (árbol → árboles) including stressed final -s (país → países); stressed -í/-ú usually take -es (jabalí → jabalíes); nouns in unstressed vowel + s are invariable (el lunes / los lunes, la crisis / las crisis). Foreign loanwords usually add just -s (los anoraks); family surnames are invariable (los Pérez); in noun+noun compounds only the first noun pluralizes (los años luz).',
+      'Plural formation: -s after a vowel (mesa → mesas), -es after a consonant (árbol → árboles) including stressed final -s (país → países); stressed -í/-ú take formal -es or, usually, -s (jabalíes; menús); nouns in unstressed vowel + s are invariable (los lunes, las crisis). Foreign loanwords usually add just -s (los anoraks); family surnames are invariable (los Pérez); in noun+noun compounds only the first noun pluralizes (los años luz).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: ['Conozco tres países interesantes.', 'Hay muchas ciudades grandes en España.'],
@@ -659,7 +659,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Definite and indefinite articles',
     description:
-      'Definite articles el/la/los/las and indefinite un/una/unos/unas; the contractions al and del; the article required before the subject of gustar; and its omission after impersonal hay.',
+      'Definite articles el/la/los/las and indefinite un/una/unos/unas; the contractions al and del; the definite article required before a generic noun as the subject of gustar (other determiners also work: me gusta tu casa); and its omission after impersonal hay.',
     cefrLevel: A1,
     language: ES,
     examplesPositive: ['Vamos al cine y volvemos del trabajo a las ocho.', 'Me gusta la música clásica.'],
@@ -1007,7 +1007,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Present irregular yo-forms (-go, -zco)',
     description:
-      'Verbs with an irregular first-person singular in the present: -go forms hago, pongo, salgo, tengo, vengo, digo, oigo, traigo, valgo, kept by compounds (mantengo, obtengo, propongo), and -zco forms of -cer/-cir verbs (conozco, agradezco, conduzco); the other persons follow the regular or stem-changing pattern (hago / haces, tengo / tienes).',
+      'Verbs with an irregular first-person singular in the present: -go forms hago, pongo, salgo, tengo, vengo, digo, oigo, traigo, valgo, kept by compounds (mantengo, obtengo, propongo), and -zco forms of most vowel + -cer/-cir verbs (conozco, agradezco, conduzco; but venzo, cuezo); the other persons follow the regular or stem-changing pattern (hago / haces, tengo / tienes).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: [
@@ -1053,7 +1053,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Ser and estar (basic contrast)',
     description:
-      'Basic ser/estar contrast: ser for identity, profession, nationality or origin (soy de Colombia), material with de (la mesa es de madera), and clock time; estar for location and for physical or emotional condition, including bien/mal; ser + adjectives of inherent nature vs. estar + adjectives of temporary state.',
+      'Basic ser/estar contrast: ser for identity, profession, nationality or origin (soy de Colombia), material with de (la mesa es de madera), and clock time; estar for the location of people and things (but events take ser: la fiesta es en mi casa) and for physical or emotional condition, including bien/mal; ser + adjectives of inherent nature vs. estar + adjectives of temporary state.',
     cefrLevel: A1,
     language: ES,
     examplesPositive: [
@@ -1063,7 +1063,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Mi hermano es en el hospital.'],
     commonErrors: [
-      'Using ser for location instead of estar, e.g. "*el banco es cerca de mi casa" instead of "el banco está cerca de mi casa".',
+      'Using ser for the location of a person, object or place instead of estar, e.g. "*el banco es cerca de mi casa" instead of "el banco está cerca de mi casa".',
       'Using estar for identity or profession, e.g. "*yo estoy profesor" instead of "yo soy profesor".',
       'Answering "¿Cómo estás?" with the wrong copula, saying "*soy bien" instead of "estoy bien".',
     ],
@@ -1173,7 +1173,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Gustar-type verbs',
     description:
-      'Basic likes and dislikes with gustar: me/te gusta + singular noun or infinitive, me/te gustan + plural noun. The thing liked is the grammatical subject and takes the definite article (Me gusta la paella).',
+      'Basic likes and dislikes with gustar: me/te gusta + singular noun or infinitive, me/te gustan + plural noun. The thing liked is the grammatical subject and, as a generic noun, takes the definite article (Me gusta la paella); a possessive or demonstrative also works (Me gusta tu casa).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: ['Me gusta el café por la mañana.', 'Te gusta el café por la mañana.'],
@@ -1323,7 +1323,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'pre-verb-negation-no',
         directive:
-          'plain sentence negation with no placed immediately before the conjugated verb (No hablo francés; Mi hermano no trabaja aquí)',
+          'plain sentence negation with no placed before the conjugated verb and any object or reflexive pronouns attached to it (No hablo francés; Mi hermano no trabaja aquí; No lo sé)',
         share: 2,
       },
       {
@@ -1363,7 +1363,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Negation with no, sí/no answers, and también/tampoco',
     description:
-      'Sentence negation with no placed immediately before the verb; sí/no as short answers to yes/no questions; and the también/tampoco pair for agreeing with a preceding affirmative (también) or negative (tampoco) statement. The tag ¿no? seeks confirmation (Usted habla inglés, ¿no?), and ya no expresses "no longer" (Ya no vivo aquí).',
+      'Sentence negation with no placed before the verb and any object pronouns (No lo tengo; No me gusta); sí/no as short answers to yes/no questions; and the también/tampoco pair for agreeing with a preceding affirmative (también) or negative (tampoco) statement. The tag ¿no? seeks confirmation (Usted habla inglés, ¿no?), and ya no expresses "no longer" (Ya no vivo aquí).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: [
@@ -1378,6 +1378,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Using también instead of tampoco to agree with a negative statement, e.g. "*no tengo hermanos, y él también" instead of "y él tampoco".',
       'Producing a double preceding negative by combining tampoco with no, e.g. "*tampoco no tengo coche" instead of "tampoco tengo coche" or "no tengo coche tampoco".',
       'Answering a negative question with just "no" and dropping the second no before the verb, e.g. answering "¿no tienes coche?" with "No, tengo" instead of "No, no tengo".',
+      'Placing no between an object pronoun and the verb, e.g. "*me no gusta" or "*lo no sé" instead of "no me gusta" or "no lo sé".',
     ],
   },
   {
@@ -1392,7 +1393,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*El libro leo es muy interesante.'],
     commonErrors: [
       'Omitting que when it functions as a direct object, by analogy with English relative-pronoun deletion, e.g. "*el libro leo" instead of "el libro que leo".',
-      'Treating que as if it changes form to agree with the antecedent\'s gender or number, when it is actually invariable.',
+      'Treating que as if it changes form to agree with the antecedent\'s gender or number, when it is actually invariable (el/la que "the one who/that" is a separate, correct structure).',
       'Separating the antecedent from its que-clause, e.g. "*el chico es simpático que vive aquí" instead of keeping them together: "el chico que vive aquí es simpático".',
     ],
   },
@@ -1553,13 +1554,13 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Prepositions a vs. en',
     description:
-      'Static location with en (estoy en casa, el libro está en la mesa) contrasted with motion or direction with a after verbs like ir/llegar (voy a Madrid, llegamos a la escuela); and a fixing a clock time (a las ocho).',
+      'Static location with en (estoy en casa, el libro está en la mesa) — apart from a few fixed phrases with a (a la derecha, a la vuelta, sentado a la mesa) — contrasted with motion or direction with a after verbs like ir/llegar (voy a Madrid, llegamos a la escuela); and a fixing a clock time (a las ocho).',
     cefrLevel: A1,
     language: ES,
     examplesPositive: ['Estoy en casa.', 'Voy a Madrid mañana.', 'La clase empieza a las ocho.'],
     examplesNegative: ['*Estoy a casa.', '*Voy en Madrid mañana.'],
     commonErrors: [
-      'Using a for a static location instead of en, e.g. "*estoy a casa" instead of "estoy en casa".',
+      'Using a after estar/vivir + a place instead of en, e.g. "*estoy a casa" instead of "estoy en casa".',
       'Using en for motion or direction instead of a, e.g. "*voy en Madrid" instead of "voy a Madrid".',
       'Omitting a before a clock time, e.g. "*la clase empieza las ocho" instead of "la clase empieza a las ocho".',
     ],
@@ -2188,7 +2189,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Pretérito perfecto',
     description:
-      'Present perfect (pretérito perfecto): haber + past participle for actions within a period that includes now; the irregular participles hecho, escrito, visto, dicho, puesto, vuelto, abierto, roto, and muerto; and the time markers ya, todavía no, and hoy that anchor it to the present. In European Spanish any just-now or same-day event takes the perfect (Esta mañana me he levantado a las seis).',
+      'Present perfect (pretérito perfecto): haber + past participle for actions within a period that includes now; the irregular participles hecho, escrito, visto, dicho, puesto, vuelto, abierto, roto, and muerto; and the time markers ya, todavía no, and hoy that anchor it to the present. In European Spanish any just-now or same-day event takes the perfect (Esta mañana me he levantado a las seis); Latin America mostly uses the preterite (ya llegó).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -2201,7 +2202,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Regularizing irregular participles: "*hacido" for "hecho", "*escribido" for "escrito", "*rompido" for "roto", "*ponido" for "puesto", "*volvido" for "vuelto".',
       'Making the past participle agree in gender/number with the subject when used with haber, e.g. "*he hecha la tarea" instead of "he hecho la tarea".',
-      'Using the simple preterite (hice) instead of the perfect when a marker like ya, todavía no, or hoy signals a period that still includes the present.',
+      'In Peninsular Spanish, using the simple preterite (hice) instead of the perfect when a marker like ya, todavía no, or hoy signals a period that still includes the present (most of Latin America uses the preterite here — ya llegó, hoy hice — and that is correct too).',
       'Inserting an adverb between haber and the participle on the English or French model, producing "*he siempre dicho" instead of "siempre he dicho" or "he dicho siempre" — nothing intervenes, and clitics attach to haber (habértelo dicho).',
       'Deleting the participle in a short answer on the English model, producing "—¿Has probado las fresas? —*Sí, he" instead of "Sí, las he probado" or simply "Sí".',
     ],
@@ -2321,7 +2322,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Estar + gerundio',
     description:
-      'Gerund formation (-ando/-iendo, with stem changes like durmiendo/pidiendo and y-insertion like leyendo) combined with estar for the present/past continuous; and enclitic pronouns attached to the gerund (leyéndolo / lo estoy leyendo). Estar in other tenses frames a bounded stretch (Estuve hablando dos horas) or progress at a future moment (Mañana a estas horas estaremos volando).',
+      'Gerund formation (-ando/-iendo, with -ir stem changes like durmiendo/pidiendo, plus poder → pudiendo, and y-insertion like leyendo) combined with estar for the present/past continuous; and enclitic pronouns attached to the gerund (leyéndolo / lo estoy leyendo). Estar in other tenses frames a bounded stretch (Estuve hablando dos horas) or progress at a future moment (Mañana a estas horas estaremos volando).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -2403,7 +2404,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'hay-que-infinitive',
         directive:
-          'hay que + infinitive for an impersonal necessity that applies to people in general, with no specific subject — hay never changes form (Hay que llegar temprano; Hay que reservar antes)',
+          'hay que + infinitive for an impersonal necessity that applies to people in general, with no specific subject — hay never changes for person, only for tense (Hay que llegar temprano; Había que reservar antes)',
         share: 2,
       },
       {
@@ -2609,7 +2610,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'dative-of-possession',
         directive:
-          'the dative of possession, where se + a dative clitic replaces a possessive on a body part or belonging in an involuntary event (Se le rompió el brazo a Carlos; Se me perdieron las llaves)',
+          'the dative of possession, where a dative clitic replaces a possessive on a body part or belonging — often with a pronominal verb (romperse, perderse) in an involuntary event, whose se is the verb\'s own, not le → se (Se le rompió el brazo a Carlos; Se me perdieron las llaves; Le robaron la cartera)',
         share: 2,
       },
       {
@@ -2630,7 +2631,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Indirect object pronouns and se',
     description:
-      'Indirect object pronouns le/les, the obligatory le→se before a third-person direct-object clitic (se lo doy, never *le lo doy), clitic doubling with a named indirect object (le di el libro a Juan), and the dative of possession replacing a possessive adjective (Se le rompió el brazo); clitics follow the fixed order se > te/os > me/nos > lo/la/los/las (Se te ha caído la tinta).',
+      'Indirect object pronouns le/les, the obligatory le→se before a third-person direct-object clitic (se lo doy, never *le lo doy), clitic doubling with a named indirect object (le di el libro a Juan), and the dative of possession replacing a possessive adjective (Le robaron la cartera; Se le rompió el brazo); clitics follow the fixed order se > te/os > me/nos > lo/la/los/las (Se te ha caído la tinta).',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -3278,7 +3279,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'si-present-apodosis-future',
         directive:
-          'si + PRESENT indicative with a FUTURE main clause — the future belongs in the main clause only, never after si (Si terminas pronto, iremos al cine)',
+          'si + PRESENT indicative with a FUTURE main clause — the future belongs in the main clause only, never after conditional si (Si terminas pronto, iremos al cine)',
         share: 2,
       },
       {
@@ -3306,7 +3307,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Open conditions with si + present',
     description:
-      'Open conditional sentences: si + present indicative in the protasis, with present, future, or imperative in the apodosis (si llueve, me quedo / iré / quédate); si is never followed by the future tense; and the spelling contrast between si ("if") and sí ("yes"/emphatic). Si also takes the perfect for by-then completion (Si no ha cambiado para el viernes, avísame) and past indicatives for fulfilled or habitual conditions.',
+      'Open conditional sentences: si + present indicative in the protasis, with present, future, or imperative in the apodosis (si llueve, me quedo / iré / quédate); "if" si never takes the future ("whether" si can: no sé si vendrá); and the spelling contrast between si ("if") and sí ("yes"/emphatic). Si also takes the perfect for by-then completion (Si no ha cambiado para el viernes, avísame) and past indicatives for fulfilled or habitual conditions.',
     cefrLevel: A2,
     language: ES,
     examplesPositive: [
@@ -3734,7 +3735,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Madrid es más grande de Sevilla.'],
     commonErrors: [
       'Using "de" instead of "que" in comparisons ("*más alto de mí").',
-      'Saying "más bueno" instead of the suppletive form "mejor".',
+      'Saying "más bueno" instead of the suppletive form "mejor" for quality ("better"); más bueno/más malo are correct only for moral character (es más bueno que el pan).',
       'Using "tan" before a noun where "tanto/a/os/as" is required ("*tan problemas como").',
     ],
   },
@@ -3920,7 +3921,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Espero que estás bien.'],
     commonErrors: [
       'Using the indicative after expressions that require subjunctive (querer que, esperar que).',
-      'Forgetting the stem changes that carry over from the present indicative.',
+      'Forgetting the stem changes that carry over from the present indicative, or the extra nosotros/vosotros change of -ir stem-changers, e→i and o→u (sintamos, pidamos, durmamos).',
       'Failing to switch the e/o stem vowels in the yo form.',
       'Extending the subjunctive to a lo mejor ("*a lo mejor llueva" instead of "a lo mejor llueve"), which — unlike quizá / tal vez — takes the indicative.',
       'Using the subjunctive after quejarse de que or after me temo que meaning "I\'m afraid (= regret to say)", which take the indicative ("*me temo que sea tarde" instead of "me temo que es tarde").',
@@ -3991,13 +3992,13 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'past-tense-durante-period',
         directive:
-          'a COMPLETED duration: a past tense + (durante) + a period, for something finished (Trabajé (durante) varios años en Madrid; Vivimos allí tres meses). Never llevar or hace…que here — those are only for still-ongoing events',
+          'a COMPLETED duration: a past tense + (durante) + a period, for something finished (Trabajé (durante) varios años en Madrid; Vivimos allí tres meses). Never llevar or hace…que + present here — those are only for still-ongoing events',
       },
     ],
     kind: 'grammar',
     name: 'Duration and time-span expressions',
     description:
-      'Duration and time-span expressions: llevar + period + gerund (Llevo dos años estudiando), hace + period + que + present, its past-shifted form hacía + period + que + imperfect (Hacía años que no la veía), tardar + en + infinitive, and dentro de + period for time from now. Completed durations take a past tense + (durante) period (Trabajé (durante) varios años en Madrid) — llevar / hace…que only cover still-ongoing events.',
+      'Duration and time-span expressions: llevar + period + gerund (Llevo dos años estudiando), hace + period + que + present, its past form hacía + period + que + imperfect (Hacía años que no la veía), tardar + en + infinitive, and dentro de + period for time from now. Completed durations take a past tense + (durante) period (Trabajé (durante) años en Madrid) — llevar / hace…que + present only cover still-ongoing events (with a preterite: "ago").',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
@@ -4012,7 +4013,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Calquing the English present perfect with "por" instead of using llevar or hace ... que.',
       'Mixing the gerund (llevo estudiando) with the infinitive ("*llevo estudiar").',
-      'Mixing the tense pairs: hace ... que takes the present (hace tres meses que vivo aquí) and hacía ... que the imperfect (hacía años que no la veía).',
+      'Mixing the tense pairs: for an ongoing state hace ... que takes the present (hace tres meses que vivo aquí) and hacía ... que the imperfect (hacía años que no la veía); hace ... que + preterite is correct but means "ago" (hace un año que lo vi).',
     ],
   },
   {
@@ -4576,7 +4577,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Dejar, permitir, hacer + infinitive',
     description:
-      'Influence and causation with a dative clitic + infinitive: dejar (no me dejan salir), permitir (le permitieron entrar), prohibir (le prohibieron fumar), and causative hacer (me hizo llorar); interchangeable with que + subjunctive (le permitieron que entrara), never que + indicative.',
+      'Influence and causation with an object clitic + infinitive: dejar (no me dejan salir), permitir (le permitieron entrar), prohibir (le prohibieron fumar), and causative hacer (me hizo llorar). With an intransitive infinitive dejar/hacer take lo/la (la hice bajar, lo dejaron ir), le/les when it has its own object (le dejaron comprar un helado); interchangeable with que + subjunctive (le permitieron que entrara), never que + indicative.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
@@ -4588,7 +4589,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using que + indicative after an influence verb, producing "*no dejan que salgo" instead of "no dejan que salga" or "no me dejan salir".',
       'Inserting a before the infinitive after hacer, producing "*me hace a llorar" instead of "me hace llorar".',
-      'Dropping the dative clitic that marks the affected person, producing "*mis padres no dejan salir" instead of "mis padres no me dejan salir".',
+      'Dropping the clitic when a specific person is meant: "mis padres no dejan salir" makes the permission generic (nobody may go out), not "mis padres no me dejan salir" (they don\'t let me go out).',
     ],
     prerequisiteKeys: ['es-b1-present-subjunctive'],
   },
@@ -4597,7 +4598,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Reported speech: backshift, no-shift, and reported commands',
     description:
-      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño; Pensé que estabas cansado), and reported commands with que + present subjunctive (Dice que te sientes). A present-zone reporting verb takes no shift — notably the perfect, which counts as a present (Juan ha dicho que viene) — but after a past one Spanish requires the shift even when the statement still holds.',
+      'Indirect statements shifting present to imperfect under a past-tense reporting verb (Dijo que tenía sueño), and reported commands with que + present subjunctive (Dice que te sientes; after a past verb, imperfect: Dijo que te sentaras). A present-zone reporting verb takes no shift — notably the perfect, which counts as a present (Juan ha dicho que viene) — but after a past one Spanish normally shifts even when the statement still holds.',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
@@ -4702,8 +4703,8 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Debes de terminar el informe antes del viernes.'],
     commonErrors: [
       'Using "deber de" for obligation instead of plain "deber" ("*debes de terminar" instead of "debes terminar").',
-      'Treating deber and deber de as freely interchangeable, blurring the obligation/probability distinction the two forms are meant to keep separate.',
-      'Using the plain present of deber for advice instead of the softened conditional deberías ("*debes hacer ejercicio" as advice instead of "deberías hacer ejercicio").',
+      'Over-correcting the distinction: plain deber for probability (debe ser tarde) is widespread and accepted, although deber de is preferred for conjecture — only deber de for obligation is non-standard.',
+      'Missing the register difference in advice: the conditional deberías softens it ("deberías hacer ejercicio"), while the plain present debes is a firmer, more direct recommendation ("debes hacer ejercicio").',
     ],
   },
   {
@@ -4895,7 +4896,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Empecé a cenar sin ti como no venías.'],
     commonErrors: [
       'Placing causal "como" after the main clause instead of fronting it at the head of the sentence ("*empecé a cenar como no venías" instead of "como no venías, empecé a cenar").',
-      'Using the subjunctive after "aunque" for a known, factual concession instead of the indicative ("*aunque llueva, salimos" when it is already raining, instead of "aunque llueve, salimos").',
+      'Missing the mood contrast after "aunque": the indicative concedes a known fact ("aunque llueve, salimos" = although it is raining), the subjunctive an unrealized one ("aunque llueva" = even if it rains); with a known fact the subjunctive is not wrong but discounts it (aunque sea tu padre, no tiene derecho).',
       'Confusing the resumptive "o sea que" ("so"/"in other words") with the causal "porque" ("because"), reversing cause and consequence.',
     ],
   },
@@ -5160,7 +5161,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Indirect questions: si, qué, cuándo, dónde + clause or infinitivo',
     description:
-      'Reported yes/no questions with si (No sé si voy); indirect wh-questions with qué/cuándo/dónde followed by a finite clause or, with same-subject reference, a bare infinitive (No sé qué hacer, Pregúntale dónde está).',
+      'Reported yes/no questions with si (No sé si voy) and indirect wh-questions with qué/cuándo/dónde, either followed by a finite clause or, with same-subject reference, a bare infinitive (No sé si ir; No sé qué hacer, Pregúntale dónde está).',
     cefrLevel: B1,
     language: ES,
     examplesPositive: [
@@ -5316,13 +5317,13 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Past (imperfect) subjunctive',
     description:
-      'Imperfect subjunctive (-ara/-iera) after past-tense triggers, polite requests, and counterfactual "si" clauses.',
+      'Imperfect subjunctive in -ra (hablara/comiera) or the equivalent -se form (hablase/comiese), interchangeable except where -ra replaces the conditional, after past-tense triggers, polite requests, and counterfactual "si" clauses.',
     cefrLevel: B2,
     language: ES,
     examplesPositive: ['Si tuviera tiempo, viajaría más.', 'Esperaba que vinieras.'],
     examplesNegative: ['*Si tengo tiempo, viajaría más.'],
     commonErrors: [
-      'Using present subjunctive after a past-tense main verb.',
+      'Using present subjunctive after a past-tense main verb for an event that is itself past ("*Me alegré de que vengas").',
       'Mixing the -ara and -iera stems incorrectly across conjugations.',
       'Pairing a counterfactual conditional with the indicative in the if-clause.',
     ],
@@ -5473,11 +5474,11 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Me pidió que la ayudara con la mudanza.',
       'Dijo que me llamaría al día siguiente.',
     ],
-    examplesNegative: ['*Dijo que vendrá a la fiesta.', '*Me pidió que la ayude con la mudanza.'],
+    examplesNegative: ['*Me dijo que vendrá, pero al final no vino.'],
     commonErrors: [
-      'Keeping the future in the reported clause, producing "*dijo que vendrá" instead of "dijo que vendría".',
+      'Keeping the future once the event is no longer ahead of the speaker, producing "*dijo que vendrá, pero no vino" instead of "dijo que vendría" ("dijo que vendrá" is possible only while the event is still to come).',
       'Failing to backshift a preterite or perfect to the pluperfect, producing "dijo que llegó" where careful style wants "dijo que había llegado".',
-      'Reporting a past command with the present subjunctive, producing "*me pidió que la ayude" instead of "me pidió que la ayudara".',
+      'Defaulting to the present subjunctive in a reported past command ("me pidió que la ayude") — the imperfect subjunctive "me pidió que la ayudara" is the default; the present is accepted only while the request still applies (common in the media and Latin America).',
       'Using próximo for narrative "next" ("*el próximo día" in a past narrative instead of "al día siguiente") — próximo / que viene count from now, siguiente from the narrative anchor.',
     ],
     prerequisiteKeys: ['es-b1-reported-speech', 'es-b2-past-subjunctive'],
@@ -5532,7 +5533,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Complex conditional sentences',
     description:
-      'Counterfactual past conditionals: "si + pluperfect subjunctive, conditional perfect" (Si hubiera sabido, habría venido). In the result clause hubiera + participle can replace habría (Si lo hubiera sabido, hubiera venido) — only the -ra form, never -se.',
+      'Counterfactual past conditionals: "si + pluperfect subjunctive, conditional perfect" (Si hubiera sabido, habría venido). In the result clause hubiera + participle can replace habría (Si lo hubiera sabido, hubiera venido) — only the -ra form, never -se. A present result takes the simple conditional (Si hubieras estudiado, ahora tendrías trabajo).',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -5543,7 +5544,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Si había estudiado, había aprobado.'],
     commonErrors: [
       'Using indicative pluperfect ("había") in the if-clause of counterfactual past conditionals.',
-      'Mixing tenses across the two clauses (e.g. simple conditional in the result clause).',
+      'Using the simple conditional in the result clause when the result is also past ("*si hubiera estudiado, aprobaría el examen el lunes pasado"); the simple conditional is correct only for a present result (si hubieras estudiado, ahora tendrías trabajo).',
       'Using the -se form in the result clause ("*si lo hubiera sabido, hubiese venido") — only hubiera can replace habría there, never hubiese.',
     ],
     prerequisiteKeys: ['es-b2-past-subjunctive', 'es-b2-conditional-perfect'],
@@ -5569,7 +5570,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Si tendría dinero, lo compraría.', '*Si tenía dinero, lo compraría.'],
     commonErrors: [
-      'Using the imperfect indicative in the if-clause by transfer from English/French ("*si tenía dinero, lo compraría" instead of "si tuviera dinero") — that pattern is only correct as a reported open condition in the past (Dijo que me pagaría si había terminado).',
+      'Using the imperfect indicative in the if-clause by transfer from English/French ("*si tenía dinero, lo compraría" instead of "si tuviera dinero") — si + imperfect indicative is fine for a past or habitual open condition (si llovía, nos quedábamos en casa), but with a conditional main clause only as a reported open condition (Dijo que me pagaría si había terminado).',
       'Using the conditional in the if-clause ("*si estaría" instead of "si estuviera") — a regional/sub-standard pattern learners should not imitate.',
       'Using the present subjunctive after si ("*si tenga tiempo, viajaría" instead of "si tuviera tiempo").',
     ],
@@ -5789,7 +5790,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'vamonos-irregular',
         directive:
-          'the irregular pair vámonos (affirmative) versus no nos vayamos (negative), the only verb whose affirmative nosotros command is not the plain subjunctive (Vámonos ya; No nos vayamos todavía)',
+          'the irregular pair vámonos (affirmative) versus no nos vayamos (negative), the only verb whose affirmative nosotros command is usually not the plain subjunctive, though vayamos also occurs, esp. in set phrases like vayamos al grano (Vámonos ya; No nos vayamos todavía)',
       },
       {
         id: 'vamos-a-infinitive-colloquial',
@@ -5896,7 +5897,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'negated-verb-of-saying-past-subjunctive',
         directive:
-          'a negated verb of saying — decir, contar, mencionar — in a past tense, followed by an imperfect or pluperfect subjunctive (No me dijo que hubiera venido a la fiesta; Nadie mencionó que estuviera enfermo)',
+          'a negated verb of saying — decir, contar, mencionar — in a past tense, followed by an imperfect or pluperfect subjunctive because its content is denied or doubted (No me dijo que hubiera venido a la fiesta; Nadie mencionó que estuviera enfermo)',
         share: 2,
       },
       {
@@ -5908,7 +5909,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Subjunctive after negated opinion and assertion',
     description:
-      'Negation flips the mood of an opinion or assertion clause: no creo que + subjunctive (vs. creo que + indicative); no es cierto/verdad que + subjunctive; and negated verbs of saying (No me dijo que hubiera venido).',
+      'Negation flips the mood of an opinion or assertion clause: no creo que + subjunctive (vs. creo que + indicative); no es cierto/verdad que + subjunctive; and negated verbs of saying when the content is doubted (No me dijo que hubiera venido; indicative if taken as true: no me dijo que había venido). Negative orders and questions keep the indicative (No creas que es fácil; ¿No es verdad que lo ha dicho?).',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -5922,7 +5923,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Keeping the indicative after "no creo que" by analogy with the affirmative "creo que + indicative", instead of switching to the subjunctive under negation.',
       'Treating "no es cierto/verdad que" as a plain statement of fact and using the indicative instead of the subjunctive it requires.',
-      'Using the indicative instead of the subjunctive when relaying a negated assertion about a past event ("*no me dijo que había venido" as a denial, instead of "no me dijo que hubiera venido").',
+      'Using the indicative when a negated assertion denies or doubts its content ("no me dijo que hubiera venido") — the indicative "no me dijo que había venido" is right only when the speaker takes the fact as true (he came but didn\'t tell me).',
       'Extending the subjunctive to "no dudo que" — dudar que takes the subjunctive, but no dudar que meaning "I\'m sure that" takes the indicative ("No dudo que es verdad").',
     ],
     prerequisiteKeys: ['es-b1-present-subjunctive'],
@@ -5955,7 +5956,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'por-mucho-mas-que-subjunctive',
         directive:
-          'por mucho que / por más que + subjunctive for an intensified concession (Por mucho que insistas, no voy a cambiar de opinión)',
+          'por mucho que / por más que + subjunctive for an intensified concession about something not yet real (Por mucho que insistas, no voy a cambiar de opinión)',
       },
       {
         id: 'reduplicative-subjunctive',
@@ -5972,7 +5973,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Subjunctive in temporal and concessive connectors',
     description:
-      'En cuanto, tan pronto como, apenas, una vez que, hasta que, después (de) que, mientras take the subjunctive only for future/posteriority (en cuanto llegues) vs. indicative for past/habitual reference (apenas llegué); aunque/a pesar de que + subjunctive for a non-factual concession; por mucho/más que + subjunctive; reduplicative subjunctive for "whether/whatever/wherever" (le guste o no, pase lo que pase, vaya donde vaya).',
+      'En cuanto, tan pronto como, apenas, una vez que, hasta que, después (de) que, mientras take the subjunctive only for future/posteriority (en cuanto llegues) vs. indicative for past/habitual reference (apenas llegué); aunque/a pesar de que + subjunctive for a non-factual concession; por mucho/más que + subjunctive (realized: indicative); reduplicative subjunctive for "whether/whatever/wherever" (le guste o no, pase lo que pase, vaya donde vaya).',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -6130,7 +6131,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Verbs of becoming: ponerse, quedarse, hacerse, volverse, convertirse en, llegar a ser',
     description:
-      'Choosing ponerse (brief mood/appearance change), quedarse (state left by an event), hacerse (voluntary lasting conversion), volverse (involuntary lasting change), convertirse en (total transformation, + noun), or llegar a ser (hard-won outcome of a slow process); also resultar for an unexpected outcome or impression (El plan resultó un desastre), and plain quedar beside quedarse for lasting states (quedó ciego), slightly more formal.',
+      'Choosing ponerse (brief mood/appearance change), quedarse (state left by an event), hacerse (usually voluntary lasting conversion), volverse (involuntary lasting change), convertirse en (total transformation, + noun), or llegar a ser (hard-won outcome of a slow process); also resultar for an unexpected outcome or impression (El plan resultó un desastre), and plain quedar beside quedarse for lasting states (quedó ciego), slightly more formal.',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -6144,7 +6145,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Se puso budista después de conocer a un monje tibetano.'],
     commonErrors: [
       'Using ponerse for a lasting change of character or belief instead of a temporary mood/state ("*se puso ateo" instead of "se hizo ateo").',
-      'Using hacerse for an involuntary or unwanted change instead of volverse ("*se hizo loco" instead of "se volvió loco").',
+      'Using hacerse where idiom requires volverse, as with loco ("*se hizo loco" instead of "se volvió loco") — hacerse is not limited to voluntary changes (se hizo rico, se hace tarde), but loco takes volverse.',
       'Reaching for convertirse en with an adjective instead of a noun phrase ("*se convirtió en triste" instead of "se puso triste").',
     ],
     // One variant per verb of becoming in Butt & Benjamin 31.3: 31.3.1
@@ -6171,7 +6172,7 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'hacerse-voluntary-conversion',
         directive:
-          'hacerse for a lasting conversion the subject brought about — profession, religion, politics (Se hizo abogado después de diez años de estudio)',
+          'hacerse for a lasting conversion, typically one the subject brought about — profession, religion, politics (Se hizo abogado después de diez años de estudio)',
       },
       {
         id: 'volverse-involuntary-change',
@@ -6665,7 +6666,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Dropping the "a" in "debido a que" ("*debido que" instead of "debido a que").',
       'Confusing "porque" (because) with "por qué" (why) in writing.',
-      'Missing the enunciative use of porque to justify the speaker\'s inference rather than the fact itself, and reaching for ya que instead in that context.',
+      'Missing the enunciative use of porque to justify the speaker\'s inference rather than the fact itself (Están en casa, porque veo luz), a slot ya que and puesto que also fill naturally (Están en casa, ya que hay luz).',
     ],
   },
 
@@ -6827,14 +6828,14 @@ const esCurriculum: readonly GrammarPoint[] = [
       {
         id: 'cada-vez-mas-menos-progressive',
         directive:
-          "cada vez más / cada vez menos for a gradual change, the only idiomatic rendering of 'more and more' — never *más y más (El tráfico está cada vez peor; Cada vez menos gente compra el periódico)",
+          "cada vez más / cada vez menos for a gradual change, the usual idiomatic rendering of 'more and more' — do not use the less idiomatic más y más (El tráfico está cada vez peor; Cada vez menos gente compra el periódico)",
         share: 2,
       },
     ],
     kind: 'grammar',
     name: 'Correlative and progressive comparison',
     description:
-      'Cuanto más/menos..., más/menos... for "the more..., the more..." (Cuanto más practiques, más aprenderás), with cuanto agreeing before a noun (cuantas más fotos) and the subjunctive for future reference; and cada vez más/menos for "more and more" — never *más y más.',
+      'Cuanto más/menos..., más/menos... for "the more..., the more..." (Cuanto más practiques, más aprenderás), with cuanto agreeing before a noun (cuantas más fotos) and the subjunctive for future reference; and cada vez más/menos for "more and more" (más y más exists but is far less idiomatic).',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -6842,10 +6843,10 @@ const esCurriculum: readonly GrammarPoint[] = [
       'Cuantas más fotos veo, menos me decido.',
       'El tráfico está cada vez peor.',
     ],
-    examplesNegative: ['*Más practicas, más aprendes.', '*La ciudad está más y más cara.'],
+    examplesNegative: ['*Más practicas, más aprendes.'],
     commonErrors: [
       'Calquing English "the more..., the more...", producing "*más practicas, más aprendes" or "*lo más... lo más..." instead of "cuanto más practiques, más aprenderás".',
-      'Calquing "more and more" as "*más y más" instead of "cada vez más".',
+      'Calquing "more and more" as "más y más" — attested but far less idiomatic — instead of the usual "cada vez más".',
       'Leaving cuanto invariable before a noun, producing "*cuanto más fotos" instead of "cuantas más fotos".',
     ],
     prerequisiteKeys: ['es-a2-comparatives-superlatives'],
@@ -6977,7 +6978,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Cleft sentences: ser-focus with relator agreement',
     description:
-      'Ser-focus cleft sentences where the relator matches the focus type: quien/el que for people (Fue Juan quien llamó), donde for place, cuando for time, lo que for a neuter idea (Lo que necesito es dormir); plain que alone in this slot is the classic anglophone error.',
+      'Ser-focus cleft sentences where the relator matches the focus type: quien/el que for people (Fue Juan quien llamó), donde for place, cuando for time, lo que for a neuter idea (Lo que necesito es dormir). Plain que alone after a person or thing focus is the classic anglophone error (*fue Juan que llamó); after a place, time or prepositional focus it is common informal Latin American usage (fue ahí que la vi), avoided in Spain and formal register.',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -6991,7 +6992,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using plain "que" instead of the relator matching the focus type ("*fue Juan que llamó" instead of "fue Juan quien/el que llamó").',
       'Using "donde" for a temporal focus or "cuando" for a place focus, instead of matching the relator to the focus type ("*fue entonces donde lo supe" instead of "fue entonces cuando lo supe").',
-      'Dropping the preposition from the second half of a prepositional cleft in careful register ("*es con ella que tienes que hablar" instead of "es con ella con la que/con quien tienes que hablar").',
+      'Dropping the preposition from the second half of a prepositional cleft in Peninsular or careful register ("es con ella que tienes que hablar", informal Latin American usage, instead of "es con ella con la que/con quien tienes que hablar").',
       'Making ser agree with the singular or neuter subject instead of a plural or personal predicate ("*todo es problemas" instead of "todo son problemas"; "*el jefe es tú" instead of "el jefe eres tú").',
       'Using third-person agreement in the relative clause when the focus is a plural first or second person ("*vosotros fuisteis los que lo vieron" instead of "los que lo visteis") — third person is only accepted in the singular (tú fuiste el que lo vio).',
     ],
@@ -7062,7 +7063,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Appreciative suffixes: diminutive -ito, augmentative -ón/-azo, pejorative -ucho',
     description:
-      'Diminutive -ito, with the -c-/-e- allomorph after words ending in -n/-r (mujercita) or -e/ie-ue (cochecito); affective and lexicalized senses (bolsillo, via -illo); augmentative -ón/-azo (portazo); pejorative -ucho (casucha). Recognition-only: production stays capped at the core -ito/-ón.',
+      'Diminutive -ito, with the -c-/-ec- allomorph after polysyllables in -n/-r (mujercita), words in -e (cochecito), words with ie/ue in the first syllable (viejecito) and monosyllables (florecita, solecito) — Latin America often keeps plain -ito (puertita, viejito); affective and lexicalized senses (bolsillo, via -illo); augmentative -ón/-azo (portazo); pejorative -ucho (casucha). Recognition-only: production stays capped at the core -ito/-ón.',
     cefrLevel: B2,
     language: ES,
     examplesPositive: [
@@ -7074,7 +7075,7 @@ const esCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Tiene un dormitorito muy grande.'],
     commonErrors: [
       'Coining novel diminutives outside the safe -ito/-ón pattern, producing non-words a native speaker would not recognize ("*dormitorito" from dormitorio is not Spanish).',
-      'Overapplying the -c-/-ec- allomorph to words that take a plain -ito/-ita ("*sillacita" instead of "sillita"), instead of reserving it for words ending in -n/-r or in -e/ie-ue.',
+      'Overapplying the -c-/-ec- allomorph to words that take a plain -ito/-ita ("*sillacita" instead of "sillita"), instead of reserving it for polysyllables in -n/-r, words in -e, words with ie/ue in the first syllable, and monosyllables.',
       'Assuming augmentatives like -ón are freely productive and inventing new coinages, rather than sticking to established, recognized forms.',
     ],
     // The derived form cannot be elicited without identifying the base word

@@ -352,7 +352,7 @@ const { A1, A2, B1, B2 } = CefrLevel;
 //
 // `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2 word-class
 // groups per level; opens 20 new vocab_recall cells.
-export const CURRICULUM_VERSION_DE = '2026-10-18';
+export const CURRICULUM_VERSION_DE = '2026-11-01';
 
 const deCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -475,7 +475,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*der Mädchen'],
     commonErrors: [
       'Overriding grammatical gender with natural gender ("*die Mädchen" as a singular instead of "das Mädchen").',
-      'Ignoring suffix-based gender rules for -ung, -heit, -keit (all feminine).',
+      'Ignoring suffix-based gender rules for the derivational suffixes -ung, -heit, -keit (all feminine: die Zeitung; not suffixless nouns like der Sprung).',
       'Treating English-cognate nouns as masculine without checking gender.',
     ],
   },
@@ -531,7 +531,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Adding English -s to every noun ("*die Buchs", "*die Stadts").',
       'Forgetting the umlaut in the plural ("*die Apfel" instead of "die Äpfel").',
-      'Leaving the noun unchanged because a number word is present ("*drei Buch").',
+      'Leaving the noun unchanged because a number word is present ("*drei Buch"); masculine/neuter measure nouns are the exception (zwei Euro, drei Kilo, zwei Glas Bier).',
     ],
   },
   {
@@ -847,7 +847,6 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Placing the infinitive right after the modal instead of clause-finally ("*Ich will gehen nach Hause").',
       'Keeping the umlaut of the infinitive in the singular ("*er könnt", "*sie müsst" instead of "er kann", "sie muss").',
       'Using zu before the infinitive after a modal ("*Ich muss zu arbeiten").',
-      'Adding können to sensation verbs by English "can see/hear" interference ("Ich sehe das Meer" is the default, not "*Ich kann das Meer sehen").',
     ],
     prerequisiteKeys: ['de-a1-present-regular'],
     coverageSpec: {
@@ -871,7 +870,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Imperative (Sie, du, ihr)',
     description:
-      'Imperatives: Sie-form with pronoun (Gehen Sie!), du-form without -st and usually without -e (Geh!, Nimm!, Fahr! — e→i(e) change kept, a→ä umlaut dropped), ihr-form = stem + -t (Geht!); sein is irregular (Sei ruhig!, Seien Sie …); wir-imperative for suggestions (Gehen wir!); public signs command with the bare infinitive (Nicht rauchen!, Bitte anschnallen!).',
+      'Imperatives: Sie-form with pronoun (Gehen Sie!), du-form without -st and usually without -e (Geh!, Nimm!, Fahr!; -e obligatory after -t/-d, -ig or consonant + m/n: Arbeite!, Öffne! — e→i(e) change kept, a→ä umlaut dropped), ihr-form = stem + -t (Geht!); sein is irregular (Sei ruhig!, Seien Sie …); wir-imperative for suggestions (Gehen wir!); public signs command with the bare infinitive (Nicht rauchen!, Bitte anschnallen!).',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
@@ -926,12 +925,11 @@ const deCurriculum: readonly GrammarPoint[] = [
           'a bare ACCUSATIVE time phrase with NO preposition at all (jeden Tag, den ganzen Abend, nächste Woche, letzten Monat)',
       },
     ],
-    examplesNegative: ['*Ich habe an Montag Zeit.', '*Wir bleiben für den ganzen Tag zu Hause.'],
+    examplesNegative: ['*Ich habe an Montag Zeit.', '*Wir fahren um Montag nach Berlin.'],
     commonErrors: [
       'Using the uncontracted an/in where am/im is required ("*an Montag", "*in Juli").',
       'Calquing English "at night" ("*an der Nacht" instead of "in der Nacht").',
       'Using um for days or dates ("*um Montag" instead of "am Montag").',
-      'Inserting für into bare accusative duration phrases ("*für den ganzen Tag bleiben" instead of "den ganzen Tag bleiben").',
     ],
   },
   {
@@ -960,7 +958,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Präteritum of sein and haben (war, hatte)',
     description:
-      'Simple-past forms war and hatte (plus es gab) — the standard way to talk about past states even in speech, where most other verbs use the Perfekt: ich war, du warst, er war; ich hatte, wir hatten.',
+      'Simple-past forms war and hatte (plus es gab) — much more common in speech than the Präteritum of most other verbs (the Perfekt ist gewesen / hat gehabt is also natural, esp. in the south): ich war, du warst, er war; ich hatte, wir hatten.',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
@@ -972,7 +970,6 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Choosing war/hatte by calquing English "was" ("*Ich war Hunger" instead of "Ich hatte Hunger").',
       'Wrong person endings ("*ihr waren" instead of "ihr wart").',
-      'Using the wordy Perfekt "ist gewesen / hat gehabt" where war/hatte is the idiomatic choice.',
     ],
     coverageSpec: {
       // 2pl floor added 2026-07-17: the entry's own commonError is
@@ -988,7 +985,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Numbers, ordinals and dates',
     description:
-      'Cardinals with units-before-tens compounds written as one word (einundzwanzig), eins vs ein/eine before nouns, year-reading (1998 = neunzehnhundertachtundneunzig); ordinals in -te (2.–19.) / -ste (from 20.), irregular erste/dritte/siebte, written with a dot (der 8. Mai); dates with am + ordinal (am achten Mai), -mal adverbs (einmal, zweimal) and the decimal comma (2,5).',
+      'Cardinals with units-before-tens compounds written as one word (einundzwanzig), eins vs ein/eine before nouns, year-reading (1998 = neunzehnhundertachtundneunzig; from 2000: zweitausendeinundzwanzig); ordinals in -te (2.–19.) / -ste (from 20.), irregular erste/dritte/siebte, written with a dot (der 8. Mai); dates with am + ordinal (am achten Mai), -mal adverbs (einmal, zweimal) and the decimal comma (2,5).',
     cefrLevel: A1,
     language: DE,
     examplesPositive: [
@@ -999,10 +996,10 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*Heute ist der dreite Oktober.', '*Das macht zwanzigundeins Euro.'],
     commonErrors: [
-      'Regularizing the irregular ordinals ("*der dreite" instead of "der dritte"; standard "der siebte", not "*der siebente").',
+      'Regularizing the irregular ordinals ("*der dreite" instead of "der dritte"; "der siebte" is standard; "der siebente" is a less frequent variant, not an error).',
       'Building number compounds tens-first, English-style ("*zwanzigundeins" instead of "einundzwanzig").',
       'Using the cardinal in dates ("*am acht Mai" instead of "am achten Mai").',
-      'Reading years with tausend by English interference — 1998 is "neunzehnhundertachtundneunzig".',
+      'Reading years 1100–1999 with tausend by English interference — 1998 is "neunzehnhundertachtundneunzig" (years from 2000 do use zweitausend).',
     ],
     selfRevealingElicitation: 'digit-form',
     elicitationSeedValues: [
@@ -1014,7 +1011,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       // Units-before-tens cardinal compounds, written as one word.
       'einundzwanzig', 'zweiundvierzig', 'siebenundsiebzig',
       'neunundneunzig', 'zweihundertdreißig', 'tausendzweihundert',
-      // Year-reading: hundred-based, not tausend.
+      // Year-reading: hundred-based for 1100–1999, zweitausend from 2000.
       'neunzehnhundertachtundneunzig', 'neunzehnhundertsiebzig',
       'zweitausendsechsundzwanzig',
       // -mal adverbs.
@@ -1123,7 +1120,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Akkusativ prepositions',
     description:
-      'Prepositions that always take the accusative: durch, für, gegen, ohne, um, bis. Article and adjective endings change accordingly.',
+      'Prepositions that always take the accusative: durch, für, gegen, ohne, um, bis. Article and adjective endings change accordingly; bis stands alone only before names and time phrases (bis Montag, bis nächsten Montag) — before an article it needs a second preposition (bis zum Bahnhof).',
     cefrLevel: A2,
     language: DE,
     examplesPositive: ['Ich gehe durch den Park.', 'Das ist für meinen Bruder.'],
@@ -1231,7 +1228,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       'Using -e everywhere ("*ein neue Tisch", "*ein neue Haus").',
       'Missing that the adjective must show the gender ein cannot ("*ein neuer Haus").',
       'Leaving the adjective bare before a noun ("*ein neu Tisch").',
-      'Keeping the stem -e- of -el/-er adjectives when inflected ("*ein dunkeles Zimmer", "*ein teueres Auto" instead of "dunkles", "teures").',
+      'Keeping the stem -e- of -el adjectives, or of -er adjectives after au/eu, when inflected ("*ein dunkeles Zimmer", "*ein teueres Auto" instead of "dunkles", "teures"); other -er adjectives usually keep it in writing (ein sauberes Zimmer).',
       'Inflecting hoch with the -ch kept ("*ein hocher Turm" instead of "ein hoher Turm"), or declining endingless color loans ("*eine rosane Bluse" — rosa/lila stay bare).',
     ],
     prerequisiteKeys: ['de-a1-articles-nominative'],
@@ -1479,7 +1476,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Reflexive verbs',
     description:
-      'Verbs with an accusative reflexive pronoun (sich freuen, sich duschen, sich treffen): mich/dich/sich/uns/euch/sich; the pronoun follows the finite verb in main clauses. Plural subjects give the reciprocal "each other" reading (Wir treffen uns; Sie helfen sich) — formal einander (+ fused miteinander, voneinander), with gegenseitig as disambiguator.',
+      'Verbs with an accusative reflexive pronoun (sich freuen, sich duschen, sich beeilen): mich/dich/sich/uns/euch/sich; the pronoun follows the finite verb in main clauses (after a pronoun subject: Heute duscht er sich; before a noun one: Heute freut sich mein Bruder). Plural subjects give the reciprocal "each other" reading (Wir treffen uns; Sie helfen sich) — formal einander (+ fused miteinander, voneinander), with gegenseitig as disambiguator.',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -1501,7 +1498,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Modal verbs in the Präteritum',
     description:
-      'Past-tense modals konnte, musste, durfte, wollte, sollte, mochte: umlaut dropped, -te- endings, final infinitive kept. The Präteritum is the idiomatic past for modals even in speech.',
+      'Past-tense modals konnte, musste, durfte, wollte, sollte, mochte: umlaut dropped (mögen also g → ch: mochte), -te- endings, final infinitive kept. The Präteritum is the idiomatic past for modals even in speech.',
     cefrLevel: A2,
     language: DE,
     examplesPositive: ['Ich konnte gestern nicht kommen.', 'Wir mussten lange warten.'],
@@ -1566,7 +1563,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Ordering with the blunt indicative where the polite form is expected ("Ich will einen Kaffee" instead of "Ich hätte gern …").',
       'Confusing konnte (past) with könnte (polite/hypothetical).',
-      'Doubling würde with a modal ("*Würdest du mir helfen können?" for a simple request).',
+      'Stacking würde onto a modal (Würdest du mir helfen können?) for a simple request — grammatical but wordier; the plain Konjunktiv II modal (Könntest du mir helfen?) is preferred.',
     ],
     prerequisiteKeys: ['de-a1-modal-verbs-present'],
   },
@@ -1859,7 +1856,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'seit + present tense',
     description:
-      'Situations that began in the past and still hold take the PRESENT tense with seit/schon (Ich wohne seit drei Jahren hier) where English uses the perfect; negated or repeated events take the Perfekt instead (Ich habe ihn seit Jahren nicht gesehen).',
+      'Situations that began in the past and still hold take the PRESENT tense with seit/schon (Ich wohne seit drei Jahren hier) where English uses the perfect; the Perfekt is used when an event has not occurred (Ich habe ihn seit Jahren nicht gesehen) or for a series of separate occurrences (Er ist seit Mai oft krank gewesen); a continuing negated state or habit stays present (Ich rauche seit Mai nicht mehr).',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -1875,7 +1872,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'seit-perfekt-negated',
         directive:
-          'seit with the PERFEKT, for an event that is negated or otherwise not ongoing (Ich habe ihn seit Monaten nicht gesehen)',
+          'seit with the PERFEKT, for a (repeatable) event that has not occurred, or a series of separate completed occurrences — not for a continuing negated state, which stays present (Ich habe ihn seit Monaten nicht gesehen)',
       },
     ],
     examplesNegative: ['*Ich habe seit zwei Jahren Deutsch gelernt. (meaning "and still do")'],
@@ -1891,7 +1888,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'wissen vs kennen (vs können)',
     description:
-      'wissen = to know facts, takes a clause (Ich weiß, wo er wohnt); kennen = to be familiar with, takes a noun phrase (Ich kenne den Film); können = mastered skills (Sie kann gut kochen).',
+      'wissen = to know facts/information, takes a clause or a noun phrase denoting a fact (Ich weiß, wo er wohnt; Ich weiß die Antwort); kennen = to be familiar/acquainted with a person, place or thing (Ich kenne den Film); können = mastered skills (Sie kann gut kochen).',
     cefrLevel: A2,
     language: DE,
     examplesPositive: [
@@ -1919,7 +1916,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     examplesNegative: ['*Ich kenne, wo er wohnt.', '*Ich weiß diesen Film.'],
     commonErrors: [
       'Using kennen with a clause ("*Ich kenne, wo er wohnt").',
-      'Using wissen with a plain noun phrase ("*Ich weiß den Film").',
+      'Using wissen for acquaintance with a person, place or thing ("*Ich weiß den Film" instead of "Ich kenne den Film").',
       'Using wissen for skills ("*Ich weiß kochen" instead of "Ich kann kochen").',
     ],
     prerequisiteKeys: ['de-a1-present-irregular'],
@@ -2150,7 +2147,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'dass-clauses with the Perfekt',
     description:
-      'Embedding a Perfekt clause under "dass" so that both the past participle and the auxiliary go to the end, in that order.',
+      'Embedding a Perfekt clause under "dass" so that both the past participle and the auxiliary go to the end, in that order (exception: with a modal/lassen Perfekt the auxiliary precedes the double infinitive — dass sie es hat machen müssen; see de-b2-modal-perfect-word-order).',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -2591,7 +2588,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Genitive case',
     description:
-      'Genitive for possession/attribution: des/der/des/der + -(e)s on masculine and neuter nouns (der Titel des Buches), adjective ending -en, proper-name -s (Marias Auto) — names already ending in s/ß/x/z take a bare apostrophe instead (Fritz’ Schwester); everyday genitive prepositions trotz, wegen, innerhalb, außerhalb; fixed temporal genitives (eines Tages); von-paraphrase in casual speech.',
+      'Genitive for possession/attribution: des/der/des/der + -(e)s on masculine and neuter nouns (der Titel des Buches; weak masculines -(e)n: des Studenten), adjective ending -en, proper-name -s (Marias Auto) — names already ending in s/ß/x/z take a bare apostrophe instead (Fritz’ Schwester); everyday genitive prepositions trotz, wegen, innerhalb, außerhalb; fixed temporal genitives (eines Tages); von-paraphrase in casual speech.',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -3089,7 +3086,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Article use: generalizations, names and abstracts',
     description:
-      'Definite article in generalizations (Der Mensch ist ein Gewohnheitstier), with abstract/mass nouns in their general sense (Die Geduld ist eine Tugend — but partial: Er hat Geduld), with feminine/masculine/plural country names (die Schweiz, der Iran, die Niederlande); adjective-qualified proper names take the article (das heutige Deutschland); the article replaces a possessive with body and attribute nouns (Er hob die Hand).',
+      'Definite article in generalizations (Der Mensch ist ein Gewohnheitstier), with abstract/mass nouns in their general sense (Die Zeit vergeht schnell; optional, none in proverbs: Geduld ist eine Tugend), with feminine/plural country names (die Schweiz, die Niederlande; optional: (der) Iran); adjective-qualified proper names take the article (das heutige Deutschland); the article replaces a possessive with body and attribute nouns (Er hob die Hand).',
     cefrLevel: B1,
     language: DE,
     examplesPositive: [
@@ -3112,7 +3109,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'definite-article-gendered-country-name',
         directive:
-          'a definite article required by a feminine, masculine or plural COUNTRY name (Sie kommt aus der Schweiz; in den Niederlanden; im Iran)',
+          'a definite article required by a feminine or plural COUNTRY name (Sie kommt aus der Schweiz; in den Niederlanden; in der Türkei)',
       },
       {
         id: 'definite-article-adjective-qualified-proper-name',
@@ -3461,7 +3458,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Promoting a dative object to subject ("*Er wurde geholfen" instead of "Ihm wurde geholfen").',
       'Using a participle after sich lassen ("*lässt sich gelöst" — the pattern takes the infinitive).',
-      'Reading sein + zu as ability only ("ist einzureichen" usually = must be handed in).',
+      'Reading sein + zu as ability only — it can express necessity ("ist bis Freitag einzureichen" = must be handed in) as well as possibility ("Er ist nicht zu erreichen").',
     ],
     prerequisiteKeys: ['de-b1-passive-werden', 'de-a2-lassen'],
   },
@@ -3930,7 +3927,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'dass-clauses and their equivalents',
     description:
-      'Replacing dass-clauses: zu-infinitive when the subjects are identical (Ich hoffe, dass ich … → Ich hoffe, … zu …), nominal phrases (Ich hoffe auf eine baldige Antwort), and obligatory/optional correlates (es, darauf/damit …, dass).',
+      'Replacing dass-clauses: zu-infinitive when its understood subject is the main-clause subject or object (Ich hoffe, dass ich … → Ich hoffe, … zu …; Ich bitte dich, früher zu kommen), nominal phrases (Ich hoffe auf eine baldige Antwort), and obligatory/optional correlates (es, darauf/damit …, dass).',
     cefrLevel: B2,
     language: DE,
     examplesPositive: [
@@ -3952,14 +3949,14 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'obligatory-correlate-darauf-damit',
         directive:
-          'an OBLIGATORY da(r)+preposition correlate introducing the dass-clause, required by the governing verb (Wir freuen uns darauf, dass ihr uns besucht)',
+          'an OBLIGATORY da(r)+preposition correlate introducing the dass-clause, required by the governing verb (Ich verlasse mich darauf, dass ihr pünktlich kommt) — not a verb where it is optional, like sich freuen or aufpassen',
       },
     ],
     examplesNegative: ['*Ich hoffe, dass ich dich bald wiederzusehen.', '*Wir freuen uns, dass ihr uns besucht, darauf.'],
     commonErrors: [
       'Mixing dass and the zu-infinitive in one clause ("*dass ich … wiederzusehen").',
-      'Dropping an obligatory correlate ("Wir freuen uns darauf, dass …" — some verbs require da(r)+preposition).',
-      'Using the zu-infinitive when the subjects differ.',
+      'Dropping an obligatory correlate ("Ich verlasse mich darauf, dass …" — some verbs require da(r)+preposition; with sich freuen, hoffen, aufpassen it is optional).',
+      'Using the zu-infinitive when its subject is neither the main-clause subject nor its object ("*Ich hoffe, ihn morgen zu kommen" for "Ich hoffe, dass er morgen kommt").',
     ],
     prerequisiteKeys: ['de-b1-zu-infinitive', 'de-a2-verb-preposition-complements'],
   },
@@ -4013,7 +4010,6 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using das instead of was after alles/etwas/nichts ("*alles, das …").',
       'Using a das-relative for a whole-clause antecedent ("*…, das mich gefreut hat" for "was …").',
-      'Inserting an unneeded resumptive der after wer when cases match ("Wer zu spät kommt, muss …" needs no der).',
     ],
     prerequisiteKeys: ['de-b1-relative-pronouns'],
   },
@@ -4071,7 +4067,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Transferring the English preposition ("*stolz über", "*abhängig auf").',
       'Wrong case after the fixed preposition ("*stolz auf ihrer Arbeit").',
-      'Dropping the da(r)-correlate before a dass-clause where the noun/adjective requires it.',
+      'Dropping the da(r)-correlate before a dass-clause where the noun/adjective requires it (with many adjectives it is optional: Ich bin (daran) gewöhnt, früh aufzustehen).',
     ],
     prerequisiteKeys: ['de-a2-verb-preposition-complements'],
   },
@@ -4100,7 +4096,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Using the article form instead of the pronoun form ("*du hast ein" instead of "einen"; neuter antecedents take "eins").',
       'Leaving mancher/sämtliche undeclined.',
-      'Missing welche as the partitive pronoun for mass nouns.',
+      'Missing welch- as the partitive pronoun for mass nouns, or not agreeing it in gender (Käse → welchen, Milch → welche, Brot → welches).',
     ],
     prerequisiteKeys: ['de-a2-indefinite-pronouns-basic'],
   },
@@ -4146,7 +4142,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     ],
     examplesNegative: ['*die Freundlichheit', '*das Arbeitzimmer'],
     commonErrors: [
-      'Choosing -heit vs -keit wrongly ("*Freundlichheit" — adjectives in -lich/-ig take -keit).',
+      'Choosing -heit vs -keit wrongly ("*Freundlichheit" — adjectives in -lich/-ig/-bar/-sam and most in -el/-er take -keit; -haft/-los take -igkeit).',
       'Dropping the Fugen-s ("*Arbeitzimmer" instead of "Arbeitszimmer").',
       'Confusing -lich and -ig pairs with distinct meanings.',
     ],
@@ -4156,7 +4152,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Mittelfeld word order (TeKaMoLo, pronouns, nicht)',
     description:
-      'Ordering inside the verb bracket: pronouns come first (acc before dat for two pronouns), then noun phrases; adverbials default to temporal–causal–modal–local (TeKaMoLo); nicht stands before the element it negates, otherwise late; the Vorfeld usually carries the topic — given information first, new information late.',
+      'Ordering inside the verb bracket: pronouns come first (acc before dat for two pronouns), then noun phrases (adverbials usually after a dative object, before a new accusative one) and TeKaMoLo order; nicht stands before the element it negates, otherwise late but before manner adverbials and verb complements (Er fährt nicht nach Berlin); the Vorfeld usually carries the topic — given information first, new information late.',
     cefrLevel: B2,
     language: DE,
     examplesPositive: [
@@ -4182,7 +4178,7 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'nicht-placement',
         directive:
-          'the placement of NICHT — immediately before the constituent it negates, or late in the Mittelfeld for whole-clause negation (Ich habe ihn gestern nicht gesehen; Er kommt nicht heute, sondern morgen)',
+          'the placement of NICHT — immediately before the constituent it negates, or late in the Mittelfeld for whole-clause negation, though still before manner adverbials and verb complements (Ich habe ihn gestern nicht gesehen; Ich warte nicht auf ihn; Er kommt nicht heute, sondern morgen)',
       },
     ],
     examplesNegative: ['*Ich habe gestern ihn im Büro kurz gesehen.', '*Sie hat mir es gestern erklärt.'],
@@ -4258,7 +4254,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     commonErrors: [
       'Fronting the particle ("*Halt das ist so").',
       'Reading wohl as "well" instead of supposition.',
-      'Confusing warning bloß with plain nur.',
+      'Using bloß for the reassuring sense of nur ("Kommen Sie nur herein!") — bloß always warns; in warnings both work, bloß slightly more emphatic.',
     ],
     prerequisiteKeys: ['de-b1-modal-particles-basic'],
     clozeUnsuitable: true,
@@ -4274,7 +4270,7 @@ const deCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Verb prefixes: inseparable meanings and variable prefixes',
     description:
-      'Inseparable prefixes as a meaning system: be- transitivizes (beantworten + A vs antworten auf), er- = achievement/change of state (erreichen, erröten), ver- = completion, error or change (verschlafen, sich verlaufen), ent- = removal, zer- = "to pieces"; variable prefixes (um-, über-, durch-, unter-) split literal-separable vs figurative-inseparable readings, with distinct participles (umgefahren "knocked down" vs umfahren "driven round").',
+      'Inseparable prefixes as a meaning system: be- transitivizes (beantworten + A vs antworten auf), er- = achievement/change of state (erreichen, erröten), ver- = completion, error/change (verschlafen, sich verlaufen), ent- = removal, zer- = "to pieces"; variable prefixes (um-, über-, durch-, unter-): separable = prefix’s own sense, inseparable often figurative/encircling; distinct participles (umgefahren "knocked down" vs umfahren "driven round").',
     cefrLevel: B2,
     language: DE,
     examplesPositive: [
@@ -4310,12 +4306,12 @@ const deCurriculum: readonly GrammarPoint[] = [
       {
         id: 'variable-prefix-separable-literal',
         directive:
-          'a VARIABLE prefix (um-, durch-, über-, unter-) used SEPARABLY with its literal reading, so it detaches and takes ge- inside (Der Bus hat das Schild umgefahren — knocked it down)',
+          'a VARIABLE prefix (um-, durch-, über-, unter-) used SEPARABLY (stressed prefix, with its own adverbial sense: turning over, through, over, under), so it detaches and takes ge- inside (Der Bus hat das Schild umgefahren — knocked it down)',
       },
       {
         id: 'variable-prefix-inseparable-figurative',
         directive:
-          'the SAME variable prefix used INSEPARABLY with its figurative reading, so it stays attached and takes no ge- (Wir haben die Baustelle umfahren — drove around it)',
+          'the SAME variable prefix used INSEPARABLY (unstressed, with a lexicalized meaning — often figurative, or encircling/covering as with um-), so it stays attached and takes no ge- (Wir haben die Baustelle umfahren — drove around it)',
       },
     ],
     examplesNegative: ['*Ich habe die Frage geantwortet.', '*Er hat das Schild umfahren. (meaning "knocked it down" — that reading needs umgefahren)'],
