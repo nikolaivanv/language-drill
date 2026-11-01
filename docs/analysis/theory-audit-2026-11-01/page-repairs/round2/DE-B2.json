@@ -1,0 +1,704 @@
+[
+ {
+  "key": "de-b2-causal-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "German nominalizations are neuter and take a capital letter: ",
+    "replace": "Nominalized infinitives are neuter and take a capital letter: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The cause comes first, the consequence second — the reverse of weil/da.",
+    "replace": "The cause comes first, the consequence second: folglich marks the consequence, whereas weil/da mark the cause.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-conditional-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "In every case the main clause follows the conditional element; if the conditional element stands first, the main clause begins with the finite verb (verb-second rule).",
+    "replace": "With wenn/falls, verb-first clauses, bei and im Falle, the conditional element usually stands first, and the main clause then begins with the finite verb (verb-second rule). With es sei denn and sonst/andernfalls, the main clause comes first.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The main clause follows with normal or inverted word order.",
+    "replace": "The main clause follows with its finite verb first (inverted order), optionally after a resumptive dann or so.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "It is a coordinating adverb, not a subordinating conjunction, so the finite verb follows immediately.",
+    "replace": "It is a conjunctional adverb that fills the first position of its clause, not a subordinating conjunction, so the finite verb follows immediately.",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-dass-equivalents",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/6",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "sich erinnern an"
+      }
+     ]
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/8",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "daran"
+      }
+     ]
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/10",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Ich erinnere mich (daran), dass wir dort waren."
+      }
+     ]
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/11",
+    "value": {
+     "kind": "text",
+     "text": " With some verbs it changes the meaning: "
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/12",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Wir freuen uns, dass ihr uns besucht"
+      }
+     ]
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/13",
+    "value": {
+     "kind": "text",
+     "text": " (we are glad) vs. "
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/14",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Wir freuen uns darauf, dass ihr uns besucht"
+      }
+     ]
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/15",
+    "value": {
+     "kind": "text",
+     "text": " (we are looking forward to it)."
+    },
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The table below shows how the same idea is expressed in each form. The first three rows use "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hoffen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (to hope), with "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hoffen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " for the nominal phrase; the correlate row uses "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sich freuen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (to look forward to)."
+     }
+    ],
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/2",
+    "value": "da(r)+preposition matching the verb's preposition (with sich freuen, darauf signals anticipation; required with e.g. sich verlassen auf)",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " in the main clause; here it is optional and adds emphasis.",
+    "replace": " in the main clause; here it makes the meaning «look forward to» explicit (without it, the sentence means «we are glad that you are visiting us»).",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/2/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "A few verbs that govern a preposition (e.g. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sich verlassen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") require the matching da(r)+preposition correlate whenever a dass-clause or zu-infinitive follows. With many others ("
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hoffen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sich erinnern an"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "aufpassen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") it is optional: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Ich hoffe (darauf), dass ihr pünktlich kommt."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " With some verbs the correlate changes the meaning ("
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sich freuen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " vs. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sich freuen auf"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), so do not add it by default."
+     }
+    ],
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-extended-attributes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The noun phrase follows a strict left-to-right order: ",
+    "replace": "The noun phrase follows this left-to-right order: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". Everything that would appear after the verb in a relative clause is placed before the participle here.",
+    "replace": ". All the other elements of the relative clause (objects, adverbs, prepositional phrases) are placed before the participle; the relative pronoun and the auxiliary are dropped, and the subject of an active clause becomes a von-phrase (den wir gekauft haben → von uns gekauft). Further adjectives can still stand between the participle and the noun: der von uns gekaufte neue Wagen.",
+    "finding": "R2 #2, #1"
+   },
+   {
+    "op": "replace",
+    "find": "The participle is inflected exactly like a predicative adjective in attributive position — it agrees",
+    "replace": "The participle is inflected exactly like an attributive adjective — it agrees",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/1/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "All modifiers of the participle must come "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "before"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " the participle itself; only further adjectives may stand between the participle and the noun (der von uns gekaufte neue Wagen). Placing a modifier after the participle or after the noun breaks the construction."
+     }
+    ],
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Using the bare participle stem — as it appears",
+    "replace": "Using the bare participle form — as it appears",
+    "finding": "R2 #4"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-indefinite-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "*Ja, es ist noch etwas da.",
+    "replace": "Ja, es ist noch etwas da.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-konjunktiv-i",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The three most important Konjunktiv I forms are "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sei"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (from "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sein"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — the one irregular form), "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "habe"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (from "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "haben"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), and "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "werde"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (from "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "werden"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "); habe and werde follow the regular stem + -e rule. These appear constantly in reported speech because "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "haben"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " and "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sein"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " form the perfect tense, and "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "werden"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " the future, in indirect speech."
+     }
+    ],
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " in a newspaper article is non-standard. The indicative blurs the boundary between the reporter's voice and the source's claim. In formal writing, always switch to Konjunktiv I (or its Konjunktiv II substitute): ",
+    "replace": " in a newspaper article breaks the norm of reporting style: without dass, written German almost always uses the subjunctive (the indicative occurs mainly after dass). The indicative blurs the boundary between the reporter's voice and the source's claim. In formal writing, switch to Konjunktiv I (or its Konjunktiv II substitute): ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "This is not optional in formal writing — it is the rule.",
+    "replace": "In formal writing this replacement is the norm.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-konjunktiv-ii",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "-clause can be replaced by moving the finite verb to first position. The main clause must still begin with the conjugated verb (after a comma): ",
+    "replace": "-clause can be replaced by moving the finite verb to first position. The main clause then begins with the conjugated verb (after a comma), or with a resumptive dann/so followed by the verb: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ") comes first, the main clause must invert: the finite verb comes directly after the comma, before the subject. ",
+    "replace": ") comes first, the main clause must invert: the finite verb comes directly after the comma (or after a resumptive dann/so), before the subject. ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-mittelfeld-word-order",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Slots 2 and 3 only apply when both objects are pronouns. When one object is a full noun phrase and the other is a pronoun, the pronoun still precedes the noun phrase regardless of case — but the accusative-before-dative rule applies only to two pronouns.",
+    "replace": "Any unstressed object pronoun goes in slot 2 or 3. The order between those two slots (accusative before dative) matters only when both objects are pronouns; when one object is a full noun phrase and the other is a pronoun, the pronoun simply precedes the noun phrase regardless of case.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/note/4",
+    "value": {
+     "kind": "text",
+     "text": ") → place/direction ("
+    },
+    "finding": "R2 #4"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/note/6",
+    "value": {
+     "kind": "text",
+     "text": "; strictly a direction complement of fahren, which likewise stands last). No causal adverbial is present, so that slot is simply skipped."
+    },
+    "finding": "R2 #4"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-modal-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", the next word must be a noun, article, or adjective — never a pronoun acting as a subject.",
+    "replace": ", a noun phrase must follow (a noun, article, adjective, possessive or object pronoun: durch ihn, durch seine Arbeit) — never a subject pronoun starting a clause.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-nominalization",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " noun can carry a genitive attribute that would otherwise require a full relative clause: ",
+    "replace": " noun can carry a genitive attribute that would otherwise require a full clause: ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-noun-verb-collocations",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " Funktionsverbgefüge are the default phrasing in business correspondence, academic writing, legal texts, and official communication. Where informal speech might say ",
+    "replace": " Funktionsverbgefüge are typical of business correspondence, academic writing, legal texts, and official communication. Where neutral style often uses a simple verb such as ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "Passive-like constructions.",
+    "replace": "Stative and causative pairs.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " (to make available). The choice of verb signals whether the subject experiences or causes the state.",
+    "replace": " (to make available). The choice of verb signals whether the subject is in the state or brings it about.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "Stative construction: the subject experiences the state. The preposition-article contraction ",
+    "replace": "Stative construction: the subject (der Raum) is in the state of being available. The preposition-article contraction ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": ". None of these three elements may be substituted freely. The verb conjugates normally for tense and person; the noun phrase does not change.",
+    "replace": ". None of these three elements may be substituted freely. The verb conjugates normally for tense and person, but the choice of verb, preposition and article stays fixed; many of the nouns can still take an adjective (eine wichtige Rolle spielen).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-relatives-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " to introduce a free relative clause with no explicit antecedent. The main clause may optionally begin with a resumptive ",
+    "replace": " to introduce a free relative clause with no explicit antecedent. When the cases differ, the main clause begins with a resumptive ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/4",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "der / dem / den"
+      }
+     ]
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " when the cases differ; when the cases are the same, no resumptive pronoun is needed,",
+    "replace": " in the case the main clause requires (Wer das glaubt, dem kann ich nicht helfen); it can be left out only when the main clause needs a nominative. When the cases are the same, no resumptive pronoun is needed,",
+    "finding": "R2 #1, #2"
+   },
+   {
+    "op": "replace",
+    "find": " construction, the main clause optionally begins with a resumptive ",
+    "replace": " construction, the main clause begins with a resumptive ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " when the case of the subject in the main clause differs from the case of ",
+    "replace": " in the case the main clause requires, when that case differs from the case of ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " in the relative clause. When both are nominative, it is usually left out,",
+    "replace": " in the relative clause; it may be dropped only when the main clause needs a nominative (Wen es interessiert, kann mitkommen). When both are nominative, it is usually left out,",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " can refer back to a whole statement.",
+    "replace": " (not das) can refer back to a whole statement here.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " can serve as a relative pronoun for a clausal antecedent.",
+    "replace": " (or, after a preposition, a wo(r)- compound such as worüber) can serve as a relative pronoun for a clausal antecedent.",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-text-reference-words",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " when the preposition starts with a vowel.",
+    "replace": " when the preposition starts with a vowel. A few prepositions form no da(r)-compound at all — außer, gegenüber, ohne and seit (for außer and seit, use the adverbs außerdem and seither).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "When the antecedent is a thing or situation, German does not allow ",
+    "replace": "When the antecedent is a thing or situation, German normally does not allow ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". The da(r)-compound is obligatory.",
+    "replace": ". For the prepositions that form one, the da(r)-compound is obligatory.",
+    "finding": "R2 #1"
+   }
+  ]
+ }
+]

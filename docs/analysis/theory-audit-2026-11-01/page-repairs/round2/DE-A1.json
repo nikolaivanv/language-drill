@@ -1,0 +1,205 @@
+[
+ {
+  "key": "de-a1-negation",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " nicht stands at the end of the clause, after all other elements — «Ich komme heute nicht.»",
+    "replace": " nicht goes as late as possible — after the objects and time adverbs: «Ich komme heute nicht.» It still stays before a predicate adjective, a prepositional complement or a second verb part (participle, infinitive, separable prefix): «Ich habe das Buch nicht gelesen.»",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "when you mean to negate the whole action, put nicht last.",
+    "replace": "when you mean to negate the whole action, put nicht after the objects and time adverbs — as late as the rules above allow.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-plural-formation",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Use the plural form whenever you refer to more than one person, thing, or concept. The definite article in the plural is always ",
+    "replace": "Use the plural form whenever you refer to more than one person, thing, or concept. In the nominative and accusative, the definite article in the plural is always ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ", regardless of the noun's gender in the singular.",
+    "replace": ", regardless of the noun's gender in the singular (in the dative it is den: mit den Kindern).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (many), ",
+    "replace": " (many) and ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " (all), and ",
+    "replace": " (all) require a plural noun. ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " (no/none) require a plural noun.",
+    "replace": " (no/none) goes with a plural noun too (keine Bücher), but keine is also the feminine singular form: keine Zeit.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-praeteritum-sein-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " follow a regular weak-verb Präteritum pattern (–, -est, –, -en, -et, -en).",
+    "replace": " are the regular weak-verb Präteritum endings (-e, -est, -e, -en, -et, -en): ich hatte, du hattest, er hatte.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-present-irregular",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — fully suppletive; every form is unique.",
+    "replace": " — fully suppletive; each form has to be learned on its own.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " only. The three patterns are: ",
+    "replace": " only. The three main patterns are: ",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-temporal-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". These contractions are obligatory — the uncontracted forms are not used in standard German for time expressions.",
+    "replace": ". In ordinary time expressions these contractions are the normal form — the uncontracted an dem / in dem appear only when the article is stressed, meaning «that» (an dem Tag, an dem wir uns kennengelernt haben).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "im is the obligatory contraction of in + dem before seasons and months.",
+    "replace": "im is the normal contraction of in + dem before seasons and months.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " The contractions are obligatory. ",
+    "replace": " In ordinary time expressions the contractions are the normal form. ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " are ungrammatical. Always write ",
+    "replace": " are ungrammatical. Write ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-v2-word-order",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The finite verb always occupies the second position in a German main clause.",
+    "replace": "The finite verb always occupies the second position in a German statement.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "In a German main clause, the finite verb — the conjugated verb that carries tense and person — must always sit in ",
+    "replace": "In a German declarative main clause (a statement) and in a W-question, the finite verb — the conjugated verb that carries tense and person — must always sit in ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " This rule applies regardless of which constituent opens the clause.",
+    "replace": " This rule applies regardless of which constituent opens the clause. (Yes/no questions and commands are different: there the verb comes first — Gehst du ins Kino?)",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-zero-article",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " As soon as an adjective modifies the noun, the article returns. Compare: ",
+    "replace": " With a singular profession or nationality after sein/werden, the article returns as soon as an adjective modifies the noun. Compare: ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "When an adjective is added before the noun in any of these contexts, use the indefinite article ",
+    "replace": "When an adjective is added before a singular profession or nationality noun after sein/werden, use the indefinite article ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/3",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Indefinite plurals and mass nouns stay without an article even with an adjective: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wir kaufen frische Äpfel."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " / "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wir brauchen frische Milch."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " German has no equivalent of English «some» in this context. Do not write ",
+    "replace": " German has no article corresponding to unstressed English «some». Do not write ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " Once an adjective modifies the noun, the zero-article rule no longer applies. Do not write ",
+    "replace": " With a singular profession or nationality, the zero-article rule no longer applies once an adjective modifies the noun. Do not write ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " The adjective signals that the indefinite article must appear.",
+    "replace": " (Plurals and mass nouns are different: they stay without an article — Sie sind gute Ärztinnen, Wir brauchen frische Milch.)",
+    "finding": "R2 #2"
+   }
+  ]
+ }
+]

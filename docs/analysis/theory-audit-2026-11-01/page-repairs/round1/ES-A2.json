@@ -1,0 +1,883 @@
+[
+ {
+  "key": "es-a2-por-para",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Neither "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "por"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " nor "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "para"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " contracts with the article "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "por + el → por el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "para + el → para el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Only "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "a"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "de"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " contract (a + el → al, de + el → del). Por and para remain as written."
+      }
+     ]
+    },
+    "finding": "self-contradictory contraction callout"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-periphrases-obligation-aspect",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " never changes form.",
+    "replace": " never changes for person, only for tense (había que, habrá que).",
+    "finding": "hay que changes for tense"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hay que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " does not change for person: it is always "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hay que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", whoever the obligation applies to. It does change for tense, like any form of haber: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "había que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hubo que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "habrá que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". It does not conjugate for person like "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tener que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "hay que changes for tense"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-indirect-object-pronouns-se",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". This same ",
+    "replace": ". Separately, ",
+    "finding": "se le ≠ dative of possession"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/13",
+    "value": {
+     "kind": "strong",
+     "children": [
+      {
+       "kind": "text",
+       "text": "le/les"
+      }
+     ]
+    },
+    "finding": "se le ≠ dative of possession"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/14",
+    "value": {
+     "kind": "text",
+     "text": " also express the dative of possession, marking the person whose body part or belonging is affected («le robaron la cartera»). In «se le cayó el vaso», the se belongs to the verb caerse; it is not le turned into se."
+    },
+    "finding": "se le ≠ dative of possession"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Dative of possession."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When something happens to a body part or personal item belonging to someone, Spanish uses "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "le/les"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " plus a definite article instead of a possessive adjective: «le robaron la cartera» (they stole his/her wallet), rather than «robaron su cartera». With a pronominal verb of accidental events (caerse, romperse), the verb's own se comes first: «se le cayó el vaso a Juan» (Juan dropped the glass)."
+      }
+     ]
+    },
+    "finding": "se le ≠ dative of possession"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Dative of possession with the pronominal verb caerse: «"
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "le"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "» marks Juan as the person affected, and «se» belongs to caerse (it is not le → se). The definite article «el» replaces a possessive adjective."
+     }
+    ],
+    "finding": "se le ≠ dative of possession"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-imperfect",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The irregulars must be memorised as whole paradigms. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ser"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " uses a completely different stem ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "er-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "); "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " uses "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ib-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ver"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " keeps the e of its infinitive, using the stem "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ve-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " before the "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-er"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " endings ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "veía, veías…"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), not the expected *vía."
+      }
+     ]
+    },
+    "finding": "ver stem ve-"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-gustar-type-verbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The verb takes only two forms in the present: third-person singular (when the subject is singular or an infinitive) and third-person plural (when the subject is plural).",
+    "replace": "When the subject is a thing or an activity — by far the most common case — the verb takes only two forms in the present: third-person singular (when the subject is singular or an infinitive) and third-person plural (when the subject is plural). A person can also be the subject, and then the verb agrees with that person: «me gustas» (I like you), «le gusto» (he/she likes me).",
+    "finding": "1st/2nd-person subjects"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-tonic-pronouns-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "that must be used after prepositions",
+    "replace": "that are used after most prepositions",
+    "finding": "entre/según take yo/tú"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "After most prepositions"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — use mí or ti wherever a preposition governs a first- or second-person singular pronoun: «para mí», «sin ti», «de mí», «sobre ti». The exceptions are con (below) and "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "entre, según, excepto, salvo, menos, incluso"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and hasta («even»), which take the subject forms yo and tú: «entre tú y yo», «según tú», «excepto yo»."
+      }
+     ]
+    },
+    "finding": "entre/según take yo/tú"
+   },
+   {
+    "op": "replace",
+    "find": "This applies after all prepositions: sin ti, de ti, sobre ti, etc.",
+    "replace": "This applies after most prepositions: sin ti, de ti, sobre ti, etc. The exceptions are entre, según, excepto, salvo, menos, incluso and hasta («even»), which keep tú and yo: «entre tú y yo», not «entre ti y mí».",
+    "finding": "entre/según take yo/tú"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Apart from the reflexive "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sí"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («himself / herself / themselves»), only the 1st and 2nd person singular have special tonic forms. All other persons use the same pronoun as the subject. The fusion with con happens only with mí, ti and reflexive sí: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "consigo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («lo lleva consigo» — he takes it with him)."
+      }
+     ]
+    },
+    "finding": "reflexive sí / consigo"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-estar-gerundio",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Stem-changing verbs (-ir verbs, plus poder)."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Stem-changing -ir verbs carry their stem change into the gerund. The vowel shift is e → i or o → u. The -er verb "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "poder"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " also changes: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "pudiendo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "poder → pudiendo"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/5/rows/4",
+    "value": [
+     "poder",
+     "o → u",
+     "pudiendo",
+     "being able to"
+    ],
+    "finding": "poder → pudiendo"
+   },
+   {
+    "op": "replace",
+    "find": "This change only affects -ir verbs, not -er verbs.",
+    "replace": "This change affects -ir verbs; the only common -er verb that changes is poder (pudiendo, not *podiendo).",
+    "finding": "poder → pudiendo"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The stem-change rule for the gerund applies to "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ir verbs"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (plus "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "poder"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "pudiendo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). An -er verb such as "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "volver"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (o → ue in the present tense) does "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "not"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " change in the gerund: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "volviendo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not *vueliendo."
+      }
+     ]
+    },
+    "finding": "poder → pudiendo"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-imperative-affirmative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". This rule is completely regular, with no exceptions.",
+    "replace": ". No verb is irregular here, but when the reflexive pronoun os is attached, the -d drops: sentad + os → sentaos, levantad + os → levantaos (the one exception is idos, from irse).",
+    "finding": "-d drops before os"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-preterito-perfecto",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "It is the tense of choice when a time marker",
+    "replace": "In Spain it is the tense of choice when a time marker",
+    "finding": "Peninsular ya/hoy norm"
+   },
+   {
+    "op": "replace",
+    "find": " signals that something has happened before the current moment or asks whether it has. It always pairs with the pretérito perfecto, not the simple preterite.",
+    "replace": " signals that something has happened before the current moment or asks whether it has. In Spain it normally pairs with the pretérito perfecto; in most of Latin America the simple preterite is standard here («ya llegó»).",
+    "finding": "Peninsular ya/hoy norm"
+   },
+   {
+    "op": "replace",
+    "find": "any action placed within it connects to the present and takes the pretérito perfecto.",
+    "replace": "any action placed within it connects to the present and, in Spain, takes the pretérito perfecto.",
+    "finding": "Peninsular ya/hoy norm"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using the simple preterite with present-anchored markers (Spain)."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " In Peninsular Spanish, when "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ya"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "todavía no"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", or "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hoy"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " appear, the period is still open and the pretérito perfecto is the norm. Saying «hoy hice mucho ejercicio» there shifts the focus to a closed, completed event and loses the connection to the present moment. Use "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hoy he hecho"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " instead. In most of Latin America, however, «hoy hice» and «ya llegó» are standard and correct."
+      }
+     ]
+    },
+    "finding": "Peninsular ya/hoy norm"
+   },
+   {
+    "op": "replace",
+    "find": "Three high-frequency verbs have irregular participles that must be memorised:",
+    "replace": "Several high-frequency verbs have irregular participles that must be memorised. Three common ones are shown below; others include dicho (decir), puesto (poner), vuelto (volver), abierto (abrir) and roto (romper).",
+    "finding": "more irregular participles"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-si-present-conditional",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is never followed by the future tense in the same clause. The condition must use the present indicative.",
+    "replace": " meaning «if» is never followed by the future tense in the same clause. The condition must use the present indicative. (When si means «whether», the future is fine: no sé si vendrá.)",
+    "finding": "whether-si takes future"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-todo-otro-quantifiers",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — use to mean «all», «every», or «the whole of». When it modifies a noun, it must be followed by a definite article (el, la, los, las), a possessive (mi, tu, su…), or a demonstrative (este, ese…).",
+    "replace": " — use to mean «all», «every», or «the whole of». When it means «all» or «the whole of» before a noun, it must be followed by a definite article (el, la, los, las), a possessive (mi, tu, su…), or a demonstrative (este, ese…). Singular todo directly before a bare noun means «every / any»: todo tipo de, en todo caso.",
+    "finding": "todo + bare noun"
+   },
+   {
+    "op": "replace",
+    "find": " the determiner (article, possessive, or demonstrative) is obligatory. The pattern is ",
+    "replace": " for «all» and «the whole of», the determiner (article, possessive, or demonstrative) is obligatory. The pattern is ",
+    "finding": "todo + bare noun"
+   },
+   {
+    "op": "replace",
+    "find": "Todo must be followed by a determiner when it modifies a noun.",
+    "replace": "When todo means «all» or «the whole of», it must be followed by a determiner.",
+    "finding": "todo + bare noun"
+   },
+   {
+    "op": "replace",
+    "find": "Wrong — determiner missing and todo not plural.",
+    "replace": "Wrong — todo does not agree with the plural noun estudiantes.",
+    "finding": "todo + bare noun (dependent gloss)"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-exclamatives-impersonals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Both sets of structures are impersonal: no noun or pronoun acts as a grammatical subject.",
+    "replace": "Only the hacer weather expressions are truly impersonal, with no grammatical subject; the exclamatives and estamos a … grados have ordinary subjects (este restaurante, tú, nosotros).",
+    "finding": "exclamatives have subjects"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-diacritic-pairs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The accent does not change pronunciation — both words are common, short words — but it signals to the reader which word is meant.",
+    "replace": "In speech the two words differ in stress, and the accent shows the reader which word is meant.",
+    "finding": "stress difference"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-direct-object-pronouns",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4/0",
+    "value": "a whole idea or clause (neuter)",
+    "finding": "neuter lo ≠ una idea"
+   }
+  ]
+ }
+]

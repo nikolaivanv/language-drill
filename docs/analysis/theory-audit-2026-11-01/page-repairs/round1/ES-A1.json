@@ -1,0 +1,607 @@
+[
+ {
+  "key": "es-a1-articles",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", the thing liked is the grammatical subject and always takes the definite article.",
+    "replace": ", the thing liked is the grammatical subject; named in a general sense like this, it takes the definite article (other determiners also work: me gusta tu casa).",
+    "finding": "gustar subject: definite article only for generic nouns"
+   },
+   {
+    "op": "replace",
+    "find": " is the grammatical subject and requires the definite article.",
+    "replace": " is the grammatical subject and, used in a general sense, requires the definite article.",
+    "finding": "gustar subject: definite article only for generic nouns"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-coordination-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " before a word that starts with the sound /i/ (spelled i- or hi-), e.g. «padre e hijo» (father and son).",
+    "replace": " before a word that starts with the sound /i/ (spelled i- or hi-), e.g. «padre e hijo» (father and son). Words in hie- start with a different sound and keep y: «agua y hielo».",
+    "finding": "y→e not before hie-"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0/1",
+    "value": "e (before i-, hi-; not hie-)",
+    "finding": "y→e not before hie-"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-gender-agreement",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "For adjectives that end in a consonant (like ",
+    "replace": "For nationality adjectives that end in a consonant (like ",
+    "finding": "consonant-final adjectives mostly invariable"
+   },
+   {
+    "op": "replace",
+    "find": "), the feminine is formed by adding ",
+    "replace": "), and for adjectives in -or, -ón, -án and -ín, the feminine is formed by adding ",
+    "finding": "consonant-final adjectives mostly invariable"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/text/8",
+    "value": {
+     "kind": "text",
+     "text": "). Most other adjectives ending in a consonant have one form for both genders: un libro fácil, una pregunta fácil (likewise azul, joven, feliz)."
+    },
+    "finding": "consonant-final adjectives mostly invariable"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-gustar-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "«Me gusta el café.» The noun takes the definite article.",
+    "replace": "«Me gusta el café.» Used in a general sense like this, the noun takes the definite article.",
+    "finding": "definite article only for generic nouns"
+   },
+   {
+    "op": "replace",
+    "find": "«Me gustan los libros.» The noun still takes the definite article.",
+    "replace": "«Me gustan los libros.» A plural noun used in a general sense still takes the definite article.",
+    "finding": "definite article only for generic nouns"
+   },
+   {
+    "op": "replace",
+    "find": "The liked thing always takes the ",
+    "replace": "A liked thing named in a general sense always takes the ",
+    "finding": "definite article only for generic nouns"
+   },
+   {
+    "op": "replace",
+    "find": " café» = «I like coffee».",
+    "replace": " café» = «I like coffee». A possessive or demonstrative also works when you mean a specific thing: «Me gusta tu casa», «Me gustan estos libros».",
+    "finding": "definite article only for generic nouns"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-hay-estar",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Estar, by contrast, is a regular verb that conjugates fully.",
+    "replace": "Estar, by contrast, conjugates fully for person and number (it is irregular: estoy, estás, está…).",
+    "finding": "estar is irregular"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-negation-tampoco",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " to negate a verb, placing it directly before the verb with no other changes to the sentence.",
+    "replace": " to negate a verb, placing it before the verb (and before any object pronoun attached to it) with no other changes to the sentence.",
+    "finding": "no goes before clitics"
+   },
+   {
+    "op": "replace",
+    "find": " immediately before any conjugated verb to make the sentence negative. Nothing else in the sentence changes.",
+    "replace": " before any conjugated verb to make the sentence negative. If the verb has an object or reflexive pronoun (me, te, lo, se…), no goes before that pronoun: «No me gusta», «No lo tengo», never «*me no gusta». Nothing else in the sentence changes.",
+    "finding": "no goes before clitics"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-noun-gender",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/2/0/text/6/children/0/text",
+    "value": "la flor",
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/2/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": ". One reliable exception: nouns ending in -dad, -tad, -tud, -ción or -sión are feminine: la ciudad, la universidad, la estación."
+    },
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/3",
+    "value": "el hotel / la flor",
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/4",
+    "value": "the hotel / the flower",
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/1/rows/4",
+    "value": [
+     "-dad, -ción, -sión",
+     "feminine",
+     "la",
+     "la ciudad / la estación",
+     "the city / the station"
+    ],
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/8/children/0/text",
+    "value": "la flor",
+    "finding": "-dad/-ción feminine"
+   },
+   {
+    "op": "replace",
+    "find": ". Always store the article as part of the word from the start.",
+    "replace": ". Always store the article as part of the word from the start. (Endings such as -dad and -ción are the exception: la ciudad, la canción are reliably feminine.)",
+    "finding": "-dad/-ción feminine"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-noun-plural",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/items/1/0/text/5",
+    "value": {
+     "kind": "text",
+     "text": ", -s, etc. (país → países). Exception: a noun that ends in an unstressed vowel + -s does not change: el lunes → los lunes, la crisis → las crisis."
+    },
+    "finding": "lunes/crisis invariable; país is consonant-final"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/items/2/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Rule 3 — ends in stressed -í or -ú:"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " everyday nouns simply add "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-s"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " ("
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "el menú → los menús"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "el champú → los champús"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "). Some, especially nationality words, also have a formal "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-es"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " plural: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "marroquíes"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hindúes"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "stressed -í/-ú: -s usual, -es formal; país removed from rule 3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/3/2",
+    "value": "consonant → +es",
+    "finding": "país is consonant-final"
+   },
+   {
+    "op": "replace",
+    "find": "país ends in a stressed syllable with -s, so the plural is países (not *paiss or *país).",
+    "replace": "país ends in a consonant (-s) in a stressed syllable, so -es is added: países (not *país).",
+    "finding": "país is consonant-final"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/1",
+    "value": {
+     "kind": "text",
+     "text": " "
+    },
+    "finding": "país is consonant-final"
+   },
+   {
+    "op": "replace",
+    "find": " ends in a vowel letter, the final syllable is stressed and ends in -s, so it takes ",
+    "replace": " ends in a consonant (-s) on a stressed syllable, so it takes ",
+    "finding": "país is consonant-final"
+   },
+   {
+    "op": "replace",
+    "find": " Nouns that end in a consonant require ",
+    "replace": " Nouns that end in a consonant (other than unstressed -s, as in lunes) require ",
+    "finding": "lunes/crisis invariable"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-prepositions-a-en",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". When the subject is not moving, the correct preposition is always ",
+    "replace": ". With estar, vivir or trabajar + a place, the preposition is ",
+    "finding": "static a in fixed phrases"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": ". (A few fixed phrases do use a for position: estar a la derecha, a la izquierda, al lado de.)"
+    },
+    "finding": "static a in fixed phrases"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-present-indicative-regular",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (vosotros) are the three pairs most often mixed up. Keep the vowel of the infinitive class in mind: ",
+    "replace": " (vosotros) are the three pairs most often mixed up. For nosotros and vosotros, keep the vowel of the infinitive class in mind: ",
+    "finding": "tú pair: -ir verbs use e"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0/text/12",
+    "value": {
+     "kind": "text",
+     "text": " for -ir. In the tú, él and ellos forms, -er and -ir verbs share e: comes, vives."
+    },
+    "finding": "tú pair: -ir verbs use e"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-present-irregular-core",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/4",
+    "value": {
+     "kind": "text",
+     "text": " (every form except "
+    },
+    "finding": "estar accents"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/5/children/0/text",
+    "value": "estoy",
+    "finding": "estar accents"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/7/children/0/text",
+    "value": "estamos",
+    "finding": "estar accents"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/8",
+    "value": {
+     "kind": "text",
+     "text": " carries a written accent: estás, está, estáis, están)."
+    },
+    "finding": "estar accents"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-present-yo-go",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "A group of common verbs is regular in the present except in the ",
+    "replace": "A group of common verbs has an irregular ",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "replace",
+    "find": " form, which takes an irregular ending. Many add a ",
+    "replace": " form in the present, with a special ending. Many add a ",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "replace",
+    "find": "), and verbs ending in ",
+    "replace": "), and most verbs ending in a vowel + ",
+    "finding": "-zco only after a vowel"
+   },
+   {
+    "op": "replace",
+    "find": "). All the other persons follow the normal present pattern.",
+    "replace": "). For hacer, poner, salir, traer and the -zco verbs, all the other persons follow the normal present pattern; tener, venir, decir and oír also change their stem in other persons (tienes, vienes, dices, oyes).",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "replace",
+    "find": " form, and leave every other person as normal.",
+    "replace": " form, and leave every other person as normal (except tener, venir, decir and oír — see the note below).",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "replace",
+    "find": ". The irregular part lives only in ",
+    "replace": ". The -go ending lives only in ",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text/10",
+    "value": {
+     "kind": "text",
+     "text": ". But tener also changes its stem in other persons (tienes, tiene, tienen), and so do venir (vienes), decir (dices) and oír (oyes)."
+    },
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   },
+   {
+    "op": "set",
+    "path": "/subtitle",
+    "value": "Verbs with an irregular first person singular in the present (-go, -zco)",
+    "finding": "tener/venir/decir/oír irregular beyond yo"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-relative-que-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " The verb inside the clause is conjugated to agree with the antecedent, not with the subject of the main clause.",
+    "replace": " The verb inside the clause agrees with its own subject: when que is the subject, that is the antecedent (los chicos que viven aquí); when que is the object, it is whoever does the action (los libros que leo — yo).",
+    "finding": "verb agreement in object relatives"
+   },
+   {
+    "op": "replace",
+    "find": " Only the verb inside the clause changes to match the antecedent.",
+    "replace": " Only the verb inside the clause changes: when que is the subject, it agrees with the antecedent (el chico que vive, los chicos que viven).",
+    "finding": "verb agreement in object relatives"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Making que agree with the antecedent."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Some learners write "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*los chicos ques viven aquí"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*las revistas ques leo"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " as if que were an adjective. que is invariable: it is always "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "que"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", regardless of gender or number. (With an article, "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "la que vive aquí"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «the one who lives here» is a different, correct structure.)"
+     }
+    ],
+    "finding": "*la que vive is grammatical"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-ser-estar-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " expresses location and physical",
+    "replace": " expresses the location of people and things and physical",
+    "finding": "events take ser"
+   },
+   {
+    "op": "replace",
+    "find": "Using the wrong verb produces a grammatically incorrect sentence, so",
+    "replace": "Using the wrong verb usually produces an incorrect sentence (or, with some adjectives, a different meaning), so",
+    "finding": "wrong verb not always ungrammatical"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/2/0/text/2/children/0/text",
+    "value": "El hielo es frío.",
+    "finding": "El agua es fría poor model"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/2/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": " (ice is cold by nature)"
+    },
+    "finding": "El agua es fría poor model"
+   },
+   {
+    "op": "replace",
+    "find": ". If you can ask «¿Qué es?»",
+    "replace": ". (Exception: events — a party, a class, a concert — take ser: «¿Dónde es la fiesta?» «Es en mi casa.») If you can ask «¿Qué es?»",
+    "finding": "events take ser"
+   },
+   {
+    "op": "replace",
+    "find": "Location always takes estar, even for buildings and fixed objects.",
+    "replace": "The location of people and things takes estar, even for buildings and fixed objects.",
+    "finding": "events take ser"
+   },
+   {
+    "op": "replace",
+    "find": " Location always requires estar. ",
+    "replace": " The location of a person, place or thing requires estar. ",
+    "finding": "events take ser"
+   },
+   {
+    "op": "replace",
+    "find": " This applies to every location — streets, buildings, people, objects.",
+    "replace": " This applies to streets, buildings, people and objects. Events are the exception: «La fiesta es en mi casa» (the party is at my house).",
+    "finding": "events take ser"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-telling-time",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4/0",
+    "value": "12:45",
+    "finding": "1:45 row"
+   }
+  ]
+ }
+]

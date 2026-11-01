@@ -1,0 +1,1685 @@
+[
+ {
+  "key": "es-a2-comparatives-superlatives",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/9/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "For physical size, use the regular forms ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "más grande"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "más pequeño"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Mayor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " can also mean «bigger», mostly in formal writing, but "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "menor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is not used for size: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "esta caja es más pequeña que la otra"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*esta caja es menor que la otra"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". For age or importance, prefer the irregular forms."
+      }
+     ]
+    },
+    "finding": "menor not for physical size (B&B 6.9)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Saying 'más bueno' instead of 'mejor'"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — the adjectives "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bueno"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "malo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "grande"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (age/importance), and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "pequeño"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (age/importance) have irregular comparative forms. For quality, say "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mejor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*más bueno"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "peor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*más malo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mayor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " for age, not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*más grande"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Only for someone's character are "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "más bueno"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " / "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "más malo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " correct: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "es el más malo de todos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (he's the naughtiest of all)."
+      }
+     ]
+    },
+    "finding": "más bueno/malo fine for moral character (B&B 6.3.1 n3)"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-deber-obligation-probability",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (conditional), softens obligation into advice. Keeping these three uses apart is essential, because the presence or absence of ",
+    "replace": " (conditional), softens obligation into advice. Keep these uses apart: adding ",
+    "finding": "deber-de framing"
+   },
+   {
+    "op": "replace",
+    "find": " — and the choice of tense — changes the meaning of the sentence entirely.",
+    "replace": " to an obligation is non-standard, while plain deber is also widely accepted for a guess (debe ser tarde), although deber de is the preferred form for probability. The choice of tense matters too: deberías gives advice.",
+    "finding": "deber-de framing"
+   },
+   {
+    "op": "replace",
+    "find": "In informal spoken Spanish, deber and deber de are sometimes mixed. In formal writing and in exams, the distinction above is expected and should be maintained.",
+    "replace": "Only one direction is a real mistake: deber de for obligation (debes de terminarlo) is non-standard. Deber without de for a guess (deben ser las cinco) is so widespread that the RAE accepts it, though deber de is preferred. In formal writing and in exams, keep deber for obligation and deber de for probability.",
+    "finding": "deber-de framing"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Treating deber and deber de as fully interchangeable"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": The overlap only goes one way. Plain deber can also express a guess — «Deben ser las cinco» (it must be five o'clock) is widely used and accepted, although deber de is preferred. But deber de cannot replace deber for obligation: «deben terminar» (they must finish) states a duty, while «deben de terminar» can only be a guess (they probably finish)."
+      }
+     ]
+    },
+    "finding": "deber-de framing"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-discourse-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " when the conceded fact is real and known at the moment of speaking (equivalent to «even though»). Reserve the subjunctive for hypothetical or unknown concessions («even if»).",
+    "replace": " when the conceded fact is real and known at the moment of speaking (equivalent to «even though»). Use the subjunctive for hypothetical or unknown concessions («even if»), or to brush a known fact aside as irrelevant.",
+    "finding": "aunque + subjunctive with known facts"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aunque + indicative vs. subjunctive."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When the conceded fact is real and present and you simply want to state it, use the indicative: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aunque llueve, salimos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The subjunctive — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aunque llueva, salimos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — is not wrong, but it means something else: «even if it rains», or, with a known fact, that the speaker dismisses it as irrelevant ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aunque sea tu padre, no tiene derecho"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — he may be your father, but he has no right)."
+      }
+     ]
+    },
+    "finding": "aunque + subjunctive with known facts"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-imperative-negative-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " Adding one or two pronouns shifts the stress count, so a written accent is required to preserve the original stress: ",
+    "replace": " Adding pronouns can push the verb's stressed syllable to third-from-last or further back; when it does, a written accent is required to preserve the original stress: ",
+    "finding": "accent with one enclitic"
+   },
+   {
+    "op": "replace",
+    "find": ". No accent is needed in the negative because the pronouns are separate words.",
+    "replace": ". A one-syllable verb plus a single pronoun needs no accent (dime, dale, vete), but cómpralo does. No accent is needed in the negative because the pronouns are separate words.",
+    "finding": "accent with one enclitic"
+   },
+   {
+    "op": "replace",
+    "find": "A written accent is added to keep the stress on the verb's original stressed syllable.",
+    "replace": "A written accent marks the verb's original stressed syllable whenever it ends up third-from-last or earlier: díselo, dámelas, but dime, vete.",
+    "finding": "accent with one enclitic"
+   },
+   {
+    "op": "replace",
+    "find": " When one or two pronouns are added to an affirmative imperative, the original stressed syllable of the verb must carry a written accent to prevent the stress from shifting. Writing «",
+    "replace": " When two pronouns are added to an affirmative imperative, the verb's stressed syllable always ends up third-from-last or earlier, so it must carry a written accent. Writing «",
+    "finding": "accent with one enclitic"
+   },
+   {
+    "op": "replace",
+    "find": ", and similar forms.",
+    "replace": ", and similar forms. With a single pronoun, only verbs of two or more syllables need it: cómpralo, but dime, ponlo.",
+    "finding": "accent with one enclitic"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-impersonal-plural",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", etc. The verb agrees with its grammatical object only when that object is a direct-object noun — the verb itself stays in the third-person plural regardless.",
+    "replace": ", etc. The verb never agrees with its object: it stays in the third-person plural whether the object is singular or plural («me robaron la cartera», «venden pan»).",
+    "finding": "verb never agrees with object"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-indirect-questions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Same subject in both clauses → infinitive."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When the subject of the main clause and the embedded question are the same person, Spanish prefers a bare infinitive after the interrogative word instead of a full finite clause: «No sé "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "qué hacer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "» (= I don't know what I should do). The same works with "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": «No sé "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "» (= I don't know whether to go)."
+      }
+     ]
+    },
+    "finding": "si + infinitive is grammatical"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0",
+    "value": [
+     "yes/no",
+     "si",
+     "finite clause (or bare infinitive, same subject)",
+     "No sé si voy a la fiesta. / No sé si ir."
+    ],
+    "finding": "si + infinitive is grammatical"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-influence-verbs-infinitive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/9/children/0/text",
+    "value": "object clitic",
+    "finding": "lo/la with dejar/hacer + intransitive inf."
+   },
+   {
+    "op": "replace",
+    "find": "The most direct construction pairs the influence verb with a ",
+    "replace": "The most direct construction pairs the influence verb with an ",
+    "finding": "lo/la with dejar/hacer + intransitive inf."
+   },
+   {
+    "op": "replace",
+    "find": "Dative clitic ",
+    "replace": "Clitic ",
+    "finding": "lo/la with dejar/hacer + intransitive inf."
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The core pattern is: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "[subject] + [object clitic] + [influence verb] + [infinitive]"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The clitic is placed before the conjugated influence verb (or attached to it as an enclitic in certain non-finite contexts). In the third person, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "permitir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "prohibir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "le/les"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dejar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hacer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "lo/la/los/las"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is usual when the infinitive has no object of its own ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "la dejaron ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "la hice reír"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "le/les"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " when it has one ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "le hice tomar un café"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). The infinitive that follows is always in its base form — it does not agree with any noun."
+      }
+     ]
+    },
+    "finding": "lo/la with dejar/hacer + intransitive inf."
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "When the alternative "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "que + subjunctive"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " construction is used, the affected person also becomes the subject of the subordinate verb. The clitic can stay or be left out: «le permitieron entrar» → «le permitieron que entrara» / «permitieron que entrara»."
+      }
+     ]
+    },
+    "finding": "clitic not dropped with que + subj."
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Dropping the clitic when a specific person is meant."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Without the clitic, nothing says who is affected, so the permission becomes general: «Mis padres no dejan salir» means nobody is allowed out. To say that they don't let "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "you"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " go out, the clitic is needed: «mis padres no me dejan salir»."
+      }
+     ]
+    },
+    "finding": "no dejan salir is grammatical (generic)"
+   },
+   {
+    "op": "replace",
+    "find": "Expressing influence and causation with a dative clitic and an infinitive",
+    "replace": "Expressing influence and causation with an object clitic and an infinitive",
+    "finding": "lo/la with dejar/hacer + intransitive inf."
+   }
+  ]
+ },
+ {
+  "key": "es-b1-llevar-time-expressions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "For ongoing actions, the verb after "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " must be in the present tense. A preterite changes the meaning: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Hace un año que trabajé aquí"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " means «I worked here a year ago», not «I've been working here for a year». For something still going on, say "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Hace un año que trabajo aquí"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "hace...que + preterite = ago"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-nominalizers",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Note: in "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "el de"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the article comes before "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "de"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", so nothing contracts ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*elde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " does not exist). But whenever "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "de"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is followed by "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — including a nominalizer "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — the contraction "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "del"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is required: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vengo del mercado"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi opinión y la del que habló ayer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (my opinion and that of the one who spoke yesterday), not "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*la de el que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "del contracts before nominalizer el"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-pluperfect",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "With time markers."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Words and phrases such as "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ya"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (already), "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "todavía no"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (not yet), "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "cuando"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (when), and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nunca antes"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (never before) frequently signal that the pluperfect is needed. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Antes de que"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is not one of them: it always takes the subjunctive ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "antes de que llegara"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "antes de que / después de que not pluperfect triggers"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-present-subjunctive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/3",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Stem-changing verbs"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " keep their stem changes from the present indicative. For "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-er"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " verbs with "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "e→ie"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "o→ue"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the change occurs in all forms except "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nosotros"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vosotros"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " stem-changers also change in "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nosotros"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vosotros"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "e→ie"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "e→i"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " verbs have "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "i"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " there ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sintamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "pidamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), and "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "o→ue"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " verbs have "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "u"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "duerma"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "durmamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "-ir stem changers"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "head": [
+      "",
+      "pensar (e→ie)",
+      "volver (o→ue)",
+      "pedir (e→i)",
+      "dormir (o→ue/u)"
+     ],
+     "kind": "conjugation-table",
+     "rows": [
+      [
+       "yo",
+       "piense",
+       "vuelva",
+       "pida",
+       "duerma"
+      ],
+      [
+       "tú",
+       "pienses",
+       "vuelvas",
+       "pidas",
+       "duermas"
+      ],
+      [
+       "él/ella/usted",
+       "piense",
+       "vuelva",
+       "pida",
+       "duerma"
+      ],
+      [
+       "nosotros/as",
+       "pensemos",
+       "volvamos",
+       "pidamos",
+       "durmamos"
+      ],
+      [
+       "vosotros/as",
+       "penséis",
+       "volváis",
+       "pidáis",
+       "durmáis"
+      ],
+      [
+       "ellos/ellas/ustedes",
+       "piensen",
+       "vuelvan",
+       "pidan",
+       "duerman"
+      ]
+     ]
+    },
+    "finding": "-ir stem changers"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-reported-speech",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/3/children/0/text",
+    "value": "que + subjunctive",
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "replace",
+    "find": ", regardless of whether the reporting verb is in the present or the past.",
+    "replace": ": present subjunctive after a present reporting verb, imperfect subjunctive after a past one.",
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Reported commands."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When the original utterance was an order or instruction, the reported clause uses "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "que + subjunctive"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not an infinitive and not the indicative: present subjunctive after a present reporting verb, imperfect subjunctive after a past one. «¡Siéntate!» → "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Dice que te sientes. / Dijo que te sentaras."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2",
+    "value": [
+     "imperative / command (present reporting verb)",
+     "que + present subjunctive",
+     "«¡Ven!» → dice que vengas"
+    ],
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/1/rows/3",
+    "value": [
+     "imperative / command (past reporting verb)",
+     "que + imperfect subjunctive",
+     "«¡Ven!» → dijo que vinieras"
+    ],
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/text/3/children/0/text",
+    "value": "reporting verb + que + subject (if expressed) + subjunctive (present after a present reporting verb, imperfect after a past one)",
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using an infinitive to report a command."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " English allows «he says to do the homework», but Spanish does not transfer this pattern. «"
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*Dice hacer los deberes"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "» is not standard. The correct form is «"
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dice que hagamos los deberes"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "» — "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "que + subjunctive"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (after a past verb: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dijo que hiciéramos los deberes"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "past reporting verb → imperfect subjunctive"
+   },
+   {
+    "op": "replace",
+    "find": "Even with a present-tense reporting verb, a relayed command requires the present subjunctive",
+    "replace": "With a present-tense reporting verb, a relayed command takes the present subjunctive",
+    "finding": "past reporting verb → imperfect subjunctive"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-ser-estar-uses",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " for time of day and atmospheric conditions (",
+    "replace": " for time of day and day/night (",
+    "finding": "no 'atmospheric conditions' with ser"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Impersonal ser — time of day and day/night."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Use the third-person singular of "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ser"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " to state what time it is, whether it is early or late, or what part of the day it is. The subject is always impersonal — there is no «it» in Spanish, but the verb is always singular: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "es tarde, es pronto, es de noche, es de día, es mediodía"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Weather is not part of this pattern: it takes "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hacer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "estar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hace frío, está nublado"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "no 'atmospheric conditions' with ser"
+   }
+  ]
+ }
+]

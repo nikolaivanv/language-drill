@@ -1,0 +1,341 @@
+[
+ {
+  "key": "de-a2-adjective-declension-indefinite",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/2",
+    "value": {
+     "kind": "strong",
+     "children": [
+      {
+       "kind": "text",
+       "text": "normally"
+      }
+     ]
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " takes an ending. Only predicate adjectives (e.g. «Der Tisch ist neu.») appear without one.",
+    "replace": " takes an ending — the invariable colour words rosa and lila (see below) are the exception. Predicate adjectives (e.g. «Der Tisch ist neu.») also appear without one.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-adjective-declension-zero",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/1",
+    "value": {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "A quick self-check: if there is no article before the noun, ask yourself which definite-article form would appear in that slot ("
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "der, die, das, dem, den, des"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " …) and take its ending: "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "der → -er, die → -e, das → -es, dem → -em, den → -en"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ". That is the strong ending — except for masculine/neuter genitive, where "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "des"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " becomes "
+        },
+        {
+         "kind": "strong",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-en"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " on the adjective."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-akkusativ-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " the accusative is always correct, regardless of movement or location.",
+    "replace": " the accusative is always correct, regardless of movement or location (except when bis is followed by a second preposition, which then sets the case: bis zum Bahnhof).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-comparison",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". These umlauts are not optional — omitting them produces a non-word.",
+    "replace": ". These umlauts are not optional — without them the form is wrong (alter is a real word, but it is not the comparative of alt).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-dativ-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "den + noun -(e)n",
+    "replace": "den + noun -n",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-indefinite-pronouns-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "*Du darfst hier nicht rauchen",
+    "replace": "Du darfst hier nicht rauchen",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " when the intended meaning is general (applying to everyone, not a specific person). Use ",
+    "replace": ". That is grammatical, and casual speech does use du for people in general, but it can sound as if you are talking to one specific person. For a rule that applies to everyone, ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " for impersonal, general rules.",
+    "replace": " is the neutral, impersonal choice.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-konjunktiv-ii-polite",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " are all irregular and must be learned as fixed forms. They take the same personal endings as the simple past.",
+    "replace": " are best learned as fixed forms: hätte, könnte and würde are the simple-past forms hatte, konnte and wurde with an umlaut added, while sollte has no umlaut and looks exactly like the simple past. All four take the same personal endings as their simple past.",
+    "finding": "R2 #4"
+   },
+   {
+    "op": "replace",
+    "find": " The umlaut (ö, not o) and the different endings mark the Konjunktiv II.",
+    "replace": " The umlaut (ö, not o) is what marks the Konjunktiv II — the endings are the same.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " Do not say «*Würdest du mir helfen können?» for a simple polite request. Use the Konjunktiv II of the modal directly: «",
+    "replace": " «Würdest du mir helfen können?» is grammatical but wordy. For a simple polite request, use the Konjunktiv II of the modal directly: «",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " du mir helfen?» «würde» is used with regular verbs, not stacked on top of another modal.",
+    "replace": " du mir helfen?» With modals (and with haben and sein), the one-word Konjunktiv II form is preferred; würde + infinitive is the usual choice for most other verbs.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-lassen",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". The infinitive always goes to the end of the clause.",
+    "replace": ". In a simple main clause, the infinitive goes to the end of the clause. (With a modal, or in a subordinate clause, lassen joins it at the end: Ich will mein Fahrrad reparieren lassen; …, weil ich mein Fahrrad reparieren lasse.)",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-past-participle-formation",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "weak verbs follow a regular pattern, strong verbs change their stem vowel,",
+    "replace": "weak verbs follow a regular pattern, strong verbs end in -en and often change their stem vowel,",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/1",
+    "value": "ge- + stem (vowel often changed) + -en",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/1",
+    "value": "ge- + stem (vowel often changed) + -en",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "prefix + ge- + changed stem + -en",
+    "replace": "prefix + ge- + stem (vowel often changed) + -en",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ", the stem vowel change (ablaut) must be memorised individually — there is no rule that predicts it. Common pairs to learn: ",
+    "replace": ", whether the stem vowel changes (ablaut) — and to what — must be memorised individually; there is no rule that predicts it. Common pairs to learn: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text/10",
+    "value": {
+     "kind": "text",
+     "text": " (these last two keep their vowel)."
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " Strong verbs take the -en ending and change their stem vowel. ",
+    "replace": " Strong verbs take the -en ending, and many also change their stem vowel. ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-perfekt-with-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " Any verb that can take a direct accusative object uses ",
+    "replace": " A verb used with a direct accusative object uses ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " Intransitive verbs that do not express motion or a change of state also take ",
+    "replace": " Most intransitive verbs that do not express motion or a change of state also take ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": ": schlafen, arbeiten, warten, etc.",
+    "replace": ": schlafen, arbeiten, warten, etc. (sein and bleiben are exceptions: they take sein.)",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "The structure is always: ",
+    "replace": "The basic structure is: ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": ". The past participle goes to the very end of the clause.",
+    "replace": ". In a main clause the past participle goes to the very end (in a subordinate clause, haben follows it: …, weil ich gearbeitet habe).",
+    "finding": "R2 #4"
+   },
+   {
+    "op": "replace",
+    "find": " always occupies the second position in a main clause. The Partizip II is always last.",
+    "replace": " occupies the second position in a statement (first position in a yes/no question). In a main clause the Partizip II is always last.",
+    "finding": "R2 #3/#4"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-perfekt-with-sein",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "At A2, focus on the intransitive (no direct object) uses, which always take ",
+    "replace": "At A2, focus on the intransitive (no direct object) uses for going somewhere, which take ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-praeteritum-modals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (internal compulsion) or ",
+    "replace": " (necessity — something had to happen) or ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (external instruction): «Wir mussten lange warten.»",
+    "replace": " (an instruction or expectation from someone else): «Wir mussten lange warten.»",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-reflexive-verbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "In a question or after an adverb at position 1, the verb still comes second.",
+    "replace": "After an adverb at position 1 (or a question word), the verb still comes second; in a yes/no question it comes first.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-verb-preposition-complements",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "(wen, wem, wer)",
+    "replace": "(wen, wem)",
+    "finding": "R2 #1"
+   }
+  ]
+ }
+]

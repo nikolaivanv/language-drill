@@ -1,0 +1,988 @@
+[
+ {
+  "key": "de-a2-adjective-declension-indefinite",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". In all other slots, where the ein-word already shows a clear ending, the adjective simply takes ",
+    "replace": ". In all other slots the ein-word has an ending of its own, so the adjective takes a weak ending: -e after eine (feminine nominative/accusative), and otherwise ",
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "replace",
+    "find": " Ask whether the ein-word itself already shows a gender ending. If yes → adjective takes ",
+    "replace": " Ask whether the ein-word itself has an ending (eine, einen, einem, einer, eines). If yes → adjective takes ",
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "replace",
+    "find": ". If no (the three bold slots above) → adjective takes the strong ending: ",
+    "replace": " (but -e after eine in the feminine nominative/accusative). If the ein-word is bare — ein, kein, mein, unser (the three bold slots above) → adjective takes the strong ending: ",
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text/4",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "-er / -es"
+      }
+     ]
+    },
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "replace",
+    "find": " endings are the three slots where the adjective carries the gender signal; all others are -en.",
+    "replace": " endings are the three slots where the adjective carries the gender signal; feminine nominative/accusative takes -e after eine, and all others are -en.",
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "A quick self-check: look at the ein-word. Has an ending been added to it ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "eine, einen, einem, einer, eines"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")? If yes, the adjective takes "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-en"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — except after "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "eine"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (feminine nominative/accusative), where it takes -e. If the ein-word is bare (ein, kein, mein, unser), the adjective must supply the gender signal (-er / -es). Careful: the -er of unser and euer is part of the word, not an ending — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "unser alter Tisch"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "unser kleines Kind"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "ein-word ending self-check"
+   },
+   {
+    "op": "replace",
+    "find": " Adjectives ending in -el or -er drop the stem -e- when inflected. Write ",
+    "replace": " Adjectives ending in -el drop the stem -e- when inflected, and so do -er adjectives after au/eu (teuer, sauer). Write ",
+    "finding": "-el/-er stem e"
+   },
+   {
+    "op": "replace",
+    "find": " (not «*ein teueres Auto»).",
+    "replace": " (not «*ein teueres Auto»). Other -er adjectives usually keep it in writing: ein sauberes Zimmer.",
+    "finding": "-el/-er stem e"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-akkusativ-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is often used without an article, especially with place names and bare time expressions.",
+    "replace": " is never followed by an article. It stands alone only before names and time phrases (bis Frankfurt, bis Montag); before an article it needs a second preposition, which then sets the case: bis zum Bahnhof (not «*bis den Bahnhof»).",
+    "finding": "bis + article"
+   },
+   {
+    "op": "replace",
+    "find": " after these prepositions.",
+    "replace": " after these prepositions (bis is the exception: it never takes an article).",
+    "finding": "bis + article"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-comparison",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " insert an extra ",
+    "replace": " usually insert an extra ",
+    "finding": "groß/-d/-t -est"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/12",
+    "value": {
+     "kind": "text",
+     "text": " — but groß is irregular: am größten; longer words with an unstressed last syllable take plain -sten: am spannendsten)."
+    },
+    "finding": "groß/-d/-t -est"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-dass-clauses",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "A quick test: if you can replace the word with «welches», it is the article/pronoun; if not, it is the conjunction and needs double-s.",
+    "replace": "A quick test: if you can replace the word with «dieses» (article or demonstrative) or «welches» (relative pronoun), it is das; if neither fits, it is the conjunction and needs double-s.",
+    "finding": "welches test"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-dativ-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "(accusative plural form used wrongly for a singular masculine noun)",
+    "replace": "(den is the masculine accusative form, wrong after mit)",
+    "finding": "den not acc. plural"
+   },
+   {
+    "op": "replace",
+    "find": "«Er arbeitet bei dem Bäcker.» (He works at the bakery.)",
+    "replace": "«Er arbeitet beim Bäcker.» (He works at the baker's.)",
+    "finding": "contracted forms"
+   },
+   {
+    "op": "replace",
+    "find": "«Ich gehe zu dem Arzt.»",
+    "replace": "«Ich gehe zum Arzt.»",
+    "finding": "contracted forms"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-demonstratives-welch",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (the same mistake). In informal speech, ",
+    "replace": " (the same mistake). After a preposition the contracted form is normal: ",
+    "finding": "im selben is standard"
+   },
+   {
+    "op": "replace",
+    "find": " (in the same house) is also accepted.",
+    "replace": " (in the same house), am selben Tag.",
+    "finding": "im selben is standard"
+   },
+   {
+    "op": "replace",
+    "find": " (contracted, informal).",
+    "replace": " (contracted, fully standard).",
+    "finding": "im selben is standard"
+   },
+   {
+    "op": "replace",
+    "find": ") is acceptable in informal use.",
+    "replace": ") is fully standard, in writing too.",
+    "finding": "im selben is standard"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-destination-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Each triggers a specific set of nouns and, where an article is present, requires the accusative case.",
+    "replace": ". Each goes with a specific set of nouns. Where an article is present, zu takes the dative (zum, zur), while in, an and auf take the accusative because they express direction.",
+    "finding": "zu is dative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "When a definite article follows, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "in"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "an"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "accusative"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (direction), but "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "zu"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " always takes the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dative"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": zum = zu + dem, zur = zu + der. The contractions below are the normal forms in standard German."
+      }
+     ]
+    },
+    "finding": "zu is dative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "nach does "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "not"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " contract with articles, and it is almost always used without any article at all. auf contracts only with das: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aufs Land"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "aufs"
+   },
+   {
+    "op": "replace",
+    "find": "Some countries — die Schweiz, die Türkei, der Iran — always use an article.",
+    "replace": "Some countries — die Schweiz, die Türkei — always use an article.",
+    "finding": "consistency: (der) Iran optional"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-indefinite-pronouns-basic",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "etwas"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nichts"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " never change their form. "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "alles"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "alle"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " do decline; the form you will meet most is the dative: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mit allem"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (with everything), "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mit allen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (with everyone)."
+      }
+     ]
+    },
+    "finding": "alle/alles decline"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-nicht-sondern",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Quick test: does the second part replace the negated element — «not X, but Y instead»? If yes, use "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sondern"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". If it adds a contrast to the whole first clause (with or without a negation), use "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aber"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "quick test"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-past-participle-formation",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "weak, stem ends in -t/-d or consonant cluster",
+    "replace": "weak, stem ends in -t/-d, or in -m/-n after a consonant other than l/r (öffnen → geöffnet)",
+    "finding": "linking -e-"
+   },
+   {
+    "op": "replace",
+    "find": " Inseparable prefixes (be-, er-, ver-, zer-, ent-, emp-, ge-…) already carry the stress; ge- is not added. Say ",
+    "replace": " Inseparable prefixes (be-, er-, ver-, zer-, ent-, emp-, ge-…) are unstressed — the stress falls on the stem (be-SU-chen). Like -ieren verbs, these verbs are not stressed on the first syllable, so ge- is not added. Say ",
+    "finding": "stress"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-perfekt-with-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Habt ihr das Film ",
+    "replace": "Habt ihr den Film ",
+    "finding": "den Film"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-perfekt-with-sein",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "A quick test: if you can ask «Wohin?» (where to?) or «Woher?» (where from?) about the action, the verb almost certainly takes ",
+    "replace": "A quick test: if the subject itself moves and you can ask «Wohin?» (where to?) or «Woher?» (where from?), the verb almost certainly takes ",
+    "finding": "Wohin test"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/2/children/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": " Verbs that move an object take haben, even though they answer «Wohin?»: «Wohin hast du das Buch gelegt?»"
+    },
+    "finding": "Wohin test"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-praeteritum-modals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " stem before the personal endings. The dependent",
+    "replace": " stem before the personal endings (mögen also changes g to ch: mochte). The dependent",
+    "finding": "mögen exception"
+   },
+   {
+    "op": "replace",
+    "find": ". The 1st and 3rd person singular share the same form — no extra ending.",
+    "replace": ". The 1st and 3rd person singular share the same form — no extra ending. One exception: mögen also changes g to ch (mochte, not «*mogte»).",
+    "finding": "mögen exception"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Describing past wishes or intentions"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — use "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wollte"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (it is also the past of möchte): «Er wollte nach Hause gehen.» "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mochte"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " means «liked» (Ich mochte den Film), not «wanted to»."
+      }
+     ]
+    },
+    "finding": "mochte ≠ wollte"
+   },
+   {
+    "op": "replace",
+    "find": " — «*Ich habe nicht kommen können» is grammatically possible but unnatural in everyday speech. German speakers use the Präteritum for modals: ",
+    "replace": " — «Ich habe nicht kommen können» is correct, but in everyday speech most speakers prefer the shorter Präteritum for modals: ",
+    "finding": "leftover: correct sentence starred"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-quantifiers-other",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", it is written with a capital letter and takes the neuter ending: ",
+    "replace": ", it stays lowercase and takes the neuter ending: ",
+    "finding": "lowercase anderes"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-reflexive-verbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "sich treffen",
+    "replace": "sich erholen",
+    "finding": "treffen not obligatory"
+   },
+   {
+    "op": "replace",
+    "find": " (to meet).",
+    "replace": " (to recover / relax).",
+    "finding": "treffen not obligatory"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/1",
+    "value": {
+     "kind": "strong",
+     "children": [
+      {
+       "kind": "text",
+       "text": "after the finite verb"
+      }
+     ]
+    },
+    "finding": "position"
+   },
+   {
+    "op": "replace",
+    "find": " in a main clause. The pronoun agrees with the subject.",
+    "replace": " in a main clause; if a pronoun subject follows the verb, the reflexive pronoun comes after it. The pronoun agrees with the subject.",
+    "finding": "position"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Only the third person has a special reflexive pronoun: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (for er/sie/es, sie and Sie — not ihn, ihm, ihr or Ihnen). All other persons use the ordinary personal pronouns ("
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mich, dich, uns, euch"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "sich is the only distinct form"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "In a question or after an adverb at position 1, the verb still comes second. The reflexive pronoun follows a pronoun subject, but usually comes before a noun subject: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Heute duscht er sich."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " / "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Duscht er sich jeden Morgen?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " / "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Heute freut sich mein Bruder."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "position"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-relative-clauses-nom-acc",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "are identical to the definite article for most forms. The only difference appears in the masculine accusative, which is ",
+    "replace": "are identical to the definite article in every form. As with the article, the only form that differs between the two cases is the masculine accusative, which is ",
+    "finding": "identical to article"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-seit-present",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Negated or completed events use the Perfekt instead.",
+    "replace": ". For an event that has not happened since a point in time («I haven't seen him for years»), German uses the Perfekt; a negated state that still continues stays in the present.",
+    "finding": "negation ≠ Perfekt"
+   },
+   {
+    "op": "replace",
+    "find": "Negated or completed events",
+    "replace": "Events that have not happened",
+    "finding": "negation ≠ Perfekt"
+   },
+   {
+    "op": "replace",
+    "find": " — when the situation is ",
+    "replace": " — when an event has ",
+    "finding": "negation ≠ Perfekt"
+   },
+   {
+    "op": "replace",
+    "find": " ongoing (e.g. «I haven't seen him for years»), use the ",
+    "replace": " happened since a point in time (e.g. «I haven't seen him for years»), use the ",
+    "finding": "negation ≠ Perfekt"
+   },
+   {
+    "op": "replace",
+    "find": " with seit, not the present tense.",
+    "replace": " with seit: Ich habe ihn seit Jahren nicht gesehen. A negated state that still continues stays in the present: Ich rauche seit zwei Jahren nicht mehr (I haven't smoked for two years).",
+    "finding": "negation ≠ Perfekt"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-weil-deshalb",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — use this when you want to state the result first and then give the reason. ",
+    "replace": " — use this to give the reason in a subordinate clause. The weil-clause usually follows the result, but it can also come first: «Weil ich krank bin, bleibe ich zu Hause.» ",
+    "finding": "weil can come first"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0/2",
+    "value": "after clause 1 (or before it)",
+    "finding": "weil can come first"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Direction matters."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " With "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "denn"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the result always comes first and the reason follows. A "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "weil"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "-clause usually follows too, but it may also come first: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Weil ich krank bin, bleibe ich zu Hause"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (the main clause then starts with its verb). With "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "deshalb"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the reason comes first and the consequence follows."
+      }
+     ]
+    },
+    "finding": "weil can come first"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-wissen-kennen",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "German has three verbs where English uses \"to know",
+    "replace": "German has three verbs where English uses \"to know\": ",
+    "finding": "broken quote"
+   },
+   {
+    "op": "replace",
+    "find": "; it almost always introduces a subordinate clause or an indirect question. ",
+    "replace": "; it usually introduces a subordinate clause or an indirect question, but it can also take a noun that names a piece of information (die Antwort, seine Adresse). ",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": " standing in for a clause. Example trigger: «Ich weiß, wo er wohnt.»",
+    "replace": " standing in for a clause — or a noun naming a piece of information (die Antwort, die Adresse) or etwas / nichts / alles. Example triggers: «Ich weiß, wo er wohnt.» «Ich weiß die Antwort.»",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": " is followed by a subordinate clause (verb moves to the end). ",
+    "replace": " is usually followed by a subordinate clause (verb moves to the end), or by a noun naming a fact (die Antwort). ",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": "wissen with a plain noun phrase",
+    "replace": "wissen for people, places and things",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": " — wissen cannot take a bare noun phrase as its direct object. «",
+    "replace": " — wissen is for facts and information, not for being acquainted with a person, place or thing. «",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": "» The only noun-like objects wissen accepts are pronouns such as es or das that stand in for a whole clause.",
+    "replace": "» Nouns that name a piece of information are fine with wissen: «Ich weiß die Antwort.» «Weißt du seine Adresse?»",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": ". If you follow it with a noun phrase, use ",
+    "replace": ". If you follow it with a person, place or thing you are familiar with, use ",
+    "finding": "wissen + NP"
+   },
+   {
+    "op": "replace",
+    "find": ". If you follow it with an infinitive expressing ability, use ",
+    "replace": " (a noun naming a fact, like die Antwort, still takes wissen). If you follow it with an infinitive expressing ability, use ",
+    "finding": "wissen + NP"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-wenn-als",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". If you can only say \"at the time when (once)",
+    "replace": ". If you can only say \"at the time when\" (one single occasion in the past), use ",
+    "finding": "broken callout"
+   }
+  ]
+ }
+]

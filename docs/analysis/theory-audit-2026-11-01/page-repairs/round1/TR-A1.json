@@ -1,0 +1,848 @@
+[
+ {
+  "key": "tr-a1-beri-dir",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Mixing up -DEn beri and -DIr for spans"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — both can express \"for\" a duration, but they are built differently. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Sabahtan beri"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " uses the ablative + postposition on a time word; "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "iki saattir"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " fuses the suffix directly onto the period phrase. Do not write "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*iki saattan beri"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "saat"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is a loanword that takes front-vowel suffixes despite its a (compare "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "saattir"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), so the ablative is "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "saatten"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", giving "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "iki saatten beri"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — which is valid but less common than "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "iki saattir"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "saattan->saatten"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/8",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "iki saatten beri bekliyorum"
+      }
+     ]
+    },
+    "finding": "saattan->saatten"
+   },
+   {
+    "op": "replace",
+    "find": "The predicate is always ongoing",
+    "replace": "The predicate is normally ongoing",
+    "finding": "predicate always ongoing"
+   },
+   {
+    "op": "replace",
+    "find": ") for actions, or a copula/adjective for states.",
+    "replace": ") for actions, or a copula/adjective for states. A negative predicate, though, often takes the -DI past: İki yıldır onu görmedim (I haven't seen him for two years).",
+    "finding": "predicate always ongoing"
+   },
+   {
+    "op": "replace",
+    "find": "Both constructions pair with an ongoing verb in the present continuous (",
+    "replace": "Both constructions normally pair with an ongoing verb in the present continuous (",
+    "finding": "predicate always ongoing"
+   },
+   {
+    "op": "replace",
+    "find": "since / for the morning",
+    "replace": "since (this) morning",
+    "finding": "sabahtan beri gloss"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-accusative-definite-object",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The suffix follows two-way vowel harmony",
+    "replace": "The suffix follows four-way vowel harmony",
+    "finding": "two-way->four-way"
+   },
+   {
+    "op": "replace",
+    "find": " Personal pronouns (and other pronouns) are inherently definite and always take the accusative: ",
+    "replace": " Personal pronouns (and demonstrative pronouns like bu, şu) are inherently definite and always take the accusative: ",
+    "finding": "and other pronouns"
+   },
+   {
+    "op": "replace",
+    "find": " (him/her/it-ACC).",
+    "replace": " (him/her/it-ACC). Indefinite pronouns stay bare: Bir şey aldım (I bought something).",
+    "finding": "and other pronouns"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-ablative-dative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "A quick check: if the last consonant of the stem is voiceless, the ablative starts with ",
+    "replace": "A quick check: if the stem ends in a voiceless consonant, the ablative starts with ",
+    "finding": "last consonant vs final sound"
+   },
+   {
+    "op": "replace",
+    "find": "; otherwise it starts with ",
+    "replace": "; if it ends in a vowel or a voiced consonant (masa → masadan), it starts with ",
+    "finding": "last consonant vs final sound"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-dan-a-kadar",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "). Both halves are required; neither can stand alone.",
+    "replace": "). Neither part is strictly obligatory: -A kadar can stand alone (cumaya kadar, until Friday), and the pair also works without kadar (sabahtan akşama, from morning to evening).",
+    "finding": "both halves required"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Thinking kadar is obligatory."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «sabahtan akşama» without kadar is also correct — the dative alone already gives «to». The postposition "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "kadar"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " adds «as far as / until» and is what you need when there is no starting point: «Cumaya kadar biter» (It will be finished by Friday)."
+     }
+    ],
+    "finding": "both halves required"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/target/0",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Pazartesiden"
+      }
+     ]
+    },
+    "finding": "day-name apostrophe"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/target/2",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "cumaya kadar"
+      }
+     ]
+    },
+    "finding": "day-name apostrophe"
+   },
+   {
+    "op": "replace",
+    "find": "Day names use an apostrophe before the suffix when written with a capital letter.",
+    "replace": "Day names are ordinary nouns: no apostrophe before the suffix (pazartesiden, cumaya).",
+    "finding": "day-name apostrophe"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-clock-time-dates",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Days of the week take no case suffix at all. The word ",
+    "replace": ". Used to mean «on <day>», a day of the week takes no case suffix. The word ",
+    "finding": "days never take case"
+   },
+   {
+    "op": "replace",
+    "find": " — no case suffix. The day name stands alone or is followed by ",
+    "replace": " — no case suffix for «on <day>». The day name stands alone or is followed by ",
+    "finding": "days never take case"
+   },
+   {
+    "op": "replace",
+    "find": " Days of the week never take a case suffix. ",
+    "replace": " To say «on <day>», a day of the week takes no case suffix (other uses are fine: pazartesiden beri, cumaya kadar). ",
+    "finding": "days never take case"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-genitive-possessive",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " means «the teacher's book». Neither suffix can be dropped without producing ungrammatical Turkish.",
+    "replace": " means «the teacher's book». The possessive suffix on the possessed cannot be dropped. Dropping the genitive changes the meaning (öğretmen kitabı is a «teacher's book» as a type), and a pronoun possessor is often left out: kitabı (his/her book).",
+    "finding": "neither suffix droppable"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Omitting the genitive when you mean a specific possessor."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Writing "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "öğretmen kitabı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " instead of "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "öğretmenin kitabı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " for «the teacher's book» gives an indefinite compound (a «teacher's book» as a type) rather than a specific possessive. It is valid Turkish, but it means something else: both suffixes are needed when a specific possessor is meant."
+     }
+    ],
+    "finding": "neither suffix droppable"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-locative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "ev (home) ends in the voiced consonant v → -de; back vowel → -de.",
+    "replace": "ev (home) ends in the voiced consonant v → -de; front vowel → -de.",
+    "finding": "back vowel -> front"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-var-yok",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " ends in a vowel, the suffix is ",
+    "replace": " ends in the voiced consonant r, the suffix is ",
+    "finding": "var ends in vowel"
+   },
+   {
+    "op": "replace",
+    "find": ". «Vakit» (time) takes the 1st-person suffix «-im» (vowel harmony: back rounded → «-im» after front unrounded vowel).",
+    "replace": ". «Vakit» (time) drops its second vowel before a vowel-initial suffix (vakit → vakt-), but the 1st-person suffix still harmonises with that i, giving «-im»: vaktim.",
+    "finding": "vakit note"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-postpositions-once-sonra",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "; the stem vowel changes (ben → benden, not *benden).",
+    "replace": "; the stem does not change (ben + -den → benden), unlike the dative bana.",
+    "finding": "benden note"
+   },
+   {
+    "op": "replace",
+    "find": " ends in a consonant cluster; the ablative is -ten, giving ",
+    "replace": " ends in the voiceless consonant s, so the ablative is -ten, giving ",
+    "finding": "ders cluster"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-vowel-harmony",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Treating every loanword as following the rule."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Some borrowed words have a back vowel in the last syllable but take front-vowel suffixes. For example, "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "saatler"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (hours, clocks), not *saatlar, and "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "halim"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (my condition), not *halım. Words ending in a soft l behave the same way: "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "golü"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (his/her goal). Dictionaries mark these words, e.g. saat (-ti). Learn them as you encounter them."
+     }
+    ],
+    "finding": "loanword pitfall reversed"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-instrumental-ile",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Personal pronouns do not take ",
+    "replace": "In standard Turkish, personal pronouns do not take ",
+    "finding": "onlarla + colloquial"
+   },
+   {
+    "op": "replace",
+    "find": " is then attached to that genitive form.",
+    "replace": " is then attached to that genitive form. Plural onlar is the exception: it takes the suffix directly (onlarla). In casual speech you will also hear benle, senle, onla.",
+    "finding": "onlarla + colloquial"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/3/rows/5",
+    "value": [
+     "onlar",
+     "— (no genitive)",
+     "onlarla",
+     "with them"
+    ],
+    "finding": "onlarla + colloquial"
+   },
+   {
+    "op": "replace",
+    "find": ", not *onla.",
+    "replace": "; casual speech also has onla.",
+    "finding": "onlarla + colloquial"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Mis-forming pronoun + -(y)lA."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " In standard Turkish ben, sen, o, biz and siz take the genitive form first: "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "benimle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "seninle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onunla"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". The plural "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onlar"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " does not: write "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onlarla"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", not "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*onlarınla"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". Bare "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "benle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "senle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onla"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " are colloquial — fine in speech, but avoid them in writing. The question word "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "kim"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " follows the same pattern: "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "kiminle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (with whom)."
+     }
+    ],
+    "finding": "onlarla + colloquial"
+   },
+   {
+    "op": "replace",
+    "find": " can always replace the suffix: ",
+    "replace": " can replace the suffix on nouns: ",
+    "finding": "leftover: ile 'always'"
+   },
+   {
+    "op": "replace",
+    "find": " is more common in writing or when emphasis is needed.",
+    "replace": " is more common in writing or when emphasis is needed. Pronouns that take the genitive keep it before ile too: benim ile, onun ile (not *ben ile).",
+    "finding": "leftover: ile with genitive pronouns"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-gore-bence",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — they do not take any further endings. Note that a -CE form exists only for 1st and 2nd person; for 3rd person, use ",
+    "replace": " — they do not take any further endings. Note that the everyday -CE forms are 1st and 2nd person only (onca «according to him/her» exists but is rare and formal); for 3rd person, use ",
+    "finding": "onca exists"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Looking for a 3rd-person -CE form."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " The 3rd-person form "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onca"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " («according to him/her») exists but is rare and formal, and "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onlarca"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " means «dozens», not «in their opinion». Use "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "ona göre"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "onlara göre"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " instead."
+     }
+    ],
+    "finding": "onca exists"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-future",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", I am coming tomorrow). For predictions and decisions, -(y)AcAk is the only choice.",
+    "replace": ", I am coming tomorrow). For predictions and firm decisions, -(y)AcAk is the natural choice; an offer made on the spot often uses the aorist instead (Kapıyı ben açarım, I'll get the door).",
+    "finding": "only choice"
+   },
+   {
+    "op": "replace",
+    "find": " is fine for a fixed arrangement, like English \"I am coming tomorrow\". But a prediction or a decision made now needs -(y)AcAk: ",
+    "replace": " is fine for a fixed arrangement, like English \"I am coming tomorrow\". But a prediction or a firm decision needs -(y)AcAk, not -(I)yor: ",
+    "finding": "only choice"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-questions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "and carries the person ending in nominal and present-tense predicates.",
+    "replace": "and carries the person ending in nominal and present-tense predicates (except 3rd-person plural -lAr, which stays before mI: geliyorlar mı?).",
+    "finding": "3pl exception"
+   },
+   {
+    "op": "replace",
+    "find": " The person ending moves from the predicate onto mI.",
+    "replace": " The person ending moves from the predicate onto mI (3rd-person plural -lAr stays: öğrenciler mi?).",
+    "finding": "3pl exception"
+   },
+   {
+    "op": "replace",
+    "find": " The person ending attaches to mI, not to the verb.",
+    "replace": " The person ending attaches to mI, not to the verb — except 3rd-person plural -lAr, which stays on the verb (geliyorlar mı?).",
+    "finding": "3pl exception"
+   },
+   {
+    "op": "replace",
+    "find": "the person endings that normally attach to the predicate are instead attached to mI.",
+    "replace": "the person endings that normally attach to the predicate are instead attached to mI; only 3rd-person plural -lAr stays on the predicate.",
+    "finding": "3pl exception"
+   },
+   {
+    "op": "replace",
+    "find": "In all other tenses and in nominal predicates, mI takes the person ending.",
+    "replace": "In all other tenses and in nominal predicates, mI takes the person ending — except 3rd-person plural -lAr, which always comes before mI (geliyorlar mı?).",
+    "finding": "3pl exception"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-personal-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — use the locative form to indicate that something is at or on the pronoun's referent (rare with personal pronouns, but grammatically possible).",
+    "replace": " — use the locative form to say that something is with or on someone, i.e. that they have it on them: Kitap bende (I have the book), Anahtar sende mi? (Do you have the key?). This is a very common use.",
+    "finding": "locative rare"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-stem-changes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "his/her mind (acc.)",
+    "replace": "the mind (acc.)",
+    "finding": "akıl/burun glosses"
+   },
+   {
+    "op": "replace",
+    "find": "its nose (acc.)",
+    "replace": "the nose (acc.)",
+    "finding": "akıl/burun glosses"
+   }
+  ]
+ }
+]

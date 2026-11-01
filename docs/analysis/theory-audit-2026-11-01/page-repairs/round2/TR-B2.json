@@ -1,0 +1,250 @@
+[
+ {
+  "key": "tr-b2-converb-until",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "uyuyunca-ya",
+    "replace": "uyuyuncaya",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/target",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Ölene kadar"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " burada kalmak istiyordu."
+     }
+    ]
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/text/2",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "-mAk-"
+      }
+     ]
+    }
+   },
+   {
+    "op": "replace",
+    "find": " comes from the infinitive -mAk, not from the negative suffix",
+    "replace": " is the infinitive suffix, not the negative suffix",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "-mAksIzIn is a single, indivisible suffix. Do not attempt",
+    "replace": "-mAksIzIn is best learned as a single fixed suffix (historically -mAk + -sIz + -In). Do not attempt",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "The suffix is a fixed, unanalysable unit: the only correct form is",
+    "replace": "Learn the suffix as a fixed unit: the only correct form is",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-reported-questions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Wh-question with present reference. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "ol-duğ-un-u"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " = stem "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "ol-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " + "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-DIK"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " + 3sg possessive "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-un"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (the 3sg possessive -(s)I takes an -n before a case suffix) + accusative "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-u"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   },
+   {
+    "op": "replace",
+    "find": " The same rule applies to the affirmative stem in the -Ip frame.",
+    "replace": " The same choice applies to the negative branch of the -Ip frame (gelip gelmediğini vs. gelip gelmeyeceğini); the -Ip branch itself carries no tense.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text",
+    "finding": "R2 #4",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Accusative marking."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " When the nominalised clause functions as the direct object of the matrix verb (e.g. after "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "sormak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bilmek"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), it takes the accusative suffix "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-I"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " after the possessive; after the 3rd-person possessive, an "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-n-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " comes in between: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gel-diğ-im-i"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", but "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gel-diğ-in-i"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   }
+  ]
+ }
+]

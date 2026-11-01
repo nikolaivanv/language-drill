@@ -1,0 +1,1252 @@
+[
+ {
+  "key": "tr-b1-causative-voice",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/2/text/3/children/0/text",
+    "value": "accusative case (-(y)I)",
+    "finding": "causee case reversed"
+   },
+   {
+    "op": "replace",
+    "find": "takes the accusative here because it is the direct object of the caused event.",
+    "replace": "takes the accusative because the base verb uyu- is intransitive (the child is the one who sleeps).",
+    "finding": "causee case reversed"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Mis-casing the causee."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " The causee (the person made to act) takes the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "accusative"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " when the base verb is intransitive, and the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dative"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " when it is transitive (the original object keeps its accusative). «I made Ali run» is "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ali'yi koşturdum"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", but «I had Ali open the door» is "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ali'ye kapıyı açtırdım"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*Ali'yi kapıyı açtırdım"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Mis-casing the causee produces an ungrammatical or misleading sentence."
+      }
+     ]
+    },
+    "finding": "causee case reversed"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-t"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — used after "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "polysyllabic stems ending in a vowel, -l, or -r"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Examples: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "uyu → uyut-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kayna → kaynat-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "otur → oturt-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "-t vs -DIr distribution"
+   },
+   {
+    "op": "replace",
+    "find": " not listed in the irregular group. The vowel harmonises: ",
+    "replace": " not listed in the irregular group (including those ending in -l or -r), and for polysyllabic stems ending in any other consonant (konuş → konuştur-). The vowel harmonises: ",
+    "finding": "-t vs -DIr distribution"
+   },
+   {
+    "op": "replace",
+    "find": " Stems ending in a vowel, -l, or -r, and all polysyllabic stems, take ",
+    "replace": " Polysyllabic stems ending in a vowel, -l, or -r take ",
+    "finding": "-t vs -DIr distribution"
+   },
+   {
+    "op": "replace",
+    "find": " is a common error. When in doubt, check whether the stem ends in a vowel or a sonorant (-l, -r) — if so, reach for -t.",
+    "replace": " is a common error. When in doubt, check two things: does the stem have more than one syllable, and does it end in a vowel, -l, or -r? Only when both hold, reach for -t (monosyllabic öl- still gives öldür-).",
+    "finding": "-t vs -DIr distribution"
+   },
+   {
+    "op": "replace",
+    "find": " (to make drink), which is regular, but other pairs are suppletive and must be learnt as vocabulary items.",
+    "replace": " (to make drink), a member of the irregular -Ir set rather than the regular -DIr form; such pairs, like the suppletive ones, must be learnt as vocabulary items.",
+    "finding": "içir- not regular"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-abstract-postpositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Unlike Group-1 postpositions (e.g. ",
+    "replace": "Unlike simple postpositions (e.g. ",
+    "finding": "Group-1 terminology + case description"
+   },
+   {
+    "op": "replace",
+    "find": "these forms are historically frozen noun + locative/ablative constructions that carry a built-in possessive suffix",
+    "replace": "these forms are built from a noun + a built-in possessive suffix + a fixed case ending (locative hakkında, ablative yüzünden, dative yerine; boyunca ends in -CA)",
+    "finding": "Group-1 terminology + case description"
+   },
+   {
+    "op": "replace",
+    "find": ", but personal pronouns must take the ",
+    "replace": ", but the pronouns ben, sen, o, biz, siz take the ",
+    "finding": "onlar row / hakklarında"
+   },
+   {
+    "op": "replace",
+    "find": "pronoun's person.",
+    "replace": "pronoun's person (plural onlar stays bare: onlar hakkında).",
+    "finding": "onlar row / hakklarında"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/text/8/text",
+    "value": "). Plural onlar is the exception: it stays bare, and the postposition keeps its 3rd-singular form.",
+    "finding": "onlar row / hakklarında"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/head/0",
+    "value": "pronoun",
+    "finding": "onlar row / hakklarında"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/5",
+    "value": [
+     "onlar",
+     "hakkında",
+     "about them"
+    ],
+    "finding": "onlar row / hakklarında"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-converb-while-yken",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/0/children/0/text",
+    "value": "Aorist by default, never -DI",
+    "finding": "imperfective-only claim"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/1/text",
+    "value": " — -ken most often attaches to the aorist (",
+    "finding": "imperfective-only claim"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/2/children/0/text",
+    "value": "-r/-Ar/-Ir",
+    "finding": "imperfective-only claim"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/3/text",
+    "value": ") or the present continuous (",
+    "finding": "imperfective-only claim"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/5/text",
+    "value": "). It can also follow -mIş (gelmişken «now that [one] has come») and -(y)AcAk (gelecekken «when [one] was about to come»), but never the completed past -DI.",
+    "finding": "imperfective-only claim"
+   },
+   {
+    "op": "replace",
+    "find": " The -DI suffix marks a completed event, which is incompatible with the simultaneous, ongoing meaning of -ken. ",
+    "replace": " -ken can follow -mIş (gelmişken), but never the -DI past. ",
+    "finding": "imperfective-only claim"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-obligation-periphrases",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "bitmemiz gerekiyor",
+    "replace": "bitirmemiz gerekiyor",
+    "finding": "bitmemiz → bitirmemiz"
+   },
+   {
+    "op": "replace",
+    "find": "Wrong nominalizer: using -mAk with gerek/lazım/şart.",
+    "replace": "Wrong structure for a personal obligation with gerek/lazım/şart.",
+    "finding": "impersonal -mAk lazım"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "To say who must act, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gerek, lazım, şart"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take the "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mA"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " verbal noun with a possessive suffix that matches the subject. The plain "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mAk"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " infinitive goes with them only impersonally («one has to …»): "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Gitmek lazım"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Neither the infinitive nor "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "lazım"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " can carry a person ending."
+      }
+     ]
+    },
+    "finding": "impersonal -mAk lazım"
+   },
+   {
+    "op": "replace",
+    "find": ".  (wrong nominalizer + wrong structure)",
+    "replace": ".  (lazım cannot take a person ending)",
+    "finding": "impersonal -mAk lazım"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Less precise:  Vizeyi "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "almalıyım"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ".  (grammatical, but presents it as your own decision: «I should get the visa»)"
+      }
+     ]
+    },
+    "finding": "almak malıyım ✗"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-olarak",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "avukatı olarak çalışıyor",
+    "replace": "avukata olarak çalışıyor",
+    "finding": "avukatı olarak marked wrong"
+   },
+   {
+    "op": "replace",
+    "find": ". The complement is always bare.",
+    "replace": ". The complement takes no case suffix — though a possessive is fine: şirketin avukatı olarak «as the company's lawyer».",
+    "finding": "avukatı olarak marked wrong"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note",
+    "value": [
+     {
+      "kind": "text",
+      "text": "olarak marks the function assigned to the object. Compare: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "masaya benziyor"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «it looks like a table» (benze- + dative), which describes resemblance, not a function the object fills."
+     }
+    ],
+    "finding": "masaya benziyor needs gibi"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-participles-dik-acak",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Both suffixes follow standard 4-way vowel harmony. ",
+    "replace": ". -DIK follows 4-way vowel harmony; -(y)AcAK follows 2-way harmony. ",
+    "finding": "4-way harmony for -(y)AcAK"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-passive-voice",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Burada sigara içilmez",
+    "replace": "Çimlere basılmaz",
+    "finding": "sigara içilmez not impersonal"
+   },
+   {
+    "op": "replace",
+    "find": " («Smoking is not done here»).",
+    "replace": " («Keep off the grass», literally «one does not step on the grass»).",
+    "finding": "sigara içilmez not impersonal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3",
+    "value": {
+     "en": "Keep off the grass.",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Impersonal passive on the intransitive verb "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bas-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («to step on», which takes the dative "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "çimlere"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not a direct object). No subject exists in the sentence. The negative aorist -maz makes this a general prohibition."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Çimlere "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "basılmaz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "sigara içilmez not impersonal"
+   },
+   {
+    "op": "replace",
+    "find": " When the agent is named, attach ",
+    "replace": " When a human agent is named, put ",
+    "finding": "always tarafından"
+   },
+   {
+    "op": "replace",
+    "find": " to the agent noun: ",
+    "replace": " after the agent noun: ",
+    "finding": "always tarafından"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using -DAn for a human agent instead of tarafından."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " A person or group of people acting as agent is introduced with "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tarafından"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Saying "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*polisten yakalandı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is wrong for «caught by the police»; say "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "polis tarafından yakalandı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The ablative or locative is used for an inanimate cause, where tarafından would sound wrong: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Fırtınada bütün evler yıkıldı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " «All the houses were destroyed in the storm»."
+      }
+     ]
+    },
+    "finding": "always tarafından"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-real-conditional",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The suffix is added to the aorist stem of the verb. The positive aorist is "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(A/I)r"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": monosyllabic stems take "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-Ar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (yap-ar, iç-er, git → gid-er), except 13 common verbs that take "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-Ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (see below); polysyllabic stems take "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-Ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " with four-way harmony (konuş-ur, beğen-ir); vowel-final stems add just "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-r"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (oku-r, de-r). The negative aorist is "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mAz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The conditional "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-sA"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is then appended, followed by the personal agreement suffix."
+      }
+     ]
+    },
+    "finding": "aorist -Ar/-Ir distribution"
+   },
+   {
+    "op": "replace",
+    "find": "Positive: verb stem + -(I)r + -sA + personal suffix",
+    "replace": "Positive: verb stem + -(A/I)r + -sA + personal suffix",
+    "finding": "aorist -Ar/-Ir distribution"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Most monosyllabic verbs take -Ar: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yap-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yaparsa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "git-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "giderse"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (t → d before a vowel), "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "et-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ederse"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The ones to memorise are the 13 monosyllabic verbs that take -Ir instead: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "al-, bil-, bul-, dur-, gel-, gör-, kal-, ol-, öl-, san-, var-, ver-, vur-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ("
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "alırsa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gelirse"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "olursa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). Vowel-final stems simply add -r: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "de-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "derse"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "false irregular aorists"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/1/children/0/text",
+    "value": "-(A/I)rsA",
+    "finding": "aorist -Ar/-Ir distribution (label)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0/text/1/text",
+    "value": " Use -(A/I)rsA when the condition could genuinely happen. The speaker does not know whether it will, but treats it as plausible: ",
+    "finding": "aorist -Ar/-Ir distribution (label)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/10/children/0/text",
+    "value": "-(A/I)rsA",
+    "finding": "aorist -Ar/-Ir distribution (label)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0/text/0/children/0/text",
+    "value": "Confusing -(A/I)rsA with the counterfactual -sAydI.",
+    "finding": "aorist -Ar/-Ir distribution (label)"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-conditional-irrealis",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "typically uses the aorist conditional (",
+    "replace": "typically uses the aorist + past copula (",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "replace",
+    "find": "-Ir/-Irdı",
+    "replace": "-(A/I)rdI: alırdım, yapardım",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "replace",
+    "find": "-IrdI",
+    "replace": "-(A/I)rdI",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "replace",
+    "find": "aorist conditional -Irdı in the main clause",
+    "replace": "aorist + past copula -(A/I)rdI (alırdım) in the main clause",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/1/text",
+    "value": " A -sA if-clause requires a hypothetical main clause, typically the aorist + past copula ",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/2/children/0/text",
+    "value": "-(A/I)rdI",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   },
+   {
+    "op": "replace",
+    "find": "; -Irdı correctly marks",
+    "replace": "; -(A/I)rdI correctly marks",
+    "finding": "'aorist conditional' mislabel for -(A/I)rdI"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-reciprocal-voice",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Treating -(I)ş as productive."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Learners sometimes try to add -(I)ş to any verb to create a reciprocal: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "✗ dinleştik"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («we listened to each other») is not a Turkish verb. If the verb does not already have a lexicalised -(I)ş form, use «birbiri»: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "✓ birbirimizi dinledik"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Do not confuse this with noun + -lAş, which does build mutual-activity verbs: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "✓ yardımlaştık"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («we helped one another») is standard."
+      }
+     ]
+    },
+    "finding": "yardımlaştık marked wrong"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4",
+    "value": [
+     "mektup (noun)",
+     "mektuplaş-",
+     "correspond by letter"
+    ],
+    "finding": "selamla-/mektupla- misanalysis"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Note that «selamlaş-» ends in "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " rather than «-ış / -iş / -uş / -üş» because the verb stem «selamla-» already ends in a vowel, so only «-ş» is added. «mektuplaş-» is different: there is no verb «mektupla-»; it is the noun «mektup» + "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-lAş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", a suffix that turns nouns into mutual-activity verbs (also «haberleş-», «yardımlaş-»)."
+      }
+     ]
+    },
+    "finding": "selamla-/mektupla- misanalysis"
+   },
+   {
+    "op": "replace",
+    "find": " (correspond with each other). These are single words",
+    "replace": " (correspond with each other; built on the noun mektup + -lAş). These are single words",
+    "finding": "selamla-/mektupla- misanalysis"
+   },
+   {
+    "op": "replace",
+    "find": "Lexicalised «mektuplaş-»; stem ends in a vowel, so only «-ş» is added.",
+    "replace": "Lexicalised «mektuplaş-», built from the noun «mektup» + -lAş (mutual activity).",
+    "finding": "selamla-/mektupla- misanalysis"
+   },
+   {
+    "op": "replace",
+    "find": " («we listened to each other») is not a Turkish verb. If the verb does not already have a lexicalised -(I)ş form, use «birbiri»: ",
+    "replace": " («we listened to each other») is not an established verb. Only a closed set of verbs has a lexicalised -(I)ş form; for any other verb use «birbiri»: ",
+    "finding": "leftover: unverified non-word claim softened"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-reflexive-voice-kendi",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/0",
+    "value": "ört-",
+    "finding": "örtü- is a noun; stem is ört-"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-since-converb",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The vowel in the suffix follows four-way vowel harmony (A = a/e).",
+    "replace": "The suffix follows two-way vowel harmony (A = a/e), giving -alı / -eli.",
+    "finding": "four-way harmony claim"
+   },
+   {
+    "op": "replace",
+    "find": "Confusing -(y)AlI with the optative -(y)AlIm / -(y)AlI.",
+    "replace": "Confusing -(y)AlI with the optative -(y)AlIm.",
+    "finding": "invented 3rd-person optative -(y)AlI"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The optative suffix "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(y)AlIm"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (1st pl. «let's…») looks similar to the converb. The key distinction is syntactic position and meaning: the converb "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(y)AlI"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " heads a time clause and is followed by a main clause, whereas the optative ends the sentence or clause as a mood form. Compare "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gidelim"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («let's go», optative) with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gideli iki yıl oldu"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («it has been two years since going», converb)."
+      }
+     ]
+    },
+    "finding": "invented 3rd-person optative -(y)AlI"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-when-converbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "). They are not interchangeable. ",
+    "replace": "). They overlap — -DIğIndA is often used where -(y)IncA would also fit — but each has a characteristic use. ",
+    "finding": "'not interchangeable' too strict"
+   },
+   {
+    "op": "replace",
+    "find": "Choosing the right suffix depends on",
+    "replace": "Where they differ, the choice depends on",
+    "finding": "'not interchangeable' too strict"
+   },
+   {
+    "op": "replace",
+    "find": "describes an ongoing state, prefer -DIğIndA.",
+    "replace": "describes an ongoing state, prefer -DIğIndA. For a simple sequence both are often fine: Eve geldiğimde seni ararım ≈ Eve gelince seni ararım («I'll call you when I get home»).",
+    "finding": "'not interchangeable' too strict"
+   }
+  ]
+ }
+]

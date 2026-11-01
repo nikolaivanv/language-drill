@@ -1,0 +1,2023 @@
+[
+ {
+  "key": "tr-b2-as-if-gibi",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "), no verb suffix is involved. The «as if» construction is distinct: it always requires a verb stem carrying ",
+    "replace": "), no verb suffix is involved. The «as if» construction is distinct: it normally requires a predicate carrying ",
+    "finding": "F2 nominal -(y)mIş"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": " (or, on a noun or adjective, the evidential copula -(y)mIş: hastaymış gibi) before "
+    },
+    "finding": "F2 nominal -(y)mIş"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The suffix "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mIş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " follows standard four-way vowel harmony ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mış / -miş / -muş / -müş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). It attaches directly to the verb stem (after any negative "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-mA-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " if needed), and "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gibi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " follows as a separate word. For an ongoing pretence, the present-tense suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)yor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is followed by the evidential copula "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(y)mIş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (here "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-muş"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), giving "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)yormuş gibi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". With a noun or adjective as the predicate, the same copula does the job on its own: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "(sanki) hastaymış gibi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " «as if (s)he were ill»."
+      }
+     ]
+    },
+    "finding": "F2 nominal -(y)mIş; -(I)yormuş = -(I)yor + copula"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": ". In the «as if» frame, "
+    },
+    "finding": "F1 not only -mIş"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/11",
+    "value": {
+     "kind": "text",
+     "text": " (or the copula -(y)mIş on a noun or adjective) is what normally precedes "
+    },
+    "finding": "F1 not only -mIş"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/13",
+    "value": {
+     "kind": "text",
+     "text": "; the aorist is also possible (uykuda gezer gibi «as if sleepwalking»), but the finite "
+    },
+    "finding": "F1 aorist -(A/I)r gibi"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/15",
+    "value": {
+     "kind": "text",
+     "text": " past reports a real event and does not give the «as if» reading."
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "replace",
+    "find": " follows a noun, no verb suffix is present, and the comparison is real. The «as if» construction always has a verb stem + ",
+    "replace": " follows a noun, no verb suffix is present, and the comparison is real. The «as if» construction has a predicate marked with ",
+    "finding": "F2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/6",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "-mIş / -(y)mIş"
+      }
+     ]
+    },
+    "finding": "F2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/5",
+    "value": {
+     "kind": "text",
+     "text": ": compare "
+    },
+    "finding": "F3 duymuyor gibi not ungrammatical"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": " — a finite verb + "
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": " gives the «seem» reading («he seems not to hear»), an impression of something real — with ✓ "
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/11",
+    "value": {
+     "kind": "text",
+     "text": " («as if he couldn't hear», a pretence)."
+    },
+    "finding": "F3"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-aspectual-verbs",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/22",
+    "value": {
+     "kind": "text",
+     "text": " (be left in a resulting state). Of the bound patterns, only "
+    },
+    "finding": "F2 productivity"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/24",
+    "value": {
+     "kind": "text",
+     "text": " is fully productive; the others are restricted to a fixed set of verbs or registers. The free forms -(y)Ip dur- and -(y)Ip kal- are productive too — more so than their bound counterparts."
+    },
+    "finding": "F2 productivity"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": " in a state as a result of something unexpected. It is used almost only with "
+    },
+    "finding": "F3 bak-/don-/şaş-"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/4",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "bak-, don-, şaş-"
+      }
+     ]
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/5",
+    "value": {
+     "kind": "text",
+     "text": " (bakakal-, donakal-, şaşakal-)."
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/2",
+    "value": {
+     "kind": "text",
+     "text": " converb (two-way harmony "
+    },
+    "finding": "F4 a/e not back"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text/11/children/0/text",
+    "value": "geliver-",
+    "finding": "F5 Cyrillic"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/16/children/0/text",
+    "value": "gidiverdi",
+    "finding": "F5 Cyrillic"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/1",
+    "value": {
+     "kind": "text",
+     "text": " Among the bound auxiliaries, only "
+    },
+    "finding": "F2 productivity"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/0/note/1/children/0/text",
+    "value": "kapa-",
+    "finding": "F1 kapayıver"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/0/note/4/text",
+    "value": " (kapa- «close» is a separate verb, a shorter synonym of kapat-; its stem ends in a vowel, so the buffer -y- appears. From kapat- the form is kapatıver-, as in the table.)",
+    "finding": "F1 kapayıver"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-compound-evidential-rivayet",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "çalışıyormuş, çalışırmış, çalışacakmış",
+    "replace": "çalışıyormuş, çalışırmış, çalışacakmış, çalışmışmış",
+    "finding": "F1 -mIşmIş consistency"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Double-marking evidentiality."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " The copula "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-(y)mIş"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " appears only once per word — "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "*geliyormuşmuş"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " is ungrammatical. A perfective "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-mIş"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " can host it ("
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "bitirmişmiş"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " «apparently he had already finished»), but that is -mIş + -(y)mIş, not the copula twice."
+       }
+      ]
+     }
+    ],
+    "finding": "F1 -mIşmIş consistency"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/4/text",
+    "value": " precedes the copula here; the order with -lAr after the copula, otururmuşlar, is equally standard (compare geliyormuşlar in the table above).",
+    "finding": "F2 otururmuşlar"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-concessive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/4/children/0/text",
+    "value": "gerektik hâlde",
+    "finding": "F1 self-contradiction"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/5",
+    "value": {
+     "kind": "text",
+     "text": " (without the possessive) is not standard. The correct form is "
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/text/0",
+    "value": {
+     "kind": "text",
+     "text": "Take the verb stem and add the action-noun suffix "
+    },
+    "finding": "F2 -mA not negative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/text/2",
+    "value": {
+     "kind": "text",
+     "text": " (not the negative -mA, though the two look alike and can co-occur: gel-me-me-si), then a possessive suffix, then the dative "
+    },
+    "finding": "F2"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-conditional-formal",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/text/12",
+    "value": {
+     "kind": "text",
+     "text": ". The possessive is required when the clause has its own subject ("
+    },
+    "finding": "F1 bare gecikme hâlinde"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/5/text/13",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "ödeme gecikmesi hâlinde"
+      }
+     ]
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/5/text/14",
+    "value": {
+     "kind": "text",
+     "text": "); with no subject of its own, a bare action noun or ordinary noun is also standard: "
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/5/text/15",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "gecikme hâlinde, ihtiyaç hâlinde, yangın durumunda"
+      }
+     ]
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/5/text/16",
+    "value": {
+     "kind": "text",
+     "text": "."
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Dropping the possessive when the clause has a subject."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " When the -mA noun has its own subject, the possessive is obligatory: write "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "ödeme gecikmesi hâlinde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", not "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "*ödeme gecikme hâlinde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". Without a subject, a bare noun is fine — "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "gecikme hâlinde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " and "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "ihtiyaç hâlinde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " are standard."
+       }
+      ]
+     }
+    ],
+    "finding": "F1"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-converb-until",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/subtitle",
+    "value": "-(y)IncAyA kadar / -(y)AnA kadar & -mAksIzIn",
+    "finding": "F3 -(y)AnA"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/5/children/0/text",
+    "value": "-(y)AnA kadar",
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-(y)IncAyA kadar"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " — the more formal form, typical of writing and careful speech. It has two meanings: «until» (ölünceye kadar «until (s)he dies») and «by the time» (bu iş bitinceye kadar «by the time this work is finished»). The subordinate clause may have the same subject as the main clause or a different one."
+       }
+      ]
+     }
+    ],
+    "finding": "F1 invented subject rule"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-(y)AnA kadar"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " — the colloquial version of the same construction, with the same two meanings and the same freedom of subject: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Sen gelene kadar bekleyeceğim"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " is as natural in speech as "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Sen gelinceye kadar bekleyeceğim"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/text/0/children/0/text",
+    "value": "-(y)AnA kadar",
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/text/2/children/0/text",
+    "value": "-(y)AnA",
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/text/5",
+    "value": {
+     "kind": "text",
+     "text": ". The vowel harmonises: back stems → -ana, front stems → -ene. Vowel-final stems take the buffer y: okuyana kadar, uyuyana kadar."
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/head/1",
+    "value": "converb -(y)AnA",
+    "finding": "F3"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/4/rows/4",
+    "value": [
+     "okumak",
+     "okuyana",
+     "okuyana kadar"
+    ],
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/text/1",
+    "value": {
+     "kind": "text",
+     "text": " is a fixed suffix added directly to the plain verb stem. Its "
+    },
+    "finding": "F2 -mAksIzIn on plain stem"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/text/3",
+    "value": {
+     "kind": "text",
+     "text": " comes from the infinitive -mAk, not from the negative suffix (contrast -mAdAn, whose -mA is the negative). It does not change for person or tense. The vowel harmonises: back stems → -maksızın, front stems → -meksizin."
+    },
+    "finding": "F2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/0/note/0/text",
+    "value": "Different subjects (ben / sen); in speech, Sen gelene kadar bekleyeceğim is equally correct. The dative -ye is visible in gelinceye.",
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/0/text",
+    "value": "-(y)AnA kadar, the colloquial form; ölmek (front stem) → ölene. The formal equivalent is ölünceye kadar.",
+    "finding": "F1"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-dir-generalizing",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Not on the -DI past."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " attaches to present-state predicates, to the perfective -mIş — the usual way to assume something about the past: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "gitmiştir"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " «(s)he has probably gone», "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "bir yerlerde karşılaşmışızdır"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " «we have probably met somewhere» — and, in formal announcements, to future-tense verbs (başlayacaktır «it will begin»). It does not combine with the -DI past or the past copula -(y)DI."
+       }
+      ]
+     }
+    ],
+    "finding": "F1 -mIştIr past assumption"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Forms like "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*geldidir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*evdeydidir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (stacking -DIr onto a -DI past or the past copula) are ungrammatical. To assume something about the past, put "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-DIr"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " on the -mIş form instead: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gelmiştir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " «she has probably arrived»."
+      }
+     ]
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/6/1",
+    "value": "l — voiced (a loanword with a front «l», so it takes a front vowel)",
+    "finding": "F2 meşgul"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-double-voice",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Double causative"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ": use this when the subject does not cause the action directly but instead causes a second person to cause a third person to act. The shape of the second causative depends on the first: after "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (or "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-Ir-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "/"
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-Ar-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ") it is "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " ("
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "yaptır-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "yazdır-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "); after "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " it is "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " ("
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "okut-tur-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "beklet-tir-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ")."
+       }
+      ]
+     }
+    ],
+    "finding": "F1 double causative rule"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5",
+    "value": {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "After "
+        },
+        {
+         "kind": "hilite",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-DIr-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " the second causative is "
+        },
+        {
+         "kind": "hilite",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-t-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", not a second "
+        },
+        {
+         "kind": "hilite",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-DIr-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ": "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "yaptırdır-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " is not a standard Turkish form; the correct double causative is "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "yaptırt-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ". After "
+        },
+        {
+         "kind": "hilite",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-t-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " it is the other way round: "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "okuttur-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "beklettir-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (not "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "*okutt-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ")."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Wrong second-causative allomorph"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ": after "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " the second causative is "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", not a repeated "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". Writing "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "*yaptırdır-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " instead of "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "yaptırt-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " is a very common error. After "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-t-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", though, the second causative is "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-DIr-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ": "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "okuttur-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "beklettir-"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "F1"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-duration-throughout",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Turkish has two closely related structures for expressing duration: "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "süresince"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", a postposition meaning «during» or «for the duration of», which follows a noun; and "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-DIğI sürece"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", a converb meaning «as long as», which attaches to a verb stem via the participial suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-DIK"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Süresince"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is a more formal near-synonym of "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "boyunca"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", though unlike boyunca it does not stress the whole length of the period; "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-DIğI sürece"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is a conditional «as long as» with no boyunca equivalent. The two are not interchangeable with each other: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "süresince"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " takes a noun, while "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-DIğI sürece"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " takes a verb."
+      }
+     ]
+    },
+    "finding": "F3 süresince meaning / not a boyunca alternative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0/text/1",
+    "value": {
+     "kind": "text",
+     "text": " — use it when the time frame is a noun phrase (an event, a period, an absence). It places something within that span; unlike "
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": ", it does not emphasise how long the period lasted, and it is more formal, common in written and official registers."
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/1",
+    "value": {
+     "kind": "text",
+     "text": " is an uninflected postposition. Place it directly after the noun in the nominative — no case suffix. The noun may carry a possessive: "
+    },
+    "finding": "F2 possessive allowed"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/0/text/2",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "yokluğum süresince"
+      }
+     ]
+    },
+    "finding": "F2"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": " «during my absence»."
+    },
+    "finding": "F2"
+   },
+   {
+    "op": "replace",
+    "find": "[bare noun]  +  süresince",
+    "replace": "[noun (± possessive)]  +  süresince",
+    "finding": "F2"
+   },
+   {
+    "op": "replace",
+    "find": "konferans süresince  ·  yokluk süresince  ·  savaş süresince",
+    "replace": "konferans süresince  ·  yokluğum süresince  ·  savaş süresince",
+    "finding": "F2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/text/11",
+    "value": {
+     "kind": "text",
+     "text": " + the suffix "
+    },
+    "finding": "F1 -CA not dative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/text/13",
+    "value": {
+     "kind": "text",
+     "text": " — the equative/adverbial -CA, not the dative, which would be süreye — in its lexicalised form)."
+    },
+    "finding": "F1"
+   },
+   {
+    "op": "replace",
+    "find": " must be in the bare (nominative) form. Do not add a dative",
+    "replace": " must be in the nominative (it may carry a possessive, as in yokluğum). Do not add a dative",
+    "finding": "F2"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-instead-of",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": " here means «in place of»: it is "
+    },
+    "finding": "F3 yerde is locative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": " + the locative -DA, used idiomatically rather than in its literal sense (place/floor)."
+    },
+    "finding": "F3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Different subjects."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-AcAğInA"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " and "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-AcAğI yerde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " carry their own possessive, so the rejected action can have a different subject: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Sen gideceğine ben gideyim"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " «Rather than you going, let me go». "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-mAk yerine"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " and "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-mAktAnsA"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " share the main-clause subject; for a different subject, use "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "-mA"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " + possessive + "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "yerine"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ": "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Senin gitmen yerine ben gideyim"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "F2 different subjects"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-AcAğI yerde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " uses the same future participle with a possessive agreeing with its subject ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-AcAğIn yerde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " for «you», "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-AcAğI yerde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " for he/she) followed by the fixed word "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yerde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The possessive does "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "not"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take the dative here; "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yerde"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " itself carries the locative meaning."
+      }
+     ]
+    },
+    "finding": "F1 possessive agreement"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/head/1",
+    "value": "3rd sg. form",
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/target/1/children/0/text",
+    "value": "seyredeceğin yerde",
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/0/text",
+    "value": "seyret- + -eceğ- + -in (2nd sg. poss.) + yerde → seyredeceğin yerde. Addressed to the listener, so the possessive is 2nd person. Note the consonant mutations t → d and k → ğ before the vowel-initial suffixes.",
+    "finding": "F1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/11",
+    "value": {
+     "kind": "text",
+     "text": " (possessive + "
+    },
+    "finding": "F1"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-participle-aorist",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4/4",
+    "value": "believing / unbelieving (for «unbelievable» use the passive inanılmaz)",
+    "finding": "F1 inanmaz"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-proportion-assoon",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "kind": "callout",
+     "variant": "default",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "Stems ending in a vowel take "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-r"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " directly (e.g. "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "kayna-r"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "). One-syllable consonant-final stems take "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-Ar"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (e.g. "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "çık-ar"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "yap-ar"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "), except thirteen that take "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-Ir/-Ur/-Ür"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ": "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "al-, bil-, bul-, dur-, gel-, gör-, kal-, ol-, öl-, san-, var-, ver-, vur-"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (e.g. "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "gel-ir"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "gör-ür"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "). Stems of two or more syllables take "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "-Ir/-Ur/-Ür"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (vowel-harmonic), e.g. "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "otur-ur"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "F1 aorist rule reversed"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/0/text",
+    "value": "Iterative -DIkçA: here both clauses share the subject (ben). -DIkçA also allows a different subject: Sen geldikçe sevinirim «Whenever you come, I'm happy».",
+    "finding": "F2 co-reference note"
+   }
+  ]
+ },
+ {
+  "key": "tr-b2-reported-directives",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/target/0/text",
+    "value": "Senden erken gelmeni değil, ",
+    "finding": "F1 person mismatch"
+   }
+  ]
+ }
+]

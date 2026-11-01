@@ -1,0 +1,40 @@
+[
+ {"key": "es-a2-comparatives-superlatives", "edits": [
+  {"op":"replace","find":" only before numbers or quantities (","replace":" before numbers or quantities (","finding":"R2 #3"},
+  {"op":"set","path":"/sections/4/body/0/items/0/0/text/13/text","value":"), and in the pattern más/menos de lo que before a clause (más de lo que pensaba).","finding":"R2 #3"},
+  {"op":"replace","find":" for age, not ","replace":" for age (","finding":"R2 #1"},
+  {"op":"set","path":"/sections/4/body/0/items/1/0/text/20","value":{"kind":"em","children":[{"kind":"text","text":"más grande"}]},"finding":"R2 #1"},
+  {"op":"replace","find":". Only for someone's character are ","replace":" is also heard for age, especially in Latin America, but mayor is the standard choice). Only for someone's character are ","finding":"R2 #1"}
+ ]},
+ {"key": "es-a2-connectors", "edits": [
+  {"op":"replace","find":" Both can start a new sentence or follow a semicolon.","replace":" Both can start a new sentence or follow a semicolon or a comma.","finding":"R2 #1"},
+  {"op":"replace","find":". A period or semicolon separates the two clauses; the connector is not preceded by a comma when it opens a new sentence.","replace":". A period, a semicolon or a comma separates the two clauses (Perdí el autobús; por eso…, No tenía dinero, entonces…); when the connector opens a new sentence, it simply follows the period.","finding":"R2 #1"}
+ ]},
+ {"key": "es-a2-diacritic-pairs", "edits": [
+  {"op":"replace","find":"The accented member is always the word that carries its own lexical stress: a subject pronoun, a verb form, or an adverb. The bare member is always an unstressed function word: a possessive, a preposition, a conjunction, or a particle.","replace":"The accented member is always the word that carries its own stress — usually a stressed pronoun, a verb form, or an adverb (té, a noun, is the odd one out). The bare member is usually an unstressed function word: a possessive, an article, a preposition, a conjunction, or an unstressed pronoun.","finding":"R2 #3"},
+  {"op":"replace","find":" (possessive determiner, «my»). Use the accent after a preposition: ","replace":" (possessive determiner, «my»). Use the accent when the word is the pronoun after a preposition, with no noun following it: ","finding":"R2 #1"},
+  {"op":"set","path":"/sections/1/body/1/items/2/0/text/5/text","value":" (but con mi madre, where mi is the possessive before a noun).","finding":"R2 #1"},
+  {"op":"replace","find":"The table below lists every standard pair with its grammatical category and meaning.","replace":"The table below lists the main pairs with their grammatical category and meaning.","finding":"R2 #4"},
+  {"op":"set","path":"/sections/2/body/2/children/0/text/0/text","value":"The Real Academia Española's spelling rules (Ortografía, 2010) say that the adverb ","finding":"R2 #5"},
+  {"op":"set","path":"/sections/2/body/2/children/0/text/2/text","value":" («only») and the demonstrative pronouns ","finding":"R2 #5"},
+  {"op":"set","path":"/sections/2/body/2/children/0/text/4/text","value":" no longer need a diacritic accent, so they are normally written without one (an accented sólo is still tolerated where the writer sees a real risk of ambiguity). The adjective solo («alone»: volvió sola) never takes an accent.","finding":"R2 #5"},
+  {"op":"replace","find":"Check: if the word is a pronoun or verb, it needs the accent.","replace":"Check: if the word is the pronoun or verb member of one of these pairs, it needs the accent.","finding":"R2 #2"}
+ ]},
+ {"key": "es-a2-present-irregular-stem-changes", "edits": [
+  {"op":"replace","find":": verbs in -ger, -gir, -guir change before -o: ","replace":": verbs in -ger, -gir, -guir, and in -cer after a consonant, change before -o: ","finding":"R2 #1"}
+ ]},
+ {"key": "es-a2-preterite-stem-spelling", "edits": [
+  {"op":"replace","find":" when it falls between two vowels. The other persons stay regular.","replace":" when it is unstressed and falls between two vowels (the -ió and -ieron endings). The other persons stay regular.","finding":"R2 #1"},
+  {"op":"replace","find":"), the ending ","replace":"), the unstressed ending ","finding":"R2 #1"},
+  {"op":"replace","find":". An i trapped between two vowels is written y.","replace":". An unstressed i trapped between two vowels is written y (a stressed í stays: leí, leímos).","finding":"R2 #1"}
+ ]},
+ {"key": "es-a2-reflexive-verbs", "edits": [
+  {"op":"replace","find":" Using a third-person pronoun with a first-person plural verb is a common slip.","replace":" Keeping the third-person verb ending after a first-person plural pronoun is a common slip.","finding":"R2 #1"},
+  {"op":"replace","find":"Nos levanta.","replace":"Nosotros nos levanta.","finding":"R2 #1"},
+  {"op":"replace","find":"Nos levantamos.","replace":"Nosotros nos levantamos.","finding":"R2 #1"}
+ ]},
+ {"key": "es-a2-todo-otro-quantifiers", "edits": [
+  {"op":"replace","find":"The table below shows the forms of each quantifier. Nada and nadie are invariable pronouns and have only one form each.","replace":"The table below shows the forms of todo, otro and demasiado. Nada («nothing», for things) and nadie («nobody», for people) are two separate invariable pronouns with only one form each.","finding":"R2 #1"},
+  {"op":"remove","path":"/sections/2/body/1/rows/4","finding":"R2 #1"}
+ ]}
+]
