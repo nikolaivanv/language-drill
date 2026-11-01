@@ -263,7 +263,11 @@ const { A1, A2, B1, B2 } = CefrLevel;
 //
 // `2026-10-18`: +20 vocab umbrellas (vocab expansion): 3 themed topics + 2 word-class
 // groups per level; opens 20 new vocab_recall cells.
-export const CURRICULUM_VERSION_TR = '2026-10-18';
+//
+// `2026-11-01`: tr-a1-plural-suffix drops its household and approximation
+// variants; they move, with the recurring-time -lArI, to the new
+// tr-a2-plural-extended-uses. Opens the new point's cells.
+export const CURRICULUM_VERSION_TR = '2026-11-01';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -472,18 +476,22 @@ const trCurriculum: readonly GrammarPoint[] = [
       'üç kitap (three books)',
       'evler (houses — front-vowel -ler after e)',
       'çok kitap (a lot of books — singular head after çok)',
-      "Ahmet'ler gelmedi. (Ahmet and his family/group didn't come — -lAr on a name means the household; kin terms take the possessive BEFORE plural: ablamlar.)",
-      'kırk yaşlarında (about forty — on time/place words -lAr gives approximation: buralarda = around here)',
     ],
     // Collapse measured 2026-08-20 on the prod pool: 24 of 24 translation rows
     // and 20 of 20 cloze rows are the plain harmonised -lAr. The two OMISSION
     // constructions — the half of the point a learner actually gets wrong — are
-    // both 0, and each owns a commonError above. The household -lAr and the
-    // approximation -lAr, both in examplesPositive, are also 0.
+    // both 0, and each owns a commonError above.
     //
     // The omission variants are deliberately worth as much as the affix itself:
     // producing "üç kitap" over "*üç kitaplar" is the drill, and no amount of
     // kitaplar/evler rows teaches it.
+    //
+    // 2026-11-01: the household -lAr (Ahmet'ler, ablamlar) and the approximation
+    // -lAr (kırk yaşlarında) moved to tr-a2-plural-extended-uses. As A1 variants
+    // they produced rows like "yirmi ___ (yaş)" → yaşlarında: a three-suffix
+    // stack right after a numeral, on the point whose theory page teaches that
+    // a numeral keeps the noun bare. The A1 theory never covered them, and the
+    // theory validator scores both as above A1.
     constructionVariants: [
       {
         id: 'plural-lar-ler-harmony',
@@ -502,18 +510,6 @@ const trCurriculum: readonly GrammarPoint[] = [
         directive:
           'a quantifier çok / her / birkaç + SINGULAR noun, where -lAr must be omitted (çok ev, her gün, birkaç kişi — never *çok evler). The point being tested is the ABSENCE of the suffix',
         share: 2,
-      },
-      {
-        id: 'lar-on-proper-name-group',
-        directive:
-          "-lAr on a personal name or kin term meaning that person's household or group (Ahmet'ler gelmedi; ablamlar — on a kin term the possessive comes BEFORE the plural)",
-        share: 1,
-      },
-      {
-        id: 'lar-approximation',
-        directive:
-          '-lAr on a time or place word giving approximation rather than plurality (kırk yaşlarında "about forty"; buralarda "around here"; akşamları "in the evenings")',
-        share: 1,
       },
     ],
     examplesNegative: [
@@ -3108,6 +3104,61 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Wrong order (tane üç elma → üç tane elma).',
     ],
     prerequisiteKeys: ['tr-a1-numbers-ordinals'],
+  },
+  // G&K §14.3.1.2 (viii) approximation and (x)(b) household -lAr, and §16.4.1.1
+  // recurrent time -lArI. Split out of tr-a1-plural-suffix on 2026-11-01: as A1
+  // variants these stacked possessive/case suffixes onto -lAr on the point
+  // whose theory teaches bare -lAr, and the theory validator rates them above
+  // A1. The recurring-time -lArI (akşamları) had no owner at all before this.
+  //
+  // No coverageSpec: the three constructions ARE the axis, and the variants
+  // carry it. Uniform shares: A2 base target 30 / 3 = 10 per variant.
+  {
+    key: 'tr-a2-plural-extended-uses',
+    kind: 'grammar',
+    name: "Other uses of -lAr (Ahmet'ler, kırk yaşlarında, akşamları)",
+    description:
+      "Beyond plurality, -lAr has three common uses. On a name or kin term it means that person and their family or group: Ahmet'ler gelmedi; on a kin term the possessive comes first (ablamlar = my sister and her family; ablalarım = my sisters). On age, time and place words it gives approximation: kırk yaşlarında, o sıralarda, mayıs başlarında, buralarda. With -I it marks recurring time: akşamları, cumartesileri.",
+    cefrLevel: A2,
+    language: TR,
+    examplesPositive: [
+      "Ahmet'ler bu akşam bize geliyor. (Ahmet and his family are coming to us tonight.)",
+      "Annemler İzmir'de oturuyor. (My mother and the family live in İzmir — possessive -m before -ler.)",
+      'Kırk yaşlarında bir adam geldi. (A man of about forty came.)',
+      'Annem beni doğurduğunda yirmi yaşlarındaydı. (My mother was about twenty when she had me — copula -ydı, not var.)',
+      'Mayıs başlarında tatile çıkıyoruz. (We are going on holiday around the beginning of May.)',
+      'Akşamları yürüyüş yapıyorum. (I go for a walk in the evenings.)',
+    ],
+    constructionVariants: [
+      {
+        id: 'household-name-kin',
+        directive:
+          "-lAr on a personal name (apostrophe before the suffix) or a kin term, meaning that person and their family or group, NOT several people of that name (Ayşe'ler; Mehmet'ler; annemler, babamlar — on a kin term the possessive comes BEFORE -lAr)",
+        share: 1,
+      },
+      {
+        id: 'approximation-age-time-place',
+        directive:
+          '-lAr on an age, time or place word giving APPROXIMATION, usually followed by the locative (otuz yaşlarında bir kadın; o sıralarda; haziran sonlarında; buralarda). An approximate age said of a person is a predicate with the copula (yaşlarındaydı), never with var/vardı',
+        share: 1,
+      },
+      {
+        id: 'recurrent-time-lari',
+        directive:
+          '-lArI on a time-of-day or weekday word for a RECURRING time, with a habitual present or aorist verb (sabahları, geceleri, pazarları, cumartesileri)',
+        share: 1,
+      },
+    ],
+    examplesNegative: [
+      '*yirmi yaşlarında vardı (an age is a predicate with the copula: yirmi yaşlarındaydı)',
+      "*Ahmet'lar (the suffix still harmonises with the name's last vowel: Ahmet'ler)",
+    ],
+    commonErrors: [
+      "Reading Ahmet'ler as \"several Ahmets\" instead of \"Ahmet and his family or group\".",
+      'Putting the plural before the possessive on a kin term (ablalarım = my sisters) when the household is meant (ablamlar).',
+      'Using var/vardı with an approximate age (yirmi yaşlarında vardı) instead of the copula (yirmi yaşlarındaydı).',
+    ],
+    prerequisiteKeys: ['tr-a1-plural-suffix', 'tr-a1-possessive-suffixes', 'tr-a1-locative'],
   },
   // G&K §28.3.4.1 (ama, fakat, ancak, yalnız 'but'). Added by the 2026-07-16
   // book-coverage triage — the highest-frequency Turkish conjunction had no

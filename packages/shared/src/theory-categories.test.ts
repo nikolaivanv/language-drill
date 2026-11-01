@@ -279,6 +279,7 @@ const EXPECTED_KEY_CATEGORY: Record<string, TheoryCategoryId> = {
   "tr-a2-clitics-da-bile": "syntax",
   "tr-a2-with-without-li-siz": "morphology",
   "tr-a2-enumerator-tane": "syntax",
+  "tr-a2-plural-extended-uses": "morphology",
   // Turkish B1
   "tr-b1-past-continuous-iyordu": "tenses",
   "tr-b1-real-conditional": "moods",
