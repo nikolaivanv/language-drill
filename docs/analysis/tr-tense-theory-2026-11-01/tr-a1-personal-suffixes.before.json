@@ -1,0 +1,601 @@
+{
+  "id": "25a3cef3-0a61-55c7-a6d7-4d7b207e05f6",
+  "quality_score": 0.85,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a1-personal-suffixes",
+    "cefr": "A1",
+    "title": "Personal (copular) suffixes",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Personal suffixes are endings added to nouns, adjectives, and other nominal forms to create complete predicate statements without a separate verb. They express 'to be' in the present tense and agree with the subject in person and number. In Turkish, you cannot simply say "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "ben öğretmen"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (I teacher); you must attach the appropriate suffix: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "ben öğretmenim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (I am a teacher)."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "To state someone's profession, identity, or role: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "doktorum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I am a doctor)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "To describe a state or quality: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "mutluyum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I am happy), "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "hazırsın"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (you are ready)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "To indicate nationality or origin: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Türküm"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I am Turkish)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "In everyday conversation and informal writing. For formal or written statements, "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-dIr"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " may be added, but personal suffixes alone are the standard in speech."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The personal suffixes attach directly to the nominal stem. The first- and second-person singular forms use a buffer "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "y"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after vowels. Vowels in the suffixes follow vowel harmony rules."
+              }
+            ]
+          },
+          {
+            "head": [
+              "Person",
+              "Suffix",
+              "Example (öğretmen)",
+              "Meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben (I)",
+                "-(y)Im",
+                "öğretmenim",
+                "I am a teacher"
+              ],
+              [
+                "sen (you, sg.)",
+                "-sIn",
+                "öğretmensin",
+                "you are a teacher"
+              ],
+              [
+                "o (he/she/it)",
+                "Ø (zero)",
+                "öğretmen",
+                "he/she is a teacher"
+              ],
+              [
+                "biz (we)",
+                "-(y)Iz",
+                "öğretmeniz",
+                "we are teachers"
+              ],
+              [
+                "siz (you, pl./formal)",
+                "-sInIz",
+                "öğretmensiniz",
+                "you are teachers"
+              ],
+              [
+                "onlar (they)",
+                "-lAr",
+                "öğretmenler",
+                "they are teachers"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The third-person singular takes no suffix. The bare noun or adjective itself serves as the predicate: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "o öğretmen"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (he/she is a teacher)."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "After a vowel, the first-person singular becomes "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yIm"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " and first-person plural becomes "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yIz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ": "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "mutlu → mutluyum"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (I am happy), "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "mutluyuz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (we are happy)."
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I am a teacher.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "First-person singular: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I)m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after consonant."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Ben öğretmenim."
+              }
+            ]
+          },
+          {
+            "en": "You are a student.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Second-person singular: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-sIn"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Sen öğrencisin."
+              }
+            ]
+          },
+          {
+            "en": "He/she is a doctor.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Third-person singular takes no suffix."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "O doktor."
+              }
+            ]
+          },
+          {
+            "en": "We are happy.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "First-person plural: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yIz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after vowel."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Biz mutluyuz."
+              }
+            ]
+          },
+          {
+            "en": "You (plural/formal) are ready.",
+            "kind": "example",
+            "target": [
+              {
+                "kind": "text",
+                "text": "Siz hazırsınız."
+              }
+            ]
+          },
+          {
+            "en": "They are students.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Third-person plural: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-lAr"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Onlar öğrenciler."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Dropping the personal suffix and relying on the pronoun alone."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Saying "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ben öğretmen"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is incomplete. You must add the suffix: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ben öğretmenim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The pronoun alone does not create a valid predicate in Turkish."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using -dIr as a default predicate marker in conversational contexts."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The suffix "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-dIr"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is formal and emphatic, typically found in written or official language. In everyday speech, use the personal suffixes directly: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "öğretmenim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "öğretmenimdir"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Predicate suffixes that mark person on nominal predicates"
+  }
+}

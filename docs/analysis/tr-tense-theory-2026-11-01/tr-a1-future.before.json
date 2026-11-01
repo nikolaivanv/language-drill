@@ -1,0 +1,1230 @@
+{
+  "id": "78e823ff-78b3-58b7-a72e-81fbe1b84976",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a1-future",
+    "cefr": "A1",
+    "title": "Future tense: -(y)AcAk",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(y)AcAk"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is Turkish's dedicated future-tense marker. It attaches to a verb stem and, together with a personal ending, states that an action will happen. The capital letters signal vowel harmony: the suffix surfaces as "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-acak"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after back vowels (a, ı, o, u) and as "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ecek"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " after front vowels (e, i, ö, ü). The parenthesised "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-y-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is a buffer consonant inserted only when the stem ends in a vowel."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Planned future actions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use -(y)AcAk for anything you intend or expect to happen: appointments, schedules, decisions already made."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Predictions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " When you predict an outcome — based on evidence or general expectation — -(y)AcAk is the natural choice."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Not a substitute for present continuous."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Turkish speakers do not routinely use the present-continuous -(I)yor to express future plans the way English does. When the event is clearly future, -(y)AcAk is more idiomatic."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The structure is: "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "verb stem + (y) + acak/ecek + personal ending"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Two phonological rules apply before you add the personal ending."
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Buffer -y-."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " If the stem ends in a vowel, insert "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-y-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " between the stem and the suffix: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "bekle-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "bekleyecek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "oku-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "okuyacak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "k → ğ softening."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The suffix ends in "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-k"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". When a vowel-initial personal ending follows (1sg "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-im"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", 1pl "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-iz"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "), that "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-k"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " softens to "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-ğ"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ": "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelecek + im"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geleceğim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Negative."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Insert the negative morpheme "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-mA-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " between the stem and the future suffix. Vowel harmony applies: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gel-me-yecek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelmeyecek"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yap-ma-yacak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yapmayacak"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-A-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " of -mA harmonises with the front/back quality of the stem's last vowel, not the suffix."
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Full conjugation of "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to come) — consonant-final stem, front vowel:"
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "positive",
+              "negative"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben (I)",
+                "geleceğim",
+                "gelmeyeceğim"
+              ],
+              [
+                "sen (you sg.)",
+                "geleceksin",
+                "gelmeyeceksin"
+              ],
+              [
+                "o (he/she/it)",
+                "gelecek",
+                "gelmeyecek"
+              ],
+              [
+                "biz (we)",
+                "geleceğiz",
+                "gelmeyeceğiz"
+              ],
+              [
+                "siz (you pl.)",
+                "geleceksiniz",
+                "gelmeyeceksiniz"
+              ],
+              [
+                "onlar (they)",
+                "gelecekler",
+                "gelmeyecekler"
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "For a back-vowel stem, compare "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yap-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to do/make):"
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "positive",
+              "negative"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben",
+                "yapacağım",
+                "yapmayacağım"
+              ],
+              [
+                "sen",
+                "yapacaksın",
+                "yapmayacaksın"
+              ],
+              [
+                "o",
+                "yapacak",
+                "yapmayacak"
+              ],
+              [
+                "biz",
+                "yapacağız",
+                "yapmayacağız"
+              ],
+              [
+                "siz",
+                "yapacaksınız",
+                "yapmayacaksınız"
+              ],
+              [
+                "onlar",
+                "yapacaklar",
+                "yapmayacaklar"
+              ]
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I will come tomorrow.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Consonant-final stem "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; the final "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " softens to "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ğ"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " before the vowel-initial ending "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-im"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Yarın "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geleceğim"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "They will go on holiday.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "3rd-person plural ending "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ler"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is consonant-initial, so the "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " does not soften."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Onlar tatile "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gidecekler"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "We will wait for the book.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Vowel-final stem "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "bekle-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " takes the buffer "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-y-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " before "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ecek"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; then "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-k → -ğ"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " before "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-iz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Kitabı "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "bekleyeceğiz"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "My mother will make soup tomorrow.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "3rd-person singular has no personal ending, so the suffix stays "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-acak"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " unchanged."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Annem yarın çorba "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yapacak"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Forgetting k → ğ before vowel-initial endings."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "callout",
+                  "variant": "warn",
+                  "children": [
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "✗ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "gelecekiz"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": "   ✓ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "geleceğiz"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "Whenever a vowel-initial personal ending (-im, -iz) follows the suffix, the final "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "-k"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": " must become "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "-ğ"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": ". This applies to both positive and negative forms."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using -(I)yor for planned future events."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "callout",
+                  "variant": "warn",
+                  "children": [
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "✗ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "Yarın geliyorum."
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": "   ✓ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "Yarın geleceğim."
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "Unlike English, Turkish does not conventionally use the present continuous to express future plans. Use -(y)AcAk when the event has not yet happened."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Dropping the -y- buffer after a vowel-final stem."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "callout",
+                  "variant": "warn",
+                  "children": [
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "✗ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "okuacak"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": "   ✓ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "okuyacak"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "Turkish does not allow two vowels to meet across a morpheme boundary. Any vowel-final stem requires the buffer consonant "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "-y-"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": " before -(y)AcAk."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Mis-harmonising the negative -mA-."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "callout",
+                  "variant": "warn",
+                  "children": [
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "✗ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "gelmayacak"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": "   ✓ "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "gelmeyecek"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "paragraph",
+                      "text": [
+                        {
+                          "kind": "text",
+                          "text": "The vowel in "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "-mA-"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": " harmonises with the stem's last vowel, not with the future suffix. "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "gel-"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": " has a front vowel, so the negative is "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "-me-"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": ", giving "
+                        },
+                        {
+                          "kind": "mono",
+                          "children": [
+                            {
+                              "kind": "text",
+                              "text": "gelmeyecek"
+                            }
+                          ]
+                        },
+                        {
+                          "kind": "text",
+                          "text": "."
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Expressing future plans and intentions with -acak / -ecek"
+  }
+}

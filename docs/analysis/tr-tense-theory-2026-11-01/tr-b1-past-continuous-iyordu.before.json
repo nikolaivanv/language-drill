@@ -1,0 +1,1175 @@
+{
+  "id": "4168ad4c-9ee7-5180-91fd-7a9c63af3ee1",
+  "quality_score": 0.72,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-b1-past-continuous-iyordu",
+    "cefr": "B1",
+    "title": "Past continuous -(I)yordu",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The past continuous is formed by combining the present-continuous suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I)yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " with the past copular suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-DI"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " plus a personal ending. The result expresses an action or state that was in progress at a specific moment in the past ("
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "was/were …ing"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "), or a repeated action that was typical of a past period ("
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "used to …"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "). It is the direct past-tense counterpart of the present continuous: wherever "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geliyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " describes something happening now, "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geliyordu"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " places that same ongoing action in the past."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Action in progress at a past moment."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use -(I)yordu when one action was already underway when something else happened, or when you are describing the background scene of a past narrative. English equivalent: «was/were …ing»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Habitual or repeated action in the past."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use -(I)yordu for something that happened regularly over a past period but no longer does. English equivalent: «used to …» or «would …» (in a narrative sense)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Past states."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Stative verbs (knowing, understanding, wanting, etc.) that describe a condition rather than an event also take -(I)yordu to express that the state held over a past period."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The suffix chain is: "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "verb stem + -(I)yor + -du/dü/tu/tü + personal ending"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Three rules govern the shape of each part."
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-(I)yor buffer vowel."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " If the stem ends in a consonant, a buffer vowel is inserted before "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ": "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ı/i/u/ü"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " according to four-way vowel harmony with the stem's last vowel. If the stem ends in a vowel, that vowel drops and "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " attaches directly (e.g. "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "bekle- → bekliyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ")."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-DI consonant mutation."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "D"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " of the past copula is always "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "d"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " here because "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " ends in the voiced consonant "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "r"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The vowel of -DI follows two-way back/front harmony with the stem's last vowel: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-du"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (back rounded), "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-dü"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (front rounded), "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-du"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (back unrounded → also "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "du"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "), "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-di"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (front unrounded). In practice the vowel of -(I)yor is always "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "o"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", so the copula vowel harmonises with the stem, not with "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "o"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Personal endings."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The endings after -DI are the same set used in the simple past tense: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-m, -n, ∅, -k, -nız/niz/nuz/nüz, -lar/ler"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Full conjugation of "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to come) and "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gör-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to see):"
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "gel- (to come)",
+              "gör- (to see)"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben (I)",
+                "geliyordum",
+                "görüyordum"
+              ],
+              [
+                "sen (you, sg.)",
+                "geliyordun",
+                "görüyordun"
+              ],
+              [
+                "o (he/she/it)",
+                "geliyordu",
+                "görüyordu"
+              ],
+              [
+                "biz (we)",
+                "geliyorduk",
+                "görüyorduk"
+              ],
+              [
+                "siz (you, pl./formal)",
+                "geliyordunuz",
+                "görüyordunuz"
+              ],
+              [
+                "onlar (they)",
+                "geliyorlardı",
+                "görüyorlardı"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "The third-person plural "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "onlar"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " form places the plural marker "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "-lar/-ler"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " before the past copula: "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "geliyorlardı"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", not "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "*geliyordular"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (though the latter is heard in informal speech)."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I was coming home.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Action in progress at a past moment. Stem "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-iyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-du"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Eve "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geliyordum"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "He used to get up early every morning.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Habitual past. The back vowel in "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalk-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " triggers buffer "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-ı-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " and copula "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-du"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Her sabah erken "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalkıyordu"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "We were eating.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Stem "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "ye-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " loses its final vowel before "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", giving "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yiyor-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; first-person plural ending "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Biz yemek "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yiyorduk"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "You knew Ömer better than me.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Stative use: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "tanı-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to know/recognise) describes a state, not an event. The stem ends in a vowel, so no buffer vowel is inserted."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Sen Ömer'i benden iyi "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "tanıyordun"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using simple past -DI instead of -(I)yordu."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Geldim"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " means «I came» — a completed event. "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Geliyordum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " means «I was coming» — an action in progress. Choosing the wrong form changes the meaning entirely. Ask yourself: was the action completed and bounded, or was it ongoing/habitual?"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Wrong vowel harmony on the -DI copula."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "The copula vowel harmonises with the "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "verb stem"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not with the "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "o"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " in "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gel-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " has a front vowel, so the copula is "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-du"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — giving "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geliyordum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*geliyordüm"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Check the stem's last vowel, not the suffix immediately before -DI."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Stacking two past markers."
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "A form like "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*geldiyordum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — combining the simple past "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-di"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " with the present continuous "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — does not exist in Turkish. The past meaning comes entirely from the copular "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-du/-dü"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " added after "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Never insert a past suffix into the stem before "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Describing ongoing or habitual actions in the past"
+  }
+}

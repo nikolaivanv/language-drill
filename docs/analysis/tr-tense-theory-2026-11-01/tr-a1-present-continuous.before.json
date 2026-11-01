@@ -1,0 +1,1174 @@
+{
+  "id": "8a7acd52-9dfb-5474-ab44-0a78542aa3a1",
+  "quality_score": 0.72,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a1-present-continuous",
+    "cefr": "A1",
+    "title": "Present continuous -(I)yor",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The present continuous suffix "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(I)yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " attaches to a verb stem to express an action that is in progress right now or that happens regularly. The "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "I"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " in parentheses stands for a high vowel (ı, i, u, or ü) that harmonises with the last vowel of the stem. The suffix "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " itself never changes. Personal endings are then added directly after "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-yor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " to mark the subject."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Actions in progress now."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use -(I)yor when something is happening at the moment of speaking: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Kitap okuyorum."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I am reading a book.)"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Habitual or repeated actions."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " -(I)yor also covers routines and habits: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Her sabah koşuyorum."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (I run every morning.) Do not assume it means only «be …ing»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "All subjects."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The suffix itself stays the same for every person; only the personal ending after "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-yor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " changes."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The build order is: "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "verb stem + (I) + yor + personal ending"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Three phonological rules apply before you attach the suffix."
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Consonant-final stems."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Insert the high buffer vowel that matches the last vowel of the stem (back/front, rounded/unrounded): "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gel-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geliyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "otur-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "oturuyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gör-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "görüyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Vowel-final stems."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The stem's final vowel is "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "raised"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " to its high counterpart, then -yor follows with no extra buffer: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "başla-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "başlıyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "oyna-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "oynuyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". The low vowels a/e raise to ı/i; o/ö raise to u/ü."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "t → d voicing."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " A small set of verbs — "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "git-, et-, tat-, güt-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " — voice their final "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "t"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " to "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "d"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " before the suffix: "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "git-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gidiyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "; "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "et-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ediyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The table below shows the full conjugation for "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to come) and "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to go), illustrating both the buffer vowel and the t→d voicing."
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "gel- (to come)",
+              "git- (to go)"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben (I)",
+                "geliyorum",
+                "gidiyorum"
+              ],
+              [
+                "sen (you, sg.)",
+                "geliyorsun",
+                "gidiyorsun"
+              ],
+              [
+                "o (he/she/it)",
+                "geliyor",
+                "gidiyor"
+              ],
+              [
+                "biz (we)",
+                "geliyoruz",
+                "gidiyoruz"
+              ],
+              [
+                "siz (you, pl.)",
+                "geliyorsunuz",
+                "gidiyorsunuz"
+              ],
+              [
+                "onlar (they)",
+                "geliyorlar",
+                "gidiyorlar"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Vowel harmony quick reference — the buffer vowel (I) follows the last vowel of the stem: "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "a/ı → ı"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "e/i → i"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "o/u → u"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ", "
+                  },
+                  {
+                    "kind": "strong",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "ö/ü → ü"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I am coming.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Consonant-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gel-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; last vowel e → buffer vowel i → "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "geliyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -um."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Geliyorum."
+              }
+            ]
+          },
+          {
+            "en": "We are drinking tea.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "iç-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; last vowel i → buffer vowel i → "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "içiyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -uz."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Çay içiyoruz."
+              }
+            ]
+          },
+          {
+            "en": "It is starting.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Vowel-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "başla-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; final low vowel a raises to ı → "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "başlıyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; no personal ending for third-person singular."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Başlıyor."
+              }
+            ]
+          },
+          {
+            "en": "I go to school by bus.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " voices to "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gid-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " before the suffix → "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gidiyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -um."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Okula otobüsle gidiyorum."
+              }
+            ]
+          },
+          {
+            "en": "The children are playing in the garden.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Vowel-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "oyna-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "; final low vowel a raises to u (back, rounded harmony from the stem) → "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "oynuyor"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". No personal ending: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "onlar"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " is implied by context; -lar can optionally be added to the verb."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Çocuklar bahçede oynuyor."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Not raising the stem-final low vowel."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Vowel-final stems require the final vowel to be raised before -yor. Writing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*başlayor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is wrong; the a must raise to ı, giving "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "başlıyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Similarly, "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*oynuyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is correct, but "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*oynayor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is not."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Choosing the wrong buffer vowel."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The buffer vowel must harmonise with the stem's last vowel. "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gelıyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is wrong because the stem "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gel-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " ends in the front vowel e, which requires the front high vowel i → "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "geliyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Use the harmony chart in the formation section as a reference."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Forgetting t → d voicing."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The verbs "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "git-, et-, tat-, güt-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " voice their final t to d before -(I)yor. "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gitiyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*etiyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " are incorrect; the correct forms are "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gidiyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " and "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ediyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". These verbs must be memorised individually."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Treating -(I)yor as only «be …ing»."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " In Turkish, -(I)yor covers both actions in progress and habitual actions. "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Her sabah koşuyorum"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " means «I run every morning», not only «I am running every morning». Context — especially time expressions like "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "her sabah"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (every morning) — clarifies which reading is intended."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Expressing actions happening now and habitual routines"
+  }
+}

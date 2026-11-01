@@ -1,0 +1,819 @@
+{
+  "id": "32176d90-941b-545c-8252-ad4084b07275",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-a2-past-copula",
+    "cefr": "A2",
+    "title": "Past & evidential copula on nominals",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Turkish has no standalone verb meaning «to be» in the present tense — the copula is a suffix. In the past, however, it surfaces as a distinct suffix attached directly to a nominal predicate (a noun, adjective, or adverbial). There are two past copulas: "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(y)DI"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", which marks a past state the speaker witnessed or knows directly (e.g. "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "hastaydım"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — «I was ill»), and "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(y)mIş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", which marks a past state reported second-hand or inferred (e.g. "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "hastaymış"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " — «she was apparently ill»). Both suffixes carry their own set of personal endings and follow standard four-way vowel harmony. They are not the same as the verbal past tense suffix "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-DI"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " added to verb stems."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Direct past states with -(y)DI."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use this when you personally witnessed or experienced the state: a past identity, quality, location, or condition. The speaker has first-hand knowledge."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Past existence with vardı / yoktu."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The existence words "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "var"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («there is») and "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yok"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («there is not») take the same -(y)DI suffix to give "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "vardı"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («there was») and "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yoktu"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " («there was not»). These are fixed third-person forms and do not change for person."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Reported or inferred past states with -(y)mIş."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Use this when you did not witness the state yourself — you heard it from someone else, read it, or are inferring it from evidence. It is often translated as «apparently», «reportedly», or «I hear that»."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it?"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Both suffixes attach to the predicate and then take personal endings. The key rule: if the predicate ends in a "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "vowel"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", insert a buffer "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-y-"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " before the suffix. If it ends in a "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "consonant"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", attach directly. The vowel in both suffixes follows four-way harmony (I = ı / i / u / ü)."
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "-(y)DI takes "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Group 1"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " personal endings (the same set used with the verbal -DI past): -m, -n, -(zero), -k, -nIz, -lAr."
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "stem + suffix",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben",
+                "hasta-y-dı-m",
+                "I was ill"
+              ],
+              [
+                "sen",
+                "hasta-y-dı-n",
+                "you were ill"
+              ],
+              [
+                "o",
+                "hasta-y-dı",
+                "he/she/it was ill"
+              ],
+              [
+                "biz",
+                "hasta-y-dı-k",
+                "we were ill"
+              ],
+              [
+                "siz",
+                "hasta-y-dı-nız",
+                "you (pl.) were ill"
+              ],
+              [
+                "onlar",
+                "hasta-y-dı-lar",
+                "they were ill"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Consonant-final stem example: "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "öğrenci"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ends in a vowel → "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "öğrenciydim"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ". "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "evde"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ends in a vowel → "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "evdeydim"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": ". "
+                  },
+                  {
+                    "kind": "em",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "doktor"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " ends in a consonant → "
+                  },
+                  {
+                    "kind": "hilite",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "doktorduk"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (we were doctors)."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "-(y)mIş takes "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Group 2"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " personal endings (the same set used with the -mIş perfect): -Im, -sIn, -(zero), -Iz, -sInIz, -lAr."
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "stem + suffix",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben",
+                "hasta-y-mış-ım",
+                "I was apparently ill"
+              ],
+              [
+                "sen",
+                "hasta-y-mış-sın",
+                "you were apparently ill"
+              ],
+              [
+                "o",
+                "hasta-y-mış",
+                "he/she/it was apparently ill"
+              ],
+              [
+                "biz",
+                "hasta-y-mış-ız",
+                "we were apparently ill"
+              ],
+              [
+                "siz",
+                "hasta-y-mış-sınız",
+                "you (pl.) were apparently ill"
+              ],
+              [
+                "onlar",
+                "hasta-y-mış-lar",
+                "they were apparently ill"
+              ]
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "I was very ill yesterday.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Vowel-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "hasta"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + buffer -y- + -dı + -m. First-hand knowledge → -(y)DI."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Dün çok "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "hastaydım"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "We were students back then.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Vowel-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "öğrenci"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -y- + -di + -k. First person plural Group 1 ending."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Biz o zaman "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "öğrenciydik"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "There used to be a restaurant here.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Past existence: "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "var"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -dı. No personal ending needed — third person is zero-marked."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Eskiden burada bir lokanta "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "vardı"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "She was apparently tired, so she didn't come.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Consonant-final stem "
+              },
+              {
+                "kind": "em",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "yorgun"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " + -muş (no buffer needed). Evidential: the speaker infers or was told about her tiredness."
+              }
+            ],
+            "target": [
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "Yorgunmuş"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", o yüzden gelmemiş."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Attaching the verbal -DI directly to a nominal."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The verbal past suffix goes on verb stems only. On a nominal predicate you need the copula form with its buffer: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✗ hastadım"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✓ hastaydım"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Without the -y- buffer the form is ungrammatical."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using the wrong personal-ending group."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " -(y)DI takes Group 1 endings (-m, -n, -k, -nIz, -lAr), not Group 2. A common mistake is to add a Group 2 first-person ending: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✗ hastaydıyım"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✓ hastaydım"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Reserve Group 2 endings for -(y)mIş."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Forgetting the -y- buffer after a vowel-final stem."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " Whenever the predicate ends in a vowel, the buffer consonant -y- is obligatory before both -(y)DI and -(y)mIş: "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✗ hastadı"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " → "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "✓ hastaydı"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Consonant-final stems (e.g. "
+                    },
+                    {
+                      "kind": "em",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yorgun"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ") attach the suffix directly without a buffer."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "-(y)DI and -(y)mIş on nouns, adjectives, and adverbials"
+  }
+}

@@ -1,0 +1,860 @@
+{
+  "id": "ab24617b-9003-5ee3-8bca-5d2fe8c5efba",
+  "quality_score": 0.92,
+  "review_status": "auto-approved",
+  "content_json": {
+    "id": "tr-b2-compound-past-hikaye",
+    "cefr": "B2",
+    "title": "Compound past \"hikâye\" — copula -(y)DI on all tenses",
+    "sections": [
+      {
+        "id": "what-is-it",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Turkish can attach the past copula "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "-(y)DI"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " to the stem of almost any tense or mood to express that the state or action described by that tense was true at a past reference point. The result is called the "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "hikâye birleşik zamanı"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (narrative compound tense). It is a single rule — append -(y)DI, then add group-1 person endings — applied uniformly across the pluperfect (-mIştI), past habitual (-ArdI), future-in-past (-AcAktI), past necessitative (-mAlIydI), and past conditional (-sAydI). At B1 you met this pattern only on the present progressive (-Iyordu); here it extends to every tense base."
+              }
+            ]
+          }
+        ],
+        "title": "what is it?"
+      },
+      {
+        "id": "when-to-use-it",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Pluperfect (-mIştI):"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " an action completed before another past event. Equivalent to English «had done»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Past habitual (-ArdI):"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " a repeated or habitual action in the past, or an unreal/hypothetical aorist. Equivalent to English «used to do» or «would do (habitually)»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Future-in-past (-AcAktI):"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " something that was expected or intended to happen from a past vantage point. Equivalent to English «was going to do» or «was about to do»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Past necessitative (-mAlIydI):"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " an obligation or expectation that was not fulfilled. Equivalent to English «should have done» or «ought to have done»."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Past conditional (-sAydI):"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " a counterfactual condition in the past. Equivalent to English «if (subject) had done». This form appears in the protasis of type-3 conditionals."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "when to use it"
+      },
+      {
+        "id": "formation",
+        "body": [
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The structure is always: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "verb stem + tense suffix + -(y)DI + person ending"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". Two phonological rules apply:"
+              }
+            ]
+          },
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "The buffer "
+                    },
+                    {
+                      "kind": "hilite",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-y-"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is used only when the tense suffix ends in a vowel (e.g. -Iyor"
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "y"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "du). When the tense suffix ends in a consonant, the -y- is dropped and -DI attaches directly (e.g. gitmiş"
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ti"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", gidecek"
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "ti"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ")."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "The D in -DI obeys consonant mutation: it surfaces as "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "t"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " after voiceless consonants (ç, f, h, k, p, s, ş, t) and as "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "d"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " elsewhere."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "text",
+                      "text": "Person endings after -(y)DI are "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "group-1"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ": -(y)Im, -n, -∅ (3sg), -k, -nIz, -lAr."
+                    }
+                  ]
+                }
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "The table below shows the five compound past forms for the verb "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gitmek"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (to go) in the 3rd person singular, followed by a full person-ending conjugation for the pluperfect."
+              }
+            ]
+          },
+          {
+            "head": [
+              "tense",
+              "tense suffix + -(y)DI (3sg)",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "pluperfect",
+                "gitmişti",
+                "he/she had gone"
+              ],
+              [
+                "past habitual",
+                "giderdi",
+                "he/she used to go"
+              ],
+              [
+                "future-in-past",
+                "gidecekti",
+                "he/she was going to go"
+              ],
+              [
+                "past necessitative",
+                "gitmeliydi",
+                "he/she should have gone"
+              ],
+              [
+                "past conditional",
+                "gitseydi",
+                "if he/she had gone"
+              ]
+            ]
+          },
+          {
+            "kind": "paragraph",
+            "text": [
+              {
+                "kind": "text",
+                "text": "Full person conjugation — pluperfect of "
+              },
+              {
+                "kind": "strong",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gitmek"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": " (-mIştI):"
+              }
+            ]
+          },
+          {
+            "head": [
+              "person",
+              "form",
+              "meaning"
+            ],
+            "kind": "conjugation-table",
+            "rows": [
+              [
+                "ben",
+                "gitmiştim",
+                "I had gone"
+              ],
+              [
+                "sen",
+                "gitmiştin",
+                "you had gone"
+              ],
+              [
+                "o",
+                "gitmişti",
+                "he/she/it had gone"
+              ],
+              [
+                "biz",
+                "gitmiştik",
+                "we had gone"
+              ],
+              [
+                "siz",
+                "gitmiştiniz",
+                "you (pl.) had gone"
+              ],
+              [
+                "onlar",
+                "gitmişlerdi",
+                "they had gone"
+              ]
+            ]
+          },
+          {
+            "kind": "callout",
+            "variant": "default",
+            "children": [
+              {
+                "kind": "paragraph",
+                "text": [
+                  {
+                    "kind": "text",
+                    "text": "Note that the 3pl can form in two ways: "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gitmişlerdi"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (plural marker on the participle) or "
+                  },
+                  {
+                    "kind": "mono",
+                    "children": [
+                      {
+                        "kind": "text",
+                        "text": "gitmiştiler"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "text",
+                    "text": " (plural marker after -DI). Both are standard; the first is more common in writing."
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "title": "formation"
+      },
+      {
+        "id": "examples-in-context",
+        "body": [
+          {
+            "en": "When I arrived, he had already left.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Pluperfect: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-miş-ti"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The -y- is absent because -miş ends in a consonant."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Ben geldiğimde o çoktan "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "gitmişti"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "As children we would go to the seaside every summer.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Past habitual: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "git-er-di-k"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". The aorist suffix -er ends in a consonant, so -DI attaches directly."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Çocukken her yaz denize "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "giderdik"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "I was just about to leave when the phone rang.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Future-in-past: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "çık-acak-tı-m"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". -AcAk ends in a consonant; D surfaces as t after k."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Tam çıkacaktım ki telefon çaldı."
+              }
+            ]
+          },
+          {
+            "en": "You should have got up earlier.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Past necessitative: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalk-malı-ydı-n"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". -mAlI ends in a vowel, so the buffer -y- is inserted before -DI."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Daha erken "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalkmalıydın"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "en": "If you had got up early, you wouldn't have missed the train.",
+            "kind": "example",
+            "note": [
+              {
+                "kind": "text",
+                "text": "Past conditional: "
+              },
+              {
+                "kind": "mono",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalk-sa-ydı-n"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ". -sA ends in a vowel; -y- buffers before -DI. Used in the protasis of a counterfactual."
+              }
+            ],
+            "target": [
+              {
+                "kind": "text",
+                "text": "Erken "
+              },
+              {
+                "kind": "hilite",
+                "children": [
+                  {
+                    "kind": "text",
+                    "text": "kalksaydın"
+                  }
+                ]
+              },
+              {
+                "kind": "text",
+                "text": ", treni kaçırmazdın."
+              }
+            ]
+          }
+        ],
+        "title": "examples in context"
+      },
+      {
+        "id": "common-pitfalls",
+        "body": [
+          {
+            "kind": "list",
+            "items": [
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Stacking two tense markers."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The copula -(y)DI is not a second tense suffix — it is a past copula grafted onto an existing tense form. Writing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gidiyorduyor"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " doubles the tense marker. The correct form is "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gidiyordu"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ": one tense suffix (-Iyor), one copula (-du)."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Using group-2 person endings."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " After -(y)DI, person endings are always group-1. The 2sg ending is "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-n"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not the group-2 "
+                    },
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "-sIn"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ". Say "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "gelmiştin"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": ", not "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*gelmiştinsin"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": "."
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "kind": "paragraph",
+                  "text": [
+                    {
+                      "kind": "strong",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "Inserting -y- after a consonant."
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " The buffer -y- appears only when the preceding tense suffix ends in a vowel. When it ends in a consonant, -DI attaches directly. Writing "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "*yemişyti"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " is wrong; the correct form is "
+                    },
+                    {
+                      "kind": "mono",
+                      "children": [
+                        {
+                          "kind": "text",
+                          "text": "yemişti"
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "text",
+                      "text": " (ye-miş-ti), because -miş ends in the consonant ş."
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ],
+        "title": "common pitfalls"
+      }
+    ],
+    "subtitle": "Shifting any tense into the past with the copular suffix -(y)DI"
+  }
+}
