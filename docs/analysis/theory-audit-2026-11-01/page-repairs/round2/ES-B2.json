@@ -1,0 +1,351 @@
+[
+ {
+  "key": "es-b2-adjective-position",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The prenominal slot carries a figurative, evaluative, or relational sense",
+    "replace": "The prenominal slot carries a figurative or evaluative sense",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " = former (relational); postnominal ",
+    "replace": " = former; postnominal ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Whenever you intend the evaluative or relational sense, the adjective must come before the noun.",
+    "replace": "Whenever you intend the prenominal sense of one of these adjectives, it must come before the noun.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " means «great, remarkable»; postnominal ",
+    "replace": " usually means «great, remarkable» (with objects it can also simply mean «big»: el gran ventanal); postnominal ",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-appreciative-suffixes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "drop the final vowel (if any) and add the suffix directly.",
+    "replace": "drop the final vowel (if any) and add the suffix directly. A few established forms also change the base: in puerta → portazo, the ue of the base becomes o once the stress moves to the suffix.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/1/0",
+    "finding": "R2 #1",
+    "value": "puerta (base port-)"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-causal-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " It cannot normally open a sentence as naturally as the others.",
+    "replace": " It most often follows the main clause, but it can also open the sentence: Debido a que había niebla, el vuelo se retrasó.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "post-main (preferred)",
+    "replace": "post-main (more frequent) or fronted",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-cleft-sentences",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "the relator is chosen by focus type, not by grammatical gender or number of the focused noun.",
+    "replace": "the relator is chosen by focus type. With a person focus, the el que forms also agree in gender and number with the focus: fueron ellas las que llamaron.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-clitic-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is the dominant norm everywhere. In Spain, ",
+    "replace": " is the dominant norm almost everywhere. In Spain, ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Bare nouns, quantified phrases and neuter pronouns are fronted without a clitic: Carne no como; ¡Cuántas tonterías dices!; Eso creo yo.",
+    "replace": "Bare nouns, quantified phrases and neuter pronouns are fronted without a clitic: Carne no como; ¡Cuántas tonterías dices!; Eso creo yo. The exception is fronted todo, which keeps the clitic: Todo lo sé.",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-comparatives-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " to state that two things are the same in some respect. It is invariable and does not agree in gender or number.",
+    "replace": " to state that two things are the same in some respect. Used adverbially (canta igual que su madre), igual is invariable; as a predicate adjective it takes the plural with a plural subject (mis zapatos son iguales que los tuyos).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-cuyo",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "un autor del que conozco sus novelas",
+    "replace": "un autor del que conozco las novelas",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-gerund-participle-constructions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " expresses an action that occurs immediately before the main event, with both verbs sharing the same subject. The ",
+    "replace": " expresses an action that occurs immediately before the main event, normally with both verbs sharing the same subject. The ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The gerund subject must be the same as the main-clause subject.",
+    "replace": "The gerund's subject is normally the same as the main-clause subject.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "When the subjects differ, a finite subordinate clause is required instead.",
+    "replace": "When the subjects differ, a finite clause (en cuanto llegué, …) is the safe choice; if you keep the infinitive, the other subject must be stated after it (nada más llegar yo, …).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "It is equivalent to «después de que» + subjunctive or «una vez que» + indicative.",
+    "replace": "It is equivalent to a «después de que» or «una vez que» clause with a finite verb.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Leaving a different subject unstated after nada más + infinitive."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " With no subject of its own, «nada más» + infinitive is read as sharing the main-clause subject, so «Nada más llegar, tú te fuiste» means «as soon as you arrived, you left». If someone else arrived, use a finite clause (e.g. «en cuanto llegué, tú te fuiste»), or state the subject after the infinitive: «nada más llegar yo, tú te fuiste»."
+       }
+      ]
+     },
+     {
+      "kind": "callout",
+      "variant": "warn",
+      "children": [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "text",
+          "text": "✗  "
+         },
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Nada más llegar, tú te fuiste."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "  (meaning: as soon as I arrived)"
+         }
+        ]
+       },
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "text",
+          "text": "✓  En cuanto llegué, tú te fuiste."
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "es-b2-past-subjunctive",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "-clause of counterfactual conditional sentences. Spanish has two interchangeable sets of forms: the -ra set (",
+    "replace": "-clause of counterfactual conditional sentences. Spanish has two sets of forms, interchangeable in nearly all uses: the -ra set (",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The -se set is used throughout the Spanish-speaking world, especially in Spain and in writing, though the -ra set is more common overall.",
+    "replace": "The -se set is used throughout the Spanish-speaking world, especially in Spain and in writing, though the -ra set is more common overall. Only the -ra set can stand in for the conditional, as in polite quisiera.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " forms are completely interchangeable in meaning. The ",
+    "replace": " forms are interchangeable whenever they work as subjunctives (after a trigger or in a si-clause). Only the -ra form can replace the conditional, so polite requests use quisiera, pudiera, debiera — not quisiese. The ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " ending, and add the imperfect subjunctive endings.",
+    "replace": " ending, and add the endings -ra, -ras, -ra, -ramos, -rais, -ran (or -se, -ses, -se, -semos, -seis, -sen). The nosotros form adds a written accent to the vowel before the ending (habláramos, tuviésemos).",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "imperfect subjunctive stem",
+    "replace": "stem (preterite minus -ron)",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "tuvier-",
+    "replace": "tuvie-",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "hicier-",
+    "replace": "hicie-",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/rows/2/2",
+    "finding": "R2 #2",
+    "value": "fue-"
+   },
+   {
+    "op": "replace",
+    "find": "dijer-",
+    "replace": "dije-",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "pudier-",
+    "replace": "pudie-",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-relative-clauses-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " for things, and ",
+    "replace": " for things or people, and ",
+    "finding": "R2 #1/#2"
+   },
+   {
+    "op": "replace",
+    "find": "For prepositional relatives, the structure is always: ",
+    "replace": "For prepositional relatives, the usual structure is: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (for things) or ",
+    "replace": " (for things and people) or ",
+    "finding": "R2 #1/#2"
+   },
+   {
+    "op": "replace",
+    "find": " (for people). The article agrees with the antecedent: ",
+    "replace": " (for people only). After a short preposition such as en, the article is sometimes left out (la casa en que vivo). The article agrees with the antecedent: ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-reported-speech-backshift",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Full backshift applies whenever the main reporting verb is in a past tense (preterite, imperfect, or pluperfect).",
+    "replace": "Full backshift is the default whenever the main reporting verb is in a past tense (preterite, imperfect, or pluperfect); the pitfalls below show when the original tense may stay.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " (whether/if, no accent) with the conditional affirmation ",
+    "replace": " (whether/if, no accent) with the affirmative adverb ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-sino-adversatives",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " alone can only precede a noun, adjective, adverb, or infinitive.",
+    "replace": " alone precedes anything that is not a finite clause: a noun, adjective, adverb, infinitive or prepositional phrase (no voy a Madrid, sino a Barcelona).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "noun / adjective / adverb / infinitive",
+    "replace": "noun / adjective / adverb / infinitive / prepositional phrase",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "no … , sino + noun/adj/adv/inf",
+    "replace": "no … , sino + noun/adj/adv/inf/prep. phrase",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-verbs-of-change",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", your options are ponerse, quedarse, hacerse, or volverse. If it is a ",
+    "replace": ", your options are ponerse, quedarse, hacerse, volverse, or llegar a ser. If it is a ",
+    "finding": "R2 #1"
+   }
+  ]
+ }
+]

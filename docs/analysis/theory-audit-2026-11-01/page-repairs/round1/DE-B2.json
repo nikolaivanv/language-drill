@@ -1,0 +1,2174 @@
+[
+ {
+  "key": "de-b2-dass-equivalents",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (when both clauses share the same subject), a ",
+    "replace": " (when its understood subject is the subject or object of the main clause), a ",
+    "finding": "zu-inf subject = main-clause object (§11.2.3)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "zu-infinitive — shared subject (or the main-clause object)."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When the subject of the main clause and the subject of the dass-clause are the same person or thing, the dass-clause can — and often should — be replaced by a zu-infinitive. The subordinate subject is dropped and the verb becomes infinitive with "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "zu"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich hoffe, dass ich dich bald wiedersehe."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich hoffe, dich bald wiederzusehen."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " With verbs like "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bitten, raten, empfehlen, erlauben, verbieten"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the understood subject is the main-clause object instead: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich bitte dich, früher zu kommen."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "zu-inf subject = main-clause object (§11.2.3)"
+   },
+   {
+    "op": "replace",
+    "find": " When the subjects differ, the dass-clause is obligatory and cannot be replaced by a zu-infinitive: ",
+    "replace": " When the dass-clause has its own subject that is neither the main-clause subject nor its object, the dass-clause is obligatory and cannot be replaced by a zu-infinitive: ",
+    "finding": "zu-inf subject = main-clause object (§11.2.3)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Correlates — obligatory or optional anticipatory pronouns."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " A correlate in the main clause can point forward to a following dass-clause. Verbs that govern a preposition use a da(r)+preposition form ("
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "darauf, damit, daran"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " …); verbs without a preposition may use "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "es"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". With many verbs the correlate is optional and simply adds emphasis — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich freuen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " can take "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "darauf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or leave it out: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wir freuen uns (darauf), dass ihr uns besucht."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " A few verbs require it, e.g. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich verlassen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich verlasse mich darauf, dass ihr pünktlich kommt."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "replace",
+    "find": "da(r)+preposition required by the governing verb",
+    "replace": "da(r)+preposition matching the verb's preposition (optional with sich freuen; required with e.g. sich verlassen auf)",
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "replace",
+    "find": ". Modal verbs do not take ",
+    "replace": ". With a modal verb, ",
+    "finding": "modals form zu-infinitives (§11.2.2d)"
+   },
+   {
+    "op": "replace",
+    "find": " and cannot head a zu-infinitive construction.",
+    "replace": " goes before the modal infinitive at the end: Ich hoffe, dich bald wiedersehen zu können.",
+    "finding": "modals form zu-infinitives (§11.2.2d)"
+   },
+   {
+    "op": "replace",
+    "find": " demands the correlate ",
+    "replace": " can take the correlate ",
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "replace",
+    "find": " in the main clause.",
+    "replace": " in the main clause; here it is optional and adds emphasis.",
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Dropping a required correlate."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1",
+    "value": {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "✗ "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "Ich verlasse mich, dass ihr pünktlich kommt."
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "✓ "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "Ich verlasse mich darauf, dass ihr pünktlich kommt."
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "A few verbs that govern a preposition (e.g. "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich verlassen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") require the matching da(r)+preposition correlate whenever a dass-clause or zu-infinitive follows. With many others ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich freuen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hoffen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "aufpassen auf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") it is optional: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wir freuen uns (darauf), dass ihr uns besucht."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Including the correlate is never wrong, so when in doubt, use it."
+      }
+     ]
+    },
+    "finding": "correlate optional (§16.5.14)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using the zu-infinitive for an unrelated subject."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "zu-inf subject = main-clause object (§11.2.3)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The zu-infinitive's understood subject must be the main-clause subject ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich hoffe, dich bald wiederzusehen."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") or, with verbs like "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bitten, raten, erlauben"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the main-clause object ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ich bitte dich, früher zu kommen."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). If the subordinate subject is anyone else, a full dass-clause with a finite verb is required."
+      }
+     ]
+    },
+    "finding": "zu-inf subject = main-clause object (§11.2.3)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-fixed-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ") stands in the main clause and points forward to the subordinate clause.",
+    "replace": ") usually stands in the main clause and points forward to the subordinate clause.",
+    "finding": "da(r)-correlate often optional (§6.4.1c)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The da(r)-correlate is "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "very common"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " when the complement is a clause, especially in written German, and it is never wrong to include it. With many adjectives it is optional, though: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Er ist stolz, dass er gewonnen hat"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Er ist stolz darauf, dass er gewonnen hat"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " are both correct; the correlate puts more emphasis on the clause."
+      }
+     ]
+    },
+    "finding": "da(r)-correlate often optional (§6.4.1c)"
+   },
+   {
+    "op": "replace",
+    "find": "The clause complement requires the da(r)-correlate ",
+    "replace": "The clause complement takes the da(r)-correlate ",
+    "finding": "da(r)-correlate often optional (§6.4.1c)"
+   },
+   {
+    "op": "replace",
+    "find": " in the main clause; the preposition cannot appear directly before the infinitive clause.",
+    "replace": " in the main clause (optional with stolz, but common in writing); the preposition itself cannot appear directly before the infinitive clause.",
+    "finding": "da(r)-correlate often optional (§6.4.1c)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Putting the bare preposition before a dass-clause."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " A preposition cannot introduce a clause directly: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*Er ist stolz auf, dass er gewonnen hat."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is wrong. Use the da(r)-correlate — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Er ist stolz darauf, dass er gewonnen hat."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — or, with many adjectives, leave the preposition out altogether: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Er ist stolz, dass er gewonnen hat."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " The correlate is more common in writing and stresses the clause."
+      }
+     ]
+    },
+    "finding": "da(r)-correlate often optional (§6.4.1c)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-indefinite-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — use for «several» or «a few» with countable plurals. Both are always plural and take adjective-style endings.",
+    "replace": " — use for «several» or «a few» with countable plurals; both take adjective-style endings. Mehrere is always plural; einig- also has singular uses with mass and abstract nouns (vor einiger Zeit, mit einigem Glück).",
+    "finding": "einig- has singular uses (§5.5.7a)"
+   },
+   {
+    "op": "replace",
+    "find": " is the partitive pronoun for mass nouns and plurals (equivalent to «some» in English). ",
+    "replace": " is the partitive pronoun for plurals and mass nouns (equivalent to «some» in English); with a singular mass noun it takes that noun's gender (Käse → welchen, Milch → welche, Brot → welches). ",
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   },
+   {
+    "op": "replace",
+    "find": " with strong endings where the article has none (nominative masculine and neuter, accusative neuter).",
+    "replace": " when it is a determiner before a noun (irgendein Mann, irgendein Buch). The stand-alone pronoun irgendeiner, shown in the table below, adds strong endings where the article has none (nominative masculine and neuter, accusative neuter).",
+    "finding": "irgendein determiner vs pronoun (§5.5.11d)"
+   },
+   {
+    "op": "replace",
+    "find": ") is also accepted.",
+    "replace": ") is the only correct form: irgendein Buch, never *irgendeines Buch.",
+    "finding": "irgendein determiner vs pronoun (§5.5.11d)"
+   },
+   {
+    "op": "replace",
+    "find": " are always plural and take strong adjective endings. The table below shows ",
+    "replace": " take strong adjective endings in the plural. The table below shows ",
+    "finding": "einig- has singular uses (§5.5.7a)"
+   },
+   {
+    "op": "replace",
+    "find": " serve as the plural and mass-noun partitive forms.",
+    "replace": " serve as the plural partitive forms. With a singular mass noun, welch- agrees with the noun's gender and declines like dieser: welcher (masc.), welche (fem.), welches (neut.).",
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   },
+   {
+    "op": "replace",
+    "find": "pl. / mass noun",
+    "replace": "pl.",
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   },
+   {
+    "op": "replace",
+    "find": " is the partitive pronoun for mass nouns (feminine or neuter singular, and plurals). It replaces «some» when the noun is not repeated.",
+    "replace": " is the partitive pronoun; with a mass noun it agrees with the noun's gender — feminine here (die Milch). For der Käse it would be welchen: Ja, ich habe welchen. It replaces «some» when the noun is not repeated.",
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   },
+   {
+    "op": "replace",
+    "find": "Missing welche as the partitive pronoun for mass nouns.",
+    "replace": "Missing welch- as the partitive pronoun for mass nouns.",
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/2/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": " With a masculine mass noun the form is welchen: Hast du Käse? — Ja, ich habe welchen."
+    },
+    "finding": "welch- agrees with mass noun gender (§5.5.26)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-konjunktiv-i",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — always ends in ",
+    "replace": " — ends in ",
+    "finding": "3sg ends in -e except sei"
+   },
+   {
+    "op": "replace",
+    "find": " and is never identical to the indicative, making it",
+    "replace": " (the one exception is sei, from sein) and is never identical to the indicative, making it",
+    "finding": "3sg ends in -e except sei"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-konjunktiv-ii",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/6/1",
+    "value": "konnt-",
+    "finding": "modal Präteritum stems konnt-/durft-/sollt-/wollt-"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/8/1",
+    "value": "durft-",
+    "finding": "modal Präteritum stems konnt-/durft-/sollt-/wollt-"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/9/1",
+    "value": "sollt-",
+    "finding": "modal Präteritum stems konnt-/durft-/sollt-/wollt-"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/10/1",
+    "value": "wollt-",
+    "finding": "modal Präteritum stems konnt-/durft-/sollt-/wollt-"
+   },
+   {
+    "op": "replace",
+    "find": " (an analytic construction). Synthetic forms are built from the simple past (Präteritum) stem, with an umlaut added where possible and the endings ",
+    "replace": " (an analytic construction). Synthetic forms are built from the simple past (Präteritum) stem plus the endings ",
+    "finding": "umlaut not on weak verbs, sollen, wollen (§10.5.2a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/6",
+    "value": {
+     "kind": "text",
+     "text": ". Strong verbs, haben, werden, wissen and the modals können, müssen, dürfen, mögen add an umlaut where the stem has a, o or u (kam → käme, konnte → könnte); weak verbs and sollen, wollen keep the Präteritum form unchanged (kaufte, sollte, wollte)."
+    },
+    "finding": "umlaut not on weak verbs, sollen, wollen (§10.5.2a)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-mittelfeld-word-order",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is placed immediately before the constituent it negates, or, for clausal negation, as late in the Mittelfeld as possible.",
+    "replace": " is placed immediately before the constituent it negates, or, for clausal negation, late in the Mittelfeld — after noun objects and most adverbials, but before manner adverbials and verb complements.",
+    "finding": "clausal nicht precedes manner adverbials and complements (§19.6a)"
+   },
+   {
+    "op": "replace",
+    "find": " stands as late as possible — after all adverbials and objects, but before any right-bracket infinitive or participle.",
+    "replace": " stands late — after noun objects and most adverbials, but before manner adverbials and verb complements (direction and place complements, prepositional objects, predicatives) and before any right-bracket infinitive or participle: Er fährt nicht nach Berlin; Ich warte nicht auf ihn; Er arbeitet nicht schnell.",
+    "finding": "clausal nicht precedes manner adverbials and complements (§19.6a)"
+   },
+   {
+    "op": "replace",
+    "find": "The table below shows the canonical left-to-right slot order inside the Mittelfeld.",
+    "replace": "The table below shows a typical left-to-right slot order inside the Mittelfeld — a strong tendency rather than a rigid rule (see the notes on slots 5 and 10).",
+    "finding": "adverbials before a new accusative NP by default (§19.5.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4/1",
+    "value": "full accusative object (noun phrase) — here only when already known/given; by default a noun accusative object follows most adverbials (gestern im Büro den Bericht gelesen)",
+    "finding": "adverbials before a new accusative NP by default (§19.5.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/9/1",
+    "value": "clausal negation — after objects and most adverbials, but before manner adverbials (slot 8) and verb complements (nicht nach Berlin, nicht auf ihn)",
+    "finding": "clausal nicht precedes manner adverbials and complements (§19.6a)"
+   },
+   {
+    "op": "replace",
+    "find": " only holds when at least one object is a full noun phrase.",
+    "replace": " only holds when both objects are full noun phrases.",
+    "finding": "dat-NP before acc-NP only when both are NPs (§19.4)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-modal-particles-advanced",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Particles can combine in one clause, and some combinations are very frequent in speech: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Komm doch mal her!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Das ist ja schon richtig."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Was ist denn eigentlich los?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Combined particles follow a fairly fixed order ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "doch mal"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ja wohl"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "denn eigentlich"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), so learn common pairs as chunks rather than stacking particles freely."
+      }
+     ]
+    },
+    "finding": "particle combinations are common (§9.1.6, §9.1.22)"
+   },
+   {
+    "op": "replace",
+    "find": " can appear in the same slot but is more neutral; ",
+    "replace": " works the same way in warnings, especially negative ones; ",
+    "finding": "warning nur ≈ bloß, bloß slightly stronger (§9.1.5, §9.1.25)"
+   },
+   {
+    "op": "replace",
+    "find": " always carries emotional weight.",
+    "replace": " is slightly more emphatic and more colloquial, and it is never used in the reassuring sense of nur (Kommen Sie nur herein!).",
+    "finding": "warning nur ≈ bloß, bloß slightly stronger (§9.1.5, §9.1.25)"
+   },
+   {
+    "op": "replace",
+    "find": "Replacing bloß with nur would sound far more neutral.",
+    "replace": "Sag das nur nicht! is also a warning, just slightly less emphatic.",
+    "finding": "warning nur ≈ bloß, bloß slightly stronger (§9.1.5, §9.1.25)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using bloß for reassuring nur."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Both "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bloß"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nur"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " can appear in warnings, and there they are close: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Sag das nur nicht!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Sag das bloß nicht!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " both warn, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bloß"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " slightly more emphatically. But "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nur"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " also has a reassuring, encouraging sense — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Kommen Sie nur herein!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " («Do come in!») — and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bloß"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " cannot replace it there: commands with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bloß"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " always sound like a warning. Use "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nur"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " to encourage, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bloß"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nur"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") to warn."
+      }
+     ]
+    },
+    "finding": "warning nur ≈ bloß, bloß slightly stronger (§9.1.5, §9.1.25)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-modal-perfect-word-order",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " The auxiliary hätte (or wäre for motion/state-change verbs, though rare with modals) combines with the double infinitive.",
+    "replace": " The auxiliary is always hätte, combined with the double infinitive — even when the dependent verb would take sein on its own: Er hätte kommen sollen (not *Er wäre kommen sollen).",
+    "finding": "modals always take haben (§15.1)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-nominalization",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "); adjectives and participles become nouns by taking strong adjective endings after an article (e.g. ",
+    "replace": "); adjectives and participles become nouns by keeping ordinary adjective endings — weak after der/das, strong after ein or with no article (e.g. ",
+    "finding": "nominalized adjectives: weak after der/das (§6)"
+   },
+   {
+    "op": "replace",
+    "find": "); and many verbs have a dedicated derived noun formed with a suffix such as ",
+    "replace": "); and many verbs and adjectives have a dedicated derived noun formed with a suffix such as ",
+    "finding": "-heit/-keit attach to adjectives (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/0",
+    "value": "adjective",
+    "finding": "-heit/-keit attach to adjectives (§20.2.1)"
+   },
+   {
+    "op": "replace",
+    "find": "Nominalized infinitives are always singular and always neuter. They do not have a plural form. Derived ",
+    "replace": "Nominalized infinitives are always neuter and are normally used only in the singular; just a few lexicalized ones have a plural (das Schreiben → die Schreiben «letters», das Essen → die Essen «meals»). Derived ",
+    "finding": "some nominalized infinitives have plurals (§11.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/text/16",
+    "value": {
+     "kind": "text",
+     "text": "); after ein or with no article the ending is strong (ein Kranker, etwas Gutes)."
+    },
+    "finding": "nominalized adjectives: weak after der/das (§6)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-noun-verb-collocations",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Fixed idiomatic expressions."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Some Funktionsverbgefüge have no exact single-verb equivalent and must be learned as set phrases: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "eine Rolle spielen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "in Frage kommen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Others do have one but differ in register or nuance: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich Mühe geben"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ≈ "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sich bemühen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Bescheid geben"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ≈ "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "benachrichtigen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "sich Mühe geben ≈ sich bemühen"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-passive-alternatives",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " be done). Very common in official instructions, regulations, and formal writing. Occasionally expresses possibility, but obligation is the primary reading.",
+    "replace": " be done) or possibility (something can be done). Obligation is typical of official instructions and regulations; possibility is very frequent too, especially with negation or kaum: Er ist nicht zu erreichen, Das ist kaum zu glauben.",
+    "finding": "sein+zu: possibility as common as obligation (§13.4.5a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Reading sein + zu + infinitive as one meaning only."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "sein+zu: possibility as common as obligation (§13.4.5a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sein + zu"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " can mean «must be done» or «can be done», and context decides. In deadlines, rules and instructions it usually signals "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "obligation"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Der Antrag ist bis Freitag einzureichen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " means «must be submitted», not «can be submitted». With negation or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kaum"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " it usually signals "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "possibility"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Er ist nicht zu erreichen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " means «He can't be reached», not «He mustn't be reached»."
+      }
+     ]
+    },
+    "finding": "sein+zu: possibility as common as obligation (§13.4.5a)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-relatives-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is used with a preposition when the antecedent is a whole clause; (3)",
+    "replace": " is used with a preposition when the antecedent is a whole clause or a was-type word (alles, etwas, nichts, das); (3)",
+    "finding": "wo(r)- not with noun antecedents (§5.4.4b)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wo(r)- + preposition — clause or was-type antecedent with a prepositional verb."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " When the relative clause requires a preposition and the antecedent is a whole clause (or one of the was-type words "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "alles, etwas, nichts, das"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", or a superlative), form a "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wo(r)-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " compound instead of "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "preposition + was"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": e.g. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "worüber, womit, worauf"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Add "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wor-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (with the extra "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "r"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") before prepositions that begin with a vowel. With a noun antecedent — even an abstract one — use preposition + "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "der/die/das"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "das Problem, über das wir sprachen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "wo(r)- not with noun antecedents (§5.4.4b)"
+   },
+   {
+    "op": "replace",
+    "find": " when the cases differ; when the cases are the same, no resumptive pronoun is needed.",
+    "replace": " when the cases differ; when the cases are the same, no resumptive pronoun is needed, though der can still be added for emphasis (Wer A sagt, der muss auch B sagen).",
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   },
+   {
+    "op": "replace",
+    "find": " in the relative clause. When both are nominative, no resumptive is used.",
+    "replace": " in the relative clause. When both are nominative, it is usually left out, but it can be added for emphasis: Wer A sagt, der muss auch B sagen.",
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   },
+   {
+    "op": "replace",
+    "find": " is inserted.",
+    "replace": " is needed (one could still be added for emphasis).",
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Giving the resumptive the case of wer instead of the main-clause case."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/1",
+    "value": {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "✗  Wer das glaubt, "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "der"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " kann ich nicht helfen."
+        }
+       ]
+      },
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "✓  Wer das glaubt, "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "dem"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " kann ich nicht helfen."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The resumptive takes the case required by the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "main clause"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not the case of "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "helfen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " governs the dative, so it must be "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dem"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (nominative "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " vs. dative "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dem"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). When both are nominative, the resumptive "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "der"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is optional — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wer zu spät kommt, muss draußen warten"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Wer zu spät kommt, der muss draußen warten"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " are both correct; the version with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "der"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is more emphatic."
+      }
+     ]
+    },
+    "finding": "resumptive der with matching cases is grammatical (§5.4.5a)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-subjective-modals",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/4/2",
+    "value": "Er will den Täter nicht kennen.",
+    "finding": "will example reads as volition"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-text-reference-words",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is slightly more formal and written. Both stand in subject or object position and are invariable in this function.",
+    "replace": " is slightly more formal and written. Both usually stand in subject or accusative-object position; with a verb that takes the dative, das becomes dem (Dem stimme ich zu).",
+    "finding": "sentence-anaphor takes dative dem"
+   },
+   {
+    "op": "replace",
+    "find": " has no inflection in this function — it always appears in its base form regardless of the grammatical role it fills in the new sentence.",
+    "replace": " keeps its base form in subject and accusative-object position. With a verb that takes the dative it becomes dem (Dem stimme ich zu — not *Das stimme ich zu), and after a preposition it is replaced by a da(r)-compound (dagegen, dafür).",
+    "finding": "sentence-anaphor takes dative dem"
+   },
+   {
+    "op": "replace",
+    "find": " take standard adjective endings after a definite article (weak declension) or without an article (strong declension), just like any other adjective.",
+    "replace": " take adjective endings after ein, kein or a quantifier (ein solcher Fehler, jeder solche Gedanke, alle solchen Fehler), and strong endings without an article (solcher Lärm). Solch- is not used after the definite article: *der solche Fehler is wrong.",
+    "finding": "solch- not after definite article (§5.1.6)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/rows/3",
+    "value": [
+     "solch- (attributive, after ein, nom. sg. masc.)",
+     "ein solcher Fehler",
+     "such a mistake"
+    ],
+    "finding": "solch- not after definite article (§5.1.6)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-verb-prefixes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " when the meaning is concrete or directional (stress on the prefix); it is ",
+    "replace": " when the prefix keeps its own adverbial sense — for um-, turning over or changing (stress on the prefix); it is ",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": " when the meaning is figurative or abstract (stress on the verb stem). The participle reveals",
+    "replace": " when the verb has a lexicalized meaning — often figurative, or, for um-, going around or encircling something (stress on the verb stem). The participle reveals",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": " (stress on prefix) = separable, literal (knock down); ",
+    "replace": " (stress on prefix) = separable, um- = over/down (knock down); ",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": " (stress on stem) = inseparable, figurative (drive around).",
+    "replace": " (stress on stem) = inseparable, um- = around (drive around). Both readings are literal here.",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": "and the meaning is literal/physical.",
+    "replace": "and um- keeps its sense of «over/down».",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": "and the meaning is figurative/directional in the sense of going around something.",
+    "replace": "and um- means encircling — going around something. This reading is just as literal as the separable one.",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   },
+   {
+    "op": "replace",
+    "find": "ge- inside = separable = literal; no ge- = inseparable = figurative.",
+    "replace": "ge- inside = separable; no ge- = inseparable.",
+    "finding": "um-: turning (sep.) vs encircling (insep.), not literal/figurative (§20.7.6)"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-word-formation",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/1",
+    "value": "adjective (mostly simple ones)",
+    "finding": "-keit also after -bar/-sam/-el/-er; -igkeit after -haft/-los (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/1",
+    "value": "adjective (mostly simple ones)",
+    "finding": "-keit also after -bar/-sam/-el/-er; -igkeit after -haft/-los (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4/1",
+    "value": "adjective in -lich, -ig, -bar, -sam (most -el/-er)",
+    "finding": "-keit also after -bar/-sam/-el/-er; -igkeit after -haft/-los (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/5/1",
+    "value": "adjective in -lich, -ig, -bar, -sam (most -el/-er)",
+    "finding": "-keit also after -bar/-sam/-el/-er; -igkeit after -haft/-los (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Choosing -heit instead of -keit after -lich or -ig"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": the form «*Freundlichheit» is wrong. As a working rule, adjectives ending in "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-lich"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ig"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-bar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-sam"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (and most in "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-el"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-er"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") take "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": freundlich → die Freundlich"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", einig → die Einig"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", dankbar → die Dankbar"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", einsam → die Einsam"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Adjectives in "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-haft"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-los"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-igkeit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": arbeitslos → die Arbeitslos"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "igkeit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-heit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " goes mainly on other simple adjectives: frei → die Frei"
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "heit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The choice is not wholly regular, so check a dictionary for new words."
+      }
+     ]
+    },
+    "finding": "-keit also after -bar/-sam/-el/-er; -igkeit after -haft/-los (§20.2.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Confusing -lich and -ig pairs with distinct meanings"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": some adjective pairs look similar but mean different things. "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "geistig"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (mental, intellectual) vs. "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "geistlich"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (spiritual, religious — "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ein geistlicher Würdenträger"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "); "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "täglich"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (daily, recurring) vs. "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tägig"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (lasting … days, used in compounds: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "dreitägig"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). Do not swap the suffixes: the meaning changes or the word becomes non-standard."
+      }
+     ]
+    },
+    "finding": "freundig is not a word"
+   }
+  ]
+ }
+]

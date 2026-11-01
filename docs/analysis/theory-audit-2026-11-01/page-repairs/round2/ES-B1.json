@@ -1,0 +1,412 @@
+[
+ {
+  "key": "es-b1-aspectual-periphrases",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is reflexive, the reflexive pronoun (me, te, se, nos, os, se) must agree with the subject and precede the conjugated verb.",
+    "replace": " is reflexive, the reflexive pronoun (me, te, se, nos, os, se) must agree with the subject. It goes before a conjugated verb (me puse a llorar), but it is attached to an affirmative imperative (ponte a estudiar) and can be attached to an infinitive (voy a ponerme a estudiar).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-collective-agreement",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "In Spanish, that option does not exist: the verb is always singular when the subject is a bare collective noun such as ",
+    "replace": "In Spanish, a verb that directly follows a bare collective noun is singular. Plural agreement only creeps in when the verb is far from the noun (for example in a later clause), and learners should avoid it. Typical bare collectives are ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/8",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "text",
+     "text": ", and "
+    }
+   },
+   {
+    "op": "replace",
+    "find": ". This is a direct interference from English «everyone knows».",
+    "replace": ". The error comes from the meaning («all people»), not from English, where «everyone knows» is singular too.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "If the noun is singular (even if it means «many people»), the verb and adjective must be singular.",
+    "replace": "If a bare subject noun is singular (even if it means «many people»), the verb and adjective must be singular. The exception is collective + de + plural noun, where the plural noun usually drives agreement: la mayoría de los vecinos creen.",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-deber-obligation-probability",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The infinitive that follows can be any verb. The structure is always: ",
+    "replace": "The infinitive that follows can be any verb, including haber + participle for past reference (debería haberlo hecho, debe de haber llegado). The basic structure is: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". Nothing comes between deber and the infinitive except the optional ",
+    "replace": ". Normally nothing comes between deber and the infinitive except the optional ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-discourse-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — use it to express the reason for an action when the subject of both verbs is the same.",
+    "replace": " — use it to express the reason for an action, usually when the subject of both verbs is the same.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-indirect-questions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " for yes/no questions. The word order inside the embedded question is normal declarative order — not inverted as in a direct question — and the interrogative word always carries a written accent.",
+    "replace": " for yes/no questions. The word order inside the embedded question is the same as in the direct question — the verb normally comes straight after the interrogative word, unlike English «where the stop is» — and the interrogative word always carries a written accent.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Word order inside the embedded clause "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "stays the same"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " as in the direct question. Compare the direct question «¿Dónde "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "está"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " la parada?» with the indirect version «Pregúntale dónde "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "está"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " la parada»: in both, the verb follows the question word. Do not copy the English order («where the stop is»): «Pregúntale dónde la parada está» sounds unnatural."
+      }
+     ]
+    }
+   },
+   {
+    "op": "replace",
+    "find": " + finite clause in the imperfect. Declarative word order — the verb does not move to the front.",
+    "replace": " + finite clause in the imperfect. As in the direct question («¿Cuándo empezaba la película?»), the verb follows the question word.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-past-narration",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", expresses «on doing X» or «when X happened» and is preferred over a finite clause when both clauses share the same subject.",
+    "replace": ", expresses «on doing X» or «when X happened». It is a concise alternative to a finite clause, used most often when both clauses share the same subject.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The interrupting event is always in the indefinido.",
+    "replace": "The interrupting event is normally in the indefinido.",
+    "finding": "R2 #4"
+   },
+   {
+    "op": "replace",
+    "find": " + infinitivo when the same subject performs two actions and the second happens immediately upon the first.",
+    "replace": " + infinitivo when one action happens immediately upon another, typically with the same subject for both.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " clause and is the preferred form in written and spoken B1+ Spanish.",
+    "replace": " clause and is especially common in writing.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " never changes for person or tense. The subject is understood from context. Only use this construction when both clauses share the same subject.",
+    "replace": " never changes for person or tense. The subject is usually understood from context and shared with the main clause; a different subject goes after the infinitive (al salir el sol, …).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "«Fui a salir» means «I went out (in order to leave)» — a completed action — not an intention that was cut short.",
+    "replace": "«Fui a salir» presents the going-out as a completed event («I went to go out»), not as an intention that was still in progress when it was cut short.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "Using a finite cuando clause instead of al + infinitivo when the subjects match.",
+    "replace": "Relying only on cuando clauses when the subjects match.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " is the more natural and idiomatic choice in Spanish. Defaulting to the finite clause can sound awkward or overly literal.",
+    "replace": " is a more concise alternative, especially in writing. The finite clause is not wrong, but using it every time can make a narrative feel repetitive.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "Less idiomatic:  ",
+    "replace": "Correct:  ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "More idiomatic:  ",
+    "replace": "More concise:  ",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-pluperfect",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " and the participle except object pronouns, which are placed ",
+    "replace": " and the participle: object pronouns are placed ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-ser-estar-uses",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is used. For dates, the first-person plural is standard: ",
+    "replace": " is used. For dates, this pattern takes the first-person plural: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". For prices, third-person plural agrees with the goods: ",
+    "replace": " (hoy es quince de mayo, with ser, is just as correct). For prices, the verb agrees with the goods: ",
+    "finding": "R2 #1/#3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/9",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "text",
+     "text": " (for las manzanas), but la gasolina está a 1,50 el litro."
+    }
+   },
+   {
+    "op": "replace",
+    "find": "estar a + price (3rd pl.)",
+    "replace": "estar a + price (agrees with the goods)",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " is used. The first-person plural is the standard form for dates in Spanish.",
+    "replace": " is used. This date pattern takes the first-person plural; «Hoy es quince de mayo», with ser, is equally correct.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "finding": "R2 #2",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Using ser in the estar a date pattern."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " «"
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*somos a quince"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "» is a common error. With "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "a"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + the day, the date takes "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "estar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "estamos a quince"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Think of it as a position on a calendar that changes every day — a fluctuating value, hence "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "estar"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Without "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "a"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", ser is the normal choice: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hoy es quince de mayo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "key": "es-b1-superlatives-comparisons",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". The adjective does not change form in this structure.",
+    "replace": ". Igual never changes, but the adjective agrees with the subject: ella es igual de alta que su hermano.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "The reference group is always introduced by ",
+    "replace": "The reference group (a noun phrase such as la ciudad) is introduced by ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": ": the reference group after a relative superlative is always introduced by ",
+    "replace": ": a reference group (a noun phrase) after a relative superlative is introduced by ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " (más caro que el otro), but the superlative construction is different.",
+    "replace": " (más caro que el otro), but the superlative construction is different. A relative clause after a superlative does take que: el más caro que he visto.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/rows/3/1",
+    "finding": "R2 #3",
+    "value": "facil-"
+   },
+   {
+    "op": "replace",
+    "find": "The suffix agrees in gender and number: -ísimo, -ísima, -ísimos, -ísimas.",
+    "replace": "Any written accent on the base disappears, because the stress moves to the suffix (fácil → facilísimo). The suffix agrees in gender and number: -ísimo, -ísima, -ísimos, -ísimas.",
+    "finding": "R2 #3"
+   }
+  ]
+ }
+]

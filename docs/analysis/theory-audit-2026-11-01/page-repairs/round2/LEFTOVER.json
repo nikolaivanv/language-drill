@@ -1,0 +1,34 @@
+[
+ {
+  "key": "tr-b1-past-continuous-iyordu",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The third-person plural places ",
+    "replace": "The third-person plural usually places ",
+    "finding": "leftover: *geliyordular is allowed (G&K §8.4(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/4",
+    "value": {
+     "kind": "text",
+     "text": "; "
+    },
+    "finding": "leftover"
+   },
+   {
+    "op": "replace",
+    "find": "*geliyordular",
+    "replace": "geliyordular",
+    "finding": "leftover"
+   },
+   {
+    "op": "replace",
+    "find": " (though the latter is heard in informal speech). After -lar the vowel is ",
+    "replace": " with -lar at the end is also possible, but less common. After -lar the vowel is ",
+    "finding": "leftover"
+   }
+  ]
+ }
+]

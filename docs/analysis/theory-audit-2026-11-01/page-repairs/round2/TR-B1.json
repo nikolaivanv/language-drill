@@ -1,0 +1,641 @@
+[
+ {
+  "key": "tr-b1-olarak",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Adverbialising derived adjectives."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Most derived adjectives — for example those formed with "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-sAl"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " ("
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bilimsel"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") or "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-(y)IcI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " ("
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "geçici"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), and some fixed forms such as "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "yazılı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — cannot modify a verb on their own. Adding olarak turns them into adverbials: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "yazılı olarak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «in writing», "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bilimsel olarak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «scientifically», "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "geçici olarak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «temporarily». Many adjectives in "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-lI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " and "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-sIz"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", like plain adjectives, can stand directly before the verb: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "dikkatli sür"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «drive carefully»."
+     }
+    ]
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Dropping olarak after derived adjectives."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Most derived adjectives — for example those ending in "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-sAl"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-(y)IcI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " — cannot directly modify a verb. "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Incorrect:"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bilimsel anlattı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Correct:"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bilimsel olarak anlattı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " «explained it scientifically». olarak is the bridge that turns the adjective into a verbal modifier."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-participles-dik-acak",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/children/0/text",
+    "finding": "R2 #2",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Notice that the final "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "k"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " of -DIK softens to "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "ğ"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " before any vowel-initial possessive: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "okuduk + um → okuduğum"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "okuduk + u → okuduğu"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". Only the 3rd plural "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-lArI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", which starts with a consonant, keeps the "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "k"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ": "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "okudukları"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". The same softening applies to -(y)AcAK: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gidecek + i → gideceği"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3/note",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Explicit 3rd-person subject "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "annemin"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (genitive) → 3rd-sg. possessive "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-ı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " on the verb: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "yaptık + ı → yaptığı"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-past-continuous-iyordu",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " triggers buffer ",
+    "replace": " triggers the buffer vowel ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " and copula ",
+    "replace": "; the past suffix is ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/6",
+    "value": {
+     "kind": "text",
+     "text": " after -yor for every verb."
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " The simple-past set, here always back and rounded: ",
+    "replace": " The simple-past set: ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/items/2/0/text/3",
+    "value": {
+     "kind": "text",
+     "text": ". In the 3rd person plural, -lar comes before the past suffix (see below)."
+    },
+    "finding": "R2 #3/#4"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-reflexive-voice-kendi",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is not standard Turkish. Use either the -(I)n verb alone (",
+    "replace": " is not standard Turkish. Use the -(I)n verb alone (",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ") or kendi with the base transitive verb.",
+    "replace": "). kendi + a transitive verb is the pattern for verbs outside the closed set (kendimi gördüm); with giy- it would not mean «get dressed».",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-b1-when-converbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "-(y)i (→ ∅ + buffer)",
+    "replace": "-i (+ n before -de)",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text",
+    "finding": "R2 #2",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Note that "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "git-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is one of a handful of verbs (with "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "et-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " and "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "tat-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") whose final "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "t"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " becomes "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "d"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " before a vowel-initial suffix, giving "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gidince"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", not "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*gitince"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". Most verbs keep their final consonant: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bitince"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "atınca"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   },
+   {
+    "op": "replace",
+    "find": ". The full pattern is: stem + -DIk + possessive + -dA.",
+    "replace": ". The full pattern is: stem + -DIk + possessive + -dA. The k of -DIk softens to ğ before a vowel-initial possessive (geldiğim), and after the 3rd-person possessive the locative appears as -nde (geldiğinde). The onlar possessive -leri starts with a consonant, so k stays: geldiklerinde.",
+    "finding": "R2 #3"
+   }
+  ]
+ }
+]

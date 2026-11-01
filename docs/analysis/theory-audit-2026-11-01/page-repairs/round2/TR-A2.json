@@ -1,0 +1,250 @@
+[
+ {
+  "key": "tr-a2-converbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is inserted when the stem ends in a vowel.",
+    "replace": " is inserted after a vowel-final stem for the vowel-initial suffixes -(y)Ip, -(y)ArAk and -(y)A; -mAdAn begins with a consonant and takes no buffer (okumadan).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-distributive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Using a plain numeral instead of the distributive."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " A plain numeral does not make the distribution explicit: «Çocuklara iki elma verdim» most naturally means I gave the children two apples in total. To say that each child got two, use the distributive: «Çocuklara "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "ikişer"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " elma verdim» (I gave the children two apples each)."
+       }
+      ]
+     }
+    ],
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Mixing up the single and the reduplicated form."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " A single distributive (ikişer) normally stands before a noun and means «two each»: ikişer elma (two apples each). The reduplicated form (ikişer ikişer) works as an adverb of manner meaning «two by two / in twos»: «Çocuklar "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "ikişer ikişer"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " girdi» (the children came in two by two)."
+       }
+      ]
+     }
+    ],
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-nominalization",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "All three suffixes attach directly to the bare verb stem. The vowels in the suffixes follow vowel harmony: A is two-way (a/e), I is four-way (ı/i/u/ü).",
+    "replace": "All three suffixes attach to the verb stem. The vowels in the suffixes follow vowel harmony: A is two-way (a/e), I is four-way (ı/i/u/ü). Because -Iş begins with a vowel, it brings the usual stem adjustments: a buffer -y- after a vowel-final stem (yürü- → yürüyüş) and t → d softening in stems like git- (gidiş).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-optative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Attach the suffix directly to the verb stem. ",
+    "replace": "Attach the suffix directly to the verb stem; the final t of git- and et- softens to d before the vowel (gideyim, edelim). ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " ends in a consonant; no buffer needed.",
+    "replace": " ends in a consonant, so no buffer is needed; its final t softens to d before the vowel: gid-eyim.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-past-copula",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " («there was not»). These are fixed third-person forms and do not change for person.",
+    "replace": " («there was not»). They are mostly third person, but like any -(y)DI predicate they take the Group 1 endings when a person is the subject: Dün evde yoktum («I wasn't at home yesterday»).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-reflexive-reciprocal-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "It always takes a possessive suffix to agree with the subject, and then takes whatever case the sentence requires. ",
+    "replace": "As a pronoun it takes a possessive suffix to agree with the subject, and then whatever case the sentence requires (as an adjective, «own», it stays bare: kendi evim). ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": "kendi kendine / kendi kendim",
+    "replace": "kendi kendime / kendi kendine / kendi kendimize",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " means «on one's own», «without help», «to oneself».",
+    "replace": " (second kendi + the subject's possessive + dative) means «on one's own», «without help», «to oneself».",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "The dative -e on the second kendi is fixed in this idiom.",
+    "replace": "The second kendi carries the subject's possessive plus the dative: kendi kendime (I), kendi kendine (he/she), kendi kendimize (we).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-spatial-postpositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ": the landmark noun takes the genitive suffix and the relational noun takes a third-person possessive suffix, after which a ",
+    "replace": ": the landmark noun takes the genitive suffix and the relational noun takes a possessive suffix agreeing with it (third person for a noun landmark), after which a ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " The relational noun must carry the third-person possessive, and the -n- buffer must appear before any case suffix. ",
+    "replace": " The relational noun must carry a possessive — third person for a noun landmark (masanın üstü), the matching person for a pronoun (benim yanım) — and after a third-person possessive the -n- buffer must appear before any case suffix. ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-suffix-order-buffers",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " joins any vowel-final stem to a vowel-initial suffix (",
+    "replace": " joins a vowel-final stem to most vowel-initial suffixes (",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " appears before any case suffix, vowel- or consonant-initial, when the preceding element is",
+    "replace": " opens the genitive -(n)In after a vowel-final noun (araba-n-ın, not *araba-y-ın) and appears before any case suffix, vowel- or consonant-initial, when the preceding element is",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". The stems ",
+    "replace": " — but not before the genitive, which takes -n- after a vowel: arabanın, not *arabayın. The stems ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " is reserved for the boundary between a 3rd-person possessive (or ",
+    "replace": " opens the genitive after a vowel-final noun (araba-n-ın) and marks the boundary between a 3rd-person possessive (or ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/3/rows/4",
+    "value": [
+     "-n-",
+     "vowel-final stem + genitive -(n)In",
+     "araba + -(n)In → araba-n-ın (not *araba-y-ın)"
+    ],
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-with-without-li-siz",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows",
+    "value": [
+     [
+      "a, ı",
+      "-lı",
+      "-sız"
+     ],
+     [
+      "e, i",
+      "-li",
+      "-siz"
+     ],
+     [
+      "o, u",
+      "-lu",
+      "-suz"
+     ],
+     [
+      "ö, ü",
+      "-lü",
+      "-süz"
+     ]
+    ],
+    "finding": "R2 #1"
+   }
+  ]
+ }
+]

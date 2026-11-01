@@ -1,0 +1,3 @@
+[{"key":"de-b2-nominalization","edits":[
+ {"op":"replace","find":"ohne + Infinitivnomen","replace":"ohne + bare Infinitivnomen (ohne Zögern)","finding":"final: show the article-less ohne pattern"},
+ {"op":"replace","find":". These contractions are obligatory in standard written German.","replace":". These contractions are the normal form in these patterns; bei dem / zu dem appear only when the article is stressed or demonstrative.","finding":"final: obligatory -> normal"}]}]

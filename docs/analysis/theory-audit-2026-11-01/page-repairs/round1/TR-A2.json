@@ -1,0 +1,1320 @@
+[
+ {
+  "key": "tr-a2-correlative-conjunctions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/1/text",
+    "value": " — use to exclude both items. Equivalent to English «neither … nor». The verb that follows can be positive or negative — Ne çay ne kahve içerim and Ne çay ne kahve içmem are both correct; they differ only in stress and intonation.",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/0/text",
+    "value": "The verb ",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/2/text",
+    "value": " is positive and the negation is supplied by ",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/4/text",
+    "value": " itself. A negative verb (içmem) is also correct here.",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3/note/2/text",
+    "value": " «there is / I have» is affirmative; ",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3/note/4/text",
+    "value": " (Ne param ne de zamanım yok) is also possible, with a different stress pattern.",
+    "finding": "ne…ne predicate may be negative (G&K §20.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Moving the second half after a negative verb."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " The second "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "ne"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " conjunct can be placed after the verb, but only when the verb is positive: "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ne çay içerim ne de kahve."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " With a negative verb, keep both halves before it: "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ne çay ne de kahve içmem."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "callout",
+      "variant": "warn",
+      "children": [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "✗"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Ne çay "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "içmem"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " ne de kahve.  "
+         },
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "✓"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Ne çay "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "içerim"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " ne de kahve."
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "finding": "ne…ne predicate may be negative (G&K §20.4) — pitfall reframed (G&K §20.4 ex. 41-42: postposed conjunct only with affirmative predicate)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-adversative-connectors",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/0/children/0/text",
+    "value": "ama / fakat — between adjectives.",
+    "finding": "ama AND fakat conjoin adjectives (G&K §28.3.4.1 ex. 55)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/3/text",
+    "value": " (or fakat) links them directly: ",
+    "finding": "ama AND fakat conjoin adjectives (G&K §28.3.4.1 ex. 55)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/1/1",
+    "value": "between clauses or adjectives",
+    "finding": "ama AND fakat conjoin adjectives (G&K §28.3.4.1 ex. 55)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/1/2",
+    "value": "clauses, adjectives",
+    "finding": "ama AND fakat conjoin adjectives (G&K §28.3.4.1 ex. 55)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/note/0/text",
+    "value": "ama linking two contrasting adjectives that modify the same noun. fakat would be equally correct here.",
+    "finding": "ama AND fakat conjoin adjectives (G&K §28.3.4.1 ex. 55)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/1/children/0/text/0/text",
+    "value": "✗  Hava soğuk ",
+    "finding": "truncated / non-minimal-pair callout"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/1/children/0/text/2/text",
+    "value": " dışarı çıkmak istiyorum.  (says the cold is caused by your wish to go out)",
+    "finding": "truncated / non-minimal-pair callout"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/8/text",
+    "value": " act as discourse connectives that mainly open a new sentence to introduce a limitation or drawback. All four signal that what follows qualifies, restricts, or contradicts what came before.",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/1/text",
+    "value": " These two words usually begin a separate sentence and introduce a failure, inability, or disadvantage that qualifies the preceding statement. ancak is more formal in tone than ",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/3/text",
+    "value": "; yalnız is also common in speech. Note that ",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/1",
+    "value": "mainly sentence-initial",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/3",
+    "value": "formal",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/1",
+    "value": "mainly sentence-initial",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/3",
+    "value": "neutral",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/1/text",
+    "value": " These words are not simply stylistic alternatives. They specifically introduce a failure, inability, or disadvantage, and they ",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/2/children/0/text",
+    "value": "typically",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/3/text",
+    "value": " open a new sentence. Joining two clauses with ancak is possible, mostly in writing, but the everyday clause-linker is ama.",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1/children/0/text/0/text",
+    "value": "✓  Semra hep gezmek istiyor ",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1/children/0/text/1/children/0/text",
+    "value": "ama",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1/children/0/text/2/text",
+    "value": " zamanı yok.  (everyday, one sentence)",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1/children/1/text/2/text",
+    "value": " zamanı yok.  (a drawback, as a new sentence)",
+    "finding": "ancak/yalnız mainly (not obligatorily) sentence-initial; yalnız not formal"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-aorist",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Using -(I)yor for general truths."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Her sabah kahve içiyorum"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is correct — -(I)yor can describe a current habit. But a general truth or characteristic trait takes the aorist: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Kaplumbağa yavaş yürüyor"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " means «the tortoise is walking slowly» (right now), not a statement about tortoises in general. Use the aorist "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "yürür"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " for the general statement."
+     }
+    ],
+    "finding": "-(I)yor is habitual too (G&K §21.3.2)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/0/note/2/text",
+    "value": " (every morning) is a typical time marker for the aorist here; içiyorum would also be correct, presenting it as a current routine.",
+    "finding": "-(I)yor is habitual too (G&K §21.3.2)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-past-copula",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/0/text",
+    "value": "Turkish has no standalone verb meaning «to be» in the present tense — the copula is a suffix. In the past, however, it surfaces as a distinct suffix attached directly to a nominal predicate (a noun, adjective, or adverbial). This page covers two copula suffixes: ",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/6/text",
+    "value": ", which marks a state reported second-hand or inferred and has no tense of its own (e.g. ",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/8/text",
+    "value": " — «she is / was apparently ill»; context sets the time). Both suffixes carry their own set of personal endings and follow standard four-way vowel harmony. They are not the same as the verbal past tense suffix ",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/0/children/0/text",
+    "value": "Reported or inferred states with -(y)mIş.",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/1/text",
+    "value": " Use this when you did not witness the state yourself — you heard it from someone else, read it, or are inferring it from evidence. It is often translated as «apparently», «reportedly», or «I hear that». It has no tense: without a time word, hastaymış usually means «apparently she is ill»; with dün («yesterday») it means «apparently she was ill».",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/0/2",
+    "value": "I am / was apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/1/2",
+    "value": "you are / were apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/2/2",
+    "value": "he/she/it is / was apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/3/2",
+    "value": "we are / were apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/4/2",
+    "value": "you (pl.) are / were apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/rows/5/2",
+    "value": "they are / were apparently ill",
+    "finding": "copular -(y)mIş is tenseless (G&K §21.4.3.1)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-reflexive-reciprocal-pronouns",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0/text/0/children/0/text",
+    "value": "Wrong case or person on birbiri",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0/text/1/text",
+    "value": " — always match the case to what the verb requires: accusative (birbirini), dative (birbirine), ablative (birbirinden), etc. For «they», both birbiri- and birbirleri- are standard: ",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0/text/2/children/0/text",
+    "value": "birbirlerini",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0/text/3/text",
+    "value": " is the neutral form for groups. For «we» and «you», change the possessive: ",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/children/0/text/2/text",
+    "value": " already contains a 3rd-person possessive (-i). For a 3rd-person plural subject, birbirleri- is equally standard (birbirlerini, birbirlerine). When the subject is 1st or 2nd person, replace that possessive: birbirimiz-, birbiriniz-, then add the case suffix.",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/5/note/2/text",
+    "value": ". The verb yardım etmek takes the dative, so birbiri takes the dative too. Birbirlerine yardım ettiler is equally correct.",
+    "finding": "birbirleri is standard (G&K §18.1.4)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-converb-temporal",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/4/text",
+    "value": " represent the two-way and four-way vowel harmony alternations respectively, and ",
+    "finding": "A two-way, I four-way (reversed)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/4/text",
+    "value": " (front rounded vowel harmony).",
+    "finding": "ü is front rounded, not back"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-indefinite-compound",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/3/body/0/note/2/text",
+    "value": " (front unrounded vowel harmony).",
+    "finding": "i is front unrounded, not back"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-ability-necessity",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/14/text",
+    "value": ". Both suffixes attach to the bare verb stem and follow two-way vowel harmony (-abil / -ebil, -malı / -meli).",
+    "finding": "two-way, not four-way harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/children/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Because "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-mAlI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " ends in a vowel and the first-person ending "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-(y)Im"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " begins with one, a buffer "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-y-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is inserted: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gitmeliyim"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", not "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*gitmeliim"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "garbled buffer -y- rationale"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-converbs",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text/1/text",
+    "value": " Only -(y)Ip follows four-way harmony: -ip / -ıp / -up / -üp. -(y)ArAk (-erek / -arak), -mAdAn (-meden / -madan) and the repeated converb -(y)A (-e / -a) follow two-way harmony.",
+    "finding": "only -(y)Ip is four-way"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-nominalization",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/rows/1/2",
+    "value": "gelmen",
+    "finding": "Cyrillic in gelmен"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/0/text",
+    "value": "All three suffixes attach directly to the bare verb stem. The vowels in the suffixes follow vowel harmony: A is two-way (a/e), I is four-way (ı/i/u/ü).",
+    "finding": "A is two-way"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-clitics-da-bile",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/1/2",
+    "value": "o da",
+    "finding": "sen da -> back-vowel example o da"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/rows/1/3",
+    "value": "he/she too",
+    "finding": "sen da -> back-vowel example o da"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/1/text",
+    "value": " The locative suffix is attached directly to the noun with no space, follows 2-way vowel harmony (",
+    "finding": "locative is 2-way + d/t, not 4-way"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/7/text",
+    "value": ", likewise 2-way (",
+    "finding": "locative is 2-way + d/t, not 4-way"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-possessive-case-stacking",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/10/text",
+    "value": " is inserted between the possessive ending and every case suffix — not only before a vowel (odasına) but before consonant-initial cases too (evinde, odasından).",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/2/children/0/text/6/text",
+    "value": ") possessives, and it appears before every case suffix, whether the case begins with a vowel or a consonant (odasına, odasında). First- and second-person possessives (",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/2/children/0/text/8/text",
+    "value": ") never take it.",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3/note/2/text",
+    "value": "; buffer ",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/note/2/text",
+    "value": "; buffer ",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/5/note/2/text",
+    "value": "; buffer ",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/5/note/6/text",
+    "value": ", even though -de begins with a consonant.",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/1/text",
+    "value": " After a 3sg or 3pl possessive, the -n- must appear before every case suffix, including the consonant-initial locative and ablative. ",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/2/children/0/text",
+    "value": "*odasıda",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text/8/children/0/text",
+    "value": "odasında",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/1/text",
+    "value": " These possessives never take the -n-. ",
+    "finding": "pronominal n before every case suffix (G&K §6.2(ii)(b))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/target/0/text",
+    "value": "Selin'in ",
+    "finding": "personal-name possessor needs genitive"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4/note/0/text",
+    "value": "Selin'in (genitive possessor) + oda-sı-n-a — 3sg possessive ",
+    "finding": "personal-name possessor needs genitive"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-spatial-postpositions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/0/text",
+    "value": "A specific landmark noun takes the genitive suffix ",
+    "finding": "genitive not 'always' (G&K §17.3.1.2)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/6/text",
+    "value": " (on top of the table). A non-specific or general complement can stay bare (bir kağıt üstünde «on a piece of paper», yargıç önüne çıkmak «to appear before a judge»), but a particular house or table needs the genitive.",
+    "finding": "genitive not 'always' (G&K §17.3.1.2)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/0/children/0/text",
+    "value": "Omitting the genitive on a specific landmark.",
+    "finding": "genitive not 'always' (G&K §17.3.1.2)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/1/text",
+    "value": " When the landmark is a particular, identifiable thing, it must carry the genitive suffix. ",
+    "finding": "genitive not 'always' (G&K §17.3.1.2)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/3/text",
+    "value": " is incorrect for «in front of the house»; the required form is ",
+    "finding": "genitive not 'always' (G&K §17.3.1.2)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-purpose-icin-uzere",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/9/children/0/text",
+    "value": "-mA + possessive + için",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/2/children/0/text",
+    "value": "-mA + possessive + için",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0/text/3/text",
+    "value": " when the purpose clause has its own subject. That subject takes the genitive case and the verbal noun takes the matching possessive suffix: (senin) anlaman için, (onun) anlaması için.",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "For a different-subject purpose clause, the verbal noun "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-mA"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " takes the possessive suffix of its subject — "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-m, -n, -(s)I, -mIz, -nIz, -lArI"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (anlamam, anlaman, anlaması, anlamamız, anlamanız, anlamaları) — and the logical subject takes the genitive:"
+     }
+    ],
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/head/1",
+    "value": "-mA + possessive + için",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/rows/0/1",
+    "value": "anlaman için",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/rows/0/2",
+    "value": "so that you understand",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/rows/1/2",
+    "value": "so that he/she sees",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/rows/2/1",
+    "value": "okumaları için",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/5/rows/2/2",
+    "value": "so that they read",
+    "finding": "possessive agrees with embedded subject"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0/text/7/children/0/text",
+    "value": "-mA + possessive + için",
+    "finding": "possessive agrees with embedded subject"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-indefinite-pronouns",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/20/text",
+    "value": " group (kimse, hiçbiri, hiçbir, hiçbir şey): in statements, the latter group requires a negative verb.",
+    "finding": "kimse + positive verb in questions (G&K §20.5.3 ex. 60)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/1/text",
+    "value": " — use for «no one / nobody» with a negative verb, or for «anyone» in questions, where the verb can be positive: Evde kimse var mı? «Is anyone home?»",
+    "finding": "kimse + positive verb in questions (G&K §20.5.3 ex. 60)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/0/text",
+    "value": "In statements, rows marked «neg. verb» require the verb to carry the negation suffix ",
+    "finding": "kimse + positive verb in questions (G&K §20.5.3 ex. 60)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/6/text",
+    "value": ". A yes/no question is the exception: Kimse var mı? «Is anyone there?»",
+    "finding": "kimse + positive verb in questions (G&K §20.5.3 ex. 60)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/9/text",
+    "value": " demand a negative verb (-mA), yok, or değil in a statement: Kimse gel",
+    "finding": "kimse + positive verb in questions (G&K §20.5.3 ex. 60)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/0/0/text/3/text",
+    "value": " is optional: biri and birisi both mean «someone» (Kapıda birisi var «There is someone at the door»).",
+    "finding": "birisi is just 'someone' (G&K ch. 18)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/text/5/text",
+    "value": " before any case suffix. For example: hepsi → hepsi",
+    "finding": "consistency: pronominal -n- before every case suffix"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/text/9/text",
+    "value": "e (dative), and also hepsinde (locative).",
+    "finding": "consistency: pronominal -n- before every case suffix"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/1/text",
+    "value": " Pronouns ending in the possessive -i / -si need a buffer -n- before case suffixes, while kimse takes the ordinary -y-. Correct forms: kimse",
+    "finding": "consistency: pronominal -n- before every case suffix"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-mis-evidential",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/8/text",
+    "value": " instead would present hearsay or inference as first-hand knowledge. Established facts are different: history, your own birth and news narration normally keep -DI (İstanbul 1453'te fethedildi «Istanbul was conquered in 1453»; 1990'da doğdum «I was born in 1990»).",
+    "finding": "-DI is normal for established unwitnessed facts"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/children/0/text/2/text",
+    "value": ". If you were not present and are passing on what you heard or inferred, use ",
+    "finding": "-DI is normal for established unwitnessed facts"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/children/0/text/4/text",
+    "value": ". Accepted facts you simply know, such as dates in history, keep -DI.",
+    "finding": "-DI is normal for established unwitnessed facts"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/3/text",
+    "value": " as a general past tense. In Turkish this is not neutral — it presents the event as known first-hand. When reporting what someone told you or what you deduced, ",
+    "finding": "-DI is normal for established unwitnessed facts"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-enumerator-tane",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/4/text",
+    "value": ") and a noun, usually a discrete, non-human one. It signals that individual, countable items are being referred to: ",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/0/children/0/text",
+    "value": "Less usual with human nouns.",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/1/text",
+    "value": " For people, the numeral alone or ",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/3/text",
+    "value": " is the neutral choice: ",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/7/text",
+    "value": ". ",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/4/0/text/9/text",
+    "value": " is also heard, especially in casual speech (iki tane çocuğu var «he/she has two children»).",
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Overusing tane with people."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "tane"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is mainly used for things. With people, "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "üç tane öğretmen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is possible in casual speech, but "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "üç öğretmen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "üç kişi"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is the neutral choice, especially in writing."
+     }
+    ],
+    "finding": "tane with humans: usual tendency, not a ban (G&K §15.8)"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-optative",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/1/children/0/text",
+    "value": "two-way vowel harmony",
+    "finding": "A two-way; I only ı/i"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/2/text",
+    "value": " (A = a/e). The I of -yIm / -lIm always follows that a or e, so it is only ı or i: alayım, gideyim, okuyayım — never *okuyayum. If the stem ends in a vowel, insert the buffer consonant ",
+    "finding": "A two-way; I only ı/i"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-relative-an",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/0/text",
+    "value": "The stem ",
+    "finding": "oyna- is vowel-final"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-suffix-order-buffers",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/4/text",
+    "value": ". Three buffer consonants appear at suffix boundaries: ",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/6/text",
+    "value": " joins any vowel-final stem to a vowel-initial suffix (Turkish avoids two vowels meeting there — a rule separate from vowel harmony), ",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/10/text",
+    "value": " appears before any case suffix, vowel- or consonant-initial, when the preceding element is a 3rd-person possessive, a demonstrative or 3rd-person pronoun, or ",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/1/0/text/7/text",
+    "value": ". The stems ",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/1/0/text/11/text",
+    "value": " (what) are irregular: before the possessive and the genitive they take -y- where other vowel-final nouns take -s- or -n- (suyu «his/her water», not *susu; suyun «of the water», not *sunun).",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/3/0/text/5/text",
+    "value": ". It appears before consonant-initial cases too, so it is not just a vowel separator: ",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/3/0/text/7/text",
+    "value": ", odasında.",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/1/1",
+    "value": "irregular stems su / ne before the possessive and genitive (instead of -s- / -n-)",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/1/2",
+    "value": "su + -(s)I → su-y-u (not *su-s-u)",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/4/text",
+    "value": " — our house). It is not a 3rd-person possessive, so no ",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/4/children/0/text/10/text",
+    "value": " buffer is triggered specifically by the 3rd-person possessive (and -ki), before every case suffix: odasına, odasında.",
+    "finding": "hiatus avoidance is not vowel harmony"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/en",
+    "value": "The letter came to his/her children.",
+    "finding": "çocuklarına analysis vs gloss"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/0/text",
+    "value": "çocuk + -lar (plural) + -ı (3sg possessive) + -n- (buffer) + -a (dative) — possessive always precedes case. Read as çocuk + -ları (3pl possessive) + -n- + -a, the same form means «to their children».",
+    "finding": "çocuklarına analysis vs gloss"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/5/target/0/text",
+    "value": "Bardaktaki ",
+    "finding": "-ki needed for 'the water in the glass'"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/5/note/0/text",
+    "value": "bardak-ta-ki «the one in the glass» describes the water; su-y-u is the ordinary accusative -(y)I after a vowel. su is irregular only before the possessive and genitive: suyu «his/her water», suyun «of the water» — never *susu, *sunun.",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii)); -ki needed for 'the water in the glass'"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/3/text",
+    "value": " where other vowel-final nouns take -s- or -n-, in the possessive and the genitive: ",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/5/text",
+    "value": " (his/her water), ",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/6/children/0/text",
+    "value": "su-y-un",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/7/text",
+    "value": " (of the water), ",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/8/children/0/text",
+    "value": "su-y-um",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/12/children/0/text",
+    "value": "ne-y-imiz",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/14/children/0/text",
+    "value": "*susu",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/16/children/0/text",
+    "value": "*sunun",
+    "finding": "su/ne irregular only in possessive + genitive (G&K §6.2(iii))"
+   }
+  ]
+ },
+ {
+  "key": "tr-a2-ca-suffix",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Adding a case suffix for 'in [language]'."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " The bare -CA form is already both the language name and the adverb meaning 'in that language'. "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Türkçe konuş"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " means 'speak in Turkish' — do not add the locative: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "*Türkçede konuş"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is wrong in this sense, because "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Türkçede"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " means 'in the Turkish language' (Türkçede bu kelime yok 'this word does not exist in Turkish'). "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Türkçe olarak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is also correct, especially in writing, but the bare form is the everyday choice."
+     }
+    ],
+    "finding": "Türkçe olarak is grammatical; Türkçede spelling/sense"
+   }
+  ]
+ }
+]

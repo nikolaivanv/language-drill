@@ -1,0 +1,146 @@
+[
+ {
+  "key": "es-a1-gender-agreement",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "are invariable and never change their ending.",
+    "replace": "are invariable for gender: they keep the same ending in the feminine and only add -es in the plural.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "), and for adjectives in -or, -ón, -án and -ín, the feminine",
+    "replace": "), and for adjectives in -ón, -án, -ín and most in -or, the feminine",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "(likewise azul, joven, feliz).",
+    "replace": "(likewise azul, joven, feliz). The comparatives mayor, menor, mejor and peor (like superior and interior) are also invariable for gender: una hermana mayor.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-hay-estar",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The choice between them is not optional: using the wrong one produces an ungrammatical sentence.",
+    "replace": "The choice between them is not a matter of style: to introduce something new, Spanish uses hay. (Abstract nouns like problema or accidente take only hay, while a person or movable thing can take estar even when indefinite: Un señor está en la puerta, «A man is at the door».)",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " when you are locating a specific, definite thing. The noun must be accompanied by a definite article, a possessive, or a demonstrative. The listener",
+    "replace": " when you are locating a specific, definite thing or person: a noun with a definite article, a possessive, or a demonstrative — or a name or a pronoun (María está en casa, yo estoy aquí). The listener",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " for nouns the listener can already identify.",
+    "replace": " for places and things the listener can already identify (only a person or a movable thing can be located with estar while still indefinite).",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-negation-tampoco",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Dropping the second no when answering a negative question.",
+    "replace": "Dropping the second no in a negative reply.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " Omitting it produces an affirmative sentence.",
+    "replace": " Without it, the verb itself is affirmative, so the reply contradicts itself.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Question: ¿No tienes coche?",
+    "replace": "Question: ¿Tienes coche?",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ".  (means «No, I do have one»)  →  ✓ No, ",
+    "replace": ".  («No» says no, but «tengo» says «I have»)  →  ✓ No, ",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-porque-para",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " = one word, always followed by an infinitive (states a purpose).",
+    "replace": " = one word; when it states a purpose, it is followed by an infinitive.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-possessives-atonic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (my head hurts), not ",
+    "replace": " (my head hurts) rather than ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/4/children/0/text",
+    "value": "me duele mi cabeza",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text/5/text",
+    "value": ", which sounds unnatural in standard Spanish.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/4/children/0/text",
+    "value": "me duele mi cabeza",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " is grammatically possible but unnatural and marked.",
+    "replace": " is heard colloquially (especially in Mexico) but is unnatural in standard Spanish.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " The possessive always comes immediately before the noun.",
+    "replace": " The possessive always comes before the noun (an adjective can stand in between: mi nueva casa).",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": "unstressed words placed directly before a noun",
+    "replace": "unstressed words placed before a noun",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "es-a1-present-indicative-regular",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "; word order alone signals the question.",
+    "replace": "; the word order is the same as in the statement, and only intonation (and, in writing, the question marks) signals the question.",
+    "finding": "R2 #1"
+   }
+  ]
+ }
+]

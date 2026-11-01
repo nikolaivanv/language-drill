@@ -1,0 +1,258 @@
+[
+ {
+  "key": "es-a1-gender-agreement",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "they keep the same ending in the feminine and only add -es in the plural.",
+    "replace": "they keep the same ending in the feminine and change only in the plural (marroquí → marroquíes, belga → belgas, canadiense → canadienses).",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-articles-use",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "». As soon as the noun is modified by an adjective or clause, the indefinite article returns: «",
+    "replace": "». A phrase that only names the kind of job keeps zero article (Es profesora de inglés), but when an adjective or clause describes the person as an individual, the indefinite article usually returns: «",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "» with no article. However, once a modifier is added, the article is required: «",
+    "replace": "» with no article. However, once an adjective or clause describes her as an individual, the article is normally used: «",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-cada-mismo",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". No article is used in this emphatic pattern.",
+    "replace": ". No article goes directly before mismo in this emphatic pattern; a noun before it keeps its own article.",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "In the emphatic pattern, no article appears.",
+    "replace": "In the emphatic pattern, no article appears directly before mismo.",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "is the article absent: ",
+    "replace": "is there no article directly before mismo: ",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-exclamatives-impersonals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (wind). These nouns do not take an article after hacer.",
+    "replace": " (wind). These nouns take no article after hacer, unless an adjective follows: hace un frío terrible.",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-indirect-object-pronouns-se",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " + verb. The indirect object pronoun always comes first.",
+    "replace": " + verb. The indirect object pronoun always comes before the direct object pronoun.",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "Spanish normally requires both the pronoun ",
+    "replace": "Spanish normally uses both the pronoun ",
+    "finding": "#2"
+   },
+   {
+    "op": "replace",
+    "find": "» — not just «di el libro a Juan».",
+    "replace": "» rather than just «di el libro a Juan».",
+    "finding": "#2"
+   }
+  ]
+ },
+ {
+  "key": "es-a2-preterite-yo-spelling",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The change is purely orthographic: it exists to keep the final consonant sound of the stem identical to the infinitive. Verbs ending in ",
+    "replace": "The change is purely orthographic: for -car and -gar verbs it keeps the final consonant sound of the stem identical to the infinitive, and for -zar verbs it follows the rule that z is not normally written before e. Verbs ending in ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": " sound. Without the adjustment, the pronunciation would shift.",
+    "replace": " sound. Without the adjustment, -car and -gar verbs would change their pronunciation, and -zar verbs would break the spelling rule.",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "to the infinitive stem. This produces the wrong consonant sound before ",
+    "replace": "to the infinitive stem. In «llegé» and «buscé» this produces the wrong consonant sound before ",
+    "finding": "#2"
+   },
+   {
+    "op": "replace",
+    "find": ". The correct forms are ",
+    "replace": "; «empezé» sounds the same but breaks the rule that z is not normally written before e. The correct forms are ",
+    "finding": "#2"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-aspectual-periphrases",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Form the gerund by replacing -ar with -ando and -er/-ir with -iendo.",
+    "replace": ". Regular verbs form the gerund by replacing -ar with -ando and -er/-ir with -iendo; some change their stem or spelling (leer → leyendo, dormir → durmiendo, pedir → pidiendo).",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-discourse-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Clause A; o sea que / así que, Clause B.",
+    "replace": "Clause A, o sea que / así que Clause B.",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-llevar-time-expressions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " or simple present with \"for\" (\"I have lived here for three years\")",
+    "replace": " or present perfect with \"for\" (\"I have lived here for three years\")",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": " tends to emphasize the subject's active involvement, while ",
+    "replace": " is more common in everyday speech, while ",
+    "finding": "#2"
+   },
+   {
+    "op": "replace",
+    "find": " is slightly more neutral.",
+    "replace": " is more usual in formal writing.",
+    "finding": "#2"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-reciprocal-se",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (for two people) or ",
+    "replace": " (for two people), los unos a los otros / las unas a las otras (for groups), or ",
+    "finding": "#2"
+   },
+   {
+    "op": "replace",
+    "find": " (for groups) after the verb: ",
+    "replace": " (for two or more) after the verb: ",
+    "finding": "#2"
+   },
+   {
+    "op": "replace",
+    "find": " are optional additions, never replacements for the pronoun. The pronoun ",
+    "replace": " are optional additions, never replacements for the pronoun, with verbs like ayudar or querer. The pronoun ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": " always be present.",
+    "replace": " always be present. (A verb used without an object, such as hablar, can also take entre sí alone: hablan entre sí, «they talk among themselves».)",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-relative-clauses",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " In restrictive clauses, use ",
+    "replace": " In restrictive clauses with no preposition, use ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": " is often preferred over ",
+    "replace": " can be used as well as ",
+    "finding": "#2"
+   }
+  ]
+ },
+ {
+  "key": "es-b1-ser-estar-uses",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " Use the third-person singular of ",
+    "replace": " Use the third person of ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "there is no «it» in Spanish, but the verb is always singular: ",
+    "replace": "there is no «it» in Spanish, and in these expressions the verb is singular: ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": ". Weather is not part of this pattern: it takes ",
+    "replace": ". Clock times agree with the hour: es la una, but son las tres. Weather is not part of this pattern: it takes ",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-conditional-conjecture",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The conditional has two main uses in Spanish: the hypothetical («I would go») and the conjectural. When you see ",
+    "replace": "The conditional has three main uses in Spanish: the hypothetical («I would go»), the future in the past («dijo que llegaría», «he said he would arrive») and the conjectural. When you see ",
+    "finding": "#1"
+   },
+   {
+    "op": "replace",
+    "find": "-clause or hypothetical frame, the correct reading is a probability estimate",
+    "replace": "-clause, hypothetical frame or reporting verb such as dijo que, the correct reading is a probability estimate",
+    "finding": "#1"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-relative-clauses-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The relative pronoun must agree in gender and number with its antecedent. ",
+    "replace": "Que, donde and lo que never change form; el/la/los/las que agree with the antecedent in gender and number, and quien/quienes in number only. ",
+    "finding": "#1"
+   }
+  ]
+ }
+]

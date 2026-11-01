@@ -1,0 +1,511 @@
+[
+ {
+  "key": "tr-a1-accusative-definite-object",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", or a bare noun used in a non-specific sense, takes no accusative suffix: ",
+    "replace": ", or a bare noun used in a non-specific sense, normally takes no accusative suffix: ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Marking every direct object with -(y)I."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " The accusative is for definite or specific objects. The neutral way to say «I read a book» is "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "bir kitap okudum"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " — no suffix. "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Bir kitabı okudum"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " is also possible, but it means one particular book you have in mind («I read a certain book / one of the books»), not just «a book»."
+       }
+      ]
+     }
+    ],
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-demonstratives",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " take case suffixes. Because these stems end in a vowel, a ",
+    "replace": " take case suffixes. A ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " buffer is inserted before any vowel-initial suffix.",
+    "replace": " is inserted before every case suffix — vowel- or consonant-initial alike (bunu, bunda) — and before the plural (bunlar).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " inflect like ordinary nouns ending in a vowel. The most common forms at A1 are the locative and nominative.",
+    "replace": " are built from the stems bura- / şura- / ora- plus the 3rd-person possessive -sı. The everyday case forms attach the case suffix to the bare stem: burada, buraya, buradan. The most common forms at A1 are the locative and nominative.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/children/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "To say «here», use "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "burada"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (bura- + -da). "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Burasında"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " also exists, but it means «at this spot / in this part (of something)» — it is not the everyday word for «here»."
+     }
+    ],
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " — means «this place / that place» and inflects like a regular noun.",
+    "replace": " — means «this place / that place»; their case forms are built on the stems bura- / şura- / ora- (burada, buraya).",
+    "finding": "R2 #3"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-gore-bence",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Both structures sit at the start of a sentence",
+    "replace": "In the opinion sense, both usually come at the start of a sentence",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " takes the dative suffix -a → ",
+    "replace": " has an irregular dative (not *bene) → ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": ". Always apply the dative suffix (-a/-e) before adding göre.",
+    "replace": ". Always put the noun or pronoun in the dative before göre — and remember that ben and sen have irregular datives: bana, sana (not *bene, *sene).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-instrumental-ile",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/5/1",
+    "value": "onların (not used here)",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " is then attached to that genitive form.",
+    "replace": " (or -la, by vowel harmony) is then attached to that genitive form.",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-ki-relativizer",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " regardless of the preceding vowel, with one small exception for time words ending in ",
+    "replace": " regardless of the preceding vowel, with one small lexical exception after ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/0/body/0/text/13",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "dün / gün"
+      }
+     ]
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (see Formation).",
+    "replace": " and words containing gün, such as bugün (see Formation).",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The suffix is added after the locative ending "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-DA"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (which itself follows vowel harmony and consonant assimilation: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-da"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " / "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-de"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", or "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-ta"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " / "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-te"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " after a voiceless consonant: "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "kitapta"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " → "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "kitaptaki"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "). The "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-ki"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " part is invariable — it does not change to match the preceding vowel. The only exception is lexical: when "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-ki"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is added directly to "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "dün"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " or to a word ending in "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "gün"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (e.g. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "bugün"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), the suffix surfaces as "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-kü"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "R2 #1, #2"
+   },
+   {
+    "op": "replace",
+    "find": "bugün ends in -ün, so -ki surfaces as -kü.",
+    "replace": "bugün contains gün, one of the few words after which -ki surfaces as -kü.",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Same rule as bugünkü: the ü vowel triggers the -kü variant.",
+    "replace": "Same lexical exception as bugünkü: only dün and gün-words take -kü.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-personal-suffixes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Their vowel follows four-way vowel harmony with the last vowel of the word (ı, i, u, ü).",
+    "replace": "Their high vowel I follows four-way vowel harmony with the last vowel of the word (ı, i, u, ü); only 3pl -lAr has the two-way a/e alternation (-lar / -ler).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-possessive-suffixes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", the buffer vowel is dropped entirely for 1sg, 2sg, 1pl, and 2pl. For 3sg/3pl, a ",
+    "replace": ", the buffer vowel is dropped entirely for 1sg, 2sg, 1pl, and 2pl. For 3sg, a ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/10",
+    "value": {
+     "kind": "text",
+     "text": " is inserted instead (arabası). The 3pl suffix -lArI begins with a consonant, so it is the same after consonants and vowels (evleri, arabaları)."
+    },
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (their). All vowels in these suffixes obey four-way vowel harmony, so the actual vowel used depends",
+    "replace": " (their). The high vowel I in these suffixes obeys four-way vowel harmony and the A in -lArI two-way harmony (a/e), so the actual vowel used depends",
+    "finding": "R2 #2"
+   }
+  ]
+ },
+ {
+  "key": "tr-a1-questions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " in place of the unknown element; these words stay in the same position the answer word would occupy — they are never fronted to the start of the sentence the way English WH-words are.",
+    "replace": " in place of the unknown element; these words normally stand in the same position the answer word would occupy, rather than being moved to the front the way English WH-words are. When nothing else comes before it, the WH-word is simply first: Nerede oturuyorsun?",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " would occupy — before the verb, not sentence-initially in an unnatural way.",
+    "replace": " would occupy — directly before the verb. Here that is also the start of the sentence, because nothing else precedes it.",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Fronting WH-words English-style."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " Turkish does not need to move question words to the front: they stand where the answer would stand, usually right before the verb. Say "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ahmet nerede oturuyor?"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (Where does Ahmet live?), just like the answer "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ahmet İstanbul'da oturuyor."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " When nothing else comes before it, the WH-word is simply first, as in "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Nerede oturuyorsun?"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "R2 #1, #2"
+   }
+  ]
+ }
+]

@@ -1,0 +1,34 @@
+[
+ {"key": "tr-a1-clock-time-dates", "edits": [
+  {"op": "replace", "find": ", both following the same vowel harmony rules.", "replace": ". The dative has the same two-way harmony as the locative (-a / -e: dörde); the accusative harmonises four ways (-ı / -i / -u / -ü: ikiyi, üçü).", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-a2-ability-necessity", "edits": [
+  {"op": "replace", "find": " Two vowels cannot meet in Turkish. After ", "replace": " The suffix vowel cannot follow the stem vowel directly. After ", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-a2-nominalization", "edits": [
+  {"op": "replace", "find": " has a back vowel (o), so the suffix vowel is ", "replace": " has the stem oku-, whose last vowel (u) is a back vowel, so the suffix vowel is ", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-a2-reflexive-reciprocal-pronouns", "edits": [
+  {"op": "replace", "find": "-(y)e / -(y)a", "replace": "-e", "finding": "R3 #1"},
+  {"op": "replace", "find": " after the possessive: kendime, kendine, kendisine, etc. ", "replace": " after the possessive; after a 3rd-person possessive the buffer -n- comes first: kendime, kendimize, kendisine, kendilerine. ", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-b1-causative-voice", "edits": [
+  {"op": "replace", "find": ". Similarly, ", "replace": ". The verbs of the irregular -Ir / -Ar / -It set need the same care: ", "finding": "R3 #1"},
+  {"op": "replace", "find": " (to drink) pairs with ", "replace": " (to drink) gives ", "finding": "R3 #1"},
+  {"op": "replace", "find": " (to make drink), a member of the irregular -Ir set rather than the regular -DIr form; such pairs, like the suppletive ones, must be learnt as vocabulary items.", "replace": " (to make drink), not the regular -DIr form. Like the suppletive pairs, these causatives must be learnt as vocabulary items.", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-b1-converb-while-yken", "edits": [
+  {"op": "replace", "find": " is stated explicitly because it differs from the implicit subject of the main clause.", "replace": " is stated explicitly because it differs from the main-clause subject, burası, and çocukken itself carries no person ending.", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-b1-passive-voice", "edits": [
+  {"op": "replace", "find": "yazıldım («I was written [to]»)", "replace": "yazıldım (idiomatically «I enrolled / signed up»)", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-b2-as-if-gibi", "edits": [
+  {"op": "replace", "find": "while signalling that the situation is contrary to fact or merely imagined. ", "replace": "while usually signalling that the situation is contrary to fact or merely imagined. ", "finding": "R3 #2"},
+  {"op": "set", "path": "/sections/3/body/3/en", "value": "She looks very tired.", "finding": "R3 #1"},
+  {"op": "replace", "find": " to describe an appearance that does not confirm the underlying fact.", "replace": " to report an impression from appearance. This is the «seem» use: unlike a pretence, she may well really be tired.", "finding": "R3 #1"}
+ ]},
+ {"key": "tr-b2-instead-of", "edits": [
+  {"op": "replace", "find": ", not the past/evidential participle ", "replace": ", not the non-future (factive) participle ", "finding": "R3 #1"}
+ ]}
+]

@@ -1,0 +1,2073 @@
+[
+ {
+  "key": "es-b2-appreciative-suffixes",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The suffix replaces the final vowel of the base word (if there is one) and agrees in gender and number. The key complication for "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is the choice of allomorph: plain "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " vs. "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-cito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (after words of more than one syllable ending in "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-n"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-r"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") and "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ecito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (after words ending in "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-e"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", after one-syllable words such as "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "flor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", and after two-syllable words with the diphthong "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ie/ue"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " in the first syllable, such as "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "puerta"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). The last two groups follow the usage of Spain; in Latin America they usually take plain "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-cito"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "puertita, piedrita, florcita"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), which is equally correct."
+      }
+     ]
+    },
+    "finding": "ie/ue first syllable + Latin America; -cito only polysyllables; monosyllables -ecito"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/6",
+    "value": [
+     "puerta",
+     "ue in the first syllable",
+     "puertecita (Spain) / puertita (Lat. Am.)",
+     "little door"
+    ],
+    "finding": "ie/ue first syllable + Latin America"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/1/rows/7",
+    "value": [
+     "flor",
+     "one syllable",
+     "florecita (Spain) / florcita (Lat. Am.)",
+     "little flower"
+    ],
+    "finding": "-cito only polysyllables; monosyllables -ecito"
+   },
+   {
+    "op": "replace",
+    "find": " are triggered only by specific endings (-n, -r, or final -e / ie-ue diphthong). Words with a plain final vowel take plain ",
+    "replace": " are triggered only by specific bases (longer words in -n or -r, words in -e, one-syllable words, and — in Spain — words with ie/ue in the first syllable). Other words ending in a plain vowel take plain ",
+    "finding": "ie/ue first syllable + Latin America; -cito only polysyllables; monosyllables -ecito"
+   },
+   {
+    "op": "replace",
+    "find": ". Applying the extended allomorph to a plain-vowel base is a clear error.",
+    "replace": ". Applying the extended allomorph to such a base is a clear error.",
+    "finding": "ie/ue first syllable + Latin America"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-causal-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " marks this use. It cannot be replaced by ",
+    "replace": " marks this use. In this justifying role it can also be replaced by ",
+    "finding": "ya que/puesto que fine for evidential cause"
+   },
+   {
+    "op": "replace",
+    "find": " without changing the meaning.",
+    "replace": ", which introduce evidence just as naturally: ",
+    "finding": "ya que/puesto que fine for evidential cause"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/10",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Debe de haber llovido, ya que el suelo está mojado"
+      }
+     ]
+    },
+    "finding": "ya que/puesto que fine for evidential cause"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/0/items/3/0/text/11",
+    "value": {
+     "kind": "text",
+     "text": "."
+    },
+    "finding": "ya que/puesto que fine for evidential cause"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Reading enunciative porque as a plain cause."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " When "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "porque"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " justifies the speaker's inference rather than the event's cause, the comma matters. Compare: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Están en casa, porque veo luz encendida"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (the light is my evidence for the claim) vs. "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Están en casa porque veo luz encendida"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (without the comma, this reads as if my seeing the light were the reason they are at home). "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ya que"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " and "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "puesto que"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " also work in the justifying role: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Están en casa, ya que veo luz encendida"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "ya que/puesto que fine for evidential cause"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-cleft-sentences",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " in all positions — a direct transfer from English «that» — is the most common anglophone error.",
+    "replace": " after a person focus — a direct transfer from English «that» — is the most common anglophone error. After a place, time or prepositional focus, plain que (fue ahí que la vi) is common in Latin America, but Spain and formal writing use donde, cuando or the repeated preposition.",
+    "finding": "que galicado is standard Lat. Am."
+   },
+   {
+    "op": "replace",
+    "find": " agrees in tense with the original clause; the relator",
+    "replace": " usually agrees in tense with the original clause; the relator",
+    "finding": "tense matching is a tendency"
+   },
+   {
+    "op": "replace",
+    "find": " Match the tense of ",
+    "replace": " Normally, match the tense of ",
+    "finding": "tense matching is a tendency"
+   },
+   {
+    "op": "replace",
+    "find": " to the tense of the original verb: present «es», preterite «fue», imperfect «era», etc. The verb in the subordinate clause keeps its own tense independently.",
+    "replace": " to the tense of the original verb: present «es», preterite «fue», imperfect «era», etc. This is a tendency, not a strict rule: present «es» is also common with a past event (Es aquí donde nos conocimos / Fue aquí donde nos conocimos). The verb in the subordinate clause keeps its own tense independently.",
+    "finding": "tense matching is a tendency"
+   },
+   {
+    "op": "replace",
+    "find": ". «Fue Juan que llamó» is incorrect.",
+    "replace": ". «Fue Juan que llamó» is not standard.",
+    "finding": "que galicado is standard Lat. Am."
+   },
+   {
+    "op": "replace",
+    "find": " is in the present because the focus is a present-tense statement.",
+    "replace": " can stay in the present even though the meeting is past; «Fue aquí donde nos conocimos» is equally correct.",
+    "finding": "tense matching is a tendency"
+   },
+   {
+    "op": "replace",
+    "find": " is not a valid relator in this slot for person, place, or time foci.",
+    "replace": " is not standard after a person focus. After a place or time focus (fue entonces que lo supe) it is common in Latin America but rejected in Spain and in formal writing, so the type-matched relator is the safe choice.",
+    "finding": "que galicado is standard Lat. Am."
+   },
+   {
+    "op": "replace",
+    "find": " «*Es con ella que tienes que hablar» omits the required second preposition before the relator. In careful register write «es con ella ",
+    "replace": " «Es con ella que tienes que hablar» drops the second preposition. This is common in Latin America but is rejected in Spain. In Peninsular or careful register write «es con ella ",
+    "finding": "que galicado is standard Lat. Am."
+   },
+   {
+    "op": "replace",
+    "find": " is treated as an error in formal writing, even if it occurs in colloquial speech.",
+    "replace": " is avoided in formal writing in Spain, even if it occurs in colloquial speech.",
+    "finding": "que galicado is standard Lat. Am."
+   }
+  ]
+ },
+ {
+  "key": "es-b2-clitic-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", the obligatory resumptive clitic that must appear when a direct object is moved to the front of the clause; and (3) ",
+    "replace": ", the obligatory resumptive clitic that must appear when a definite direct object is moved to the front of the clause; and (3) ",
+    "finding": "doubling only with definite/specific fronted objects"
+   },
+   {
+    "op": "replace",
+    "find": " When a direct-object noun phrase is moved before the verb for emphasis or topic-marking, Spanish requires a resumptive clitic (",
+    "replace": " When a definite or specific direct-object noun phrase is moved before the verb for emphasis or topic-marking, Spanish requires a resumptive clitic (",
+    "finding": "doubling only with definite/specific fronted objects"
+   },
+   {
+    "op": "replace",
+    "find": ") that agrees in gender and number with the fronted noun. The fronted noun and the clitic co-refer; neither can be omitted.",
+    "replace": ") that agrees in gender and number with the fronted noun. The fronted noun and the clitic co-refer; neither can be omitted. Bare nouns, quantified phrases and neuter pronouns are fronted without a clitic: Carne no como; ¡Cuántas tonterías dices!; Eso creo yo.",
+    "finding": "doubling only with definite/specific fronted objects"
+   },
+   {
+    "op": "replace",
+    "find": " — the fronted noun phrase comes first, then the clitic",
+    "replace": " — the fronted definite noun phrase comes first, then the clitic",
+    "finding": "doubling only with definite/specific fronted objects"
+   },
+   {
+    "op": "replace",
+    "find": " Once the direct object is fronted, the resumptive clitic is obligatory: ",
+    "replace": " Once a definite direct object is fronted, the resumptive clitic is obligatory: ",
+    "finding": "doubling only with definite/specific fronted objects"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-complex-conditionals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ") in the result clause to express what would have happened as a result.",
+    "replace": ", or equally ",
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/0/body/0/text/5",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "hubiera + past participle"
+      }
+     ]
+    },
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/0/body/0/text/6",
+    "value": {
+     "kind": "text",
+     "text": ") in the result clause to express what would have happened as a result."
+    },
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0",
+    "value": [
+     "si + pluperfect subjunctive",
+     "conditional perfect (or -ra pluperfect subjunctive)"
+    ],
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/1",
+    "value": [
+     "si + hubiera/hubiese + past participle",
+     "habría/habrías/habría/habríamos/habríais/habrían + past participle (or hubiera/hubieras/… + past participle)"
+    ],
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "replace",
+    "find": " is more common in everyday speech.",
+    "replace": " is more common in everyday speech. In the result clause, the -ra form can replace habría: Si lo hubiera sabido, hubiera venido is as standard as Si lo hubiera sabido, habría venido. The -se form hubiese is not used this way in careful Spanish.",
+    "finding": "hubiera + participle in result clause"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Using the simple conditional for a past result."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " When the result also lies in the past, the result clause needs the conditional "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "perfect"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". Say "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "habría venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", not "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "vendría"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". The simple conditional is correct only when the result is in the present: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Si hubieras estudiado más, ahora tendrías trabajo"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "."
+       }
+      ]
+     }
+    ],
+    "finding": "simple conditional OK for present result"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Using hubiese in the result clause."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Hubiera"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " and "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "hubiese"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " are interchangeable in the if-clause, and "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "hubiera"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " can also replace "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "habría"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " in the result clause ("
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Si lo hubiera sabido, hubiera venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "). The -se form, however, does not replace "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "habría"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ": in careful Spanish say "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "habría venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " or "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "hubiera venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", not "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "hubiese venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", in the result clause."
+       }
+      ]
+     }
+    ],
+    "finding": "hubiera + participle in result clause"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-conditional-conjecture",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ser"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is regular in the conditional ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sería"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", built on the full infinitive); "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tener"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "haber"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " have irregular stems ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tendr-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "habr-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). These are the same irregularities you already know from the future tense."
+      }
+     ]
+    },
+    "finding": "ser is regular; self-contradictory callout"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-conditional-connectors",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "and each one governs a fixed mood in the subordinate clause.",
+    "replace": "and, used as a condition, each one governs a set mood in the subordinate clause.",
+    "finding": "siempre que + indicative = whenever"
+   },
+   {
+    "op": "replace",
+    "find": " — express a stipulation or condition that must be met for the main clause to hold. Because the condition refers to a future or hypothetical event that has not yet been verified, the subjunctive is obligatory.",
+    "replace": " — express a stipulation or condition that must be met for the main clause to hold. Because the condition refers to a future or hypothetical event that has not yet been verified, the subjunctive is obligatory. Note that siempre que + indicative is not conditional: it means «whenever» (La saludaba siempre que la veía).",
+    "finding": "siempre que + indicative = whenever"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/1",
+    "value": [
+     "siempre que",
+     "subjunctive (+ indicative = «whenever»)",
+     "provided that / as long as"
+    ],
+    "finding": "siempre que + indicative = whenever"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-correlative-comparison",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " by direct translation. Neither is Spanish. The correct frame is always ",
+    "replace": " by direct translation. Neither is Spanish. The safe, pan-Hispanic frame is ",
+    "finding": "mientras más / entre más regional variants"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/1/text/6",
+    "value": {
+     "kind": "text",
+     "text": ": «Cuanto más practiques, más aprenderás.» In Latin America, mientras más…, más… is also very common, and entre más… is accepted in Mexico and Central America."
+    },
+    "finding": "mientras más / entre más regional variants"
+   },
+   {
+    "op": "replace",
+    "find": "Translating «more and more» as *más y más.",
+    "replace": "Translating «more and more» as más y más.",
+    "finding": "más y más exists, less idiomatic"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/1",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The phrase "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "más y más"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " exists, but it is far less idiomatic. The usual expression is "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "cada vez más"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ": «Los precios son cada vez más altos», rather than "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "los precios son más y más altos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "más y más exists, less idiomatic"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-nosotros-imperative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " for -er/-ir verbs.",
+    "replace": " for -er/-ir verbs. Stem-changing verbs are the exception: the e→ie / o→ue change of the yo form does not appear in the nosotros form (empiezo → empecemos, vuelvo → volvamos), and stem-changing -ir verbs take e→i / o→u instead (pedir → pidamos, dormir → durmamos).",
+    "finding": "stem-changers don't follow yo-form recipe"
+   },
+   {
+    "op": "replace",
+    "find": " is a special case. The affirmative command is ",
+    "replace": " is a special case. The usual affirmative command is ",
+    "finding": "vayamos also used affirmatively"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/5",
+    "value": {
+     "kind": "text",
+     "text": " (rather than "
+    },
+    "finding": "vayamos also used affirmatively"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/6",
+    "value": {
+     "kind": "hilite",
+     "children": [
+      {
+       "kind": "text",
+       "text": "vayamos"
+      }
+     ]
+    },
+    "finding": "vayamos also used affirmatively"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/3/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": ", which also occurs, mainly in set phrases like vayamos al grano), and with the enclitic "
+    },
+    "finding": "vayamos also used affirmatively"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Irregular: "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "ir"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " usually uses "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "vamos"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (rather than "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "vayamos"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") for the affirmative, giving "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "vámonos"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " with the enclitic."
+     }
+    ],
+    "finding": "vayamos also used affirmatively"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The verb "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is the only verb whose usual affirmative nosotros command ("
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") differs from the present subjunctive ("
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vayamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Vayamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " also occurs as an affirmative, mainly in set phrases ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vayamos al grano"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), but "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is the everyday form. Do not use "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*no vamos"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " as a negative command."
+      }
+     ]
+    },
+    "finding": "vayamos also used affirmatively"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-passive-voice",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/2",
+    "value": {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "strong",
+         "children": [
+          {
+           "kind": "text",
+           "text": "✗"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "Pisos"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " se venden en esta calle."
+        }
+       ]
+      },
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "strong",
+         "children": [
+          {
+           "kind": "text",
+           "text": "✓"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " Se venden "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "pisos"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " en esta calle."
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "example was not a se-passive"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-past-subjunctive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/0/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The imperfect subjunctive is the past-tense form of the subjunctive mood. It appears in subordinate clauses when the main verb is in a past tense (preterite, imperfect, or conditional) and triggers the subjunctive, in polite requests with verbs like "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "querer"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", and in the "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "-clause of counterfactual conditional sentences. Spanish has two interchangeable sets of forms: the -ra set ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ara"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " for -ar verbs, "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-iera"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " for -er/-ir verbs) and the -se set ("
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ase"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " / "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-iese"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). The -se set is used throughout the Spanish-speaking world, especially in Spain and in writing, though the -ra set is more common overall."
+      }
+     ]
+    },
+    "finding": "-ara/-iera are one set; -se not regional"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-perception-verbs",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", is always available as a neutral alternative but lacks the compactness and aspectual precision of the non-finite constructions.",
+    "replace": ", is a common alternative, but it lacks the compactness and aspectual precision of the non-finite constructions and can also report what you realized or were told rather than what you directly perceived.",
+    "finding": "ver/oír que not a fully neutral paraphrase"
+   },
+   {
+    "op": "replace",
+    "find": " This option is aspectually neutral and is always grammatically correct, but it is more wordy.",
+    "replace": " This option is aspectually neutral but more wordy, and it can be ambiguous: oír que… can mean «to hear (be told) that…», and ver que… can mean «to realize that…». Oí que los vecinos discutían may mean you heard them arguing or that someone told you they were arguing.",
+    "finding": "ver/oír que not a fully neutral paraphrase"
+   },
+   {
+    "op": "replace",
+    "find": " + clause alternative: grammatically neutral, but more wordy than the infinitive/gerund construction.",
+    "replace": " + clause alternative: more wordy than the infinitive/gerund construction, and it can also mean «I realized that she was going into the bank».",
+    "finding": "ver/oír que not a fully neutral paraphrase"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-quantifiers-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " only when comparing to a second term (",
+    "replace": " to introduce the person or thing being compared against (",
+    "finding": "que + any comparison target incl. NP"
+   },
+   {
+    "op": "replace",
+    "find": " is correct only when introducing a comparison target that is a clause or pronoun: ",
+    "replace": " introduces the person or thing being compared against, whether a pronoun, a noun phrase or a clause: ",
+    "finding": "que + any comparison target incl. NP"
+   },
+   {
+    "op": "replace",
+    "find": " (he earns twice as much as I do).",
+    "replace": " / que su hermano (he earns twice as much as I do / as his brother). Rule of thumb: de + the quantity being multiplied, que + what it is compared against.",
+    "finding": "que + any comparison target incl. NP"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-remote-conditionals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". The two tenses must match: you cannot mix them with other tense combinations in this construction.",
+    "replace": ". This is the core pairing for a present or future hypothetical. Mixed-time combinations also exist — Si fuera más prudente, no habría hecho eso (present condition, past result) and Si hubieras estudiado, ahora tendrías trabajo (past condition, present result) — but this page focuses on the core pattern.",
+    "finding": "mixed-time hypotheticals"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/6/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Common irregular conditional stems include: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "tener → tendr-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "poder → podr-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hacer → har-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "decir → dir-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "saber → sabr-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ir"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ser"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " are regular: the endings go on the full infinitive ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "iría, sería"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). The endings (-ía, -ías, -ía, -íamos, -íais, -ían) are the same for all verbs, regular or irregular."
+      }
+     ]
+    },
+    "finding": "ir/ser not irregular"
+   },
+   {
+    "op": "replace",
+    "find": " The imperfect indicative after si is only correct in a different construction — reported speech about a past open condition (e.g. «Dijo que me pagaría si había terminado»), which is not a remote conditional.",
+    "replace": " The imperfect indicative after si belongs to a different construction: an open condition in the past, either habitual («Si llovía, nos quedábamos en casa») or reported («Dijo que se quedaría en casa si llovía»). Neither is a remote conditional.",
+    "finding": "imperfect indicative after si not only reported speech"
+   },
+   {
+    "op": "replace",
+    "find": "(used after si only in indirect questions, not in conditionals)",
+    "replace": "(never used after si in standard Spanish, in conditionals or in indirect questions: no sé si viene)",
+    "finding": "no present subjunctive after si in indirect questions"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/1/children/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "A quick rule: in a conditional clause, "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is never followed by the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "conditional"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "present subjunctive"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " in standard Spanish. For a remote condition use the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "imperfect subjunctive"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; for an open condition use an indicative tense (present, or a past tense: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si lo hizo…, si llovía…"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "); for an unfulfilled past condition use the pluperfect subjunctive ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "si hubiera sabido…"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "quick rule false"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-reported-speech-backshift",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Defaulting to the present subjunctive in a reported past command."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " When the reporting verb is in the past, the default is the imperfect subjunctive: "
+       },
+       {
+        "kind": "hilite",
+        "children": [
+         {
+          "kind": "text",
+          "text": "me pidió que la ayudara"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". "
+       },
+       {
+        "kind": "mono",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Me pidió que la ayude"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " is accepted only when the request still applies at the moment of speaking (the help has not yet been given); it is common in the media and in Latin America. When the request belongs to the past — as with a move that has already happened — use the imperfect subjunctive."
+       }
+      ]
+     }
+    ],
+    "finding": "present subjunctive after past verb acceptable when request still pending"
+   },
+   {
+    "op": "replace",
+    "find": " After a past reporting verb, the future indicative must shift to the conditional. Writing ",
+    "replace": " After a past reporting verb, the future normally shifts to the conditional. Keeping it once the event is no longer ahead of the speaker, as in ",
+    "finding": "leftover: align with curriculum"
+   },
+   {
+    "op": "replace",
+    "find": "*dijo que vendrá",
+    "replace": "*dijo que vendrá, pero al final no vino",
+    "finding": "leftover"
+   },
+   {
+    "op": "replace",
+    "find": " is incorrect in standard reported speech. The correct form is ",
+    "replace": ", is wrong; the correct form is ",
+    "finding": "leftover"
+   },
+   {
+    "op": "replace",
+    "find": "The present-tense form ",
+    "replace": "The future ",
+    "finding": "leftover: vendrá is future, not present"
+   },
+   {
+    "op": "replace",
+    "find": " is only acceptable if the speaker treats the reported content as still currently true — a deliberate stylistic choice, not the default.",
+    "replace": " is possible only while the event is still to come (Ayer dijo que vendrá mañana); the conditional is never wrong.",
+    "finding": "leftover"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-sino-adversatives",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Pero can only link two full clauses, not replace a negated adjective with another adjective.",
+    "replace": ". Pero can link adjectives and phrases as well as clauses (es pobre pero honrado), but it only adds a contrast; it cannot correct a negated element by replacing it.",
+    "finding": "pero links non-clauses"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0",
+    "value": [
+     "pero",
+     "any clause, phrase or adjective (affirmative or negative)",
+     "… , pero + clause / phrase"
+    ],
+    "finding": "pero links non-clauses"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-subjunctive-compound",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Do not use the pluperfect subjunctive when the main clause is in the present.",
+    "replace": ". This is a tendency, not a rigid rule: a present main verb can take the pluperfect subjunctive when the subordinate clause is hypothetical (No creo que lo hubiera conseguido sin ti — I don't think I would have managed it without you) or refers to a time before another past moment (Me extraña que no lo hubieran avisado antes de la reunión), and ojalá + pluperfect has no main verb to agree with at all.",
+    "finding": "present main + pluperfect subjunctive possible"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-subjunctive-negated-opinion",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The subjunctive is required in the subordinate clause when the main clause is a negated statement of one of the following kinds. Negative commands and negative questions are not denials and keep the indicative: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "No creas que es fácil"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "¿No es verdad que ha dicho eso?"
+        }
+       ]
+      }
+     ]
+    },
+    "finding": "negative imperatives/questions take indicative"
+   },
+   {
+    "op": "replace",
+    "find": " is negated to deny that something was asserted, the subordinate clause takes the subjunctive (typically the past subjunctive for past contexts).",
+    "replace": " is negated and the content itself is denied or in doubt, the subordinate clause takes the subjunctive (typically the past subjunctive for past contexts). If the speaker takes the content as a known fact, the indicative is used: no me dijo que había venido (he came, but didn't tell me).",
+    "finding": "indicative after no decir que when content is fact"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/4",
+    "value": [
+     "no me dijo que",
+     "imperfect / pluperfect subjunctive (indicative if the content is a known fact)",
+     "hubiera venido, supiera, fuera"
+    ],
+    "finding": "indicative after no decir que when content is fact"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/3/note",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The subjunctive "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hubiera venido"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " presents the content as doubtful: the speaker does not vouch that he came, only that he did not say so. With the indicative ("
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "no me dijo que había venido"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "), the speaker would take it as fact that he came."
+     }
+    ],
+    "finding": "indicative after no decir que when content is fact"
+   },
+   {
+    "op": "replace",
+    "find": ". These expressions are categorical denials, not descriptions, and always govern the subjunctive.",
+    "replace": ". As statements, these expressions are categorical denials, not descriptions, and govern the subjunctive. (In a negative question — ¿No es verdad que han aprobado la ley? — the indicative is used.)",
+    "finding": "negative imperatives/questions take indicative"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Ignoring the meaning of the mood after a negated verb of saying."
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "text",
+        "text": "After negated "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "decir"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", the mood carries meaning. "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "No me dijo que había venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (indicative) is correct when the speaker takes the fact as true: he came, but he didn't tell me. "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "No me dijo que hubiera venido"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (subjunctive) is used when the content itself is denied or in doubt. Choose the mood that matches what you know, rather than switching to the subjunctive automatically."
+       }
+      ]
+     }
+    ],
+    "finding": "indicative after no decir que when content is fact"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-subjunctive-temporal-concessive",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " always take the subjunctive. They express that no degree of effort or quantity changes the outcome. Example: ",
+    "replace": " take the subjunctive when the situation is future or hypothetical. They express that no degree of effort or quantity changes the outcome. Example: ",
+    "finding": "por mucho/más que + indicative for realized events"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/3/items/2/0/text/6",
+    "value": {
+     "kind": "text",
+     "text": " When the event really happened, the indicative is used: "
+    },
+    "finding": "por mucho/más que + indicative for realized events"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/1/body/3/items/2/0/text/7",
+    "value": {
+     "kind": "em",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Por más que se lo dije, no lo hizo."
+      }
+     ]
+    },
+    "finding": "por mucho/más que + indicative for realized events"
+   },
+   {
+    "op": "replace",
+    "find": "Por mucho que always requires the subjunctive; it signals that no degree of the action in the subordinate clause affects the outcome.",
+    "replace": "Subjunctive because the insisting is still hypothetical; the phrase signals that no degree of the action in the subordinate clause affects the outcome. For a real past event, the indicative is used (por mucho que insistió…).",
+    "finding": "por mucho/más que + indicative for realized events"
+   }
+  ]
+ },
+ {
+  "key": "es-b2-verbs-of-change",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " Instead, it distributes the meaning across six reflexive constructions — ",
+    "replace": " Instead, it distributes the meaning across six constructions — ",
+    "finding": "llegar a ser is not pronominal"
+   },
+   {
+    "op": "replace",
+    "find": " — each encoding a different type of change:",
+    "replace": " (the only one without a reflexive pronoun) — each encoding a different type of change:",
+    "finding": "llegar a ser is not pronominal"
+   },
+   {
+    "op": "replace",
+    "find": "All six constructions are built on the same reflexive pattern: a conjugated verb",
+    "replace": "Five of the six constructions are built on the same reflexive pattern: a conjugated verb",
+    "finding": "llegar a ser is not pronominal"
+   },
+   {
+    "op": "replace",
+    "find": "; the same pronoun set applies to all six verbs.",
+    "replace": "; the same pronoun set applies to quedarse, hacerse, volverse and convertirse en. Llegar a ser takes no pronoun: llegó a ser director, never *se llegó a ser.",
+    "finding": "llegar a ser is not pronominal"
+   },
+   {
+    "op": "replace",
+    "find": " — a lasting change that is the result of the subject's own effort, decision, or deliberate process. Typical with professions, ideologies, and religions: ",
+    "replace": " — a lasting change, often (though not always) the result of the subject's own effort, decision, or a gradual process. It also covers natural changes (hacerse mayor, se hace tarde). Typical with professions, ideologies, and religions: ",
+    "finding": "hacerse not always voluntary"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1",
+    "value": [
+     {
+      "kind": "paragraph",
+      "text": [
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "hacerse with loco and similar adjectives."
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " hacerse often suggests a deliberate change, but it is not limited to voluntary ones ("
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "se hizo rico"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "se hace tarde"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": "). With adjectives of character or mental state such as "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "loco"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ", however, Spanish uses "
+       },
+       {
+        "kind": "strong",
+        "children": [
+         {
+          "kind": "text",
+          "text": "volverse"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": ". Compare: "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "*Se hizo loco"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (wrong — loco takes volverse) vs. "
+       },
+       {
+        "kind": "em",
+        "children": [
+         {
+          "kind": "text",
+          "text": "Se volvió loco"
+         }
+        ]
+       },
+       {
+        "kind": "text",
+        "text": " (correct)."
+       }
+      ]
+     }
+    ],
+    "finding": "hacerse not always voluntary"
+   }
+  ]
+ }
+]

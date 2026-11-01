@@ -1,0 +1,503 @@
+[
+ {
+  "key": "de-b1-hin-her",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "When used as separable prefixes, the compound splits in main clauses: the prefix moves to the end of the clause.",
+    "replace": "When used as separable prefixes, the whole compound is the prefix: in main clauses it moves as one unit to the end of the clause, and it stays joined to the verb in the participle and in subordinate clauses.",
+    "finding": "hinein does not split"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/target",
+    "value": [
+     {
+      "kind": "text",
+      "text": "Sie geht "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hinein"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". → Sie ist "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hineingegangen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "hinein does not split"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/en",
+    "value": "She goes in(side). → She went in(side).",
+    "finding": "hinein does not split"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/note",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The whole compound "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hinein-"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is the separable prefix of "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hineingehen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ": it never splits internally. It goes to the end of a main clause and rejoins the verb in the participle ("
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "hineingegangen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") and in subordinate clauses ("
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "…, dass sie hineingeht"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ")."
+     }
+    ],
+    "finding": "hinein does not split"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-subordinate-conjunctions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "ausgehen",
+    "replace": "ausmachen",
+    "finding": "ausgehen -> ausmachen"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-konjunktiv-ii-past",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " to match the subject, then add the past participle of the main verb at the end of the clause.",
+    "replace": " to match the subject, then add the past participle of the main verb at the end of a main clause.",
+    "finding": "participle not always final"
+   },
+   {
+    "op": "replace",
+    "find": ". The participle is always the final element in its clause.",
+    "replace": ". In a main clause the participle comes last; in a subordinate clause the auxiliary moves after it (…, wenn ich das gewusst hätte). With a modal, a double infinitive replaces the participle: Ich hätte früher kommen sollen (subordinate: …, dass ich früher hätte kommen sollen).",
+    "finding": "participle not always final"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-praeteritum",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". Strong verbs use the same endings, but the 1sg/3sg have ",
+    "replace": ". Strong verbs use the same endings except in wir and sie/Sie, which take -en (kamen, gingen). In both classes the 1sg/3sg have ",
+    "finding": "strong verbs take -en"
+   },
+   {
+    "op": "replace",
+    "find": " — just the bare ablaut stem.",
+    "replace": " (machte, kam) — for strong verbs, just the bare ablaut stem.",
+    "finding": "strong verbs take -en"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-comparison-attributive",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/1/3",
+    "value": "-er (after ein, masc.) / -e (weak)",
+    "finding": "comparative row -es vs -er"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/3",
+    "value": "-e (weak) / -er (after mein etc., masc.)",
+    "finding": "superlative not always weak"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/4",
+    "value": "der beste Plan / mein bester Plan",
+    "finding": "superlative not always weak"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text",
+    "value": [
+     {
+      "kind": "text",
+      "text": "The superlative in attributive position is "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "usually"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " weak-declined because it most often follows a definite article or "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "alle"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (der beste Freund). After a possessive or other ein-word it takes the same endings as any adjective after ein: mein bester Freund, unser größtes Problem. Where no article is present, strong endings apply in the same way as for the comparative."
+     }
+    ],
+    "finding": "superlative not always weak"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note/7/children/0/text",
+    "value": "*der am schönsten Tag",
+    "finding": "extra: note marked valid 'am schönsten Tag' as wrong"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-progressive-equivalents",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ", or the colloquial ",
+    "replace": ", or the standard ",
+    "finding": "beim is standard"
+   },
+   {
+    "op": "replace",
+    "find": " for a concise, idiomatic way to say you are occupied with an activity. This construction is common in everyday spoken German but is considered colloquial or regional in formal writing.",
+    "replace": " for a concise, idiomatic way to say you are occupied with an activity. This is standard German, common in speech and acceptable in writing; it is the similar am-form (Ich bin am Kochen) that is colloquial and regional.",
+    "finding": "beim is standard"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note/0/text",
+    "value": "A concise everyday phrase. beim + infinitive is standard German, fine in writing too — unlike the colloquial «Ich bin am Kochen».",
+    "finding": "beim is standard"
+   },
+   {
+    "op": "replace",
+    "find": "In essays, letters, or professional contexts, prefer ",
+    "replace": "In essays, letters, or professional contexts, prefer the standard «Ich bin beim Lesen», ",
+    "finding": "beim is standard"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-genitive",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " to the noun itself. Feminine and plural nouns do not change their ending.",
+    "replace": " to the noun itself — except weak masculines, which take -(e)n instead (des Studenten, des Kollegen, des Herrn; also des Namens, des Herzens). Feminine and plural nouns do not change their ending.",
+    "finding": "weak masculines"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0/3",
+    "value": "-(e)s  e.g. des Mannes, des Vaters; weak masc. -(e)n: des Studenten",
+    "finding": "weak masculines"
+   },
+   {
+    "op": "replace",
+    "find": "Dropping -(e)s from masculine or neuter nouns.",
+    "replace": "Dropping -(e)s from (non-weak) masculine or neuter nouns.",
+    "finding": "weak masculines"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/0/0/text/7/text",
+    "value": ". Weak masculines are the exception: they take -(e)n, not -s (des Studenten, not *des Studentes).",
+    "finding": "weak masculines"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-articles-use",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Feminine, masculine and plural country names."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " Most country names in German are neuter and take no article. However, feminine names (e.g. "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "die Schweiz, die Türkei"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") and plural names (e.g. "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "die Niederlande, die USA"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") always require the article, including after prepositions. Masculine names (e.g. "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "der Iran, der Irak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ") usually take it too, but there it is optional: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "(der) Iran, im Irak / in Irak"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "masculine country article optional"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/2/2",
+    "value": "(der) Iran",
+    "finding": "masculine country article optional"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/2/3",
+    "value": "aus dem Iran / aus Iran",
+    "finding": "masculine country article optional"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/3/2",
+    "value": "(der) Irak",
+    "finding": "masculine country article optional"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/3/rows/3/3",
+    "value": "aus dem Irak / aus Irak",
+    "finding": "masculine country article optional"
+   },
+   {
+    "op": "replace",
+    "find": " (freedom) take the definite article when the statement is about the concept as a whole.",
+    "replace": " (freedom) often take the definite article when the statement is about the concept as a whole, though it is optional there; in proverbs and sayings it is usually left out (Geduld ist eine Tugend).",
+    "finding": "abstract-noun article optional"
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/4",
+    "value": {
+     "en": "Time passes quickly.",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "The abstract noun «Zeit» is used here with the article for the concept in general (in such statements the article is common but not obligatory). Compare: «Ich habe keine Zeit» (no article — partial use) and the proverb «Geduld ist eine Tugend» (no article)."
+      }
+     ],
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Die"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Zeit vergeht schnell."
+      }
+     ]
+    },
+    "finding": "abstract-noun article optional"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-dass-clause-perfekt",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " the participle and the auxiliary move to the end. The fixed order at the end is: ",
+    "replace": " the participle and the auxiliary move to the end. With a participle, the order at the end is: ",
+    "finding": "modal Perfekt exception"
+   },
+   {
+    "op": "replace",
+    "find": "-clause the required order is always ",
+    "replace": "-clause the required order is ",
+    "finding": "modal Perfekt exception"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/1/1/text/8",
+    "value": {
+     "kind": "text",
+     "text": " (One exception: with a modal in the Perfekt there is no participle, and the auxiliary comes before the two infinitives — "
+    },
+    "finding": "modal Perfekt exception"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/1/1/text/9",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "dass sie es hat machen müssen"
+      }
+     ]
+    },
+    "finding": "modal Perfekt exception"
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/1/1/text/10",
+    "value": {
+     "kind": "text",
+     "text": ".)"
+    },
+    "finding": "modal Perfekt exception"
+   },
+   {
+    "op": "replace",
+    "find": " and make sure the auxiliary is the absolute last word before the full stop or comma.",
+    "replace": " and make sure the auxiliary comes after the participle, as the last word before the full stop or comma (only with a modal Perfekt does it precede the two infinitives).",
+    "finding": "modal Perfekt exception"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-passive-werden",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ") is used. In a modal passive, the verb cluster always ends with ",
+    "replace": ") is used. In a main-clause modal passive, the verb cluster ends with ",
+    "finding": "modal passive order only main clause"
+   },
+   {
+    "op": "replace",
+    "find": ": modal → Partizip II → werden.",
+    "replace": ": modal → Partizip II → werden. In a subordinate clause the finite modal moves to the very end: …, weil das Formular ausgefüllt werden muss.",
+    "finding": "modal passive order only main clause"
+   },
+   {
+    "op": "replace",
+    "find": "The correct order is: modal (finite) → Partizip II → ",
+    "replace": "In a main clause, the correct order is: modal (finite) → Partizip II → ",
+    "finding": "modal passive order only main clause"
+   }
+  ]
+ }
+]

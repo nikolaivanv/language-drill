@@ -1,0 +1,255 @@
+[
+ {
+  "key": "de-a1-articles-nominative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "The accusative form «einen» is reserved for direct objects of action verbs.",
+    "replace": "The accusative form «einen» is for direct objects and after accusative prepositions (für einen Freund) — never for the complement of sein, werden or bleiben.",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-possessive-articles",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "«*euer Kinder» is wrong on two counts: the plural ending is missing and the stem is uncontracted. The correct form is «",
+    "replace": "«*euer Kinder» is wrong because the plural ending is missing — and once the ending is added, the inner -e- drops. The correct form is «",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-praeteritum-sein-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Both verbs are irregular. Their Präteritum forms must be learned as fixed paradigms. Note that the 1st and 3rd person singular share the same form — there is no extra ending.",
+    "replace": "Both verbs have irregular past stems (war-, hatt-) that must be learned. Note that the 1st and 3rd person singular share the same form (ich war = er war, ich hatte = er hatte) — er/sie/es has no ending of its own.",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": " The forms of «war» are fully suppletive and must simply be memorised.",
+    "replace": " With «war», the irregular part is the stem: sein switches to a completely different past stem, war-. Its endings are those of strong verbs — none for ich and er/sie/es, then -st, -en, -t, -en.",
+    "finding": "R3 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-past-participle-formation",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "weak, stem ends in -t/-d, or in -m/-n after a consonant other than l/r (öffnen → geöffnet)",
+    "replace": "weak, stem ends in -t/-d, or in -m/-n after a consonant other than l/r (öffnen → geöffnet, atmen → geatmet; a lengthening h or a double mm/nn does not count: gewohnt, getrennt)",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-perfekt-with-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". For example, ",
+    "replace": " (-et when the stem ends in -t or -d). For example, ",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-a2-verb-preposition-complements",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/0/1",
+    "value": "vowel",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-es-expressions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " that must always include ",
+    "replace": " that include ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": " Certain verbs and phrases are always paired with ",
+    "replace": " Certain verbs and phrases are paired with ",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-futur-i",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "reaching for Futur I in these contexts marks you as a non-native speaker.",
+    "replace": "Futur I is grammatical here, but in these contexts it sounds marked or overly emphatic.",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-n-declension",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Apply n-declension whenever the noun belongs to one of the following groups:",
+    "replace": "Almost all weak masculines belong to one of the following groups — but not every noun in these groups is weak, so check the dictionary:",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": " — by far the largest group. Examples: ",
+    "replace": " that denote people or animals — by far the largest group. Examples: ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/0/0/text/7",
+    "value": {
+     "kind": "text",
+     "text": ". (der Käse is regular: des Käses.)"
+    },
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": "Masculine nouns of foreign origin ending in -ent, -ant, -ist, -at, -ot",
+    "replace": "Many masculine nouns of foreign origin ending in -ent, -ant, -ist, -at, -ot",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": " — Examples: ",
+    "replace": " — mostly ones denoting people. Examples: ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/1/0/text/9",
+    "value": {
+     "kind": "text",
+     "text": ". But der Moment and der Kontinent are regular (des Moments, des Kontinents)."
+    },
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-passive-werden",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "All passive forms share the pattern: ",
+    "replace": "All passive forms are built from werden — the finite verb, or worden / an infinitive when sein or a modal is finite — plus the past participle: ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": "finite form of werden + past participle of main verb",
+    "replace": "werden + past participle of main verb",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-genitive-prepositions",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " for indefinites). Masculine and neuter singular nouns additionally take the ending ",
+    "replace": " for indefinites). Most masculine and neuter singular nouns additionally take the ending ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": "); feminine and plural nouns are unchanged. Attributive adjectives take ",
+    "replace": "; weak masculines take -(e)n instead: aufgrund des Studenten); feminine and plural nouns are unchanged. Attributive adjectives after an article take ",
+    "finding": "R3 #1, #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/14",
+    "value": {
+     "kind": "text",
+     "text": "); with no article at all, the adjective shows the case itself (infolge starker Regenfälle)."
+    },
+    "finding": "R3 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-modal-particles-advanced",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "are short, unstressed words",
+    "replace": "are short, usually unstressed words",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": "They are always ",
+    "replace": "They are normally ",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": " in speech (stress shifts the meaning or makes the word an adverb instead).",
+    "replace": " in speech: stress usually shifts the meaning (stressed wohl becomes concessive) or makes the word an adverb instead, although bloß and nur in a warning may be stressed to sharpen it.",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": "That is precisely the problem — what did you expect?",
+    "replace": "That's just the problem — what did you expect?",
+    "finding": "R3 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-nominalization",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "weak after der/das, strong after ein or with no article (e.g. ",
+    "replace": "weak after der/das, mixed after ein, strong with no article (e.g. ",
+    "finding": "R3 #2"
+   },
+   {
+    "op": "replace",
+    "find": "); after ein or with no article the ending is strong (ein Kranker, etwas Gutes).",
+    "replace": "); with no article the ending is strong (etwas Gutes), and after ein it is strong only where ein itself has no ending (ein Kranker, but einem Kranken, einen Kranken).",
+    "finding": "R3 #2"
+   }
+  ]
+ },
+ {
+  "key": "de-b2-verb-prefixes",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "ge-, miss-, emp-",
+    "replace": "ge-, emp-",
+    "finding": "R3 #1"
+   },
+   {
+    "op": "replace",
+    "find": ") — are always unstressed, never split from the verb, and never receive the ",
+    "replace": "; miss- is also inseparable, but its stress varies from verb to verb) — are always unstressed, never split from the verb, and never receive the ",
+    "finding": "R3 #1"
+   }
+  ]
+ }
+]

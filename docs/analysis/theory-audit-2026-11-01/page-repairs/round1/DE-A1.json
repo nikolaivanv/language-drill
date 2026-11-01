@@ -1,0 +1,1002 @@
+[
+ {
+  "key": "de-a1-accusative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "German signals this case mainly through changes to the article; the noun itself does not change.",
+    "replace": "German signals this case mainly through changes to the article; the noun itself usually does not change. A few masculine nouns are the exception and add -(e)n: der Herr → Ich kenne Herrn Müller, der Student → den Studenten.",
+    "finding": "noun 'does not change' ignores weak masculines"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-dative",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/3/body/2/note",
+    "value": [
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "helfen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " takes the dative. "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Eltern"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is a plural noun that already ends in -n, so the dative plural adds nothing: it stays "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "Eltern"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ". The possessive article "
+     },
+     {
+      "kind": "mono",
+      "children": [
+       {
+        "kind": "text",
+        "text": "mein"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " takes the dative plural ending "
+     },
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-en"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " → "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "meinen"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ],
+    "finding": "self-contradictory Eltern -n note"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-imperative",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "stem only (drop -en, drop -st)",
+    "replace": "stem (drop -en; + -e after -t/-d)",
+    "finding": "table du-row: -e obligatory for some stems"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/1/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "The -e ending."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Most regular verbs may add a final -e ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Gehe!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Geh!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). It is required after stems ending in -t/-d, -ig, or a consonant + m/n: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Arbeite!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Warte!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Entschuldige!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Öffne!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — not "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*Arbeit!"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Verbs with an e → i(e) change never take the -e."
+      }
+     ]
+    },
+    "finding": "'optional -e' wrong for -t/-d, -ig, C+m/n stems"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-modal-verbs-present",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/4/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Conjugating the infinitive too."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Only the modal changes with the subject; the verb at the end stays in its infinitive form. «Er muss heute "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "arbeiten"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ".» — not "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*Er muss heute arbeitet"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "*Ich kann das Meer sehen is grammatical — pitfall replaced with a real error"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-noun-gender",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ignoring suffix-based gender rules."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Nouns formed with the suffixes "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ung"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-heit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", and "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-keit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " are "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "always"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " feminine: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "die Wohnung"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "die Zeitung"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "die Freiheit"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". If you see one of these suffixes, the article is "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "die"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — no need to look it up. Watch out for short nouns that only happen to end in the letters -ung and are not formed with the suffix: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "der Sprung"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (jump) is masculine."
+      }
+     ]
+    },
+    "finding": "-ung 'no exceptions' overstated (der Sprung)"
+   },
+   {
+    "op": "replace",
+    "find": " always signals a feminine noun, so the article is ",
+    "replace": " (as in wohnen → Wohnung) always signals a feminine noun, so the article is ",
+    "finding": "-ung example note tied to the suffix"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-numbers-ordinals",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Years are read in hundreds (1998 = neunzehnhundertachtundneunzig).",
+    "replace": "Years up to 1999 are read in hundreds (1998 = neunzehnhundertachtundneunzig); from 2000 they use zweitausend (2021 = zweitausendeinundzwanzig).",
+    "finding": "years since 2000 use zweitausend"
+   },
+   {
+    "op": "replace",
+    "find": " — read as two two-digit groups in hundreds: 1998 → neunzehnhundert + achtundneunzig.",
+    "replace": " — years from 1100 to 1999 are read as two two-digit groups in hundreds: 1998 → neunzehnhundert + achtundneunzig. From 2000 on, use zweitausend: 2021 → zweitausend + einundzwanzig.",
+    "finding": "years since 2000 use zweitausend"
+   },
+   {
+    "op": "replace",
+    "find": "but German splits the year into two hundreds groups: 1998 = ",
+    "replace": "but German splits years from 1100 to 1999 into two hundreds groups: 1998 = ",
+    "finding": "years since 2000 use zweitausend"
+   },
+   {
+    "op": "replace",
+    "find": ". Using tausend here sounds unnatural.",
+    "replace": ", not *eintausendneunhundertachtundneunzig. From 2000 on, tausend is correct: 2021 = zweitausendeinundzwanzig.",
+    "finding": "years since 2000 use zweitausend"
+   },
+   {
+    "op": "replace",
+    "find": "The dot is not a full stop — do not add a space before the month name.",
+    "replace": "The dot is not a full stop, and a space still follows it before the month name.",
+    "finding": "ordinal dot: space before month"
+   },
+   {
+    "op": "replace",
+    "find": "not *der dreite or *der siebente.",
+    "replace": "not *der dreite or *der einte. (The form der siebente also exists; it is less common but correct.)",
+    "finding": "siebente is a correct variant"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-personal-pronouns",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is the only third-person singular form that differs between accusative and dative.",
+    "replace": " is the only third-person singular accusative that differs from its nominative (er → ihn; es and sie stay the same). In the dative, all three change: ihm, ihm, ihr.",
+    "finding": "ihn 'only form differing acc/dat' false"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-plural-formation",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/0/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "After a number word."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Whenever a cardinal number greater than one precedes a noun, the noun must be in the plural: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "drei Bücher"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*drei Buch"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The exception is masculine and neuter units of money and measurement, which stay singular: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "zwei Euro"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "drei Kilo"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "zwei Glas Bier"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "measure nouns stay singular after numerals"
+   },
+   {
+    "op": "replace",
+    "find": "The noun must always carry its plural ending when the quantity is more than one.",
+    "replace": "The noun must carry its plural ending when the quantity is more than one; only masculine and neuter units such as Euro, Kilo or Glas stay singular (zwei Euro).",
+    "finding": "measure nouns stay singular after numerals"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-possessive-articles",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/1/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Taking the place of the article."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " A possessive article fills the article slot before the noun, so it never appears together with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ein"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "der"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". It takes the same endings as "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ein/eine/einen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", but its meaning is specific: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mein Schlüssel"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is the key that belongs to me, so you use it just as naturally for things the listener already knows about: «Wo ist mein Schlüssel?»."
+      }
+     ]
+    },
+    "finding": "possessive ≠ 'noun not yet known'"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-praeteritum-sein-haben",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " — are the standard choice even in spoken German. Using the Perfekt equivalents («ist gewesen», «hat gehabt») sounds unnatural and is best avoided.",
+    "replace": " — are much more common in spoken German than the Präteritum of other verbs, and they are safe to use everywhere. The Perfekt equivalents («ist gewesen», «hat gehabt») are also correct and common, especially in southern Germany, Austria and Switzerland.",
+    "finding": "Perfekt of sein/haben is natural, not 'unnatural'"
+   },
+   {
+    "op": "replace",
+    "find": "is the only natural option in this construction.",
+    "replace": "is the usual choice in this construction; the Perfekt «hat es gegeben» is also heard, especially in the south.",
+    "finding": "es gab not 'the only natural option'"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Treating the Perfekt as wrong — or forming it wrongly."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " «Ich bin gestern krank gewesen» and «Wir haben keine Zeit gehabt» are correct and common; "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "war"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " and "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "hatte"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " are simply shorter and safe in every region and register. If you do use the Perfekt of «sein», its auxiliary is «sein»: "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ich bin krank gewesen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*ich habe krank gewesen"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    "finding": "pitfall called Perfekt clumsy/unnatural — reframed"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-present-irregular",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/4",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "werden"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — the du- and er/sie/es-forms change the vowel (e → i); the du-form also loses the "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "d"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wirst"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "), and the er/sie/es-form takes no "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-t"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ending ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "wird"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ")."
+      }
+     ]
+    },
+    "finding": "werden description garbled"
+   },
+   {
+    "op": "replace",
+    "find": "the er/sie/es-form is wird — both the d and the vowel change from the infinitive.",
+    "replace": "the er/sie/es-form is wird — the vowel changes from e to i, and there is no -t ending (not *wirdt).",
+    "finding": "werden note: wird keeps the d"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-temporal-prepositions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3",
+    "value": [
+     "von … bis",
+     "von + dative; bis + accusative, or + a second preposition (bis zum Abend)",
+     "time spans",
+     "von neun bis fünf Uhr"
+    ],
+    "finding": "bis is not a dative preposition"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/3/0",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Adding a preposition to bare accusative phrases."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " Expressions like "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "jeden Tag"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nächste Woche"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " or "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "letzten Monat"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " take no preposition. "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "*in nächste Woche"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is wrong; say "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nächste Woche"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". For «stay all day», "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "den ganzen Tag bleiben"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is the most common choice; "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "für den ganzen Tag bleiben"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is also correct, like "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "für zwei Tage"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", when you stress a planned duration."
+      }
+     ]
+    },
+    "finding": "*für den ganzen Tag wrongly starred"
+   }
+  ]
+ },
+ {
+  "key": "de-a1-zero-article",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (unless you specifically mean «some, not all»).",
+    "replace": ". (There is no plural form of ein, so nothing goes in that slot. _einige Äpfel_ is also correct, but it adds the meaning «a few».)",
+    "finding": "einige Äpfel wrongly starred"
+   },
+   {
+    "op": "replace",
+    "find": "*Wir kaufen einige Äpfel",
+    "replace": "*Wir kaufen eine Äpfel",
+    "finding": "einige Äpfel wrongly starred"
+   }
+  ]
+ }
+]

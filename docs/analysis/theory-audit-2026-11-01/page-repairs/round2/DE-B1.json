@@ -1,0 +1,526 @@
+[
+ {
+  "key": "de-b1-adjectives-as-nouns",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/1/body/0/items/2/0/text",
+    "finding": "R2 #1",
+    "value": [
+     {
+      "kind": "strong",
+      "children": [
+       {
+        "kind": "text",
+        "text": "After etwas, nichts, viel, alles."
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " When a nominalized adjective follows one of these indefinite pronouns, it is always neuter. After etwas, nichts and viel it takes the strong ending "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-es"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " in the nominative and accusative: "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "etwas Neues"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "nichts Besonderes"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "viel Interessantes"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " (dative: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "mit etwas Neuem"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "). After "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "alles"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", which already provides a definite-type ending, the adjective takes the weak ending "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-e"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ": "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "alles Gute"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   },
+   {
+    "op": "set",
+    "path": "/sections/3/body/1/note",
+    "finding": "R2 #2",
+    "value": [
+     {
+      "kind": "text",
+      "text": "After "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "etwas"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", the neuter nominalized adjective takes the strong ending "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "-es"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " in the nominative and accusative (dative: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "mit etwas Neuem"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ")."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "de-b1-dass-clause-perfekt",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "-clause is finished and prior to the main verb's time frame, use the Perfekt rather than the present tense.",
+    "replace": "-clause is finished and prior to the main verb's time frame, and the main clause is in the present, use the Perfekt rather than the present tense. (After a past-tense main clause, an earlier action normally takes the Plusquamperfekt: Er sagte, dass sie die Hausaufgaben gemacht hatte.)",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-dative-reflexive-body",
+  "edits": [
+   {
+    "op": "replace",
+    "find": ". The table below shows the dative reflexive forms alongside the ordinary dative personal pronouns for comparison.",
+    "replace": ". The table below shows the dative reflexive forms.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-es-expressions",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/2/children/0/text",
+    "finding": "R2 #1, #2",
+    "value": [
+     {
+      "kind": "text",
+      "text": "When "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "es"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " is a placeholder, the real subject is the following clause, and the verb is third-person singular to agree with it. In impersonal and fixed expressions, "
+     },
+     {
+      "kind": "hilite",
+      "children": [
+       {
+        "kind": "text",
+        "text": "es"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": " itself is the subject, so the verb is again third-person singular. In "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "es gibt"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": ", what follows is an accusative object, so even a plural noun does not change the verb: "
+     },
+     {
+      "kind": "em",
+      "children": [
+       {
+        "kind": "text",
+        "text": "es gibt viele Parks"
+       }
+      ]
+     },
+     {
+      "kind": "text",
+      "text": "."
+     }
+    ]
+   },
+   {
+    "op": "replace",
+    "find": " and cannot be restructured without it: ",
+    "replace": " as their subject: ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " is an inseparable part of the phrase and cannot be omitted.",
+    "replace": " is part of the phrase. In casual speech it is often dropped at the very start (Tut mir leid.), but when another element comes first it stays: Mir tut es leid.",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "replace",
+    "find": " is not a placeholder — it is a required part of the expression and cannot be omitted, even though the dative pronoun ",
+    "replace": " is not a placeholder — it is the subject of the expression, so it stays when another element comes first, although the dative pronoun ",
+    "finding": "R2 #3"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/1/2/children/1",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Correct: "
+        }
+       ]
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Es tut mir leid. / Mir tut es leid."
+        }
+       ]
+      }
+     ]
+    }
+   }
+  ]
+ },
+ {
+  "key": "de-b1-genitive",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " is always safe for monosyllables.",
+    "replace": " is a safe choice for native monosyllables ending in a consonant. Monosyllables ending in a vowel and loanwords take -s: des Schuhs, des Klubs.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-modal-particles-basic",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "Modal particles (Modalpartikeln) are short, unstressed words",
+    "replace": "Modal particles (Modalpartikeln) are short, usually unstressed words",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/4",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "text",
+     "text": " (the middle field of the German clause, after the finite verb and any pronouns, before the non-finite verb or the end of the clause). They are normally "
+    }
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/6",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "text",
+     "text": " in natural speech; a stressed doch or ja has a stronger force (Das ist DOCH richtig! — a rebuttal; Sei JA vorsichtig! — a warning)."
+    }
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/2/2",
+    "finding": "R2 #2",
+    "value": "after finite verb (+ subject)"
+   },
+   {
+    "op": "set",
+    "path": "/sections/2/body/1/rows/3/2",
+    "finding": "R2 #2",
+    "value": "after finite verb (+ subject)"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-n-declension",
+  "edits": [
+   {
+    "op": "set",
+    "path": "/sections/2/body/0/text/14",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "text",
+     "text": " in the plural. "
+    }
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/0/text/15",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "Nachbar"
+      }
+     ]
+    }
+   },
+   {
+    "op": "insert",
+    "path": "/sections/2/body/0/text/16",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "text",
+     "text": " also adds only -n, throughout: den Nachbarn, des Nachbarn, die Nachbarn."
+    }
+   },
+   {
+    "op": "set",
+    "path": "/sections/1/body/1/items/2/0/text/4",
+    "finding": "R2 #1",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "der Nachbar (den Nachbarn)"
+      }
+     ]
+    }
+   },
+   {
+    "op": "replace",
+    "find": ". A useful check: if the article is not nominative, the noun must end in -(e)n.",
+    "replace": ". A useful check: outside the nominative singular, a weak masculine ends in -(e)n (the Name type adds -s in the genitive: des Namens).",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "set",
+    "path": "/sections/4/body/0/items/2/0/text/9",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "text",
+     "text": " there (the Name type: "
+    }
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/2/0/text/10",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "mono",
+     "children": [
+      {
+       "kind": "text",
+       "text": "-ns"
+      }
+     ]
+    }
+   },
+   {
+    "op": "insert",
+    "path": "/sections/4/body/0/items/2/0/text/11",
+    "finding": "R2 #3",
+    "value": {
+     "kind": "text",
+     "text": "), whereas regular masculines show only "
+    }
+   }
+  ]
+ },
+ {
+  "key": "de-b1-participles-as-adjectives",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " after the indefinite article (nominative neuter).",
+    "replace": " after the indefinite article (accusative neuter — the direct object of nehmen).",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-praeteritum",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " ending belongs to the present tense, not the Präteritum.",
+    "replace": " ending in the 3sg belongs to the present tense (er kommt), not the Präteritum.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-schon-noch-erst",
+  "edits": [
+   {
+    "op": "replace",
+    "find": "❌ «Bist du fertig?» when you mean to express surprise that the person might be done so quickly.",
+    "replace": "«Bist du fertig?» is a correct question, but it misses the point if you mean to express surprise that the person might be done so quickly.",
+    "finding": "R2 #1"
+   }
+  ]
+ },
+ {
+  "key": "de-b1-statt-ohne-zu",
+  "edits": [
+   {
+    "op": "replace",
+    "find": " (he asked — same subject ✓) vs. ",
+    "replace": " (he did not ask — same subject ✓) vs. ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": " (she noticed — different subject ✓). Using ",
+    "replace": " (she did not notice — different subject ✓). Using ",
+    "finding": "R2 #1"
+   },
+   {
+    "op": "replace",
+    "find": "*ohne sie zu merken",
+    "replace": "ohne es zu merken",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " here would change the meaning entirely (it would imply ",
+    "replace": " here would change the meaning entirely: its understood subject is er, so it would say that ",
+    "finding": "R2 #2"
+   },
+   {
+    "op": "replace",
+    "find": " noticed nothing).",
+    "replace": " did not notice.",
+    "finding": "R2 #2"
+   }
+  ]
+ }
+]
