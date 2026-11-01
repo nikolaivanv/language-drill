@@ -6,11 +6,8 @@
  * `parseTheoryValidationResult` lands in Task 4; `validateTheoryDraft` lands
  * in Task 5.
  *
- * Structural mirror of `validate.ts`. The model id is aliased to
- * `GENERATION_MODEL` (the same `claude-sonnet-4-6` constant the generator
- * and the exercise validator pin) so the three Claude paths cannot drift
- * — Task 6's cross-file equality assertion fails CI if one path is bumped
- * without the others.
+ * Structural mirror of `validate.ts`. The model is pinned separately from
+ * the exercise pipeline (see `THEORY_VALIDATION_MODEL`).
  *
  * Deltas from the exercise validator's tool schema (intentional, per
  * design Component 1 / Req 1.5):
@@ -32,7 +29,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 
 import type { ClaudeUsageBreakdown } from "./cost-model.js";
 import { applyShaped, extractToolUse, shapeToolRequest, type Effort } from "./model-request.js";
-import { GENERATION_MODEL } from "./generate.js";
+import { mixedScriptFactualErrors } from "./theory-content-checks.js";
 import type {
   TheoryDraft,
   TheoryGenerationSpec,
@@ -47,16 +44,34 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
- * Authoritative model id for the theory validator. Deliberately pinned to
- * Sonnet while `THEORY_GENERATION_MODEL` runs Opus — a different model
- * checking the generator's work is an independent-reviewer property we
- * want to keep, and the validator's structured-verdict task is well within
- * Sonnet's capability. Aliased to `GENERATION_MODEL` (also Sonnet) so the
- * exercise-side pricing constants keep covering validator cost estimates.
+ * Authoritative model id for the theory validator. Still a different model
+ * from `THEORY_GENERATION_MODEL` (Opus) — an independent reviewer of the
+ * generator's work is a property we want to keep.
+ *
+ * Switched from Sonnet 4.6 (no thinking) to Sonnet 5.5 with adaptive thinking
+ * on 2026-11-01. On 36 pages with audited factual errors the old validator
+ * kept 69% auto-approved; Sonnet 5.5 + thinking rejected 97% and flagged the
+ * rest, at roughly the same cost (~$0.04/page). Opus 5.5 at high effort scored
+ * the same on those pages at twice the cost and approved fewer repaired pages.
+ * Run: `eval:theory-validator`, docs/analysis/theory-audit-2026-11-01/.
  */
-export const THEORY_VALIDATION_MODEL = GENERATION_MODEL;
+export const THEORY_VALIDATION_MODEL = "claude-sonnet-5-5" as const;
 
 export const THEORY_VALIDATION_MAX_TOKENS = 1024;
+
+/**
+ * Output budget when the validator thinks first. Fact-checking a page claim by
+ * claim needs the reasoning room; 1024 tokens only fits the verdict itself.
+ */
+export const THEORY_VALIDATION_THINKING_MAX_TOKENS = 16000;
+
+/**
+ * Whether the validator reasons before its verdict. The 2026-11-01 audit found
+ * a one-pass, no-thinking verdict approved 183 of 312 pages that stated wrong
+ * rules or starred correct sentences — it catches self-contradiction but not a
+ * plausible wrong rule.
+ */
+export const THEORY_VALIDATION_THINKING: "off" | "adaptive" = "adaptive";
 
 /** Strict reviewer: zero diversity, deterministic output. */
 export const THEORY_VALIDATION_TEMPERATURE = 0.0;
@@ -304,22 +319,26 @@ export async function validateTheoryDraft(
   client: Anthropic,
   draft: TheoryDraft,
   spec: TheoryGenerationSpec,
-  options?: { model?: string; effort?: Effort },
+  options?: { model?: string; effort?: Effort; thinking?: "off" | "adaptive" },
 ): Promise<ValidateTheoryDraftResult> {
   const systemText = await buildTheoryValidationSystemPrompt(spec);
   const userText = buildTheoryValidationUserPrompt(draft, spec);
 
   const effectiveModel = options?.model ?? THEORY_VALIDATION_MODEL;
+  const thinking = options?.thinking ?? THEORY_VALIDATION_THINKING;
   const shaped = shapeToolRequest(effectiveModel, {
     tool: THEORY_VALIDATION_TOOL,
-    thinking: "off",
+    thinking,
     temperature: THEORY_VALIDATION_TEMPERATURE,
     effort: options?.effort,
   });
 
   const response = await client.messages.create(applyShaped({
     model: effectiveModel,
-    max_tokens: THEORY_VALIDATION_MAX_TOKENS,
+    max_tokens:
+      thinking === "adaptive"
+        ? THEORY_VALIDATION_THINKING_MAX_TOKENS
+        : THEORY_VALIDATION_MAX_TOKENS,
     system: [
       {
         type: "text" as const,
@@ -334,7 +353,16 @@ export async function validateTheoryDraft(
     label: "Validator",
   });
 
-  const result = parseTheoryValidationResult(toolInput);
+  const parsed = parseTheoryValidationResult(toolInput);
+  // Deterministic checks the model cannot see (look-alike letters read as the
+  // intended word) — any hit is a factual error, which rejects the page.
+  const result: TheoryValidationResult = {
+    ...parsed,
+    factualErrors: [
+      ...parsed.factualErrors,
+      ...mixedScriptFactualErrors(draft.contentJson),
+    ],
+  };
   const tokenUsage = readUsage(response);
   return { result, tokenUsage };
 }
