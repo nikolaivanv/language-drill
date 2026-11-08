@@ -460,6 +460,14 @@ export type EvaluationResult = {
    * Absent on rows written before 2026-07-05 — treat as 'llm'.
    */
   evaluationSource?: 'deterministic' | 'llm';
+  /**
+   * The learner's whole answer with every error fixed (and rewritten to do the
+   * task if it missed it); verbatim when nothing was wrong. For a cloze, only
+   * the corrected fill for the blank. Voiced by the "hear the corrected
+   * sentence" feature. Absent on deterministic results and on rows written
+   * before 2026-11-08.
+   */
+  correctedAnswer?: string;
 };
 
 // ---------------------------------------------------------------------------

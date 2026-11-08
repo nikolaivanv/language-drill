@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-08");
   });
 
   // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the
@@ -272,6 +272,14 @@ describe("vocab_recall citation-form rule (evaluate@2026-10-17a)", () => {
   });
 
   it("pins the evaluator version", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-08");
+  });
+});
+
+describe("corrected-answer rule (evaluate@2026-11-08)", () => {
+  it("asks for the full corrected answer and a rewrite on a task miss", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("**Corrected Answer**");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("never echo an answer you scored down unchanged");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("For a cloze, give only the corrected word(s) for the blank");
   });
 });

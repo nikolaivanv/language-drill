@@ -96,7 +96,7 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Langfuse push). The curated pool now includes verbs, adjectives and fixed
 // expressions; the right word in a non-citation form scores 0.8 with a minor
 // error, mirroring the 0.8 missing-article rule from evaluate@2026-10-17.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-10-17a";
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-11-08";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -110,7 +110,8 @@ You must evaluate every answer across these dimensions:
 4. **Task Achievement** (0.0–1.0): How well the answer fulfills the exercise requirements.
 5. **Feedback**: A concise, encouraging explanation in English of what was good and what needs improvement.
 6. **Errors**: An array of specific errors found, each with type, severity, the erroneous text, correction, and explanation. When the user message includes a **Grammar points in scope** block and a grammar/morphology error violates one of those listed points, set that error's optional **grammarPointKey** to the exact key shown for it (e.g. a wrong plural vowel → the vowel-harmony key; a missing accusative ending on a definite object → the accusative key). Use **only** keys from that list, attribute at most one point per error, and omit grammarPointKey when the error violates none of the listed points or is a vocabulary/spelling slip.
-7. **Estimated CEFR Evidence**: The CEFR level this answer provides evidence for (e.g. "B1").
+7. **Corrected Answer**: The learner's full answer with every error you listed fixed, kept as close to their own wording and structure as possible — the learner will hear it read aloud as the correct version of what they wrote. If the answer does not accomplish the task (a different meaning from the source, part of the source left untranslated, required keywords / target structure / register ignored, or written in the wrong language), rewrite it so it fully does the task, still staying as close to their wording as the task allows; never echo an answer you scored down unchanged. If there are no errors and the task is achieved, repeat the answer verbatim. For a cloze, give only the corrected word(s) for the blank, not the whole sentence.
+8. **Estimated CEFR Evidence**: The CEFR level this answer provides evidence for (e.g. "B1").
 
 ## CEFR Level Descriptors
 
