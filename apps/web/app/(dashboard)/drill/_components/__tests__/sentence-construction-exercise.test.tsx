@@ -10,6 +10,10 @@ import {
   type SentenceConstructionExerciseProps,
   type SubmissionState,
 } from '../sentence-construction-exercise';
+vi.mock('../spoken-sentence', () => ({
+  SpokenSentence: ({ text }: { text: string }) => <div data-testid="spoken-sentence">{text}</div>,
+}));
+
 
 const baseContent: SentenceConstructionContent = {
   type: ExerciseType.SENTENCE_CONSTRUCTION,
@@ -270,5 +274,24 @@ describe('SentenceConstructionExercise — Cmd/Ctrl+Enter submits', () => {
     expect(onSubmit).not.toHaveBeenCalled();
     fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
     expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('hear the corrected sentence', () => {
+  const spokenSubmission = (spokenText: string | null): SubmissionState => ({
+    kind: 'evaluated',
+    result: { ...(evaluatedSubmission as Extract<SubmissionState, { kind: 'evaluated' }>).result, spokenText },
+    meta: {},
+    submissionId: 'sub-1',
+  });
+
+  it('renders SpokenSentence when spokenText is present', () => {
+    renderEx({ submission: spokenSubmission('La frase correcta.'), exerciseId: 'ex-1', fetchFn: vi.fn() });
+    expect(screen.getByTestId('spoken-sentence')).toHaveTextContent('La frase correcta.');
+  });
+
+  it('omits it when spokenText is null', () => {
+    renderEx({ submission: spokenSubmission(null), exerciseId: 'ex-1', fetchFn: vi.fn() });
+    expect(screen.queryByTestId('spoken-sentence')).not.toBeInTheDocument();
   });
 });

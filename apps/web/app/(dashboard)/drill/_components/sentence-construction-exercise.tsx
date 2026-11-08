@@ -18,7 +18,9 @@ import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { stripInlineMarkdown } from '../../../../lib/drill/strip-inline-markdown';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
-import type { SubmissionMeta, SubmissionState } from './types';
+import type { AuthenticatedFetch } from '@language-drill/api-client';
+import { spokenTextOf, type SubmissionMeta, type SubmissionState } from './types';
+import { SpokenSentence } from './spoken-sentence';
 
 export type { SubmissionMeta, SubmissionState } from './types';
 
@@ -35,6 +37,8 @@ export interface SentenceConstructionExerciseProps {
   /** Coach nudge shown at the bottom of the feedback card when the current item
    *  is a known weak spot. Omit when the item is not a weak spot. */
   coach?: CoachNudge | null;
+  /** Authenticated fetch for the "hear it" audio; omitted → no audio row. */
+  fetchFn?: AuthenticatedFetch;
 }
 
 function isAccentLanguage(lang: string): lang is 'ES' | 'DE' | 'TR' {
@@ -55,6 +59,7 @@ export function SentenceConstructionExercise({
   nextLabel,
   exerciseId,
   coach,
+  fetchFn,
 }: SentenceConstructionExerciseProps) {
   const [answer, setAnswer, clearDraft] = useAnswerDraft(exerciseId);
   const [exampleShown, setExampleShown] = React.useState(false);
@@ -231,6 +236,17 @@ export function SentenceConstructionExercise({
                     })}
                   </ul>
                 )}
+                {(() => {
+                  const spokenText = spokenTextOf(submission.result);
+                  return spokenText && submission.submissionId && exerciseId && fetchFn ? (
+                    <SpokenSentence
+                      text={spokenText}
+                      exerciseId={exerciseId}
+                      submissionId={submission.submissionId}
+                      fetchFn={fetchFn}
+                    />
+                  ) : null;
+                })()}
                 <Card padding="md" className="bg-paper-2">
                   <p className="t-micro text-ink-mute">example answers</p>
                   <ul className="mt-s-1 flex flex-col gap-s-1">

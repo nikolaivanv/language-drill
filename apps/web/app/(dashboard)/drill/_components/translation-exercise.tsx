@@ -19,7 +19,8 @@ import { submitOnModEnter } from '../../../../lib/drill/keyboard';
 import { translationVerdict } from '../../../../lib/drill/verdict-tier';
 import { useDrillAction } from './drill-action-context';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
-import type { SubmissionMeta, SubmissionState } from './types';
+import { spokenTextOf, type SubmissionMeta, type SubmissionState } from './types';
+import { SpokenSentence } from './spoken-sentence';
 
 export type { SubmissionMeta, SubmissionState } from './types';
 
@@ -337,6 +338,17 @@ export function TranslationExercise({
                     })}
                   </ul>
                 )}
+                {(() => {
+                  const spokenText = spokenTextOf(submission.result);
+                  return spokenText && submission.submissionId && exerciseId && fetchFn ? (
+                    <SpokenSentence
+                      text={spokenText}
+                      exerciseId={exerciseId}
+                      submissionId={submission.submissionId}
+                      fetchFn={fetchFn}
+                    />
+                  ) : null;
+                })()}
                 <Card padding="md" className="bg-paper-2">
                   <p className="t-micro text-ink-mute">the version we coded</p>
                   <p className="mt-s-1">{content.referenceTranslation}</p>

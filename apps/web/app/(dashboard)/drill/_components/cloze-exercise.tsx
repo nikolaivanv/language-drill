@@ -11,7 +11,8 @@ import { ClozePrompt, type BlankState } from '../../../../components/drill/cloze
 import { useDrillAction } from './drill-action-context';
 import { ExplainWhy } from './explain-why';
 import { FeedbackShell, type CoachNudge } from './feedback-shell';
-import type { SubmissionMeta, SubmissionState } from './types';
+import { spokenTextOf, type SubmissionMeta, type SubmissionState } from './types';
+import { SpokenSentence } from './spoken-sentence';
 
 export type { SubmissionMeta, SubmissionState } from './types';
 
@@ -203,6 +204,17 @@ export function ClozeExercise({
                     </p>
                   )}
                 </div>
+                {(() => {
+                  const spokenText = spokenTextOf(submission.result);
+                  return spokenText && submission.submissionId && exerciseId && fetchFn ? (
+                    <SpokenSentence
+                      text={spokenText}
+                      exerciseId={exerciseId}
+                      submissionId={submission.submissionId}
+                      fetchFn={fetchFn}
+                    />
+                  ) : null;
+                })()}
                 {submission.result.evaluationSource === 'deterministic' &&
                 submission.submissionId &&
                 exerciseId &&

@@ -15,7 +15,19 @@ export type SubmissionMeta = {
  * EvaluationResult, so consumers reading base fields (score/feedback/errors)
  * work for both arms; the dictation component narrows via `isDictationResult`.
  */
-export type SubmissionResult = EvaluationResult | DictationResult;
+export type SubmissionResult =
+  | (EvaluationResult & {
+      /** Sentence the result card can voice (null → no audio). Hear the corrected sentence, 2026-11-08. */
+      spokenText?: string | null;
+    })
+  | DictationResult;
+
+/** The voiceable sentence of an evaluated submission, or null. */
+export function spokenTextOf(result: SubmissionResult): string | null {
+  return 'spokenText' in result && typeof result.spokenText === 'string' && result.spokenText.length > 0
+    ? result.spokenText
+    : null;
+}
 
 export type SubmissionState =
   | { kind: 'idle' }

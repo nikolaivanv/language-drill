@@ -27,6 +27,10 @@ import {
   type ClozeExerciseProps,
   type SubmissionState,
 } from '../cloze-exercise';
+vi.mock('../spoken-sentence', () => ({
+  SpokenSentence: ({ text }: { text: string }) => <div data-testid="spoken-sentence">{text}</div>,
+}));
+
 import {
   DrillActionProvider,
   useDrillAction,
@@ -526,5 +530,24 @@ describe('ClozeExercise', () => {
         expect.objectContaining({ usedMc: false }),
       );
     });
+  });
+});
+
+describe('hear the corrected sentence', () => {
+  const spokenSubmission = (spokenText: string | null): SubmissionState => ({
+    kind: 'evaluated',
+    result: { ...(evaluatedSubmission as Extract<SubmissionState, { kind: 'evaluated' }>).result, spokenText },
+    meta: {},
+    submissionId: 'sub-1',
+  });
+
+  it('renders SpokenSentence when spokenText is present', () => {
+    renderCloze({ submission: spokenSubmission('La frase correcta.'), exerciseId: 'ex-1', fetchFn: vi.fn() });
+    expect(screen.getByTestId('spoken-sentence')).toHaveTextContent('La frase correcta.');
+  });
+
+  it('omits it when spokenText is null', () => {
+    renderCloze({ submission: spokenSubmission(null), exerciseId: 'ex-1', fetchFn: vi.fn() });
+    expect(screen.queryByTestId('spoken-sentence')).not.toBeInTheDocument();
   });
 });
