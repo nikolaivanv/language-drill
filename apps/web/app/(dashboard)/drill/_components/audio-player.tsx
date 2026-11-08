@@ -12,6 +12,12 @@ export interface AudioPlayerProps {
   floating?: boolean;
   /** Hide the floating transport (e.g. while a bottom sheet is open). */
   floatingSuppressed?: boolean;
+  /**
+   * Start playing once on mount. Only for a clip the learner just asked to
+   * hear (the click that fetched it is the user gesture); browsers that still
+   * block it leave the play button as the fallback.
+   */
+  autoPlay?: boolean;
 }
 
 function clamp01(x: number): number {
@@ -30,6 +36,7 @@ export function AudioPlayer({
   durationSec,
   floating = false,
   floatingSuppressed = false,
+  autoPlay = false,
 }: AudioPlayerProps) {
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const waveRef = React.useRef<HTMLDivElement | null>(null);
@@ -64,6 +71,16 @@ export function AudioPlayer({
     setPlaying(false);
     setDur(durationSec);
   }, [src, durationSec]);
+
+  // Mount-only on purpose: a later src change must not restart playback.
+  React.useEffect(() => {
+    if (!autoPlay) return;
+    const a = audioRef.current;
+    if (!a || !a.src) return;
+    void a.play()?.catch(() => {
+      /* autoplay blocked — the play button stays available */
+    });
+  }, []);
 
   // The single source of truth for duration: the loaded audio's real length once
   // known, else the metadata estimate. Read live inside event handlers so a seek

@@ -33,6 +33,18 @@ export function readingAudioKey(language: string, voiceId: string, normalizedTex
 }
 
 /**
+ * Content-addressed key for a corrected-sentence clip ("hear the corrected
+ * sentence" on drill result cards). Same hash shape as `readingAudioKey`,
+ * separate prefix so the two pools are distinguishable in the bucket.
+ */
+export function phraseAudioKey(language: string, voiceId: string, normalizedText: string): string {
+  const hash = createHash('sha256')
+    .update(`${language}|${voiceId}|${normalizedText}`)
+    .digest('hex');
+  return `phrase/${hash}.mp3`;
+}
+
+/**
  * Rough duration estimate (~2.5 words/sec neural pace). The client's <audio>
  * element self-corrects to the real duration on load, so this only needs to be
  * a sane initial label.

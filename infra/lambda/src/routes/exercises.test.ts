@@ -76,7 +76,9 @@ const mockGrammarPointsAtOrBelow = vi.fn(
   (_language?: string | null, _difficulty?: string | null) => [] as { key: string; name: string }[],
 );
 
-vi.mock('@language-drill/db', () => {
+vi.mock('@language-drill/db', async () => {
+  // Real pure audio helpers — spoken-text / phrase-audio-service run for real.
+  const actualDb = await vi.importActual<typeof import('@language-drill/db')>('@language-drill/db');
   // Declared inside the factory (rather than reusing the top-level
   // mockGrammarPointsAtOrBelow pattern) so resolveEvaluationGuidance below
   // can share the exact same vi.fn instance that tests mutate via
@@ -85,6 +87,11 @@ vi.mock('@language-drill/db', () => {
     (_key?: string) => undefined as { name: string; description: string; commonErrors: string[] } | undefined,
   );
   return {
+    READING_VOICE_BY_LANGUAGE: actualDb.READING_VOICE_BY_LANGUAGE,
+    POLLY_NEURAL_MAX_CHARS: actualDb.POLLY_NEURAL_MAX_CHARS,
+    normalizePassageText: actualDb.normalizePassageText,
+    phraseAudioKey: actualDb.phraseAudioKey,
+    estimateDurationSec: actualDb.estimateDurationSec,
     users: { id: 'id' },
     exercises: { reviewStatus: 'review_status', type: 'type', audioS3Key: 'audio_s3_key', grammarPointKey: 'grammar_point_key', language: 'language', difficulty: 'difficulty' },
     userExerciseHistory: { id: 'id', userId: 'user_id', exerciseId: 'exercise_id' },
@@ -228,9 +235,26 @@ vi.mock('@language-drill/ai', () => ({
 // implementation returns a stable string so existing tests that don't
 // care about the value still see deterministic inserts.
 const mockRandomUUID = vi.fn(() => '00000000-0000-0000-0000-000000000000');
-vi.mock('node:crypto', () => ({
+vi.mock('node:crypto', async () => ({
+  // Real createHash — phraseAudioKey content-addresses the audio clip.
+  ...(await vi.importActual<typeof import('node:crypto')>('node:crypto')),
   randomUUID: () => mockRandomUUID(),
 }));
+
+const { mockHeadObjectExists, mockSynthesizeReadingAudio, mockPresignAudioUrl } = vi.hoisted(() => ({
+  mockHeadObjectExists: vi.fn(async (_key: string) => false),
+  mockSynthesizeReadingAudio: vi.fn(async (_args: unknown) => {}),
+  mockPresignAudioUrl: vi.fn(),
+}));
+vi.mock('../lib/reading-audio-synth', () => ({
+  headObjectExists: (key: string) => mockHeadObjectExists(key),
+  synthesizeReadingAudio: (args: unknown) => mockSynthesizeReadingAudio(args),
+}));
+vi.mock('../lib/audio-url', async () => {
+  const actual = await vi.importActual<typeof import('../lib/audio-url')>('../lib/audio-url');
+  mockPresignAudioUrl.mockImplementation(actual.presignAudioUrl);
+  return { ...actual, presignAudioUrl: (key: string) => mockPresignAudioUrl(key) };
+});
 
 vi.mock('../usage/plan', () => ({
   getEffectivePlan: vi.fn(async () => 'free'),
@@ -1740,6 +1764,9 @@ describe('POST /exercises/:id/submit — observability', () => {
       ...sampleEvaluation,
       evaluationSource: 'llm',
       submissionId: '00000000-0000-0000-0000-000000000000',
+      // Added 2026-11-08 (hear the corrected sentence); null — no correctedAnswer
+      // and the sample is an EN exercise with no voice.
+      spokenText: null,
     });
 
     // Three inserts: auth user upsert (1), userExerciseHistory (2),
@@ -2384,6 +2411,13 @@ describe('POST /exercises/:id/submit — deterministic match branch', () => {
     expect(allValuesCalls.some((v) => v && v.eventType === 'ai_evaluation')).toBe(false);
   });
 
+  it('submit (deterministic cloze) returns spokenText', async () => {
+    queueExerciseAndMastery(clozeExercise);
+    const res = await submit('cloze-tr-001', 'Koydu.');
+    const body = await res.json() as AnyJson;
+    expect(body.spokenText).toBe('Ali kitabı masanın üzerine koydu.');
+  });
+
   it('cloze acceptable-answer match short-circuits too', async () => {
     queueExerciseAndMastery(clozeExercise);
     const res = await submit('cloze-tr-001', 'koymuştu');
@@ -2549,6 +2583,42 @@ describe('POST /exercises/:id/submit — error attribution keys', () => {
     const mod = await import('./exercises');
     app = new Hono();
     app.route('/', mod.default);
+  });
+
+  it('submit (translation llm) returns spokenText from correctedAnswer', async () => {
+    mockLimit.mockResolvedValueOnce([
+      {
+        ...trA1TranslationExercise,
+        contentJson: {
+          type: 'translation',
+          instructions: 'Translate.',
+          sourceText: 'The books are on the table.',
+          sourceLanguage: 'EN',
+          targetLanguage: 'TR',
+          referenceTranslation: 'Kitaplar masada.',
+        },
+      },
+    ]);
+    mockWhere
+      .mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }))
+      .mockResolvedValueOnce([{ count: 0 }] as never);
+    mockEvaluateAnswer.mockResolvedValueOnce({
+      ...evaluationWithAttributedError,
+      correctedAnswer: 'Kitaplar masada.',
+    });
+
+    const res = await app.request(
+      '/exercises/tr-a1-001/submit',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: 'Kitap masada.' }),
+      },
+      authEnv,
+    );
+    const body = (await res.json()) as AnyJson;
+    expect(res.status).toBe(200);
+    expect(body.spokenText).toBe('Kitaplar masada.');
   });
 
   it('persists the evaluator-attributed grammarPointKey as errorGrammarPointKey', async () => {
@@ -2941,5 +3011,138 @@ describe('POST /exercises/:id/submissions/:submissionId/explain', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const allSetCalls = (mockSet.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson);
     expect(allSetCalls.some((v) => v?.responseJson?.explanation)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submissions/:submissionId/audio
+// ---------------------------------------------------------------------------
+describe('POST /exercises/:id/submissions/:submissionId/audio', () => {
+  let app: Hono;
+  const SUB = '11111111-1111-1111-1111-111111111111';
+  const EX = '22222222-2222-2222-2222-222222222222';
+  const authEnv = {
+    event: { requestContext: { authorizer: { jwt: { claims: { sub: 'user_123' } } } } },
+  };
+  const clozeExercise = {
+    id: EX,
+    type: 'cloze',
+    language: 'TR',
+    difficulty: 'A1',
+    grammarPointKey: null,
+    contentJson: {
+      type: 'cloze',
+      instructions: 'Fill in the blank.',
+      sentence: 'Yarın ___ gidiyorum.',
+      correctAnswer: 'okula',
+    },
+  };
+  const historyRow = {
+    id: SUB,
+    userId: 'user_123',
+    exerciseId: EX,
+    responseJson: {
+      userAnswer: 'okula',
+      evaluation: { score: 1, errors: [], taskAchievement: 1, evaluationSource: 'deterministic' },
+    },
+  };
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    mockHeadObjectExists.mockResolvedValue(false);
+    mockPresignAudioUrl.mockResolvedValue('https://signed/phrase.mp3');
+    const mod = await import('./exercises');
+    app = new Hono();
+    app.route('/', mod.default);
+  });
+
+  function queueHistoryAndExercise(row: unknown, exercise: unknown) {
+    mockLimit.mockResolvedValueOnce(row ? [row] : []);
+    mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    if (row && exercise) {
+      mockLimit.mockResolvedValueOnce([exercise]);
+      mockWhere.mockImplementationOnce(() => ({ orderBy: mockOrderBy, limit: mockLimit }));
+    }
+  }
+
+  const audio = (exerciseId: string, submissionId: string) =>
+    app.request(`/exercises/${exerciseId}/submissions/${submissionId}/audio`, { method: 'POST' }, authEnv);
+
+  it('malformed uuid → 404', async () => {
+    const res = await audio(EX, 'not-a-uuid');
+    expect(res.status).toBe(404);
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it('cross-user → 404', async () => {
+    // The WHERE clause carries userId; another user's row simply isn't found.
+    queueHistoryAndExercise(null, null);
+    const res = await audio(EX, SUB);
+    expect(res.status).toBe(404);
+    expect(((await res.json()) as AnyJson).code).toBe('AUDIO_NOT_AVAILABLE');
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
+  });
+
+  it('mismatched exercise → 404', async () => {
+    // Row lookup is scoped to (submissionId, userId, exerciseId=:id) → no row.
+    queueHistoryAndExercise(null, null);
+    const res = await audio('33333333-3333-3333-3333-333333333333', SUB);
+    expect(res.status).toBe(404);
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
+  });
+
+  it('no speakable sentence (EN translation) → 404', async () => {
+    queueHistoryAndExercise(
+      { ...historyRow, responseJson: { userAnswer: 'I go home.', evaluation: { score: 1, errors: [], taskAchievement: 1 } } },
+      {
+        ...clozeExercise,
+        type: 'translation',
+        contentJson: {
+          type: 'translation',
+          instructions: 'Translate.',
+          sourceText: 'Eve gidiyorum.',
+          sourceLanguage: 'TR',
+          targetLanguage: 'EN',
+          referenceTranslation: 'I am going home.',
+        },
+      },
+    );
+    const res = await audio(EX, SUB);
+    expect(res.status).toBe(404);
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
+  });
+
+  it('ok → 200 with audioUrl, synthesizes once and meters phrase_tts', async () => {
+    queueHistoryAndExercise(historyRow, clozeExercise);
+    mockWhere.mockResolvedValueOnce([{ count: 0 }] as never); // countRecentTts
+    const res = await audio(EX, SUB);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as AnyJson;
+    expect(body).toMatchObject({ audioUrl: 'https://signed/phrase.mp3', durationSec: expect.any(Number) });
+    expect(mockSynthesizeReadingAudio).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'Yarın okula gidiyorum.', voiceId: 'Burcu', key: expect.stringMatching(/^phrase\//) }),
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const usage = (mockValues.mock.calls as any[]).map((c: any[]) => c[0] as AnyJson).find((v) => v?.eventType === 'phrase_tts');
+    expect(usage).toMatchObject({ userId: 'user_123', eventType: 'phrase_tts', metadata: { submissionId: SUB } });
+  });
+
+  it('cache hit → 200, no synth, no usage row', async () => {
+    queueHistoryAndExercise(historyRow, clozeExercise);
+    mockHeadObjectExists.mockResolvedValueOnce(true);
+    const res = await audio(EX, SUB);
+    expect(res.status).toBe(200);
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((mockValues.mock.calls as any[]).some((c: any[]) => c[0]?.eventType === 'phrase_tts')).toBe(false);
+  });
+
+  it('at the daily cap → 429 RATE_LIMIT_EXCEEDED', async () => {
+    queueHistoryAndExercise(historyRow, clozeExercise);
+    mockWhere.mockResolvedValueOnce([{ count: 100 }] as never);
+    const res = await audio(EX, SUB);
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as AnyJson).code).toBe('RATE_LIMIT_EXCEEDED');
+    expect(mockSynthesizeReadingAudio).not.toHaveBeenCalled();
   });
 });

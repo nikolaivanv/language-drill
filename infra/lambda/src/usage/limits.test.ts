@@ -50,3 +50,11 @@ describe('read_tts limits', () => {
     expect(limitFor('read_tts', 'boosted')).toBe(500);
   });
 });
+
+describe('phrase_tts limits', () => {
+  it('meters phrase_tts at 100 free / 1000 boosted', () => {
+    expect(BASE_DAILY_LIMITS.phrase_tts).toBe(100);
+    expect(limitFor('phrase_tts', 'free')).toBe(100);
+    expect(limitFor('phrase_tts', 'boosted')).toBe(1000);
+  });
+});

@@ -4,6 +4,7 @@ import {
   POLLY_NEURAL_MAX_CHARS,
   normalizePassageText,
   readingAudioKey,
+  phraseAudioKey,
   estimateDurationSec,
 } from './reading-audio';
 
@@ -42,5 +43,17 @@ describe('reading-audio helpers', () => {
   it('estimates duration from word count (>=1s)', () => {
     expect(estimateDurationSec('')).toBe(1);
     expect(estimateDurationSec(normalizePassageText('uno dos tres cuatro cinco'))).toBe(2); // ceil(5/2.5)
+  });
+});
+
+describe('phraseAudioKey', () => {
+  it('is content-addressed under phrase/', () => {
+    const a = phraseAudioKey('TR', 'Burcu', 'Yarın okula gidiyorum.');
+    expect(a).toMatch(/^phrase\/[0-9a-f]{64}\.mp3$/);
+    expect(phraseAudioKey('TR', 'Burcu', 'Yarın okula gidiyorum.')).toBe(a);
+    expect(phraseAudioKey('TR', 'Burcu', 'Yarın eve gidiyorum.')).not.toBe(a);
+    expect(a.slice('phrase/'.length)).toBe(
+      readingAudioKey('TR', 'Burcu', 'Yarın okula gidiyorum.').slice('reading/'.length),
+    );
   });
 });

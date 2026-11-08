@@ -319,7 +319,7 @@ describe("EVALUATION_SYSTEM_PROMPT", () => {
     // user-builder-only.
     // 2026-10-17: vocab recall states the article rule + stops claiming the
     // (never-rendered) authoring hints were visible — user-builder-only.
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-10-17a");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-08");
   });
 });
 
@@ -431,6 +431,31 @@ describe("parseEvaluationResult", () => {
 // ---------------------------------------------------------------------------
 // EVALUATION_TOOL schema tests
 // ---------------------------------------------------------------------------
+
+describe("correctedAnswer", () => {
+  it("buildEvaluationTool puts correctedAnswer after errors and requires it", () => {
+    const tool = buildEvaluationTool();
+    const keys = Object.keys(tool.input_schema.properties as Record<string, unknown>);
+    expect(keys[0]).toBe("reasoning");
+    expect(keys.indexOf("correctedAnswer")).toBe(keys.indexOf("errors") + 1);
+    expect(tool.input_schema.required as string[]).toContain("correctedAnswer");
+  });
+
+  it("parseEvaluationResult keeps a string correctedAnswer", () => {
+    const result = parseEvaluationResult({ ...validEvaluationInput, correctedAnswer: "Eve gidiyorum." });
+    expect(result.correctedAnswer).toBe("Eve gidiyorum.");
+  });
+
+  it("parseEvaluationResult drops a non-string correctedAnswer without throwing", () => {
+    const result = parseEvaluationResult({ ...validEvaluationInput, correctedAnswer: 42 });
+    expect(result.correctedAnswer).toBeUndefined();
+  });
+
+  it("parseEvaluationResult tolerates a missing correctedAnswer", () => {
+    const result = parseEvaluationResult(validEvaluationInput);
+    expect(result.correctedAnswer).toBeUndefined();
+  });
+});
 
 describe("EVALUATION_TOOL", () => {
   it("has the correct tool name", () => {

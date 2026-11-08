@@ -7,6 +7,7 @@
 import {
   ExerciseType,
   type ExerciseContent,
+  type ClozeContent,
   isClozeContent,
   isVocabRecallContent,
   isConjugationContent,
@@ -79,6 +80,17 @@ function matchesAccepted(accepted: string, candidate: string): boolean {
     (locale) =>
       normalizeFluencyAnswer(accepted, locale) === normalizeFluencyAnswer(candidate, locale),
   );
+}
+
+/**
+ * The stored accepted cloze form (`correctAnswer` or an `acceptableAnswers`
+ * entry, spelled as stored) that `answer` matches under the same folds as
+ * `gradeFluencyAnswer`; null on a miss. Used to voice the canonical spelling
+ * (e.g. "İstanbul'a") when the learner typed a forgiven variant ("Istanbul'a").
+ */
+export function matchedClozeForm(content: ClozeContent, answer: string): string | null {
+  const accepted = [content.correctAnswer, ...(content.acceptableAnswers ?? [])];
+  return accepted.find((a) => matchesAccepted(a, answer)) ?? null;
 }
 
 /**

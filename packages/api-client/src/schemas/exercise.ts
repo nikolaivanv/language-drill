@@ -73,6 +73,11 @@ export const EvaluationResultSchema = z.object({
   estimatedCefrEvidence: z.string(),
   evaluationSource: z.enum(['deterministic', 'llm']).optional(),
   submissionId: z.string().uuid().optional(),
+  // Hear the corrected sentence (2026-11-08). `spokenText` is the sentence the
+  // result card can voice; null = no audio for this answer. Both absent on
+  // responses from before the feature.
+  correctedAnswer: z.string().optional(),
+  spokenText: z.string().nullable().optional(),
 });
 
 export type EvaluationResultResponse = z.infer<typeof EvaluationResultSchema>;
@@ -198,3 +203,11 @@ export const WordHintsResponseSchema = z.object({
 });
 
 export type WordHintsResponse = z.infer<typeof WordHintsResponseSchema>;
+
+// POST /exercises/:id/submissions/:submissionId/audio
+export const PhraseAudioResponseSchema = z.object({
+  audioUrl: z.string().url().nullable(),
+  durationSec: z.number(),
+});
+
+export type PhraseAudioResponse = z.infer<typeof PhraseAudioResponseSchema>;

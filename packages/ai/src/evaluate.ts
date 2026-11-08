@@ -107,11 +107,23 @@ export function buildEvaluationTool(
             required: ["type", "severity", "text", "correction", "explanation"],
           },
         },
+        // Directly after `errors` so the model writes it with its error list
+        // already committed. Consumed by the "hear the corrected sentence"
+        // audio (docs/superpowers/specs/2026-11-08-hear-corrected-sentence-design.md).
+        correctedAnswer: {
+          type: "string",
+          description:
+            "The learner's full answer with every listed error fixed, kept as close to their wording as possible. " +
+            "If the answer does not accomplish the task (different meaning from the source, part of the source untranslated, " +
+            "required keywords/structure/register missing, or written in the wrong language), rewrite it so it fully does, " +
+            "still staying as close to their wording as the task allows. If there are no errors and the task is achieved, " +
+            "repeat the answer verbatim. For a cloze: only the corrected word(s) for the blank, not the sentence.",
+        },
         estimatedCefrEvidence: { type: "string", description: 'The CEFR level this answer provides evidence for (e.g. "B1").' },
       },
       required: [
         "reasoning", "score", "grammarAccuracy", "vocabularyRange",
-        "taskAchievement", "feedback", "errors", "estimatedCefrEvidence",
+        "taskAchievement", "feedback", "errors", "correctedAnswer", "estimatedCefrEvidence",
       ],
     },
   };
@@ -285,6 +297,9 @@ export function parseEvaluationResult(
     feedback: raw.feedback as string,
     errors,
     estimatedCefrEvidence: raw.estimatedCefrEvidence as string,
+    // Optional and never fatal: a missing / malformed value only hides the
+    // corrected-sentence audio, it must not fail the grading.
+    ...(typeof raw.correctedAnswer === "string" ? { correctedAnswer: raw.correctedAnswer } : {}),
   };
 }
 

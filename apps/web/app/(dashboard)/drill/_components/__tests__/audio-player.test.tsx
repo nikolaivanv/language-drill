@@ -52,6 +52,18 @@ describe('AudioPlayer', () => {
     expect(HTMLMediaElement.prototype.play).toHaveBeenCalled();
   });
 
+  it('autoPlay starts playback once on mount', () => {
+    vi.mocked(HTMLMediaElement.prototype.play).mockClear();
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={2} autoPlay />);
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not play on mount without autoPlay', () => {
+    vi.mocked(HTMLMediaElement.prototype.play).mockClear();
+    render(<AudioPlayer src="blob:x" waveform={[]} durationSec={2} />);
+    expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
+  });
+
   it('toggles 0.75x slow', () => {
     render(<AudioPlayer src="blob:x" waveform={[0.5]} durationSec={5} />);
     const slow = screen.getByRole('button', { name: /0\.75/ });

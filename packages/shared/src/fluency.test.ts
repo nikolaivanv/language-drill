@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { ExerciseType, type ClozeContent, type VocabRecallContent, type ConjugationContent } from "./index";
 import {
   gradeFluencyAnswer,
+  matchedClozeForm,
   normalizeFluencyAnswer,
   isFluencyEligibleType,
   FLUENCY_MASTERY_THRESHOLD,
@@ -193,5 +194,20 @@ describe("eligibility helpers + constants", () => {
     expect(LATENCY_CEILING_MS).toBe(60_000);
     expect(DEFAULT_FLUENCY_SESSION_SIZE).toBe(8);
     expect(FLUENCY_ELIGIBLE_TYPES).toEqual([ExerciseType.CLOZE, ExerciseType.VOCAB_RECALL, ExerciseType.CONJUGATION]);
+  });
+});
+
+describe("matchedClozeForm", () => {
+  it("returns the stored lowercase i form for a keyboard-capitalised I answer", () => {
+    // A non-TR keyboard capitalises i→I, which a Turkish voice would read as ı.
+    expect(matchedClozeForm(cloze({ correctAnswer: "iki" }), "Iki.")).toBe("iki");
+  });
+
+  it("returns the acceptableAnswers entry it matched", () => {
+    expect(matchedClozeForm(cloze({ acceptableAnswers: ["se encuentra"] }), "SE ENCUENTRA")).toBe("se encuentra");
+  });
+
+  it("returns null on a miss", () => {
+    expect(matchedClozeForm(cloze(), "es")).toBeNull();
   });
 });

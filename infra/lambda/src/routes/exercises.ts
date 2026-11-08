@@ -18,6 +18,9 @@ import {
   exerciseWordHints,
   incidentalObservations,
 } from '@language-drill/db';
+import { spokenTextFor } from '../lib/spoken-text';
+import { resolvePhraseAudio, type PhraseAudioDeps } from '../lib/phrase-audio-service';
+import { headObjectExists, synthesizeReadingAudio } from '../lib/reading-audio-synth';
 import {
   createObservedClaudeClient,
   evaluateAnswer,
@@ -552,7 +555,8 @@ exercises.post('/exercises/:id/submit', async (c) => {
         evidenceWeight,
       });
 
-      return c.json({ ...result, submissionId });
+      const spoken = spokenTextFor({ exerciseLanguage: exercise.language ?? '', content, userAnswer, evaluation: result });
+      return c.json({ ...result, submissionId, spokenText: spoken?.text ?? null });
     }
     // fall through to the normal LLM evaluation
   }
@@ -766,7 +770,14 @@ exercises.post('/exercises/:id/submit', async (c) => {
       evidenceWeight,
     });
 
-    return c.json({ ...stamped, submissionId });
+    if (isDictation) return c.json({ ...stamped, submissionId });
+    const spoken = spokenTextFor({
+      exerciseLanguage: exercise.language ?? '',
+      content,
+      userAnswer,
+      evaluation: stamped as EvaluationResult,
+    });
+    return c.json({ ...stamped, submissionId, spokenText: spoken?.text ?? null });
   } catch (err) {
     // 7a. Safety refusal — the model declined to evaluate this answer (e.g. a
     // provocative or off-task submission). This is an expected outcome, not an
@@ -800,6 +811,96 @@ exercises.post('/exercises/:id/submit', async (c) => {
 // re-scored — the LLM output is feedback enrichment only, cached into
 // responseJson.explanation so repeat taps are free.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// POST /exercises/:id/submissions/:submissionId/audio — "hear the corrected
+// sentence" on a cloze / translation / sentence-construction result card.
+// The text is derived from the stored submission (never from the client), so
+// this can't voice arbitrary strings. Pure branching lives in
+// resolvePhraseAudio; this handler wires DB/AWS deps exactly like
+// POST /read/:entryId/audio. Not behind checkGlobalCapacity — Polly cost is
+// metered by its own `phrase_tts` bucket.
+// ---------------------------------------------------------------------------
+exercises.post('/exercises/:id/submissions/:submissionId/audio', async (c) => {
+  const userId = c.get('userId');
+  const { id, submissionId } = c.req.param();
+  const notAvailable = () => {
+    c.header('Cache-Control', 'no-store');
+    return c.json({ error: 'No audio for this submission', code: 'AUDIO_NOT_AVAILABLE' }, 404);
+  };
+
+  const uuid = z.string().uuid();
+  if (!uuid.safeParse(id).success || !uuid.safeParse(submissionId).success) return notAvailable();
+
+  const plan = await getEffectivePlan(userId);
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const deps: PhraseAudioDeps = {
+    loadSpoken: async (subId, uid) => {
+      const [row] = await db
+        .select()
+        .from(userExerciseHistory)
+        .where(
+          and(
+            eq(userExerciseHistory.id, subId),
+            eq(userExerciseHistory.userId, uid),
+            eq(userExerciseHistory.exerciseId, id),
+          ),
+        )
+        .limit(1);
+      const response = (row?.responseJson ?? {}) as { userAnswer?: unknown; evaluation?: EvaluationResult };
+      if (!row || typeof response.userAnswer !== 'string' || !response.evaluation) return null;
+
+      const [exercise] = await db
+        .select()
+        .from(exercisesTable)
+        .where(eq(exercisesTable.id, id))
+        .limit(1);
+      if (!exercise) return null;
+
+      return spokenTextFor({
+        exerciseLanguage: exercise.language ?? '',
+        content: exercise.contentJson as ExerciseContent,
+        userAnswer: response.userAnswer,
+        evaluation: response.evaluation,
+      });
+    },
+    countRecentTts: async (uid) => {
+      const [{ count: recentCount }] = await db
+        .select({ count: count() })
+        .from(usageEvents)
+        .where(
+          and(
+            eq(usageEvents.userId, uid),
+            eq(usageEvents.eventType, 'phrase_tts'),
+            gte(usageEvents.createdAt, dayAgo),
+          ),
+        );
+      return Number(recentCount);
+    },
+    limit: () => limitFor('phrase_tts', plan),
+    headObjectExists,
+    synthesize: synthesizeReadingAudio,
+    recordTtsUsage: async (uid, subId) => {
+      await db.insert(usageEvents).values({
+        userId: uid,
+        eventType: 'phrase_tts',
+        metadata: { submissionId: subId },
+      });
+    },
+    presign: presignAudioUrl,
+  };
+
+  const result = await resolvePhraseAudio(submissionId, userId, deps);
+  switch (result.kind) {
+    case 'not_found':
+      return notAvailable();
+    case 'rate_limited':
+      return c.json({ error: 'Daily audio limit reached', code: 'RATE_LIMIT_EXCEEDED' }, 429);
+    case 'ok':
+      return c.json({ audioUrl: result.audioUrl, durationSec: result.durationSec }, 200);
+  }
+});
+
 exercises.post('/exercises/:id/submissions/:submissionId/explain', async (c) => {
   const userId = c.get('userId');
   const { id, submissionId } = c.req.param();

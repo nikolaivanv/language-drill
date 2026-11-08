@@ -7,6 +7,7 @@ export type MeteredEventType =
   | 'read_annotation'
   | 'read_span_annotation'
   | 'read_tts'
+  | 'phrase_tts'
   | 'text_generation'
   | 'writing_helper'
   | 'translation_word_hint';
@@ -18,6 +19,9 @@ export const BASE_DAILY_LIMITS: Record<MeteredEventType, number> = {
   read_annotation: 50,
   read_span_annotation: 150,
   read_tts: 50,
+  // On-demand Polly clips of the corrected sentence on drill result cards.
+  // Only true cache misses are metered; replays and cross-user hits are free.
+  phrase_tts: 100,
   text_generation: 20,
   writing_helper: 50,
   translation_word_hint: 50,
