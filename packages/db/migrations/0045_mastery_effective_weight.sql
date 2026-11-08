@@ -1,0 +1,1 @@
+ALTER TABLE "user_grammar_mastery" ADD COLUMN "effective_weight" real;
