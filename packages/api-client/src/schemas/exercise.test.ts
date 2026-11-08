@@ -5,6 +5,7 @@ import {
   ApiErrorSchema,
   DictationResultSchema,
   parseSubmitResult,
+  PhraseAudioResponseSchema,
 } from './exercise';
 
 describe('ExerciseResponseSchema', () => {
@@ -210,5 +211,36 @@ describe('ApiErrorSchema', () => {
   it('rejects missing required fields', () => {
     expect(() => ApiErrorSchema.parse({ error: 'oops' })).toThrow();
     expect(() => ApiErrorSchema.parse({ code: 'ERR' })).toThrow();
+  });
+});
+
+describe('hear the corrected sentence — schemas', () => {
+  const base = {
+    score: 1,
+    grammarAccuracy: 1,
+    vocabularyRange: 'A1',
+    taskAchievement: 1,
+    feedback: 'ok',
+    errors: [],
+    estimatedCefrEvidence: 'A1',
+  };
+
+  it('keeps spokenText null', () => {
+    expect(EvaluationResultSchema.parse({ ...base, spokenText: null }).spokenText).toBeNull();
+  });
+
+  it('keeps spokenText and correctedAnswer strings', () => {
+    const r = EvaluationResultSchema.parse({ ...base, spokenText: 'Eve gidiyorum.', correctedAnswer: 'Eve gidiyorum.' });
+    expect(r.spokenText).toBe('Eve gidiyorum.');
+    expect(r.correctedAnswer).toBe('Eve gidiyorum.');
+  });
+
+  it('accepts the old shape without the fields', () => {
+    expect(EvaluationResultSchema.parse(base).spokenText).toBeUndefined();
+  });
+
+  it('PhraseAudioResponseSchema rejects a non-URL audioUrl', () => {
+    expect(() => PhraseAudioResponseSchema.parse({ audioUrl: 'nope', durationSec: 2 })).toThrow();
+    expect(PhraseAudioResponseSchema.parse({ audioUrl: null, durationSec: 0 }).audioUrl).toBeNull();
   });
 });

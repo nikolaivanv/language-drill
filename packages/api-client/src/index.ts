@@ -9,6 +9,8 @@ export {
   type PublicPoint,
   EvaluationResultSchema,
   type EvaluationResultResponse,
+  PhraseAudioResponseSchema,
+  type PhraseAudioResponse,
   DictationResultSchema,
   type DictationResultResponse,
   type SubmitResultResponse,
@@ -260,6 +262,10 @@ export {
   useReadAudio,
   type UseReadAudioOptions,
 } from './hooks/useReadAudio';
+export {
+  usePhraseAudio,
+  type UsePhraseAudioOptions,
+} from './hooks/usePhraseAudio';
 export {
   useReadAnnotateSpanStream,
   type UseReadAnnotateSpanStreamOptions,
