@@ -39,6 +39,14 @@ describe('SpokenSentence', () => {
     expect(state.mutate).not.toHaveBeenCalled();
   });
 
+  it('listen is a content-width design-system chip, not a full-width bar', () => {
+    render(<SpokenSentence {...props} />);
+    const btn = screen.getByRole('button', { name: /listen/i });
+    // The card body is a flex column, which stretches children to full width.
+    expect(btn).toHaveClass('self-start');
+    expect(btn).toHaveClass('!rounded-pill');
+  });
+
   it('first click calls mutate with exerciseId + submissionId', () => {
     render(<SpokenSentence {...props} />);
     fireEvent.click(screen.getByRole('button', { name: /listen/i }));
