@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { CefrLevel } from '@language-drill/shared';
-import { updateMastery, replayHistory, type MasteryState } from './update';
+import { updateMastery, replayHistory, MAX_PRIOR_WEIGHT, type MasteryPrev } from './update';
 
 const d = (s: string) => new Date(s);
 
@@ -63,7 +63,7 @@ describe('updateMastery', () => {
   });
 
   it('rewards a correct answer on a hard item more than on an easy item', () => {
-    const prior: MasteryState = {
+    const prior: MasteryPrev = {
       masteryScore: 0.5, confidence: 0.5, evidenceCount: 4, lastPracticedAt: d('2026-01-01'),
     };
     const at = d('2026-01-01');
@@ -73,7 +73,7 @@ describe('updateMastery', () => {
   });
 
   it('punishes an error on an easy item more than on a hard item', () => {
-    const prior: MasteryState = {
+    const prior: MasteryPrev = {
       masteryScore: 0.5, confidence: 0.5, evidenceCount: 4, lastPracticedAt: d('2026-01-01'),
     };
     const at = d('2026-01-01');
@@ -83,7 +83,7 @@ describe('updateMastery', () => {
   });
 
   it('lets new evidence dominate a stale prior (recency decay)', () => {
-    const prior: MasteryState = {
+    const prior: MasteryPrev = {
       masteryScore: 0.9, confidence: 0.9, evidenceCount: 10, lastPracticedAt: d('2026-01-01'),
     };
     const recent = updateMastery(prior, { score: 0, difficulty: CefrLevel.B1, at: d('2026-01-01') });
@@ -202,5 +202,63 @@ describe('replayHistory ordering', () => {
     const late = { grammarPointKey: 'p', score: 1, difficulty: CefrLevel.A1, evaluatedAt: d('2026-02-01'), sourceRank: 0 as const };
     const state = replayHistory([late, early]).get('p')!;
     expect(state.lastPracticedAt).toEqual(d('2026-02-01'));
+  });
+});
+
+describe('bounded, persisted prior weight', () => {
+  const at = d('2026-11-08');
+  // A heavily-practised point, read back from a pre-column row: weight falls
+  // back to min(evidenceCount, MAX_PRIOR_WEIGHT).
+  const veteran: MasteryPrev = {
+    masteryScore: 0.747, confidence: 1, evidenceCount: 134, lastPracticedAt: at,
+  };
+
+  it('caps the prior weight so a heavily-practised point still moves', () => {
+    const next = updateMastery(veteran, { score: 1, difficulty: CefrLevel.A1, at });
+    // (10 * 0.747 + 0.5 * 1) / 10.5 — the old rule used 134 here (+0.0009).
+    expect(next.masteryScore).toBeCloseTo((10 * 0.747 + 0.5) / 10.5, 6);
+    expect(next.masteryScore - veteran.masteryScore).toBeGreaterThan(0.01);
+  });
+
+  it('keeps evidenceCount and confidence on the raw count', () => {
+    const next = updateMastery(veteran, { score: 1, difficulty: CefrLevel.A1, at });
+    expect(next.evidenceCount).toBe(135);
+    expect(next.confidence).toBeCloseTo(1 - Math.exp(-135 / 5), 10);
+    expect(next.effectiveWeight).toBe(MAX_PRIOR_WEIGHT);
+  });
+
+  it('a set of five perfect A1 answers moves a capped point by several points', () => {
+    let s = updateMastery(veteran, { score: 1, difficulty: CefrLevel.A1, at });
+    for (let i = 0; i < 4; i++) s = updateMastery(s, { score: 1, difficulty: CefrLevel.A1, at });
+    expect(s.masteryScore - veteran.masteryScore).toBeGreaterThan(0.05);
+  });
+
+  it('persists decay: a second answer after a gap still sees the decayed weight', () => {
+    const stored: MasteryPrev = { ...veteran, effectiveWeight: MAX_PRIOR_WEIGHT, lastPracticedAt: d('2026-10-09') };
+    const first = updateMastery(stored, { score: 1, difficulty: CefrLevel.A1, at });
+    // 30 days → priorW = 10/e ≈ 3.68; persisted weight = 3.68 + 1.
+    expect(first.effectiveWeight).toBeCloseTo(10 * Math.exp(-1) + 1, 6);
+    const second = updateMastery(first, { score: 1, difficulty: CefrLevel.A1, at });
+    // Old rule: second answer saw evidenceCount (135) again. Now it sees ~4.68.
+    expect(second.masteryScore - first.masteryScore)
+      .toBeCloseTo((0.5 * (1 - first.masteryScore)) / (first.effectiveWeight + 0.5), 6);
+  });
+
+  it('first observation persists weight 1, not the pseudo-count', () => {
+    const next = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at });
+    expect(next.effectiveWeight).toBe(1);
+  });
+
+  it('a hinted answer adds proportionally less weight', () => {
+    const prev: MasteryPrev = { masteryScore: 0.5, confidence: 0.5, evidenceCount: 3, lastPracticedAt: at, effectiveWeight: 3 };
+    const hinted = updateMastery(prev, { score: 1, difficulty: CefrLevel.A1, at, evidenceWeight: 0.25 });
+    expect(hinted.effectiveWeight).toBeCloseTo(3.25, 10);
+  });
+
+  it('never persists a weight above the cap', () => {
+    let s = updateMastery(null, { score: 1, difficulty: CefrLevel.B1, at });
+    for (let i = 0; i < 50; i++) s = updateMastery(s, { score: 1, difficulty: CefrLevel.B1, at });
+    expect(s.effectiveWeight).toBe(MAX_PRIOR_WEIGHT);
+    expect(s.evidenceCount).toBe(51);
   });
 });

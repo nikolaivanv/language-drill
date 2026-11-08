@@ -744,6 +744,7 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
           masteryScore: s.masteryScore,
           confidence: s.confidence,
           evidenceCount: s.evidenceCount,
+          effectiveWeight: s.effectiveWeight,
           lastPracticedAt: s.lastPracticedAt,
           updatedAt: new Date(),
         })
@@ -754,6 +755,7 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
             masteryScore: s.masteryScore,
             confidence: s.confidence,
             evidenceCount: s.evidenceCount,
+            effectiveWeight: s.effectiveWeight,
             lastPracticedAt: s.lastPracticedAt,
             updatedAt: new Date(),
           },

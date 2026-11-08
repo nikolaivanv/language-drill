@@ -91,6 +91,10 @@ export const userGrammarMastery = pgTable(
     masteryScore: real('mastery_score').notNull(), // 0.0–1.0
     confidence: real('confidence').notNull(), // 0.0–1.0
     evidenceCount: integer('evidence_count').notNull(),
+    // Decayed, capped prior weight of the mastery estimate (see
+    // mastery/update.ts). Null on rows written before 2026-11-08 — the rule
+    // falls back to min(evidence_count, MAX_PRIOR_WEIGHT) for those.
+    effectiveWeight: real('effective_weight'),
     lastPracticedAt: timestamp('last_practiced_at', { withTimezone: true }).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

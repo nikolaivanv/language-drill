@@ -139,9 +139,10 @@ export { seedKindFor } from './generation/seed-kind';
 
 // Per-grammar-point mastery — the update rule (used by the submit handler) and
 // the history-replay fold (used by the backfill CLI).
-export { updateMastery, replayHistory } from './mastery/update';
+export { updateMastery, replayHistory, MAX_PRIOR_WEIGHT } from './mastery/update';
 export type {
   MasteryState,
+  MasteryPrev,
   MasteryObservation,
   HistoryRow,
 } from './mastery/update';

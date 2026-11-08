@@ -142,6 +142,7 @@ async function applyGrammarMastery(opts: {
         confidence: userGrammarMastery.confidence,
         evidenceCount: userGrammarMastery.evidenceCount,
         lastPracticedAt: userGrammarMastery.lastPracticedAt,
+        effectiveWeight: userGrammarMastery.effectiveWeight,
       })
       .from(userGrammarMastery)
       .where(
@@ -168,6 +169,7 @@ async function applyGrammarMastery(opts: {
         masteryScore: next.masteryScore,
         confidence: next.confidence,
         evidenceCount: next.evidenceCount,
+        effectiveWeight: next.effectiveWeight,
         lastPracticedAt: next.lastPracticedAt,
         updatedAt: at,
       })
@@ -177,6 +179,7 @@ async function applyGrammarMastery(opts: {
           masteryScore: next.masteryScore,
           confidence: next.confidence,
           evidenceCount: next.evidenceCount,
+          effectiveWeight: next.effectiveWeight,
           lastPracticedAt: next.lastPracticedAt,
           updatedAt: at,
           language: opts.language,
