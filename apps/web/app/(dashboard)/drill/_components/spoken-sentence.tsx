@@ -32,7 +32,10 @@ export interface SpokenSentenceProps {
   fetchFn: AuthenticatedFetch;
 }
 
-const controlClass = '!rounded-pill !min-h-[44px]';
+// Content-width pill, matching read's Listen chip. `self-start` is load-bearing:
+// the result-card body is a flex column, which stretches children full width.
+const controlClass = 'self-start !rounded-pill';
+const statusClass = 't-small inline-flex min-h-[32px] items-center self-start text-ink-mute';
 
 /**
  * "Hear it" row on a cloze / translation / sentence-construction result card:
@@ -63,7 +66,7 @@ export function SpokenSentence({ text, exerciseId, submissionId, fetchFn }: Spok
     );
   } else if (isPending) {
     control = (
-      <span className="t-small inline-flex min-h-[44px] items-center gap-[8px] text-ink-mute">
+      <span className={`${statusClass} gap-[8px]`}>
         <span
           aria-hidden="true"
           className="inline-block h-[12px] w-[12px] animate-spin rounded-full border border-rule border-t-accent"
@@ -73,7 +76,7 @@ export function SpokenSentence({ text, exerciseId, submissionId, fetchFn }: Spok
     );
   } else if (isError && (error as { status?: number } | null)?.status === 429) {
     control = (
-      <span className="t-small inline-flex min-h-[44px] items-center text-ink-mute">
+      <span className={statusClass}>
         daily audio limit reached
       </span>
     );
@@ -87,7 +90,7 @@ export function SpokenSentence({ text, exerciseId, submissionId, fetchFn }: Spok
     control = <AudioPlayer src={data.audioUrl} waveform={[]} durationSec={data.durationSec} autoPlay />;
   } else if (data) {
     control = (
-      <span className="t-small inline-flex min-h-[44px] items-center text-ink-mute">
+      <span className={statusClass}>
         audio unavailable — try again later
       </span>
     );
