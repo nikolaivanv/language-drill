@@ -240,3 +240,64 @@ describe('spokenTextFor — unsupported', () => {
     ).toBeNull();
   });
 });
+
+describe('spokenTextFor — cloze review fixes', () => {
+  const det = evaluation({ evaluationSource: 'deterministic' });
+
+  it('strips the trailing citation-form hint', () => {
+    expect(
+      spokenTextFor({ exerciseLanguage: 'TR', content: cloze({ sentence: 'Her sabah ___ gidiyorum. (okul)' }), userAnswer: 'okula', evaluation: det })?.text,
+    ).toBe('Her sabah okula gidiyorum.');
+  });
+
+  it('strips a multi-part clitic hint', () => {
+    expect(
+      spokenTextFor({
+        exerciseLanguage: 'ES',
+        content: cloze({ sentence: '___ en el salón, que hay mejor señal. (conectar + te + lo)', correctAnswer: 'Conéctatelo' }),
+        userAnswer: 'conéctatelo',
+        evaluation: det,
+      })?.text,
+    ).toBe('Conéctatelo en el salón, que hay mejor señal.');
+  });
+
+  it('strips a hint right after the blank', () => {
+    expect(
+      spokenTextFor({ exerciseLanguage: 'TR', content: cloze({ sentence: 'Bu bir ___ (destek) mektubu.', correctAnswer: 'destek' }), userAnswer: 'destek', evaluation: det })?.text,
+    ).toBe('Bu bir destek mektubu.');
+  });
+
+  it('other parentheses left after stripping → null', () => {
+    expect(
+      spokenTextFor({ exerciseLanguage: 'TR', content: cloze({ sentence: 'Yarın (sabah) ___ gidiyorum. (okul)' }), userAnswer: 'okula', evaluation: det }),
+    ).toBeNull();
+  });
+
+  it('closes the gap before punctuation after the blank', () => {
+    expect(
+      spokenTextFor({
+        exerciseLanguage: 'DE',
+        content: cloze({ sentence: 'Viele Schüler sind krank ___ . (werden)', correctAnswer: 'geworden' }),
+        userAnswer: 'geworden',
+        evaluation: det,
+      })?.text,
+    ).toBe('Viele Schüler sind krank geworden.');
+  });
+
+  it('llm fill that restates the sentence falls back to correctAnswer', () => {
+    expect(
+      spokenTextFor({
+        exerciseLanguage: 'TR',
+        content: cloze(),
+        userAnswer: 'okulda',
+        evaluation: evaluation({ score: 0.2, errors: oneError, correctedAnswer: 'Yarın okula gidiyorum.' }),
+      })?.text,
+    ).toBe('Yarın okula gidiyorum.');
+  });
+
+  it('clean llm fill drops trailing punctuation the learner typed', () => {
+    expect(
+      spokenTextFor({ exerciseLanguage: 'TR', content: cloze(), userAnswer: 'işe.', evaluation: evaluation({ correctedAnswer: 'işe' }) })?.text,
+    ).toBe('Yarın işe gidiyorum.');
+  });
+});

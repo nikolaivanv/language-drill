@@ -35,6 +35,28 @@ export interface SpokenText {
 }
 
 const BLANK = /_{3,}/g;
+/** A citation-form hint written straight after the blank: `bir ___ (destek)`. */
+const HINT_AFTER_BLANK = /(_{3,})\s*\([^()]*\)/g;
+/** The generator's trailing citation-form hint: `… gidiyorum. (okul)`. */
+const TRAILING_HINT = /\s*\([^()]*\)\s*$/;
+const TRAILING_PUNCT = /[.,!?;:…]+$/;
+/** A cloze fill this many words longer than the key is treated as a restated sentence. */
+const MAX_EXTRA_FILL_WORDS = 3;
+
+const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+
+/**
+ * True when the model returned (part of) the sentence instead of just the
+ * blank's fill — substituting it would make the learner hear words twice.
+ */
+function restatesSentence(fill: string, sentence: string, correctAnswer: string): boolean {
+  if (wordCount(fill) > wordCount(correctAnswer) + MAX_EXTRA_FILL_WORDS) return true;
+  const lowerFill = fill.toLocaleLowerCase();
+  return sentence
+    .split(BLANK)
+    .map((side) => side.replace(/[.,!?;:…¡¿"]/g, ' ').trim().toLocaleLowerCase())
+    .some((side) => side.length >= 4 && lowerFill.includes(side));
+}
 
 function hasVoice(language: string): language is ReadingAudioLanguage {
   return Object.prototype.hasOwnProperty.call(READING_VOICE_BY_LANGUAGE, language);
@@ -69,7 +91,12 @@ export function spokenTextFor(input: SpokenTextInput): SpokenText | null {
 
   if (isClozeContent(content)) {
     language = input.exerciseLanguage;
-    const blanks = content.sentence.match(BLANK) ?? [];
+    // Drop the generator's citation-form hint ("(okul)", "(dar / se / las)") —
+    // it is a prompt for the learner, not part of the sentence. Any other
+    // parenthetical means we can't be sure what the sentence is.
+    const sentence = content.sentence.replace(HINT_AFTER_BLANK, '$1').replace(TRAILING_HINT, '');
+    if (/[()]/.test(sentence)) return null;
+    const blanks = sentence.match(BLANK) ?? [];
     if (blanks.length !== 1) return null;
     let fill: string | null;
     if (evaluation.evaluationSource === 'deterministic') {
@@ -77,10 +104,15 @@ export function spokenTextFor(input: SpokenTextInput): SpokenText | null {
     } else {
       const picked = pickCorrected(evaluation, userAnswer);
       fill = picked === undefined ? content.correctAnswer : picked;
+      if (fill !== null && restatesSentence(fill, sentence, content.correctAnswer)) {
+        fill = content.correctAnswer;
+      }
     }
     if (fill === null) return null;
-    const value = fill.trim();
-    raw = content.sentence.replace(BLANK, () => value);
+    const value = fill.trim().replace(TRAILING_PUNCT, '');
+    if (value.length === 0) return null;
+    // `krank ___ .` → `krank geworden.`
+    raw = sentence.replace(BLANK, () => value).replace(/\s+([.,!?;:…])/g, '$1');
   } else if (isTranslationContent(content) || isSentenceConstructionContent(content)) {
     language =
       content.type === ExerciseType.TRANSLATION ? content.targetLanguage : input.exerciseLanguage;

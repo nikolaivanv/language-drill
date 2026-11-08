@@ -2415,7 +2415,7 @@ describe('POST /exercises/:id/submit — deterministic match branch', () => {
     queueExerciseAndMastery(clozeExercise);
     const res = await submit('cloze-tr-001', 'Koydu.');
     const body = await res.json() as AnyJson;
-    expect(body.spokenText).toBe('Ali kitabı masanın üzerine koydu .');
+    expect(body.spokenText).toBe('Ali kitabı masanın üzerine koydu.');
   });
 
   it('cloze acceptable-answer match short-circuits too', async () => {
