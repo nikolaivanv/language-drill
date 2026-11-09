@@ -262,3 +262,29 @@ describe('bounded, persisted prior weight', () => {
     expect(s.evidenceCount).toBe(51);
   });
 });
+
+describe('loss weight (halved asymmetry)', () => {
+  const at = d('2026-11-08');
+  const prev: MasteryPrev = {
+    masteryScore: 0.95, confidence: 1, evidenceCount: 50, lastPracticedAt: at, effectiveWeight: MAX_PRIOR_WEIGHT,
+  };
+
+  it.each([
+    [CefrLevel.A1, 1.25], [CefrLevel.A2, 1.15], [CefrLevel.B1, 1.05],
+    [CefrLevel.B2, 0.95], [CefrLevel.C1, 0.85], [CefrLevel.C2, 0.75],
+  ])('weights a miss at %s by %f', (level, w) => {
+    const next = updateMastery(prev, { score: 0, difficulty: level, at });
+    expect(next.masteryScore).toBeCloseTo((10 * 0.95) / (10 + w), 6);
+  });
+
+  it('one A1 miss on a 0.95 point costs ~11pt, not ~12', () => {
+    const next = updateMastery(prev, { score: 0, difficulty: CefrLevel.A1, at });
+    expect(next.masteryScore).toBeCloseTo(0.844, 3);
+  });
+
+  it('leaves gain weights unchanged', () => {
+    const low: MasteryPrev = { ...prev, masteryScore: 0.75 };
+    const next = updateMastery(low, { score: 1, difficulty: CefrLevel.A1, at });
+    expect(next.masteryScore).toBeCloseTo((10 * 0.75 + 0.5) / 10.5, 6);
+  });
+});

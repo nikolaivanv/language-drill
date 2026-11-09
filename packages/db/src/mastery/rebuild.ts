@@ -632,8 +632,8 @@ export async function run(db: Db, opts: RunOptions): Promise<RunResult> {
   // Difficulty: the VIOLATED point's own `cefrLevel`, via the same
   // `getGrammarPoint` lookup the live fold performs — NOT the host
   // exercise's difficulty. `updateMastery` weights a losing observation by
-  // `DW_PIVOT - dw`, so this is load-bearing: a major error on a fresh point
-  // folds to 0.1250 at A1 but 0.1786 at B2, and attribution keys always come
+  // the inverse of `dw` (`lossWeight`), so this is load-bearing: a major
+  // error on a fresh point folds lower at A1 than at B2, and attribution keys always come
   // from `grammarPointsAtOrBelow(language, exercise.difficulty)`, so an
   // incidental point is always at or below the host's difficulty — using
   // the host's difficulty here would systematically under-penalize on every

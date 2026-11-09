@@ -75,7 +75,12 @@ const DIFFICULTY_WEIGHTS: Record<CefrLevel, number> = {
   [CefrLevel.C1]: 1.3,
   [CefrLevel.C2]: 1.5,
 };
-const DW_PIVOT = 2.0; // DW_MAX + DW_MIN (1.5 + 0.5); inverse weight = pivot - dw
+// A loss is weighted by `1 + LOSS_ASYMMETRY × (1 − dw)`: at 1.0 this was the
+// original inverse weight `2 − dw` (A1 1.5 … C2 0.5, so an A1 miss weighed 3× an
+// A1 gain); halved on 2026-11-08 (A1 1.25 … C2 0.75) once the prior-weight cap
+// made a single A1 miss cost ~12pt on a 0.95 point. Gains are unchanged (`dw`).
+const LOSS_ASYMMETRY = 0.5;
+const lossWeight = (dw: number) => 1 + LOSS_ASYMMETRY * (1 - dw);
 const MS_PER_DAY = 86_400_000;
 const HALFLIFE_DAYS = 30;
 const PRIOR_BASE = 1.0;
@@ -83,8 +88,8 @@ const K_EVIDENCE = 5; // confidence = 1 - exp(-n / K_EVIDENCE)
 // Upper bound on the prior's weight, in observation units — the estimate
 // behaves like an exponentially-weighted window over roughly the last
 // MAX_PRIOR_WEIGHT answers. At 10, a perfect A1 answer closes ~4.8% of the
-// gap to 1.0 and a full miss on an A1 item costs ~13% of the current score
-// (losses at A1 weigh 3× gains — see the asymmetric weight below).
+// gap to 1.0 and a full miss on an A1 item costs ~11% of the current score
+// (losses at A1 weigh 2.5× gains — see `lossWeight`).
 export const MAX_PRIOR_WEIGHT = 10;
 
 // A first observation is folded against a weak virtual prior rather than taken
@@ -121,9 +126,10 @@ export function updateMastery(
   const priorW = Math.min(MAX_PRIOR_WEIGHT, PRIOR_BASE * storedW * decay);
 
   // Asymmetric observation weight: gains scale with difficulty (reward hard
-  // correct), losses scale with INVERSE difficulty (punish easy errors).
+  // correct), losses scale with INVERSE difficulty, damped by LOSS_ASYMMETRY
+  // (punish easy errors, but not 3× a gain).
   const ew = obs.evidenceWeight == null ? 1 : clamp01(obs.evidenceWeight);
-  const obsW = (obs.score >= base.masteryScore ? dw : DW_PIVOT - dw) * ew;
+  const obsW = (obs.score >= base.masteryScore ? dw : lossWeight(dw)) * ew;
 
   const masteryScore = clamp01(
     (priorW * base.masteryScore + obsW * obs.score) / (priorW + obsW),
