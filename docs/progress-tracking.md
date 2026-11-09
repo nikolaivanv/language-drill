@@ -139,17 +139,27 @@ confidence ∈ [0.0, 1.0] — how sure we are (more evidence = higher confidence
 >
 > ```
 > decay   = exp(-daysSinceLastPractice / 30)     // 30-day half-life on the PRIOR's weight
-> priorW  = prev.evidenceCount * decay
-> obsW    = (score >= prev.mastery ? dw : 2.0 - dw) * evidenceWeight
+> priorW  = min(10, prev.effectiveWeight * decay)   // persisted, capped (MAX_PRIOR_WEIGHT)
+> obsW    = (score >= prev.mastery ? dw : 1 + 0.5 * (1 - dw)) * evidenceWeight
 > mastery = (priorW * prev.mastery + obsW * score) / (priorW + obsW)
+> effectiveWeight = min(10, priorW + evidenceWeight)
 > ```
+>
+> - **Bounded, persisted prior weight** (#809, 2026-11-08). The decayed weight is
+>   stored in `effective_weight` and capped at 10, so mastery behaves like a weighted
+>   average over roughly the last 10 answers and decay accumulates across sessions.
+>   Before #809 the weight was recomputed from the raw `evidenceCount` each step: decay
+>   only touched the first answer after a gap, and a point with 134 observations moved
+>   ~0.1% per perfect answer. Rows with a null weight fall back to `min(evidenceCount, 10)`.
 >
 > - **Difficulty weight `dw`** rewards harder exercises: A1 = 0.5, A2 = 0.7, B1 = 0.9,
 >   B2 = 1.1, C1 = 1.3, C2 = 1.5.
-> - **Asymmetric:** a *gain* (`score ≥ prior`) is weighted by `dw`; a *loss* by the
->   inverse `2.0 − dw`. At A1 an error therefore carries weight **1.5 vs 0.5** for a
->   correct — errors hurt ~3× more than corrects help, and cheap (low-CEFR) errors are
->   punished hardest.
+> - **Asymmetric:** a *gain* (`score ≥ prior`) is weighted by `dw`; a *loss* by
+>   `1 + 0.5 × (1 − dw)` (A1 1.25, A2 1.15, B1 1.05, B2 0.95, C1 0.85, C2 0.75). At A1 an
+>   error carries weight **1.25 vs 0.5** for a correct — cheap (low-CEFR) errors are
+>   still punished hardest. Until 2026-11-08 the loss weight was the full inverse
+>   `2.0 − dw` (A1 1.5, 3× a gain); it was halved once the prior-weight cap made one A1
+>   miss cost ~12pt on a 0.95 point.
 > - **`evidenceWeight ∈ (0,1]`** shrinks an observation when hints were used.
 > - **Confidence is evidence-count only:** `confidence = 1 − exp(-n / 5)` (n=1 → 0.18,
 >   n=5 → 0.63, n=8 → 0.80). It grows monotonically with attempts and **does not
