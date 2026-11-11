@@ -1,3 +1,4 @@
+import { checkMixedScript } from '@language-drill/ai';
 import { parseVocabPos, type VocabPos } from '@language-drill/shared';
 
 export type ProposedWord = {
@@ -72,6 +73,15 @@ export function validateProposedWord(
   // A non-noun's learner-facing form IS its citation form; the generator seeds
   // on `lemma`, so the two must agree ("acordarse de", not "acordarse").
   if (pos !== 'noun' && norm(r.displayForm) !== norm(lemma)) return null;
+
+  // A Cyrillic letter spliced into a word ("ailемле") — the generator's
+  // mixed-script defect, often an invisible homoglyph. See mixed-script.ts.
+  if (
+    checkMixedScript([r.displayForm, r.lemma, r.gloss, r.exampleSentence]).kind ===
+    'mixed-script'
+  ) {
+    return null;
+  }
 
   const example = lower(r.exampleSentence);
   const lemmaTok = lower(lemma);

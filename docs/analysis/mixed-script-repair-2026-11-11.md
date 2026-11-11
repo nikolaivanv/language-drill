@@ -71,3 +71,27 @@ WHERE e.id = r.id;
 `applyDeterministicChecks` for every exercise type and rejects any draft with a
 letter outside Latin/Greek (`mixed-script` reason code). It also runs in
 `revalidate:cloze --deterministic-only`.
+
+## Wider sweep: inputs and other outputs
+
+Checked the same day for any letter outside Latin/Greek:
+
+- **LLM inputs in the repo** (curriculum, grammar points, `constructionVariants`,
+  `coverageSpec`, seed words, prompts): clean. The only hits are test fixtures and
+  the `·` separator.
+- **Prod tables** (every public table, whole-row scan): `vocab_lemma`
+  (88k), `skill_topics`, `theory_topics`, `exercise_word_hints`, `gloss_cache`,
+  `generated_reading_texts`, `read_entries`, `error_observations` and the rest
+  were all clean, apart from three rows:
+  - `vocab_target` `fc71fa06-faa5-4808-991e-f8c66a6e597b` example sentence
+    `Akşam ailемле televizyon izlerim.` → `ailemle`. Fixed.
+  - `user_exercise_history` `22c5ad98-…` and `1aec480a-…`: the conjugation
+    feedback quoted the defective breakdown (`prueб-`, `duerм-`). Fixed to
+    `prueb-` / `duerm-` (text only; scores untouched).
+  - `exercise_flags` `2d94acdf-…`: the learner's own report of this bug.
+    Left as is; it is still `open`.
+
+Theory pages already had their own Cyrillic/Greek check (`FOREIGN_SCRIPT` in
+`theory-content-checks.ts`, #805). The vocab-target proposer had none, so
+`validateProposedWord` now drops a word whose display form, lemma, gloss or
+example has a mixed-script hit.
