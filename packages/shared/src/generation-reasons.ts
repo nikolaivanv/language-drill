@@ -35,7 +35,7 @@
  *   {@link ContextSpoilsAnswer}, {@link CulturalIssue},
  *   {@link VowelHarmonyAllomorph}, {@link ParserFailure},
  *   {@link ValidatorParseFailure}, {@link SeedTargetMismatch},
- *   {@link AnswerStemOverlap}. These are the only codes that can key
+ *   {@link AnswerStemOverlap}, {@link MixedScript}. These are the only codes that can key
  *   `generation_jobs.rejection_reason_counts`.
  * - Flag branch (drafts inserted with `review_status = 'flagged'`):
  *   {@link LowQualityFlag}, {@link Ambiguous}, {@link LevelMismatch},
@@ -72,6 +72,12 @@ export enum GenerationReasonCode {
    * "prefiero el del del escaparate"). `detail` holds the broken substitution.
    */
   AnswerStemOverlap = "answer-stem-overlap",
+  /**
+   * Deterministic mixed-script defect → rejected. A word in the content carries
+   * a non-Latin letter (almost always Cyrillic: "şemsiyен", "sütле"), often an
+   * invisible homoglyph. `detail` lists the offending words with their path.
+   */
+  MixedScript = "mixed-script",
 
   // -- Flag branch ----------------------------------------------------------
   /** 0.5 <= qualityScore < 0.7 → flagged. */
@@ -150,6 +156,7 @@ export const REASON_LABELS: Record<GenerationReasonCode, string> = {
   [GenerationReasonCode.SeedTargetMismatch]: "Seed-target mismatch",
   [GenerationReasonCode.AnswerStemOverlap]:
     "Answer restates a stem word beside the blank",
+  [GenerationReasonCode.MixedScript]: "Non-Latin letter inside a word",
   [GenerationReasonCode.SuspectedAnswerStemOverlap]:
     "Suspected answer/stem overlap beside the blank",
   [GenerationReasonCode.LowQualityFlag]: "Low quality score (<0.7)",
@@ -178,6 +185,7 @@ export const REJECTED_BRANCH_CODES: readonly GenerationReasonCode[] = [
   GenerationReasonCode.ValidatorParseFailure,
   GenerationReasonCode.SeedTargetMismatch,
   GenerationReasonCode.AnswerStemOverlap,
+  GenerationReasonCode.MixedScript,
 ];
 
 /**

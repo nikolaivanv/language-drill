@@ -6,8 +6,12 @@
  * and can only **downgrade** that decision based on pure, non-LLM checkers in
  * `@language-drill/ai`. It never upgrades.
  *
- * Two checkers run:
+ * Checkers:
  *
+ * - `checkMixedScript` (every exercise type, every language): a word carrying a
+ *   non-Latin letter — almost always a Cyrillic letter spliced mid-word
+ *   ("şemsiyен") — → `rejected`. Added 2026-11-11 after 40 such rows were found
+ *   approved in prod, several with the defect inside the graded answer.
  * - `checkTurkishCloze` (Turkish cloze only): a provable vowel-harmony error →
  *   `rejected`; a suspected malformed surface form → `flagged`.
  * - `checkClozeOverlap` (any-language cloze): the `correctAnswer` restates the
@@ -31,7 +35,12 @@ import {
   isClozeContent,
   Language,
 } from '@language-drill/shared';
-import { checkClozeOverlap, checkLexemeHint, checkTurkishCloze } from '@language-drill/ai';
+import {
+  checkClozeOverlap,
+  checkLexemeHint,
+  checkMixedScript,
+  checkTurkishCloze,
+} from '@language-drill/ai';
 
 import { getGrammarPoint } from '../curriculum';
 
@@ -68,6 +77,20 @@ export function applyDeterministicChecks(
   language: Language,
   grammarPointKey?: string | null,
 ): RoutingDecision {
+  // Mixed script runs first and applies to EVERY exercise type: a Cyrillic
+  // letter in a translation reference, conjugation target or cloze answer is a
+  // provable defect regardless of what the LLM validator scored.
+  const script = checkMixedScript(content);
+  if (script.kind === 'mixed-script') {
+    return {
+      reviewStatus: 'rejected',
+      flaggedReasons: [
+        { code: GenerationReasonCode.MixedScript, detail: script.hits.join('; ') },
+        ...decision.flaggedReasons,
+      ],
+    };
+  }
+
   if (!isClozeContent(content)) {
     return decision;
   }

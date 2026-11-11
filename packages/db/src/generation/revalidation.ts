@@ -230,6 +230,7 @@ const DETERMINISTIC_REASON_CODES: ReadonlySet<GenerationReasonCode> = new Set([
   GenerationReasonCode.VowelHarmonyAllomorph,
   GenerationReasonCode.MalformedSurfaceForm,
   GenerationReasonCode.MissingLexemeHint,
+  GenerationReasonCode.MixedScript,
 ]);
 
 function hasProvenDefect(reasons: readonly GenerationReason[]): boolean {

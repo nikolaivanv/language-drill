@@ -1,0 +1,1754 @@
+[
+ {
+  "id": "0141664a-1639-5218-abcc-69343db08c0d",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "vocab_recall",
+   "hints": [
+    "Think about the opposite of 'old' or 'stale' when talking about food.",
+    "You might hear this word at a market when the seller wants you to know the produce was harvested today.",
+    "This word is commonly paired with bread, vegetables, or juice to highlight how recently they were prepared."
+   ],
+   "prompt": "This adjective describes food or drink that has been made or picked very recently — not old, not stale, not spoiled. You might use it to describe bread straight from the oven or fruit just off the tree.",
+   "seedWord": "taze",
+   "_dedupKey": "taze::this adjective describes food or drink that has been made or picked very recently — not old, not stale, not spoiled. you might use it to describe bread straight from the oven or fruit just off the tree.",
+   "topicHint": "food & drink",
+   "expectedWord": "taze",
+   "instructions": "Read the definition and write the Turkish adjective it describes.",
+   "exampleSentence": "Annем her sabah marketten taze sebze alıyor."
+  }
+ },
+ {
+  "id": "04250545-33cd-52cb-a300-44175af1a386",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "sa-da-bile-concessive",
+   "_dedupKey": "even if it rains tomorrow, he will still go to the park.",
+   "topicHint": "weather",
+   "sourceText": "Even if it rains tomorrow, he will still go to the park.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "sa-da-bile-concessive",
+   "acceptableAnswers": [
+    "Yarın yağmur yağsa bile parka gidecek.",
+    "Yağmur yağsa da yarın parka gidecek.",
+    "Yağmur yağsa bile yarın parka gidecek.",
+    "Yarın yağmur yağsa da parka gidecek."
+   ],
+   "referenceTranslation": "Yarın yağmur yağsa da parkа gidecek."
+  }
+ },
+ {
+  "id": "05883b4e-7bdd-5c6a-ae0e-ae964ddec52b",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "carolyn",
+   "_dedupKey": "she studied without stopping until the exam was over.",
+   "topicHint": "study / school",
+   "sourceText": "She studied without stopping until the exam was over.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate converb construction.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Sınav bitenе kadar durmaksızın çalıştı.",
+    "Sınav bitinceye kadar durmadan çalıştı.",
+    "Sınav bitene kadar durmadan çalıştı."
+   ],
+   "referenceTranslation": "Sınav bitinceye kadar durmaksızın çalıştı."
+  }
+ },
+ {
+  "id": "08884007-ff33-55b9-a90e-a685cefb62fc",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "beacon",
+   "_dedupKey": "she kept walking without stopping until she reached the park.",
+   "topicHint": "daily routine / outdoor",
+   "sourceText": "She kept walking without stopping until she reached the park.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate converb construction.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Parka ulaşıncaya kadar durmaksızın yürümeye devam etti.",
+    "Parka varıncaya kadar durmaksızın yürüdü.",
+    "Parka ulaşıncaya kadar durmaksızın yürüdü.",
+    "Parka varана kadar durmaksızın yürümeye devam etti.",
+    "Parka ulaşana kadar durmaksızın yürümeye devam etti.",
+    "Parka varана kadar durmaksızın yürüdü.",
+    "Parka ulaşana kadar durmaksızın yürüdü."
+   ],
+   "referenceTranslation": "Parka varıncaya kadar durmaksızın yürümeye devam etti."
+  }
+ },
+ {
+  "id": "0d515832-174f-5036-8d3f-171af90ef0f7",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "torun",
+   "_dedupKey": "my grandmother has four grandchildren.",
+   "topicHint": "family",
+   "sourceText": "My grandmother has four grandchildren.",
+   "instructions": "Translate the sentence into Turkish. Make sure to use the enumerator tane correctly.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Anneannеmin dört tane torunu var."
+  }
+ },
+ {
+  "id": "0e5f1160-9133-5bd4-b9ee-e1284a69565d",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "cunku-clause-initial",
+   "_dedupKey": "i couldn't finish the exam because there wasn't enough time.",
+   "topicHint": "education",
+   "sourceText": "I couldn't finish the exam because there wasn't enough time.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Sınavı bitiremedim çünkü yeterli vakit yoktu.",
+    "Sınavı tamamlayamadım çünkü yeterli zaman yoktu.",
+    "Sınavı tamamlayamadım çünkü yeterli vakit yoktu."
+   ],
+   "referenceTranslation": "Sınavı bitiреmedim çünkü yeterli zaman yoktu."
+  }
+ },
+ {
+  "id": "1119a458-f0d2-5b66-9c2d-6a7a22cbe873",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "mak-zorunda",
+   "_dedupKey": "what a pity — you (all) really have to leave now.",
+   "topicHint": "mixed / everyday social",
+   "sourceText": "What a pity — you (all) really have to leave now.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Tüh, siz şimdi gerçekten gitmek zorundасınız."
+  }
+ },
+ {
+  "id": "14a0bf0f-954f-5a01-a701-dffd8b659664",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "tılsım",
+   "_dedupKey": "if the password is not changed, your account security will be at risk.",
+   "topicHint": "technology / everyday security",
+   "sourceText": "If the password is not changed, your account security will be at risk.",
+   "instructions": "Translate the following sentence into Turkish, using a formal conditional construction (-DIğI takdirde, -mAsI hâlinde, or -mAsI durumunda).",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Şifre değiştirilmemesi durumunda hesap güvenliğiniz tehlikeye girer.",
+    "Şifrenin değiştirilmediği takdirde hesap güvenliğiniz tehlikeye girer.",
+    "Şifre değiştirilmemesi hâlinde hesap güvenliğiniz tehlikeye girер.",
+    "Şifre değiştirilmemesi durumunda hesap güvenliğiniz tehlikeye girecektir.",
+    "Şifre değiştirilmemesi hâlinde hesap güvenliğiniz tehlikeye girecektir.",
+    "Şifrenin değiştirilmediği takdirde hesap güvenliğiniz tehlikeye girecektir."
+   ],
+   "referenceTranslation": "Şifre değiştirilmemesi hâlinde hesap güvenliğiniz tehlikeye girer."
+  }
+ },
+ {
+  "id": "15de5df6-2315-5546-8884-acda6483d84f",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "Flasche",
+    "Flaschen",
+    "Flascheн von",
+    "Glas"
+   ],
+   "seedWord": "willen",
+   "sentence": "Ich möchte bitte zwei ___ Wasser für die Reise.",
+   "_dedupKey": "ich mochte bitte zwei ___ wasser fur die reise.",
+   "topicHint": "travel",
+   "instructions": "Fill in the blank with the correct measure or quantity expression.",
+   "correctAnswer": "Flaschen"
+  }
+ },
+ {
+  "id": "17051825-34f8-5c0f-bb84-df6393d5704a",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "kalmak",
+   "subject": {
+    "gloss": "you (plural / formal)",
+    "pronoun": "siz"
+   },
+   "features": [
+    {
+     "term": "zorunluluk (-mek zorunda)",
+     "gloss": "obligation / compulsion"
+    },
+    {
+     "term": "olumlu",
+     "gloss": "affirmative"
+    }
+   ],
+   "_dedupKey": "kalmak::zorunluluk (-mek zorunda) olumlu 2. cogul kisi",
+   "breakdown": "kal- (stem) + -mak (infinitive) + zorunda (compulsion word) + -sınız (2pl copular suffix, vowel harmony: a → ı)",
+   "topicHint": "mixed",
+   "lemmaGloss": "to stay / to remain",
+   "targetForm": "kalmak zorунdasınız",
+   "instructions": "Write the correct obligatory form of the verb for the subject given.",
+   "featureBundle": "zorunluluk (-mek zorunda) · olumlu · 2. çoğul kişi",
+   "exampleSentences": [
+    "Bu gece burada kalmak zorundasınız.",
+    "Yarın erken gitmeniz gerekiyor, bu yüzden bu otelde kalmak zorundasınız."
+   ]
+  }
+ },
+ {
+  "id": "1816ee23-4383-55df-bc4c-46c3ab09faee",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "ability-negative-yama",
+   "_dedupKey": "my grandmother couldn't come to our house last weekend.",
+   "topicHint": "family",
+   "sourceText": "My grandmother couldn't come to our house last weekend.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "ability-negative-yama",
+   "acceptableAnswers": [
+    "Anneannем geçen hafta sonu evimize gelemedi.",
+    "Babaannem geçen hafta sonu evimize gelemedі.",
+    "Anneannеm geçen hafta sonu bizim evimize gelemedi.",
+    "Babaannem geçen hafta sonu bizim evimize gelemedi."
+   ],
+   "referenceTranslation": "Babaannem geçen hafta sonu evimize gelemedi."
+  }
+ },
+ {
+  "id": "18dc1e80-231d-5dc0-bab1-413cd0be1e31",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "You are a building manager explaining that the broken pipes were repaired by having the workers fix them. Write one sentence describing that the repair work was had done (i.e. someone caused it to be done, and the sentence is in the passive). Use a combined voice form that stacks causative + passive on a single verb stem.",
+   "register": "neutral",
+   "_dedupKey": "you are a building manager explaining that the broken pipes were repaired by having the workers fix them. write one sentence describing that the repair work was had done (i.e. someone caused it to be done, and the sentence is in the passive). use a combined voice form that stacks causative + passive on a single verb stem.",
+   "topicHint": "home / daily life",
+   "promptMode": "grammar_target",
+   "instructions": "Write one sentence in Turkish using a combined voice (birleşik çatı) verb form.",
+   "modelAnswers": [
+    "Bozuk borular ustaya tamir ettirилdi.",
+    "Bozuk borular usta tarafından tamir ettirildi.",
+    "Hasarlı borular işçilere tamir ettirildi."
+   ],
+   "targetStructure": "causative + passive (birleşik çatı: ettirgen + edilgen)"
+  }
+ },
+ {
+  "id": "18f25a3b-50cb-5f25-874d-09a93a790488",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "dormir",
+   "subject": {
+    "gloss": "they",
+    "pronoun": "ellos/ellas"
+   },
+   "features": [
+    {
+     "term": "presente de subjuntivo",
+     "gloss": "present subjunctive"
+    }
+   ],
+   "_dedupKey": "dormir::duerman::ellos/ellas",
+   "breakdown": "stem (o→ue stem change): duerм- + subjunctive ending -an → duerman",
+   "topicHint": "daily routine / health",
+   "lemmaGloss": "to sleep",
+   "targetForm": "duerman",
+   "instructions": "A friend says: \"Quiero que mis hijos _____ (dormir) más horas cada noche.\" Write the correct present subjunctive form of the verb in parentheses.",
+   "featureBundle": "presente de subjuntivo · 3ª persona del plural (ellos/ellas)",
+   "exampleSentences": [
+    "Quiero que mis hijos duerman más horas cada noche.",
+    "Es importante que ellos duerman bien antes del examen."
+   ]
+  }
+ },
+ {
+  "id": "19d9e17c-4105-5b9e-bbae-37a2c02df50b",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "You are describing a school project. The teacher arranged for the students to have their essays corrected by someone else. Write one sentence expressing this idea using a combined voice verb — specifically a causative + passive stack (e.g. a verb built with both a causative suffix and a passive suffix, in that order).",
+   "register": "neutral",
+   "_dedupKey": "ogrencilerin odevleri ogretmen tarafından duzelttirилdi.",
+   "topicHint": "school / education",
+   "promptMode": "grammar_target",
+   "instructions": "Write one sentence in Turkish using a combined voice (birleşik çatı) verb form.",
+   "modelAnswers": [
+    "Öğrencilerin ödevleri öğretmen tarafından düzelttirилdi.",
+    "Kompozisyonlar sınıfta öğretmene düzelttirилdi.",
+    "Öğrencilerin yazıları uzman birine düzelttirилdi."
+   ],
+   "targetStructure": "causative + passive (birleşik çatı: ettirgen + edilgen)"
+  }
+ },
+ {
+  "id": "1a34ac0a-d587-5806-ab69-576a64337b47",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "context": "Past copula on a nominal predicate (-(y)DI)",
+   "glossEn": "You (all) were very tired yesterday.",
+   "seedWord": "dinlenmek",
+   "sentence": "Siz dün çok ___ . (yorgun)",
+   "_dedupKey": "siz dun cok ___ . (yorgun)",
+   "topicHint": "daily life",
+   "instructions": "Fill in the blank with the correct past copula form of the word in parentheses.",
+   "correctAnswer": "yorgunduнuz"
+  }
+ },
+ {
+  "id": "1e009782-4718-5cc2-a238-a78ef08af1e3",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "dik-possessive-halde",
+   "_dedupKey": "even though she knew the soup was too salty, she didn't say anything.",
+   "topicHint": "food",
+   "sourceText": "Even though she knew the soup was too salty, she didn't say anything.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "dik-possessive-halde",
+   "acceptableAnswers": [
+    "Çorbanın çok tuzlu olduğunu bildiği halde hiçbir şey söylemedi.",
+    "Çorbanın fazla tuzlu olduğunu bildiği hâlde hiçbir şey söylemedi.",
+    "Çorbanın fazla tuzlu olduğunu bildiği halde hiçbir şey söylemedi.",
+    "Çorba çok tuzlu olduğunu bildiği hâlde hiçbir şey söylemedi.",
+    "Çorba çok tuzlu olduğunu bildiği halde hiçbir şey söylemedi."
+   ],
+   "referenceTranslation": "Çorbанın çok tuzlu olduğunu bildiği hâlde hiçbir şey söylemedi."
+  }
+ },
+ {
+  "id": "1f33cc22-e3ba-51e6-811a-984a40410a67",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "arka",
+   "_dedupKey": "the back seat is more comfortable than the front seat.",
+   "topicHint": "travel / transport",
+   "sourceText": "The back seat is more comfortable than the front seat.",
+   "instructions": "Translate the following sentence into Turkish, using a comparative construction with \"daha\".",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Arka koltuk ön koltuğundan daha rahat.",
+    "Arka koltuk ön koltuktан daha rahat.",
+    "Arka koltuk, ön koltuğundan daha rahat."
+   ],
+   "referenceTranslation": "Arka koltuk ön koltuğtan daha rahat."
+  }
+ },
+ {
+  "id": "22f922f5-3477-54ed-8d9b-01217d0ca714",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "schaf",
+   "_dedupKey": "the sheep are running down the hill toward us.",
+   "topicHint": "nature / animals",
+   "sourceText": "The sheep are running down the hill toward us.",
+   "instructions": "Translate the following sentence into German, paying attention to the correct directional adverb (hin or her).",
+   "sourceLanguage": "EN",
+   "targetLanguage": "DE",
+   "acceptableAnswers": [
+    "Die Schafe laufen den Hügel herunter zu uns.",
+    "Die Schafe kommen den Hügel herunter.",
+    "Die Schafe laufen den Hügel herунter auf uns zu."
+   ],
+   "referenceTranslation": "Die Schafe laufen den Hügel zu uns herunter."
+  }
+ },
+ {
+  "id": "23662207-f128-575f-a951-03a3ea55aa46",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "beklemek",
+   "subject": {
+    "gloss": "you (singular)",
+    "pronoun": "sen"
+   },
+   "features": [
+    {
+     "term": "-mAk zorunda değil",
+     "gloss": "not obliged"
+    },
+    {
+     "term": "olumsuz",
+     "gloss": "negative"
+    }
+   ],
+   "_dedupKey": "beklemek::beklемek zorunda degilsin::sen",
+   "breakdown": "bekle- (stem) + -mek (infinitive suffix, front-vowel harmony) + zorunda (obligation word, locative-fused) + değil- (negation) + -sin (2sg copular suffix)",
+   "topicHint": "daily routine / travel",
+   "lemmaGloss": "to wait",
+   "targetForm": "beklемek zorunda değilsin",
+   "instructions": "Sen is the subject. Write the negative obligation form: \"you don't have to / don't need to …\"",
+   "featureBundle": "-mAk zorunda değil · olumsuz · 2. tekil şahıs (sen)",
+   "exampleSentences": [
+    "Sen beni beklемek zorunda değilsin; ben otobüse yetişirim.",
+    "Merak etme, sen burada beklемek zorunda değilsin."
+   ]
+  }
+ },
+ {
+  "id": "27508915-3df8-52bf-b588-2013b0fe4db2",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "beden",
+   "sentence": "Hava çok soğuk, biz dışarıda ___ . (bekle)",
+   "_dedupKey": "hava cok soguk, biz dısarıda ___ . (bekle)",
+   "topicHint": "weather / daily routine",
+   "instructions": "Fill in the blank with the correct negative optative form of the verb in parentheses.",
+   "correctAnswer": "beklemeyелim"
+  }
+ },
+ {
+  "id": "2923dcfc-a481-5870-a182-f57ce142e7d1",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "sa-deliberative-question",
+   "_dedupKey": "i wonder what room i shouldn't put them in.",
+   "topicHint": "home",
+   "sourceText": "I wonder what room I shouldn't put them in.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "sa-deliberative-question",
+   "acceptableAnswers": [
+    "Acaba onları hangi odaya koymасам?",
+    "Hangi odaya koymасам acaba onları?"
+   ],
+   "referenceTranslation": "Onları hangi odaya koymасам acaba?"
+  }
+ },
+ {
+  "id": "2bea4509-dffd-580f-affc-de43c74d022a",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "cloze",
+   "context": "After numerals, the plural suffix -lAr is dropped. Use vowel harmony when the plural suffix is needed.",
+   "options": [
+    "sınıf",
+    "sınıflar",
+    "sınıfler",
+    "sınıflар"
+   ],
+   "sentence": "Okulda altı ___ var. (sınıf)",
+   "_dedupKey": "okulda altı ___ var. (sınıf)",
+   "topicHint": "school",
+   "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+   "correctAnswer": "sınıf"
+  }
+ },
+ {
+  "id": "2dc293a4-81cd-53a2-9319-493e7c933be7",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "tensed-verb-ysa-inferential",
+   "_dedupKey": "i wonder which hotel i should not stay at during the holiday.",
+   "topicHint": "holidays",
+   "sourceText": "I wonder which hotel I should not stay at during the holiday.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "sa-deliberative-question",
+   "acceptableAnswers": [
+    "Tatil süresince hangi otelde kalmasam acaba?",
+    "Acaba tatilde hangi otelde kalmasam?"
+   ],
+   "referenceTranslation": "Tatilde hangi otelde kalmасам acaba?"
+  }
+ },
+ {
+  "id": "3175a434-6735-57b8-b1af-be94597b3e69",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "maskot",
+   "_dedupKey": "the team's mascot stayed on the field until the match ended.",
+   "topicHint": "sports / everyday",
+   "sourceText": "The team's mascot stayed on the field until the match ended.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate \"until\" converb construction (-(y)IncAyA kadar or -AnA kadar).",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Takımın maskotu maç bitenе kadar sahada kaldı.",
+    "Takımın maskotu maç bitene kadar sahada kaldı."
+   ],
+   "referenceTranslation": "Takımın maskotu maç bitinceye kadar sahada kaldı."
+  }
+ },
+ {
+  "id": "367e0e15-18ea-5d51-8ab3-7b4d68ebdbc8",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "üzeri",
+   "_dedupKey": "the book is on my table.",
+   "topicHint": "home / everyday objects",
+   "sourceText": "The book is on my table.",
+   "instructions": "Translate the sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Kitap masамın üzerinde."
+  }
+ },
+ {
+  "id": "3b4739c1-d8de-5a45-b50b-d65999f251a4",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "Your friend helped you prepare for an exam and you passed, OR bad weather ruined your plans. Describe what happened using either sayesinde (for a good outcome you are grateful for) or yüzünden (for a bad outcome you are blaming on something). Use a bare noun before the postposition — not a personal pronoun.",
+   "register": "neutral",
+   "_dedupKey": "your friend helped you prepare for an exam and you passed, or bad weather ruined your plans. describe what happened using either sayesinde (for a good outcome you are grateful for) or yuzunden (for a bad outcome you are blaming on something). use a bare noun before the postposition — not a personal pronoun.",
+   "topicHint": "mixed",
+   "promptMode": "grammar_target",
+   "instructions": "Write one sentence in Turkish using the abstract postposition yüzünden or sayesinde. Remember: yüzünden is for unwelcome causes, sayesinde is for welcome causes.",
+   "modelAnswers": [
+    "Arkadaşımın yardımı sayesinde sınavı geçtim.",
+    "Kötü hava yüzünden pikniğimizi iptal ettik.",
+    "Senin tavsiyен sayesinde doğru kararı verdim."
+   ],
+   "targetStructure": "yüzünden / sayesinde (abstract postpositions for cause)"
+  }
+ },
+ {
+  "id": "47bed17c-6f7e-5fb4-9723-b1c8342cfc75",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "Mary",
+   "_dedupKey": "the woman talking to mary is my aunt.",
+   "topicHint": "family",
+   "sourceText": "The woman talking to Mary is my aunt.",
+   "instructions": "Translate the sentence into Turkish. Make sure to use the subject relative suffix -(y)An/-(y)En to form a pre-nominal modifier.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Mary ile konuşan kadın teyzeм."
+  }
+ },
+ {
+  "id": "47f8318d-5c15-519d-8556-3e317341bff4",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Ablative and dative case",
+   "glossEn": "The children got very excited from the show.",
+   "options": [
+    "gösteriден",
+    "gösteriden",
+    "gösteriye",
+    "gösteride"
+   ],
+   "seedWord": "gösteri",
+   "sentence": "Çocuklar ___ çok heyecanlandı. (gösteri)",
+   "_dedupKey": "cocuklar ___ cok heyecanlandı. (gosteri)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+   "correctAnswer": "gösteriden"
+  }
+ },
+ {
+  "id": "49c8fa57-a162-5389-9e33-f215cc8e76c4",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "klinik",
+   "_dedupKey": "the doctor at the clinic spoke to us in turkish.",
+   "topicHint": "health / daily life",
+   "sourceText": "The doctor at the clinic spoke to us in Turkish.",
+   "instructions": "Translate the sentence into Turkish. Pay attention to how \"in Turkish\" is expressed.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Kliniктeki doktor bize Türkçe konuştu."
+  }
+ },
+ {
+  "id": "4e127670-0b11-5516-9b85-08faa8c57fe3",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "kurtarmak",
+   "subject": {
+    "gloss": "you (singular)",
+    "pronoun": "sen"
+   },
+   "features": [
+    {
+     "term": "geniş zaman koşul (-(I)rsA)",
+     "gloss": "open conditional"
+    },
+    {
+     "term": "olumsuz",
+     "gloss": "negative"
+    }
+   ],
+   "seedWord": "kurtarmak",
+   "_dedupKey": "kurtarmak::kurtarmazsan::sen",
+   "breakdown": "kurtар- (stem) + -maz (aorist negative) + -sa (conditional -sA) + -n (2sg person suffix)",
+   "topicHint": "mixed / everyday",
+   "lemmaGloss": "to save / to rescue",
+   "targetForm": "kurtarmazsan",
+   "instructions": "Sen öznesiyle, \"kurtarmak\" fiilinin olumsuz açık koşul biçimini yaz. (Write the negative open/real conditional form of \"kurtarmak\" for the subject \"sen\".)",
+   "featureBundle": "geniş zaman koşul · olumsuz · 2. tekil kişi",
+   "exampleSentences": [
+    "Sen onu kurtarmazsan, kimse kurtaramaz.",
+    "Kurtarmazsan çok geç olacak."
+   ]
+  }
+ },
+ {
+  "id": "56d902e8-d45a-599e-91c4-8802cc6ab4a3",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "seyretmek",
+   "subject": {
+    "gloss": "they",
+    "pronoun": "onlar"
+   },
+   "features": [
+    {
+     "term": "geniş zaman",
+     "gloss": "aorist"
+    },
+    {
+     "term": "hikâye (-(y)DI)",
+     "gloss": "past copula"
+    },
+    {
+     "term": "olumsuz",
+     "gloss": "negative"
+    }
+   ],
+   "seedWord": "seyretmek",
+   "_dedupKey": "seyretmek::seyretmezlerdi::onlar",
+   "breakdown": "seyrет + -mez (aorist negative) + -ler (3pl) + -di (past copula -(y)DI)",
+   "topicHint": "mixed",
+   "lemmaGloss": "to watch",
+   "targetForm": "seyretmezlerdi",
+   "instructions": "Write the correct compound past (hikâye) negative form of the verb for the subject \"onlar\".",
+   "featureBundle": "geniş zaman hikâyesi · olumsuz · 3. çoğul",
+   "acceptableForms": [
+    "seyretmezdilerdi"
+   ],
+   "exampleSentences": [
+    "Onlar hiç haber seyretmezlerdi, sadece film izlerlerdi.",
+    "Küçükken onlar televizyon seyretmezlerdi, dışarıda oynarlardı."
+   ]
+  }
+ },
+ {
+  "id": "5a08e774-f923-5f90-9edd-9efccabab211",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "Bekannter",
+    "Bekannten",
+    "Bekannte",
+    "Bekanntен"
+   ],
+   "seedWord": "verprügeln",
+   "sentence": "Auf der Straße hat er einen ___ angesprochen, den er aus der Schule kannte.",
+   "_dedupKey": "auf der straße hat er einen ___ angesprochen, den er aus der schule kannte.",
+   "topicHint": "everyday social life",
+   "instructions": "Fill in the blank with the correct nominalized adjective form.",
+   "correctAnswer": "Bekannten"
+  }
+ },
+ {
+  "id": "5b0b279e-eacc-5278-93df-c9f4eadb7ca5",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "glossEn": "",
+   "options": [
+    "Bekannte",
+    "Bekannten",
+    "Bekannter",
+    "Bekanntе"
+   ],
+   "seedWord": "persönlichkeit",
+   "sentence": "Auf der Party waren viele ___ aus unserer Stadt.",
+   "_dedupKey": "auf der party waren viele ___ aus unserer stadt.",
+   "topicHint": "social life",
+   "instructions": "Fill in the blank with the correct nominalized adjective form.",
+   "correctAnswer": "Bekannte"
+  }
+ },
+ {
+  "id": "5be228ce-d28e-5816-8373-128a61ff7d67",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "sürtük",
+   "_dedupKey": "i prefer tea without milk.",
+   "topicHint": "food and drink",
+   "sourceText": "I prefer tea without milk.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Sütсüz çayı tercih ederim."
+  }
+ },
+ {
+  "id": "5ce9e819-ca1f-586d-b747-a8412ec6084c",
+  "review_status": "auto-approved",
+  "content_json": {
+   "task": "Usted compró un electrodoméstico hace tres semanas y ya no funciona bien. La tienda le ofrece dos soluciones: devolverle el dinero o repararlo sin coste. Escriba un párrafo formal en el que compare las ventajas de cada opción para un cliente como usted. Explique qué prefiere y por qué, teniendo en cuenta el tiempo de espera y la confianza en la tienda. Termine el párrafo con una frase que indique qué solución pide.",
+   "type": "free_writing",
+   "title": "¿Reembolso o reparación? Dos caminos ante un producto defectuoso",
+   "domain": "consumo · reclamaciones",
+   "maxWords": 120,
+   "minWords": 80,
+   "register": "formal",
+   "_dedupKey": "¿reembolso o reparacion? dos caminos ante un producto defectuoso",
+   "topicHint": "shopping",
+   "instructions": "Escribe un párrafo formal (80–120 palabras) sopesando las dos posiciones y终 defendiendo tu conclusión.",
+   "requiredElements": [
+    {
+     "id": "two_options",
+     "label": "Presente las dos opciones: el reembolso y la reparación, con al menos una ventaja de cada una."
+    },
+    {
+     "id": "preference",
+     "label": "Indique claramente cuál de las dos soluciones prefiere y justifique la decisión."
+    },
+    {
+     "id": "concession",
+     "label": "Use al menos un conector concesivo, por ejemplo: aunque, si bien o a pesar de."
+    },
+    {
+     "id": "formal_request",
+     "label": "Termine con una petición formal usando usted (por ejemplo: le solicito), sin cambiar de tratamiento."
+    }
+   ],
+   "suggestedMinutes": 15
+  }
+ },
+ {
+  "id": "5fa22445-4515-56b7-a8b5-546b3c50767a",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "londra",
+   "_dedupKey": "our hotel is in front of the museum.",
+   "topicHint": "travel",
+   "sourceText": "Our hotel is in front of the museum.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Otelimiз müzenin önündedir."
+  }
+ },
+ {
+  "id": "62409d38-c145-581a-b6cb-8e96280cd70f",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "vocab_recall",
+   "hints": [
+    "Think of a place in nature with many trees growing close together.",
+    "Animals like bears, wolves, and deer often live here.",
+    "In Turkish, this word has two syllables and refers to a wooded wilderness area."
+   ],
+   "prompt": "A large area of land covered with trees, often found in nature and countryside regions.",
+   "_dedupKey": "orman::a large area of land covered with trees, often found in nature and countryside regions.",
+   "topicHint": "nature & outdoors",
+   "expectedWord": "orman",
+   "instructions": "Read the definition and write the Turkish word it describes.",
+   "exampleSentence": "Hafta sonu ailемle birlikte ormana yürüyüşe gittik."
+  }
+ },
+ {
+  "id": "675bb6d0-5c52-5ab0-8873-379c567f2f21",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "christina",
+   "_dedupKey": "when christina gets home, she always calls her mother.",
+   "topicHint": "daily routine / family",
+   "sourceText": "When Christina gets home, she always calls her mother.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate \"when\" clause with -(y)IncA or -DIğIndA.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Christina eve geldiğinde annesini her zaman arar.",
+    "Christina eve geldiği zaman annesini her zaman arar.",
+    "Christina her zaman eve gelince annesini arar.",
+    "Christina her zaman eve geldiğinde annesini arar."
+   ],
+   "referenceTranslation": "Christina eve gelince annесini her zaman arar."
+  }
+ },
+ {
+  "id": "699e6721-cd23-5535-bf09-fcd9ebedb5cc",
+  "review_status": "manual-approved",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "Your friend asks what you always do right after you get home from school. Describe one thing you do after arriving home, using -DIktAn sonra.",
+   "_dedupKey": "eve dondukten sonra ellerimi yıkarım.",
+   "topicHint": "daily routine",
+   "promptMode": "situation",
+   "instructions": "Read the situation below and write one sentence in Turkish using -mAdAn önce or -DIktAn sonra.",
+   "modelAnswers": [
+    "Eve döndükten sonra ellerimi yıkarım.",
+    "Okuldан geldikten sonra çantamı bırakırım.",
+    "Eve geldikten sonra bir şeyler yerim."
+   ]
+  }
+ },
+ {
+  "id": "7245e646-b288-5386-a525-443ac44f3cd7",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "delirmek",
+   "subject": {
+    "gloss": "they",
+    "pronoun": "onlar"
+   },
+   "features": [
+    {
+     "term": "ettirgen",
+     "gloss": "causative"
+    },
+    {
+     "term": "olumsuz",
+     "gloss": "negative"
+    },
+    {
+     "term": "geniş zaman",
+     "gloss": "aorist"
+    }
+   ],
+   "seedWord": "delirmek",
+   "_dedupKey": "delirmek::delirtmezler::onlar",
+   "breakdown": "deliр (stem) + -t (causative; polysyllabic vowel-final stem) + -mez (negative aorist) + -ler (3pl)",
+   "topicHint": "mixed / everyday behaviour",
+   "lemmaGloss": "to go crazy",
+   "targetForm": "delirtmezler",
+   "instructions": "Write the correct negative causative form of the verb in parentheses for the subject \"onlar\". (delirmek)",
+   "featureBundle": "ettirgen · olumsuz · geniş zaman · 3. çoğul şahıs",
+   "acceptableForms": [
+    "delirtmez"
+   ],
+   "exampleSentences": [
+    "Onlar çocukları delirtmezler, aksine onları sakinleştirirler.",
+    "İyi öğretmenler öğrencilerini delirtmezler."
+   ]
+  }
+ },
+ {
+  "id": "73e5874c-2556-542c-afdd-f6c0abee94b5",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "vocab_recall",
+   "hints": [
+    "This is a free-time activity done entirely on foot, outdoors.",
+    "It is slower and more relaxed than running — you enjoy the scenery as you go.",
+    "The noun part of this two-word expression refers to a 'walk' or 'hike'."
+   ],
+   "prompt": "To walk or hike in nature — going through a park, forest, or along a trail on foot for enjoyment.",
+   "_dedupKey": "yuruyus yapmak::to walk or hike in nature — going through a park, forest, or along a trail on foot for enjoyment.",
+   "topicHint": "nature",
+   "expectedWord": "yürüyüş yapmak",
+   "instructions": "Think of the Turkish verb (infinitive form) that means this activity, then type it.",
+   "exampleSentence": "Hafta sonları ailемle ormanda yürüyüş yapmayı seviyorum.",
+   "acceptableAnswers": [
+    "doğa yürüyüşü yapmak"
+   ]
+  }
+ },
+ {
+  "id": "74cbcc39-8804-5241-92f2-5e4d9b92c940",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "reported-necessity-dik-accusative",
+   "_dedupKey": "the cashier told you that you had to keep your receipt.",
+   "topicHint": "shopping",
+   "sourceText": "The cashier told you that you had to keep your receipt.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "reported-necessity-dik-accusative",
+   "acceptableAnswers": [
+    "Kasiyer sana fişini saklaман gerektiğini söyledi.",
+    "Kasiyer, fişini saklaман gerektiğini söyledi sana.",
+    "Kasiyer fişini muhafaza etmen gerektiğini sana söyledi.",
+    "Kasiyer sana fişini muhafaza etmen gerektiğini söyledi."
+   ],
+   "referenceTranslation": "Kasiyer, fişini saklaман gerektiğini sana söyledi."
+  }
+ },
+ {
+  "id": "775b9891-474b-596b-b16c-d7179da207b6",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "_dedupKey": "she combed her hair and got dressed before leaving the house.",
+   "topicHint": "daily routine",
+   "sourceText": "She combed her hair and got dressed before leaving the house.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Evden çıkmadan önce tarандı ve giyindi."
+  }
+ },
+ {
+  "id": "797809a7-8655-59d3-bae9-48cf9b5a1b8a",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Past copula on a nominal predicate (-(y)DI)",
+   "seedWord": "nominal-past-copula-ydi",
+   "sentence": "Dün sen çok ___ , o yüzden hiç konuşmadın. (yorgun)",
+   "_dedupKey": "dun sen cok ___ , o yuzden hic konusmadın. (yorgun)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct past copula form of the word in parentheses.",
+   "correctAnswer": "yorgunduн"
+  }
+ },
+ {
+  "id": "8621184c-05d4-5b1c-9d2b-2f6078101e05",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "mak-zorunda",
+   "_dedupKey": "melissa, you don't have to wait for me.",
+   "topicHint": "daily routine / social interaction",
+   "sourceText": "Melissa, you don't have to wait for me.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Melissa, beni beklемek zorunda değilsin."
+  }
+ },
+ {
+  "id": "88d29ef8-8c17-53de-a9bc-19c22b59289b",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "Kenneth",
+   "_dedupKey": "kenneth combed his hair and got dressed before leaving the house.",
+   "topicHint": "daily routine",
+   "sourceText": "Kenneth combed his hair and got dressed before leaving the house.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Kenneth evden çıkmadan önce tarандı ve giyindi."
+  }
+ },
+ {
+  "id": "88fc5648-fa3b-55ae-beb5-5c8290b5f133",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "ister-ister",
+   "_dedupKey": "whether you win or lose, always shake hands with your opponent.",
+   "topicHint": "sport",
+   "sourceText": "Whether you win or lose, always shake hands with your opponent.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "ister-ister",
+   "acceptableAnswers": [
+    "İster kazan ister kaybet, rakibinle her zaman el sıkış.",
+    "İster kazanasın ister kaybedеsin, rakibinle her zaman tokalaş.",
+    "İster kazanasın ister kaybedesin, rakibinle her zaman el sıkış."
+   ],
+   "referenceTranslation": "İster kazan ister kaybet, rakibinle her zaman tokalaş."
+  }
+ },
+ {
+  "id": "8b1e1001-ec4b-5ac3-ae72-2f2f8362936e",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Instrumental ile / -(y)lA",
+   "glossEn": "I drink my tea with milk.",
+   "seedWord": "ile-suffix-consonant-stem",
+   "sentence": "Çayımı ___ içiyorum. (süt)",
+   "_dedupKey": "cayımı ___ iciyorum. (sut)",
+   "topicHint": "food and drink",
+   "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+   "correctAnswer": "sütле"
+  }
+ },
+ {
+  "id": "8d6150ab-2aa3-5c63-870b-222faf95522a",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "probar",
+   "subject": {
+    "gloss": "she / he / you (formal)",
+    "pronoun": "ella"
+   },
+   "features": [
+    {
+     "term": "presente de indicativo",
+     "gloss": "present"
+    }
+   ],
+   "seedWord": "prueba",
+   "_dedupKey": "probar::prueba::ella",
+   "breakdown": "stem prueб- (o→ue stem change) + ending -a (3sg present)",
+   "topicHint": "food / daily routine",
+   "lemmaGloss": "to try / to taste",
+   "targetForm": "prueba",
+   "instructions": "Write the correct present indicative form of the verb in parentheses for the subject given. (probar)",
+   "featureBundle": "presente de indicativo · 3ª persona del singular",
+   "exampleSentences": [
+    "Ella prueba la sopa y dice que está muy rica.",
+    "Mi madre siempre prueba la comida antes de servir."
+   ]
+  }
+ },
+ {
+  "id": "8d836dd5-2c3d-5255-a1aa-541949fa2c6c",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "distributive-sar-each",
+   "sentence": "Kasiyер her alışveriş torbasına ___ şişe su koydu. (dört)",
+   "_dedupKey": "kasiyер her alısveris torbasına ___ sise su koydu. (dort)",
+   "topicHint": "shopping",
+   "instructions": "Fill in the blank with the correct distributive form of the number in parentheses.",
+   "correctAnswer": "dörder",
+   "realizedVariant": "distributive-sar-each"
+  }
+ },
+ {
+  "id": "9477ff07-7ad2-54dd-afc7-adb10af71580",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "teyit",
+   "sentence": "Haberi ___ hemen arkadaşlarımı aradım. (duyмак → duymak)",
+   "_dedupKey": "haberi ___ hemen arkadaslarımı aradım. (duyмак → duymak)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct \"when\" clause form of the verb in parentheses. Use -(y)IncA or -DIğIndA as appropriate.",
+   "correctAnswer": "duyunca",
+   "acceptableAnswers": [
+    "duyduğumda"
+   ]
+  }
+ },
+ {
+  "id": "94c207ca-3fbc-599e-9935-e3f2190d5fe7",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "vocab_recall",
+   "hints": [
+    "This is a noun used to describe how food tastes overall.",
+    "You might use this word when reviewing a meal at a restaurant — saying the soup was full of it.",
+    "Think of the word for 'flavour' or 'taste' as a quality of food in Turkish cooking."
+   ],
+   "prompt": "The quality of food or drink that makes it taste good or bad; the overall flavour experience of a dish — for example, a dish from a restaurant can have a wonderful or terrible one.",
+   "seedWord": "lezzet",
+   "_dedupKey": "lezzet::the quality of food or drink that makes it taste good or bad; the overall flavour experience of a dish — for example, a dish from a restaurant can have a wonderful or terrible one.",
+   "topicHint": "food",
+   "expectedWord": "lezzet",
+   "instructions": "Read the definition and write the Turkish word it describes.",
+   "exampleSentence": "Bu çorbанın lezzeti çok güzel; her gün içmek istiyorum."
+  }
+ },
+ {
+  "id": "9725044b-3aa9-522f-9293-43834edca386",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "delirmek",
+   "subject": {
+    "gloss": "you (plural / formal)",
+    "pronoun": "siz"
+   },
+   "features": [
+    {
+     "term": "yükümlülük (-mAk zorunda)",
+     "gloss": "obligation"
+    },
+    {
+     "term": "olumlu",
+     "gloss": "affirmative"
+    }
+   ],
+   "seedWord": "delirmek",
+   "_dedupKey": "delirmek::delirmek zorundası­nız::siz",
+   "breakdown": "deliр- (stem) + -mek (infinitive suffix, front-vowel harmony) + zorunda (compulsion postpredicate) + -sınız (2pl copular suffix, back-vowel harmony)",
+   "topicHint": "travel",
+   "lemmaGloss": "to go crazy / to lose one's mind",
+   "targetForm": "delirmek zorundası­nız",
+   "instructions": "Write the correct obligatory form of the verb \"delirmek\" for the subject \"siz\" using -mAk zorunda.",
+   "featureBundle": "-mAk zorunda · geniş zaman yükümlülük · 2. çoğul kişi (siz)",
+   "acceptableForms": [
+    "delirmek zorundasınız"
+   ],
+   "exampleSentences": [
+    "Bu uçuşu kaçırmamak için siz de erken kalkmak zorundası­nız.",
+    "Siz de vizeyi zamanında almak zorundası­nız, yoksa seyahat edemezsiniz."
+   ]
+  }
+ },
+ {
+  "id": "9cedbcfe-b7f4-5676-b05c-03caf90ad1df",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "vocab_recall",
+   "hints": [
+    "This is a noun commonly used in social and consumer contexts.",
+    "It describes a negative reaction someone voices when something does not meet expectations.",
+    "Think of what you might submit to a restaurant manager when your order is wrong."
+   ],
+   "prompt": "The act of complaining or raising an objection — often used when a customer is unhappy with food or service at a restaurant and wants to formally express their dissatisfaction.",
+   "_dedupKey": "sikayet::the act of complaining or raising an objection — often used when a customer is unhappy with food or service at a restaurant and wants to formally express their dissatisfaction.",
+   "topicHint": "food",
+   "expectedWord": "şikayet",
+   "instructions": "Read the definition and produce the Turkish word it describes.",
+   "exampleSentence": "Yemek soğuk gelince müşteri garsonа bir şikayet iletti."
+  }
+ },
+ {
+  "id": "a07042c3-16c9-5bfd-b8aa-81f106d658b0",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "toro",
+   "_dedupKey": "i will keep studying until the exam is over.",
+   "topicHint": "study / school",
+   "sourceText": "I will keep studying until the exam is over.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate \"until\" converb construction.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Sınav bitenе kadar çalışmaya devam edeceğim.",
+    "Sınav bitene kadar çalışmaya devam edeceğim.",
+    "Sınav bitinceye kadar ders çalışmaya devam edeceğim.",
+    "Sınav bitene kadar ders çalışmaya devam edeceğim.",
+    "Sınav bitinceye kadar çalışacağım.",
+    "Sınav bitene kadar çalışacağım.",
+    "Sınav bitinceye kadar ders çalışacağım.",
+    "Sınav bitene kadar ders çalışacağım."
+   ],
+   "referenceTranslation": "Sınav bitinceye kadar çalışmaya devam edeceğim."
+  }
+ },
+ {
+  "id": "a24af680-59d6-5f1e-a0f0-5a125865264b",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "Bekannte",
+    "Bekannter",
+    "Bekannten",
+    "Bekanntер"
+   ],
+   "seedWord": "vergib",
+   "sentence": "Mein Nachbar ist ein ___, den ich schon lange kenne.",
+   "_dedupKey": "mein nachbar ist ein ___, den ich schon lange kenne.",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct nominalized adjective form.",
+   "correctAnswer": "Bekannter"
+  }
+ },
+ {
+  "id": "a96e8be8-2a08-5af4-a25c-d808152899f5",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Instrumental ile / -(y)lA: expressing the means or instrument used",
+   "glossEn": "The man is selling the fruits with a basket.",
+   "seedWord": "ile-suffix-consonant-stem",
+   "sentence": "Adam meyveleri ___ satıyor. (sepet)",
+   "_dedupKey": "adam meyveleri ___ satıyor. (sepet)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct form of the word in parentheses.",
+   "correctAnswer": "sepеtle"
+  }
+ },
+ {
+  "id": "aa729118-7c37-576e-baac-c1e220708b7b",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "meşale",
+   "_dedupKey": "she held the torch until the others found the path.",
+   "topicHint": "mixed / outdoor adventure",
+   "sourceText": "She held the torch until the others found the path.",
+   "instructions": "Translate the following sentence into Turkish, using the appropriate \"until\" converb construction (-(y)IncAyA kadar or -AnA kadar).",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Diğerleri yolu bulanа kadar meşaleyi tuttu.",
+    "Ötekiler yolu buluncaya kadar meşaleyi tuttu.",
+    "Ötekiler yolu bulana kadar meşaleyi tuttu."
+   ],
+   "referenceTranslation": "Diğerleri yolu buluncaya kadar meşaleyi tuttu."
+  }
+ },
+ {
+  "id": "af0b7a35-53d0-58cb-92ff-0ff777e7a58e",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "çalışmak",
+   "subject": {
+    "gloss": "you (singular)",
+    "pronoun": "sen"
+   },
+   "features": [
+    {
+     "term": "-mAk zorunda",
+     "gloss": "obligation (compulsion)"
+    },
+    {
+     "term": "olumlu",
+     "gloss": "affirmative"
+    }
+   ],
+   "_dedupKey": "calısmak::-mak zorunda olumlu 2. tekil sahıs",
+   "breakdown": "çalış (root) + -mak (infinitive suffix) + zorunda (obligation word) + -sın (2sg copular ending)",
+   "topicHint": "mixed",
+   "lemmaGloss": "to work / to study",
+   "targetForm": "çalışmak zorundасın",
+   "instructions": "Write the correct obligation form of the verb for the subject given.",
+   "featureBundle": "-mAk zorunda · olumlu · 2. tekil şahıs",
+   "exampleSentences": [
+    "Sınava yarın gireceksin, bu gece çalışmak zorundasın.",
+    "Eğer iyi bir iş istiyorsan, daha çok çalışmak zorundasın."
+   ]
+  }
+ },
+ {
+  "id": "b2aee1d3-d45f-509b-b978-4e47b89ff852",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "Allen",
+   "_dedupKey": "if you (plural) had had more time, you would have visited all the places.",
+   "topicHint": "travel",
+   "sourceText": "If you (plural) had had more time, you would have visited all the places.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Daha fazla vaktiniz olsaydı, her yeri gezerdинiz."
+  }
+ },
+ {
+  "id": "b6d4301a-8ace-59b4-990f-1c781cf6e0a9",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "gruselige",
+    "gruseligen",
+    "grусеligе",
+    "grусеligеr"
+   ],
+   "seedWord": "halloween",
+   "sentence": "Zu Halloween haben wir viele ___ Kürbisse auf die Treppe gestellt. (gruselig)",
+   "_dedupKey": "zu halloween haben wir viele ___ kurbisse auf die treppe gestellt. (gruselig)",
+   "topicHint": "mixed / Halloween",
+   "instructions": "Fill in the blank with the correct form of the adjective in parentheses.",
+   "correctAnswer": "gruselige"
+  }
+ },
+ {
+  "id": "b74d838d-84f3-5c0f-ac90-a9d3addd60c2",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "mak-uzere-imminence",
+   "_dedupKey": "my grandmother was just about to call us when we arrived.",
+   "topicHint": "family",
+   "sourceText": "My grandmother was just about to call us when we arrived.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "mak-uzere-imminence",
+   "acceptableAnswers": [
+    "Biz vardığımızda anneanne bizi aramak üzereydi.",
+    "Geldiğimizde anneanne bizi aramak üzereydi.",
+    "Biz geldiğimizde babaanne bizi aramak üzereydi.",
+    "Geldiğimizde babaanne bizi aramak üzereydi.",
+    "Biz vardığımızda babaanne bizi aramak üzereydi.",
+    "Vardığımızda anneanne bizi aramak üzereydi.",
+    "Vardığımızda babaanne bizi aramak üzereydi."
+   ],
+   "referenceTranslation": "Biz geldiğimizde anneannем bizi aramak üzereydi."
+  }
+ },
+ {
+  "id": "b920447a-964e-56fe-b626-3b023ae6687f",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "bez",
+   "_dedupKey": "if the cloth gets dirty, she will wash it.",
+   "topicHint": "household / cleaning",
+   "sourceText": "If the cloth gets dirty, she will wash it.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Bez kirlenirsе onu yıkayacak."
+  }
+ },
+ {
+  "id": "ba3c841c-5a92-5794-8a35-48c8f31fb075",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "context": "Nosotros imperative (first-person plural command)",
+   "seedWord": "derribado",
+   "sentence": "Esta pared está en muy mal estado; ___ antes de construir la nueva. (derribar)",
+   "_dedupKey": "esta pared esta en muy mal estado; ___ antes de construir la nueva. (derribar)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct nosotros imperative form of the verb in parentheses.",
+   "correctAnswer": "derrибémosla"
+  }
+ },
+ {
+  "id": "bfa71865-f420-522f-a2a4-3a6390cd9512",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "context": "Past copula on nominals — 2nd person plural",
+   "seedWord": "torun",
+   "sentence": "Siz o zaman tıp öğrencisi ___, değil mi? (tıp öğrencisi)",
+   "_dedupKey": "siz o zaman tıp ogrencisi ___, degil mi? (tıp ogrencisi)",
+   "topicHint": "education",
+   "instructions": "Fill in the blank with the correct past copula form of the word in parentheses.",
+   "correctAnswer": "tıp öğrencisiydинiz"
+  }
+ },
+ {
+  "id": "c6aed6f5-2ee4-57cb-b0b2-ca975d48f376",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "cloze",
+   "context": "Past copula on a nominal predicate (-(y)DI)",
+   "seedWord": "nominal-past-copula-ydi",
+   "sentence": "Sen dün çok ___ , bu yüzden düştün. (yorgun)",
+   "_dedupKey": "sen dun cok ___ , bu yuzden dustun. (yorgun)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct past copula form of the word in parentheses.",
+   "correctAnswer": "yorgunduн"
+  }
+ },
+ {
+  "id": "c6c0b47c-b9c8-536c-8b5b-7d3032cda945",
+  "review_status": "flagged",
+  "content_json": {
+   "task": "Ailenle birlikte çekilmiş eski bir fotoğrafı düşün. O fotoğrafta kim var? Bu kişiler kim — annен mi, kardeşin mi, başka biri mi? Onlar o gün ne yapıyordu ya da ne hissediyordu? En az iki aile üyesini ve o ana dair küçük bir ayrıntıyı anlat.",
+   "type": "free_writing",
+   "title": "Aile fotoğrafı: O an ne hatırlıyorsun?",
+   "domain": "aile · anı",
+   "maxWords": 60,
+   "minWords": 30,
+   "register": "informal",
+   "_dedupKey": "aile fotografı: o an ne hatırlıyorsun?",
+   "topicHint": "aile",
+   "instructions": "Aşağıdaki soruyu okuyun ve bir paragraf yazın.",
+   "requiredElements": [
+    {
+     "id": "two_members",
+     "label": "En az iki aile üyesini adlandır (örneğin annem, kardeşim).",
+     "detail": "Her kişi için doğru iyelik eki kullan: annem, babam, kardeşim gibi."
+    },
+    {
+     "id": "moment_detail",
+     "label": "O fotoğraf anına dair somut bir ayrıntı ver (nerede, ne yapıyorlar).",
+     "detail": "Örneğin: 'Bahçede oturuyoruz.' veya 'Babam gülümsüyor.'"
+    },
+    {
+     "id": "likes_or_feeling",
+     "label": "Bir aile üyesinin o anda ne hissettiğini veya ne sevdiğini bir cümleyle belirt.",
+     "detail": "Basit bir ifade yeterli: 'Annem fotoğraf çekmeyi çok sever.' gibi."
+    }
+   ],
+   "suggestedMinutes": 10
+  }
+ },
+ {
+  "id": "cc628f9e-1144-5ee0-b860-618ccb5412ed",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "i̇spanya",
+   "sentence": "İspanya'ya ___ hava çok sıcaktı. (git)",
+   "_dedupKey": "ispanya'ya ___ hava cok sıcaktı. (git)",
+   "topicHint": "travel",
+   "instructions": "Fill in the blank with the correct \"when\" clause form of the verb in parentheses.",
+   "correctAnswer": "gittiğimizde",
+   "acceptableAnswers": [
+    "gittiğimde",
+    "gittiğinde",
+    "gittiğinizde",
+    "gittiğinде"
+   ]
+  }
+ },
+ {
+  "id": "cd1a9e82-000b-5ca6-b54d-bd8a64300cff",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Relativiser -ki: forming a pronoun from a genitive phrase",
+   "glossEn": "Your bag is red, mine is blue.",
+   "seedWord": "ki-pronoun-standalone",
+   "sentence": "Senin çantан kırmızı, ___ mavi.",
+   "_dedupKey": "senin cantан kırmızı, ___ mavi.",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct form using -ki.",
+   "correctAnswer": "benimki"
+  }
+ },
+ {
+  "id": "df922224-879c-57d4-9e8c-15b8fbfe9c4d",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "le",
+   "_dedupKey": "she does not read.",
+   "topicHint": "daily routine",
+   "sourceText": "She does not read.",
+   "instructions": "Translate the sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "referenceTranslation": "Okumуyor."
+  }
+ },
+ {
+  "id": "e5152cd3-5ca6-57c3-b724-f88fd34ce9b2",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "cunku-clause-final",
+   "_dedupKey": "i couldn't finish my soup. it was too salty.",
+   "topicHint": "food",
+   "sourceText": "I couldn't finish my soup. It was too salty.",
+   "instructions": "Translate the following two sentences into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Çorbamı bitiremedim. Çok tuzluydu çünkü."
+   ],
+   "referenceTranslation": "Çorbamı bitiреmedim. Çok tuzluydu çünkü."
+  }
+ },
+ {
+  "id": "e521a94f-7af5-5f69-b264-06e51446d86c",
+  "review_status": "rejected",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "erste",
+    "einte",
+    "ersте",
+    "dritte"
+   ],
+   "seedWord": "hund",
+   "sentence": "Heute ist der ___ Januar — mein Hund hat Geburtstag!",
+   "_dedupKey": "heute ist der ___ januar — mein hund hat geburtstag!",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct ordinal number in German.",
+   "correctAnswer": "erste"
+  }
+ },
+ {
+  "id": "e6ca0792-9576-515a-9cfb-b8d6499966f3",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "You are at home and something unexpected happened while you or someone else was doing a household activity (for example: cooking, cleaning, sleeping, watching TV). Describe the situation in one sentence using -(y)ken to show that one action was happening in the background when the other occurred.",
+   "register": "neutral",
+   "seedWord": "yken-verbal-aorist",
+   "_dedupKey": "yemek pisirirken telefon caldı.",
+   "topicHint": "home",
+   "promptMode": "grammar_target",
+   "instructions": "Write one sentence in Turkish using the converb -(y)ken to describe something that happened at home while another action was going on.",
+   "modelAnswers": [
+    "Yemek pişirirken telefon çaldı.",
+    "Annем bulaşıkları yıkarken ben odamı topladım.",
+    "Uyurken kapı çalındı."
+   ],
+   "targetStructure": "Converb -(y)ken (while / when)"
+  }
+ },
+ {
+  "id": "e6f1975b-4c41-520b-9a1f-97778e7d9872",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "sentence_construction",
+   "prompt": "Your manager arranged for the office to be cleaned before an important meeting. Describe what happened to the office using a causative + passive combined voice structure (e.g. a verb where someone caused something to be done, and that action was received — like \"yaptırıldı\").",
+   "register": "neutral",
+   "_dedupKey": "toplantıdan once ofis temizletildi.",
+   "topicHint": "work",
+   "promptMode": "grammar_target",
+   "instructions": "Write one sentence in Turkish using a combined voice (birleşik çatı) structure.",
+   "modelAnswers": [
+    "Toplantıdan önce ofis temizletildi.",
+    "Önemli toplantıdan önce ofis müdür tarafından temizlettirildi.",
+    "Toplantı başlamadan önce masalar düzenlettirилди."
+   ],
+   "targetStructure": "causative + passive (combined voice: birleşik çatı)"
+  }
+ },
+ {
+  "id": "ec113718-1df5-571a-8d0a-cd3686b31adf",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "werner",
+   "_dedupKey": "apparently, i am supposed to wake up early tomorrow.",
+   "topicHint": "daily routine",
+   "sourceText": "Apparently, I am supposed to wake up early tomorrow.",
+   "instructions": "Translate the following sentence into Turkish, using the compound evidential (rivayet) form to express hearsay or reported information.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "acceptableAnswers": [
+    "Yarın erken uyanmalıymışım.",
+    "Ben yarın erken kalkmалıymışım.",
+    "Yarın erken kalmalıymışım.",
+    "Yarın erken kalkmалıymışım."
+   ],
+   "referenceTranslation": "Ben yarın erken uyanmalıymışım."
+  }
+ },
+ {
+  "id": "ec3a1e2a-d9ef-542e-836f-ac0206942137",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "mamak-icin-negative-purpose",
+   "_dedupKey": "i closed the windows so as not to get wet from the rain.",
+   "topicHint": "weather",
+   "sourceText": "I closed the windows so as not to get wet from the rain.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "mamak-icin-negative-purpose",
+   "acceptableAnswers": [
+    "Yağmurda ıslanmamak için pencereleri kapattım.",
+    "Islанmamak için pencereleri kapattım.",
+    "Yağmurdan ıslanmamak için camları kapattım.",
+    "Yağmurda ıslanmamak için camları kapattım."
+   ],
+   "referenceTranslation": "Yağmurdan ıslanmamak için pencereleri kapattım."
+  }
+ },
+ {
+  "id": "ed4c5c96-5880-5d1e-bdfc-6332c21f6087",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "dormir",
+   "subject": {
+    "gloss": "I",
+    "pronoun": "yo"
+   },
+   "features": [
+    {
+     "term": "presente de indicativo",
+     "gloss": "present"
+    }
+   ],
+   "seedWord": "dormir",
+   "_dedupKey": "dormir::duermo::yo",
+   "breakdown": "duerм- (stem with o→ue change) + -o (1sg ending)",
+   "topicHint": "mixed / daily routine",
+   "lemmaGloss": "to sleep",
+   "targetForm": "duermo",
+   "instructions": "Write the correct present indicative form of \"dormir\" for the subject \"yo\".",
+   "featureBundle": "presente de indicativo · 1ª persona del singular",
+   "exampleSentences": [
+    "Yo duermo ocho horas cada noche.",
+    "Normalmente yo duermo tarde los fines de semana."
+   ]
+  }
+ },
+ {
+  "id": "ed82a9cf-7257-5f0b-a262-c157fceb540a",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "context": "Appreciative suffixes: diminutive",
+   "seedWord": "acostarte",
+   "sentence": "Ya es tarde, cariño. ¿Por qué no te das un ___ antes de que llegue tu padre? (siesta)",
+   "_dedupKey": "ya es tarde, carino. ¿por que no te das un ___ antes de que llegue tu padre? (siesta)",
+   "topicHint": "daily routine",
+   "instructions": "Fill in the blank with the correct form of the word in parentheses, using the appropriate appreciative suffix.",
+   "correctAnswer": "siesteciта"
+  }
+ },
+ {
+  "id": "f134d24e-c85a-57a6-be6e-8abab2478d27",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "viel",
+    "viele",
+    "vielen",
+    "vielе"
+   ],
+   "seedWord": "lord",
+   "sentence": "Im Park sehe ich ___ Kinder spielen.",
+   "_dedupKey": "im park sehe ich ___ kinder spielen.",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct form of the quantifier.",
+   "correctAnswer": "viele",
+   "acceptableAnswers": [
+    "alle",
+    "ein paar",
+    "andere",
+    "wenige"
+   ]
+  }
+ },
+ {
+  "id": "f28ef7c1-8887-53b3-9d9f-3ceff4b13e46",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "options": [
+    "Bekannte",
+    "Bekannter",
+    "Bekannten",
+    "Bekanntер"
+   ],
+   "seedWord": "fahrrad",
+   "sentence": "Mein Fahrrad ist kaputt, aber zum Glück hat mir ein ___ geholfen, es zu reparieren. (bekannt)",
+   "_dedupKey": "mein fahrrad ist kaputt, aber zum gluck hat mir ein ___ geholfen, es zu reparieren. (bekannt)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct nominalized adjective form.",
+   "correctAnswer": "Bekannter"
+  }
+ },
+ {
+  "id": "f556bc63-f34d-59db-880f-f70727a0468a",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "conjugation",
+   "lemma": "benzemek",
+   "subject": {
+    "gloss": "they",
+    "pronoun": "onlar"
+   },
+   "features": [
+    {
+     "term": "zorunluluk (zorunda)",
+     "gloss": "obligation"
+    },
+    {
+     "term": "olumsuz",
+     "gloss": "negative"
+    }
+   ],
+   "seedWord": "benzer",
+   "_dedupKey": "benzemek::benzemek zorunda degiller::onlar",
+   "breakdown": "benzе-mek (infinitive) + zorunda (compulsion predicate) + değil-ler (negation copula + 3pl suffix); 3sg variant: zorunda değil (Ø)",
+   "topicHint": "mixed / identity",
+   "lemmaGloss": "to resemble, to look like",
+   "targetForm": "benzemek zorunda değiller",
+   "instructions": "Write the correct negative obligation form of the verb in parentheses for the subject \"onlar\". (benzemek)",
+   "featureBundle": "olumsuz zorunluluk · -mAk zorunda değil · 3. çoğul şahıs",
+   "acceptableForms": [
+    "benzemek zorunda değil"
+   ],
+   "exampleSentences": [
+    "Onlar birbirine benzemek zorunda değiller; herkes farklıdır.",
+    "İkiz kardeşler her şeyde birbirine benzemek zorunda değiller."
+   ]
+  }
+ },
+ {
+  "id": "f9e62fcb-d14f-539f-bd5b-ffc31f0c4f5e",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "scann",
+   "sentence": "Die Noten der von den Lehrern ___ Prüfungen wurden sofort veröffentlicht.",
+   "_dedupKey": "die noten der von den lehrern ___ prufungen wurden sofort veroffentlicht.",
+   "topicHint": "education",
+   "instructions": "Fill in the blank with the correct extended participial attribute (participial phrase used as a pre-nominal modifier).",
+   "correctAnswer": "eingescanntен"
+  }
+ },
+ {
+  "id": "fd32728f-12f6-54f7-86ab-e44bb769aca6",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "seedWord": "sa-da-bile-concessive",
+   "sentence": "Ahmet erken ___ bile, uçağa yetişemez — trafik çok yoğun. (kalk-)",
+   "_dedupKey": "ahmet erken ___ bile, ucaga yetisemez — trafik cok yogun. (kalk-)",
+   "topicHint": "travel",
+   "instructions": "Fill in the blank with the correct conditional form of the verb in parentheses.",
+   "correctAnswer": "kalksа",
+   "realizedVariant": "sa-da-bile-concessive"
+  }
+ },
+ {
+  "id": "fd650f55-43c0-57f5-8516-8a790d945e14",
+  "review_status": "auto-approved",
+  "content_json": {
+   "type": "cloze",
+   "context": "Temporal converbs: -mAdAn önce / -DIktAn sonra",
+   "seedWord": "istem",
+   "sentence": "Siparişi ___ önce fiyatı kontrol et. (isteмek)",
+   "_dedupKey": "siparisi ___ once fiyatı kontrol et. (isteмek)",
+   "topicHint": "mixed",
+   "instructions": "Fill in the blank with the correct temporal converb form of the verb in parentheses.",
+   "correctAnswer": "istemeden"
+  }
+ },
+ {
+  "id": "ffaf4294-78fa-5984-970a-1d78f4d08cad",
+  "review_status": "flagged",
+  "content_json": {
+   "type": "translation",
+   "seedWord": "negation-adverb-daha-henuz",
+   "_dedupKey": "you haven't paid for the items yet.",
+   "topicHint": "shopping",
+   "sourceText": "You haven't paid for the items yet.",
+   "instructions": "Translate the following sentence into Turkish.",
+   "sourceLanguage": "EN",
+   "targetLanguage": "TR",
+   "realizedVariant": "negation-adverb-daha-henuz",
+   "acceptableAnswers": [
+    "Siz ürünleri henüz ödemedинiz.",
+    "Ürünleri daha ödemedинiz.",
+    "Ürünleri henüz ödemedинiz.",
+    "Siz daha ürünleri ödemedинiz.",
+    "Siz henüz ürünleri ödemedинiz."
+   ],
+   "referenceTranslation": "Siz ürünleri daha ödemedинiz."
+  }
+ }
+]
