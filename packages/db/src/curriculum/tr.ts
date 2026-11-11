@@ -267,7 +267,13 @@ const { A1, A2, B1, B2 } = CefrLevel;
 // `2026-11-01`: tr-a1-plural-suffix drops its household and approximation
 // variants; they move, with the recurring-time -lArI, to the new
 // tr-a2-plural-extended-uses. Opens the new point's cells.
-export const CURRICULUM_VERSION_TR = '2026-11-01b';
+//
+// `2026-11-11`: tr-a1-possessive-suffixes documents the optional genitive
+// pronoun and that a single thing owned by an overt plural possessor usually
+// takes 3sg -(s)I (onların kapısı, G&K §14.4 ex. 112-114). The 3pl cloze rows
+// keyed only on -lArI after onların marked the usual form wrong (learner report,
+// 2026-11-11). tr-a1-genitive-possessive gains the plural-possessor example.
+export const CURRICULUM_VERSION_TR = '2026-11-11';
 
 const trCurriculum: readonly GrammarPoint[] = [
   // ---------------------------------------------------------------------------
@@ -1214,6 +1220,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     examplesPositive: [
       'öğretmenin kitabı',
       'Türkiye\'nin başkenti',
+      'çocukların öğretmeni (the children\'s teacher — a plural possessor still takes 3sg -(s)I when one thing is possessed; çocukların öğretmenleri usually means "the children\'s teachers")',
       'Evin kapısı açık. (The door of the house is open — buffer -n- in the genitive, -s- in the 3sg possessive.)',
       'Onun bir kedisi var. (He/She has a cat — the possessive on the head is obligatory in var sentences.)',
       'dergilerin hepsi (all of the magazines — partitives use the same construction: paranın yarısı = half of the money, öğrencilerin çoğu = most of the students)',
@@ -1389,7 +1396,7 @@ const trCurriculum: readonly GrammarPoint[] = [
     kind: 'grammar',
     name: 'Possessive suffixes (İyelik ekleri)',
     description:
-      'Possessive suffixes mark the possessed noun: -(I)m, -(I)n, -(s)I, -(I)mIz, -(I)nIz, -lArI (harmonised). The buffer vowel (I) drops after a vowel (araba-m); 3sg adds -s- after a vowel (kapı-sı).',
+      'Possessive suffixes mark the possessed noun: -(I)m, -(I)n, -(s)I, -(I)mIz, -(I)nIz, -lArI (harmonised). The buffer vowel (I) drops after a vowel (araba-m); 3sg adds -s- after a vowel (kapı-sı). A genitive pronoun (benim, senin, onun, bizim, sizin, onların) is optional, used for emphasis or contrast. After an overt onların, one possessed thing usually takes 3sg -(s)I (onların kapısı); onların kapıları usually means "their doors".',
     cefrLevel: A1,
     language: TR,
     examplesPositive: [
@@ -1399,6 +1406,8 @@ const trCurriculum: readonly GrammarPoint[] = [
       'evimiz (our house)',
       'arabam (my car — vowel-final stem, no buffer vowel: araba + m)',
       'gözüm (my eye — round-vowel stem, suffix harmonises to -üm)',
+      'benim evim / evim (my house — the genitive pronoun is optional; the suffix alone already says "my")',
+      'onların kapısı (their door — after an overt plural genitive, a single possessed thing usually takes 3sg -(s)I; without onların, "their door" is kapıları)',
     ],
     examplesNegative: [
       '*evi (when meaning "my house" — "evi" is 3sg "his/her house"; "my house" is "evim")',
@@ -1409,6 +1418,7 @@ const trCurriculum: readonly GrammarPoint[] = [
       'Dropping the -s- buffer in 3sg after a vowel-final stem (*arabaı instead of arabası).',
       'Marking the possessor instead of the possessed (possessive suffix goes on the possessed noun; the possessor takes the genitive).',
       'Inserting a buffer vowel after a vowel-final stem (*arabaım, *kapıım instead of arabam, kapım — the buffer (I) only appears after consonants).',
+      'Using 3sg -(s)I for "their" when no possessor word is present: kapısı alone means "his/her door"; "their door" without onların is kapıları. With an overt onların both are correct — onların kapısı (their door, the usual form for one thing) and onların kapıları (more often "their doors") — so a blank right after onların must accept both.',
     ],
     prerequisiteKeys: ['tr-a1-vowel-harmony'],
   },
