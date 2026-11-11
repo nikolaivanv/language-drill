@@ -20,6 +20,30 @@ describe('validateProposedWord', () => {
     });
   });
 
+  it('rejects a Cyrillic letter spliced into the example (prod, 2026-11-11)', () => {
+    expect(
+      validateProposedWord({
+        displayForm: 'aile',
+        lemma: 'aile',
+        gloss: 'family',
+        exampleSentence: 'Akşam ailемле televizyon izlerim.',
+        pos: 'noun',
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects an invisible homoglyph in the gloss', () => {
+    expect(
+      validateProposedWord({
+        displayForm: 'aile',
+        lemma: 'aile',
+        gloss: 'fаmily',
+        exampleSentence: 'Akşam ailemle televizyon izlerim.',
+        pos: 'noun',
+      }),
+    ).toBeNull();
+  });
+
   it('rejects a multi-token lemma', () => {
     expect(
       validateProposedWord({

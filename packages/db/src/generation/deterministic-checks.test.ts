@@ -373,3 +373,49 @@ describe('applyDeterministicChecks — missing verb hint', () => {
     ]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Mixed script — a Cyrillic letter spliced into a word (prod, 2026-11-11).
+// Applies to every exercise type, not only cloze.
+// ---------------------------------------------------------------------------
+
+describe('applyDeterministicChecks — mixed script', () => {
+  const translation: ExerciseContent = {
+    type: ExerciseType.TRANSLATION,
+    instructions: 'Translate.',
+    sourceText: 'Is your umbrella in your bag?',
+    sourceLanguage: Language.EN,
+    targetLanguage: Language.TR,
+    referenceTranslation: 'Senin şemsiyен çantanda mı?',
+  };
+
+  it('rejects a non-cloze draft carrying a Cyrillic letter', () => {
+    const out = applyDeterministicChecks(approved(), translation, Language.TR);
+    expect(out).toEqual({
+      reviewStatus: 'rejected',
+      flaggedReasons: [
+        {
+          code: GenerationReasonCode.MixedScript,
+          detail: 'referenceTranslation: şemsiyен',
+        },
+      ],
+    });
+  });
+
+  it('rejects a cloze whose answer holds an invisible homoglyph, ahead of LLM reasons', () => {
+    const llm = { code: GenerationReasonCode.Ambiguous };
+    const out = applyDeterministicChecks(
+      approved([llm]),
+      cloze('Çayımı ___ içiyorum. (süt)', 'sütле'),
+      Language.TR,
+    );
+    expect(out.reviewStatus).toBe('rejected');
+    expect(out.flaggedReasons[0].code).toBe(GenerationReasonCode.MixedScript);
+    expect(out.flaggedReasons[1]).toEqual(llm);
+  });
+
+  it('leaves clean Latin content alone', () => {
+    const clean = { ...translation, referenceTranslation: 'Senin şemsiyen çantanda mı?' };
+    expect(applyDeterministicChecks(approved(), clean, Language.TR)).toEqual(approved());
+  });
+});
