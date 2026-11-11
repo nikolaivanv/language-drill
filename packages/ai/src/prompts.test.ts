@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-08");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-11");
   });
 
   // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the
@@ -272,7 +272,7 @@ describe("vocab_recall citation-form rule (evaluate@2026-10-17a)", () => {
   });
 
   it("pins the evaluator version", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-08");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-11");
   });
 });
 
@@ -281,5 +281,19 @@ describe("corrected-answer rule (evaluate@2026-11-08)", () => {
     expect(EVALUATION_SYSTEM_PROMPT).toContain("**Corrected Answer**");
     expect(EVALUATION_SYSTEM_PROMPT).toContain("never echo an answer you scored down unchanged");
     expect(EVALUATION_SYSTEM_PROMPT).toContain("For a cloze, give only the corrected word(s) for the blank");
+  });
+});
+
+describe("TR possessor agreement (evaluate@2026-11-11)", () => {
+  it("accepts 3sg -(s)I after an overt plural genitive", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("**Possessor agreement.**");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain('"onların kapısı" = "their door"');
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("accept BOTH -(s)I and -lArI");
+  });
+
+  it("keeps -lArI required when no possessor word is present", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain(
+      'Only without an overt possessor does "their X" require -lArI',
+    );
   });
 });

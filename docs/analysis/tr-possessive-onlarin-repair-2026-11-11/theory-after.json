@@ -1,0 +1,1760 @@
+{
+ "id": "tr-a1-possessive-suffixes",
+ "cefr": "A1",
+ "title": "Possessive suffixes (İyelik ekleri)",
+ "subtitle": "Marking ownership directly on the possessed noun",
+ "sections": [
+  {
+   "id": "what-is-it",
+   "title": "what is it?",
+   "body": [
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "A possessive suffix is a short ending attached to a noun to show who owns or is associated with it. Turkish has one suffix for each grammatical person: "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)m"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (my), "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)n"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (your, singular), "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(s)I"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (his/her/its), "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)mIz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (our), "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-(I)nIz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (your, plural/formal), and "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-lArI"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (their). The high vowel I in these suffixes obeys four-way vowel harmony and the A in -lArI two-way harmony (a/e), so the actual vowel used depends on the last vowel of the stem. The suffix is added to the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "possessed noun"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", not to the possessor."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "when-to-use-it",
+   "title": "when to use it",
+   "body": [
+    {
+     "kind": "list",
+     "items": [
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Expressing ownership or belonging."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Use a possessive suffix whenever you want to say that something belongs to a person: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "evim"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (my house), "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kitabın"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (your book)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Body parts and family members."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " They take the same suffixes as any other noun: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "gözüm"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (my eye), "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "annem"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (my mother)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Possessive constructions with a named possessor."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " When the possessor is a noun or pronoun (not just implied), it takes the genitive suffix "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-(n)In"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", and the possessed noun still carries the possessive suffix: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ahmet'in arabası"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (Ahmet's car)."
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "formation",
+   "title": "formation",
+   "body": [
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The buffer vowel "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "(I)"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " in the suffixes below stands for whichever of "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ı, i, u, ü"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " matches the last vowel of the stem. It appears only when the stem ends in a "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "consonant"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". When the stem ends in a "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "vowel"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the buffer vowel is dropped entirely for 1sg, 2sg, 1pl, and 2pl. For 3sg, a "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "buffer consonant -s-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is inserted instead (arabası). The 3pl suffix -lArI begins with a consonant, so it is the same after consonants and vowels (evleri, arabaları)."
+      }
+     ]
+    },
+    {
+     "kind": "conjugation-table",
+     "head": [
+      "person",
+      "suffix (after consonant)",
+      "suffix (after vowel)",
+      "example stem: ev (house)",
+      "example stem: araba (car)"
+     ],
+     "rows": [
+      [
+       "1sg (my)",
+       "-(I)m",
+       "-m",
+       "evim",
+       "arabam"
+      ],
+      [
+       "2sg (your)",
+       "-(I)n",
+       "-n",
+       "evin",
+       "araban"
+      ],
+      [
+       "3sg (his/her/its)",
+       "-I",
+       "-sI",
+       "evi",
+       "arabası"
+      ],
+      [
+       "1pl (our)",
+       "-(I)mIz",
+       "-mIz",
+       "evimiz",
+       "arabamız"
+      ],
+      [
+       "2pl (your, pl.)",
+       "-(I)nIz",
+       "-nIz",
+       "eviniz",
+       "arabanız"
+      ],
+      [
+       "3pl (their)",
+       "-lArI",
+       "-lArI",
+       "evleri",
+       "arabaları"
+      ]
+     ]
+    },
+    {
+     "kind": "callout",
+     "variant": "default",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "strong",
+         "children": [
+          {
+           "kind": "text",
+           "text": "Vowel harmony reminder."
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " The "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "I"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " in each suffix follows the last vowel of the stem: back-unrounded (a, ı) → "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "ı"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "; front-unrounded (e, i) → "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "i"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "; back-rounded (o, u) → "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "u"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": "; front-rounded (ö, ü) → "
+        },
+        {
+         "kind": "mono",
+         "children": [
+          {
+           "kind": "text",
+           "text": "ü"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ". So "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "göz"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (eye) → "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "gözüm"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (my eye)."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "with-a-possessor-word",
+   "title": "with a possessor word (benim, onların…)",
+   "body": [
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "You can name the owner with a genitive pronoun before the noun: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "benim"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "senin"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "onun"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "bizim"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "sizin"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "onların"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The noun still carries its possessive suffix — the pronoun is added, not swapped in."
+      }
+     ]
+    },
+    {
+     "kind": "conjugation-table",
+     "head": [
+      "person",
+      "genitive pronoun",
+      "with ev (house)",
+      "with araba (car)"
+     ],
+     "rows": [
+      [
+       "1sg (my)",
+       "benim",
+       "benim evim",
+       "benim arabam"
+      ],
+      [
+       "2sg (your)",
+       "senin",
+       "senin evin",
+       "senin araban"
+      ],
+      [
+       "3sg (his/her/its)",
+       "onun",
+       "onun evi",
+       "onun arabası"
+      ],
+      [
+       "1pl (our)",
+       "bizim",
+       "bizim evimiz",
+       "bizim arabamız"
+      ],
+      [
+       "2pl (your, pl.)",
+       "sizin",
+       "sizin eviniz",
+       "sizin arabanız"
+      ],
+      [
+       "3pl (their)",
+       "onların",
+       "onların evi",
+       "onların arabası"
+      ]
+     ]
+    },
+    {
+     "kind": "list",
+     "items": [
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "The pronoun is usually left out."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The suffix already tells you who the owner is, so "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Evim büyük."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (My house is big.) is the normal sentence. Add the pronoun for emphasis or contrast: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Benim evim büyük, senin evin küçük."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (My house is big, your house is small.)"
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "“Their” has two patterns."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " With no possessor word, “their” needs "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-lArI"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ": "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kapıları"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " = their door (or their doors). When "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "onların"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " comes first, the plural is already shown, so one possessed thing usually takes the 3sg suffix "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-(s)I"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ": "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "onların kapısı"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (their door). "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Onların kapıları"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is also correct, but it is usually understood as “their doors”."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "The same goes for any plural possessor."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Çocukların öğretmeni"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " = the children’s teacher; "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "çocukların öğretmenleri"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " usually means the children’s teachers."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "kind": "callout",
+     "variant": "default",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "strong",
+         "children": [
+          {
+           "kind": "text",
+           "text": "Keep the suffix."
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " In standard Turkish the noun keeps its suffix after the pronoun: "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "benim evim"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "bizim evimiz"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ". In casual speech you will also hear "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "bizim ev"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " (our house), especially with "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "benim"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "senin"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "bizim"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": " and "
+        },
+        {
+         "kind": "em",
+         "children": [
+          {
+           "kind": "text",
+           "text": "sizin"
+          }
+         ]
+        },
+        {
+         "kind": "text",
+         "text": ", but learn the full form first."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "examples-in-context",
+   "title": "examples in context",
+   "body": [
+    {
+     "kind": "example",
+     "en": "This is my house.",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Bu "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "evim"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Consonant-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ev"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + 1sg suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-im"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (front-unrounded harmony)."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "Where is your book?",
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Kitabın"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " nerede?"
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Consonant-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kitap"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " undergoes consonant mutation to "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kitab-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " before a vowel suffix, then 2sg "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-ın"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is added."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "Ahmet's car is big.",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Ahmet'in "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "arabası"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " büyük."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Vowel-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "araba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + 3sg suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-sı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (buffer consonant -s- required after a vowel)."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "Our house is small.",
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Evimiz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " küçük."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Consonant-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ev"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + 1pl suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-imiz"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "My school is close.",
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Okulum"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " yakın."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Consonant-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "okul"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + 1sg suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-um"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (back-rounded harmony: o/u → u)."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "My car is here.",
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Arabam"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " burada."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "Vowel-final stem "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "araba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " + 1sg suffix "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-m"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — no buffer vowel after a vowel-final stem."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "en": "Their door is very beautiful.",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Onların "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kapısı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " çok güzel."
+      }
+     ],
+     "note": [
+      {
+       "kind": "text",
+       "text": "The plural possessor "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "onların"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is written out, so one door takes 3sg "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-sı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Without "
+      },
+      {
+       "kind": "mono",
+       "children": [
+        {
+         "kind": "text",
+         "text": "onların"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " you would say "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Kapıları çok güzel."
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "common-pitfalls",
+   "title": "common pitfalls",
+   "body": [
+    {
+     "kind": "list",
+     "items": [
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Confusing 1sg -(I)m with 3sg -(s)I."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Evim"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " means «my house»; "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "evi"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " means «his/her house». The 3sg suffix on a consonant-final stem is just "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-I"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (no leading consonant), so it is shorter than the 1sg form. Keep the two distinct."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Dropping the -s- buffer in 3sg after a vowel-final stem."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The 3sg suffix after a vowel is "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-sI"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", not "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "-I"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ". Writing "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "*arabaı"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is incorrect; the correct form is "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "arabası"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ". The buffer consonant -s- prevents two vowels from colliding."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Putting the possessive suffix on the possessor instead of the possessed noun."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " In Turkish, the possessor takes the "
+         },
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "genitive suffix"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " and the possessed noun takes the "
+         },
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "possessive suffix"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ". "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ahmet'in arabası"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is correct (genitive on Ahmet, possessive on araba), not "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "*Ahmet'im araba"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Inserting a buffer vowel after a vowel-final stem."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The buffer vowel "
+         },
+         {
+          "kind": "mono",
+          "children": [
+           {
+            "kind": "text",
+            "text": "(I)"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " only appears after consonant-final stems. After a vowel-final stem, it is dropped. "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "*Arabaım"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " and "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "*kapıım"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " are both wrong; the correct forms are "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "arabam"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " and "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kapım"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Mixing up the two “their” patterns."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " After "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "onların"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kapısı"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (their door) is correct and is the usual form for one thing. Without "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "onların"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", though, "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kapısı"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " means «his/her door» — for «their door» use "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "kapıları"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -96,7 +96,12 @@ const CEFR_DESCRIPTOR_BULLETS = (
 // Langfuse push). The curated pool now includes verbs, adjectives and fixed
 // expressions; the right word in a non-citation form scores 0.8 with a minor
 // error, mirroring the 0.8 missing-article rule from evaluate@2026-10-17.
-export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-11-08";
+// 2026-11-11: TR possessor agreement. An overt plural genitive (onların,
+// çocukların) normally takes 3sg -(s)I on a single possessed noun (G&K §14.4
+// ex. 112-114). A cloze keyed "Onların ___ (kapı)" → kapıları scored the
+// learner's "kapısı" 0.2 as an agreement error. SYSTEM-prompt edit — needs a
+// Langfuse push per env.
+export const EVALUATION_SYSTEM_PROMPT_VERSION = "evaluate@2026-11-11";
 
 export const EVALUATION_SYSTEM_PROMPT = `You are an expert language evaluator for a language-learning application. Your role is to evaluate user answers to language exercises with precision and pedagogical insight.
 
@@ -137,6 +142,7 @@ ${CEFR_DESCRIPTOR_BULLETS}
 - Evaluate the 2-way (e/a) low-vowel pattern (e.g. plural -lAr/-lEr, locative -DA) and the 4-way (i/ı/u/ü) high-vowel pattern (e.g. accusative -(y)I, possessive -(s)I), agglutinative suffix ordering, case suffixes, and verb conjugation.
 - Pay attention to definite vs indefinite object marking (accusative case).
 - Buffer consonants (-y-, -n-, -s-) and consonant mutations are important.
+- **Possessor agreement.** A genitive pronoun before a possessed noun (benim, senin, onun, bizim, sizin, onların) is optional: "evim" and "benim evim" are both correct. When the possessor is an overt PLURAL genitive (onların, çocukların, komşuların), a single possessed thing normally takes the 3rd person SINGULAR suffix -(s)I — "onların kapısı" = "their door", "çocukların öğretmeni" = "the children's teacher". This is correct standard Turkish, NOT an agreement error, and it matches a singular meaning such as "Their door". "Onların kapıları" is also grammatical (usually read as "their doors"). So after an overt plural genitive accept BOTH -(s)I and -lArI, even when the expected answer shows only one of them. Only without an overt possessor does "their X" require -lArI (kapısı alone = "his/her door").
 
 ## Instructions
 
