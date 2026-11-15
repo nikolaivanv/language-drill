@@ -1,0 +1,1897 @@
+{
+ "id": "tr-a1-questions",
+ "cefr": "A1",
+ "title": "Question formation",
+ "sections": [
+  {
+   "id": "what-is-it",
+   "body": [
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Turkish has two question types. Yes/no questions are formed with the clitic "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı / mi / mu / mü"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", which is written as a separate word and must harmonise with the last vowel of the word before it. The clitic follows the focused word — usually the predicate — and carries the person ending in nominal and present-tense predicates (except 3rd-person plural -lAr, which stays before mI: geliyorlar mı?). In the past tense with "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-dı/-di/-du/-dü"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the person ending stays on the verb and "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is left bare. Content (WH) questions use question words such as "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ne, nerede, kim, nasıl"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " in place of the unknown element; these words normally stand in the same position the answer word would occupy, rather than being moved to the front the way English WH-words are. When nothing else comes before it, the WH-word is simply first: Nerede oturuyorsun?"
+      },
+      {
+       "kind": "text",
+       "text": " Two more patterns build on mI. In an "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "either/or question"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " mI follows each option, and the options can be joined by "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yoksa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ('or'): Otobüse mi biniyorsun, yoksa trene mi? And the invariable word "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "acaba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ('I wonder') can be added to any question, yes/no or WH, to make it sound tentative or curious."
+      }
+     ]
+    }
+   ],
+   "title": "what is it?"
+  },
+  {
+   "id": "when-to-use-it",
+   "body": [
+    {
+     "kind": "list",
+     "items": [
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Yes/no questions — nominal predicate."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Use mI after a noun or adjective predicate when asking whether someone or something belongs to a category. The person ending moves from the predicate onto mI (3rd-person plural -lAr stays: öğrenciler mi?)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Yes/no questions — present tense."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Use mI after the present-tense verb stem + tense suffix. The person ending attaches to mI, not to the verb — except 3rd-person plural -lAr, which stays on the verb (geliyorlar mı?)."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Yes/no questions — past tense (-dı)."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The person ending stays on the verb. mI follows the fully inflected verb and carries no extra ending."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Yes/no questions — existence (var/yok)."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Place mI directly after "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "var"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " or "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "yok"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " to ask whether something exists or is available."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Content (WH) questions."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Replace the unknown element with the appropriate question word. No mI clitic is used. The question word occupies the same slot as the answer would."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Focus questions — mI after another word."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " mI can also follow another word in the sentence (a person, a place, a time) instead of the verb. Then only that word is questioned, and the rest is taken for granted: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ankara'ya mı gidiyorsun?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " ('Is it to Ankara that you're going?'). The focused word normally sits just before the verb. Here mI stays bare: the person ending remains on the verb, in every tense."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Either/or (alternative) questions."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " To offer a choice, put mI after each option. "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "yoksa"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " ('or') between them is optional: "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Çay mı kahve mi istiyorsun?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " / "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Çay mı istiyorsun, yoksa kahve mi?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The options can also be a predicate and its negative, to mean 'or not': "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Geliyor musun, gelmiyor musun?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Var mı, yok mu?"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "acaba — 'I wonder'."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Add "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "acaba"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " to a yes/no or WH question to show doubt or curiosity. It usually stands at the start or the end of the sentence. It never changes form, and it does not replace mI: a yes/no question keeps its mI ("
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Acaba otobüs geç mi?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "), and a WH question still has none ("
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ali nerede acaba?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ")."
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   ],
+   "title": "when to use it"
+  },
+  {
+   "id": "formation",
+   "body": [
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "The form of mI is determined by four-way vowel harmony based on the last vowel of the preceding word."
+      }
+     ]
+    },
+    {
+     "head": [
+      "last vowel in preceding word",
+      "clitic form"
+     ],
+     "kind": "conjugation-table",
+     "rows": [
+      [
+       "a, ı",
+       "mı"
+      ],
+      [
+       "e, i",
+       "mi"
+      ],
+      [
+       "o, u",
+       "mu"
+      ],
+      [
+       "ö, ü",
+       "mü"
+      ]
+     ]
+    },
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "For yes/no questions, the person endings that normally attach to the predicate are instead attached to mI; only 3rd-person plural -lAr stays on the predicate. Because mI ends in a vowel, a buffer "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-y-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " comes before the vowel-initial endings -Im and -Iz: mi-y-im, mu-y-uz. The table below shows the pattern for a nominal predicate and for the present-continuous tense."
+      }
+     ]
+    },
+    {
+     "head": [
+      "person",
+      "nominal predicate (öğrenci — student)",
+      "present continuous (geliyor — is coming)"
+     ],
+     "kind": "conjugation-table",
+     "rows": [
+      [
+       "ben (I)",
+       "öğrenci miyim?",
+       "geliyor muyum?"
+      ],
+      [
+       "sen (you, sg.)",
+       "öğrenci misin?",
+       "geliyor musun?"
+      ],
+      [
+       "o (he/she/it)",
+       "öğrenci mi?",
+       "geliyor mu?"
+      ],
+      [
+       "biz (we)",
+       "öğrenci miyiz?",
+       "geliyor muyuz?"
+      ],
+      [
+       "siz (you, pl.)",
+       "öğrenci misiniz?",
+       "geliyor musunuz?"
+      ],
+      [
+       "onlar (they)",
+       "öğrenciler mi?",
+       "geliyorlar mı?"
+      ]
+     ]
+    },
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "In the "
+      },
+      {
+       "kind": "strong",
+       "children": [
+        {
+         "kind": "text",
+         "text": "-dı past"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", the person ending remains on the verb. mI follows as a bare clitic with no ending."
+      }
+     ]
+    },
+    {
+     "head": [
+      "person",
+      "-dı past question (git — to go)"
+     ],
+     "kind": "conjugation-table",
+     "rows": [
+      [
+       "ben",
+       "gittim mi?"
+      ],
+      [
+       "sen",
+       "gittin mi?"
+      ],
+      [
+       "o",
+       "gitti mi?"
+      ],
+      [
+       "biz",
+       "gittik mi?"
+      ],
+      [
+       "siz",
+       "gittiniz mi?"
+      ],
+      [
+       "onlar",
+       "gittiler mi?"
+      ]
+     ]
+    },
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Common WH-words at A1. The answer slot is taken by the WH-word, so the verb keeps its normal person ending and no mI is added. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nere-"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " ('where') normally carries a case ending: nerede (at), nereye (to), nereden (from)."
+      }
+     ]
+    },
+    {
+     "kind": "conjugation-table",
+     "head": [
+      "question word",
+      "meaning",
+      "example"
+     ],
+     "rows": [
+      [
+       "ne",
+       "what",
+       "Bu ne?"
+      ],
+      [
+       "kim",
+       "who",
+       "Bu kim?"
+      ],
+      [
+       "nerede",
+       "where (at)",
+       "Ali nerede?"
+      ],
+      [
+       "nereye",
+       "where (to)",
+       "Nereye gidiyorsun?"
+      ],
+      [
+       "nereden",
+       "where (from)",
+       "Nereden geliyorsun?"
+      ],
+      [
+       "ne zaman",
+       "when",
+       "Ne zaman geliyorsun?"
+      ],
+      [
+       "nasıl",
+       "how",
+       "Bugün hava nasıl?"
+      ],
+      [
+       "neden / niye / niçin",
+       "why",
+       "Neden gülüyorsun?"
+      ],
+      [
+       "hangi",
+       "which",
+       "Hangi kitabı okuyorsun?"
+      ],
+      [
+       "kaç",
+       "how many (+ singular noun, often with tane); what time (saat kaç)",
+       "Kaç kardeşin var?"
+      ],
+      [
+       "ne kadar",
+       "how much",
+       "Bu çanta ne kadar?"
+      ]
+     ]
+    },
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "Where mI goes decides where the person ending goes. When mI follows the predicate, the ending moves onto mI (also in other tenses you will meet later: gelir misin?, gelecek misin?), except in the -dı past and with 3rd-person plural -lAr. When mI follows any other word (a focused word, or an option in an either/or question), mI is bare and the verb keeps its ending. mI always harmonises with the word right before it."
+      }
+     ]
+    },
+    {
+     "kind": "conjugation-table",
+     "head": [
+      "mI follows…",
+      "example",
+      "person ending"
+     ],
+     "rows": [
+      [
+       "the predicate (present)",
+       "Ankara'ya gidiyor musun?",
+       "on mI (mu-sun)"
+      ],
+      [
+       "the predicate (-dı past)",
+       "Ankara'ya gittin mi?",
+       "on the verb (gitti-n)"
+      ],
+      [
+       "a focused word (a → mı)",
+       "Ankara'ya mı gidiyorsun?",
+       "on the verb (gidiyor-sun)"
+      ],
+      [
+       "a focused word (e → mi)",
+       "Otobüse mi biniyorsun?",
+       "on the verb"
+      ],
+      [
+       "a focused word (u → mu)",
+       "Okulu mu seviyorsun?",
+       "on the verb"
+      ],
+      [
+       "a focused word (ü → mü)",
+       "Bugün mü geliyorsun?",
+       "on the verb"
+      ],
+      [
+       "a focused subject (past)",
+       "Sen mi yaptın?",
+       "on the verb (yaptı-n)"
+      ],
+      [
+       "each option (either/or)",
+       "Ankara'ya mı İstanbul'a mı gidiyorsun?",
+       "on the verb"
+      ]
+     ]
+    },
+    {
+     "kind": "paragraph",
+     "text": [
+      {
+       "kind": "text",
+       "text": "In an either/or question, the shared verb is usually said once: after the first option ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Otobüse mi biniyorsun, yoksa trene mi?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ") or after the last one ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Otobüse mi trene mi biniyorsun?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "). When the options are the predicate itself, each one is a complete yes/no question and follows the normal rules: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Geliyor musun, gelmiyor musun?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (ending on mI), "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Geldin mi, gelmedin mi?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " (ending on the verb)."
+      }
+     ]
+    }
+   ],
+   "title": "formation"
+  },
+  {
+   "id": "examples-in-context",
+   "body": [
+    {
+     "en": "Are you coming?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Present continuous yes/no question. The last vowel of "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "geliyor"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is o, so the clitic is "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mu"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; the 2sg ending -sun attaches to it."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Geliyor "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "musun"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ]
+    },
+    {
+     "en": "Are you a student?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Nominal predicate question. The person ending -sin moves off the noun and onto "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". Saying "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "öğrencisin mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is a common learner error."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Sen öğrenci "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "misin"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ]
+    },
+    {
+     "en": "Did you go to the cinema yesterday?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Past tense question. The -n person ending stays on the verb "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "gittin"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "; "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is bare."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Dün sinemaya gittin "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ]
+    },
+    {
+     "en": "Is there milk at home?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Existence question with "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "var"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". The last vowel of "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "var"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " is a, so the clitic is "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ". No person ending is added."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Evde süt var "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ]
+    },
+    {
+     "en": "What is this?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Content question. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ne"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " replaces the predicate; no mI clitic is used."
+      }
+     ],
+     "target": [
+      {
+       "kind": "text",
+       "text": "Bu "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "ne"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ]
+    },
+    {
+     "en": "Where do you live?",
+     "kind": "example",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Content question. "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Nerede"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " sits in the position an answer like "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "İstanbul'da"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " would occupy — directly before the verb. Here that is also the start of the sentence, because nothing else precedes it."
+      }
+     ],
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Nerede"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " oturuyorsun?"
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Otobüse "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " biniyorsun, yoksa trene "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ],
+     "en": "Are you taking the bus or the train?",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Either/or question. mI follows each option ("
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "otobüse"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → mi, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "trene"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → mi), and "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yoksa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " joins them. The verb is said only once and keeps its ending -sun, because mI is not on the predicate."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Çay "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " kahve "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " istiyorsun?"
+      }
+     ],
+     "en": "Do you want tea or coffee?",
+     "note": [
+      {
+       "kind": "text",
+       "text": "The same pattern without "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yoksa"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", with the verb after the last option. Each mI harmonises with its own word: "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "çay"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → mı, "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "kahve"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " → mi."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Geliyor "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "musun"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", gelmiyor "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "musun"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ],
+     "en": "Are you coming or not?",
+     "note": [
+      {
+       "kind": "text",
+       "text": "The two options are the predicate and its negative, so each is a full present-tense yes/no question with the ending on mI."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Ankara'ya "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mı"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " gidiyorsun?"
+      }
+     ],
+     "en": "Is it to Ankara that you're going?",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Focus question. mI follows "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ankara'ya"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": ", which sits just before the verb. The speaker already knows you are going somewhere and asks only about the destination. Compare "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Ankara'ya gidiyor musun?"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " — a plain question about the whole sentence, with the ending on mI."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Sen "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "mi"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " yaptın?"
+      }
+     ],
+     "en": "Was it you who did it?",
+     "note": [
+      {
+       "kind": "text",
+       "text": "Focus on the subject. mI is bare and the person ending stays on the verb "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "yaptın"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Acaba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " otobüs geç mi?"
+      }
+     ],
+     "en": "I wonder if the bus is late.",
+     "note": [
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Acaba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " at the start of a yes/no question. The question still needs mI after "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "geç"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "."
+      }
+     ]
+    },
+    {
+     "kind": "example",
+     "target": [
+      {
+       "kind": "text",
+       "text": "Ali nerede "
+      },
+      {
+       "kind": "hilite",
+       "children": [
+        {
+         "kind": "text",
+         "text": "acaba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": "?"
+      }
+     ],
+     "en": "I wonder where Ali is.",
+     "note": [
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "Acaba"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " at the end of a WH question. There is still no mI, because "
+      },
+      {
+       "kind": "em",
+       "children": [
+        {
+         "kind": "text",
+         "text": "nerede"
+        }
+       ]
+      },
+      {
+       "kind": "text",
+       "text": " already makes it a question."
+      }
+     ]
+    }
+   ],
+   "title": "examples in context"
+  },
+  {
+   "id": "common-pitfalls",
+   "body": [
+    {
+     "kind": "list",
+     "items": [
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Keeping the person ending on the predicate."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " In nominal and present-tense yes/no questions the person ending must move to mI. "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "öğrencisin mi"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is wrong; the correct form is "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "öğrenci misin"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Wrong vowel harmony on mI."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " The clitic must match the last vowel of the preceding word. After "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "geliyor"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (last vowel o) the clitic is "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "mu"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", not "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "mi"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ". Check the last vowel every time."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Fronting WH-words English-style."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Turkish does not need to move question words to the front: they stand where the answer would stand, usually right before the verb. Say "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ahmet nerede oturuyor?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " (Where does Ahmet live?), just like the answer "
+         },
+         {
+          "kind": "em",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ahmet İstanbul'da oturuyor."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " When nothing else comes before it, the WH-word is simply first, as in "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Nerede oturuyorsun?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Applying the present-tense pattern to the -dı past."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " In the past tense the person ending stays on the verb. "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "geldi misin"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is wrong; the correct form is "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "geldin mi"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ". The mI clitic in past-tense questions carries no person ending."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Putting the person ending on a focus or either/or mI."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " When mI follows a word other than the predicate, it takes no ending. "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ankara'ya mısın gidiyor?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is wrong; the correct form is "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Ankara'ya mı gidiyorsun?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Dropping the second mI in an either/or question."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " Every option needs its own mI. "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Otobüse mi biniyorsun, yoksa tren?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " is wrong; say "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Otobüse mi biniyorsun, yoksa trene mi?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": "."
+         }
+        ]
+       }
+      ],
+      [
+       {
+        "kind": "paragraph",
+        "text": [
+         {
+          "kind": "strong",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Leaving out mI after acaba."
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " acaba adds 'I wonder', but in standard Turkish a yes/no question with acaba still takes mI. Write "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Acaba otobüs geç mi?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": ", not "
+         },
+         {
+          "kind": "hilite",
+          "children": [
+           {
+            "kind": "text",
+            "text": "Acaba otobüs geç?"
+           }
+          ]
+         },
+         {
+          "kind": "text",
+          "text": " acaba itself never changes form."
+         }
+        ]
+       }
+      ]
+     ]
+    },
+    {
+     "kind": "callout",
+     "variant": "warn",
+     "children": [
+      {
+       "kind": "paragraph",
+       "text": [
+        {
+         "kind": "text",
+         "text": "A quick rule of thumb: when mI follows the predicate, the person ending goes on mI (öğrenci misin?, geliyor musun?), except in the -dı past (gittin mi?) and with 3rd-person plural -lAr, which comes before mI (geliyorlar mı?). When mI follows any other word, the verb keeps its own ending and mI is bare (Ankara'ya mı gidiyorsun?)."
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "title": "common pitfalls"
+  }
+ ],
+ "subtitle": "mı, WH-words, either/or questions and acaba"
+}
