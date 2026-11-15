@@ -17,7 +17,14 @@ import { buildRankContext } from '../lib/mastery/rank-context';
 import { effectiveGrammarPointKeySql } from '../lib/errors/effective-point';
 import { computeSkillMovements, type SkillHistoryRow } from '../lib/debrief/skill-movements.js';
 import { db } from '../db';
-import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy, scoringEvidenceFilter } from '../lib/exercise-filters';
+import {
+  approvedStatusFilter,
+  audioReadyFilter,
+  freshFirstOrderBy,
+  inCurriculumFilter,
+  inCurriculumSql,
+  scoringEvidenceFilter,
+} from '../lib/exercise-filters';
 import { mergeSessionRows } from '../lib/session-selection';
 import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import { presignAudioUrl } from '../lib/audio-url';
@@ -185,6 +192,9 @@ sessions.post('/sessions', async (c) => {
     eq(exercisesTable.difficulty, difficulty),
     approvedStatusFilter(exercisesTable),
     audioReadyFilter(exercisesTable),
+    // Rows of a point removed from the curriculum must not leak in, including
+    // through the top-up pull that fills a short targeted pool.
+    inCurriculumFilter(exercisesTable),
     ...(exerciseType ? [eq(exercisesTable.type, exerciseType)] : []),
   ];
 
@@ -858,6 +868,9 @@ async function sampleFreshPool(params: {
          -- dictation isn't in V1_PLAN_SHAPE today, but the gate must hold if it
          -- is ever added. Mirrors lib/exercise-filters.ts audioReadyFilter.
          AND (type <> 'dictation' OR audio_s3_key IS NOT NULL)
+         -- Skip rows whose grammar point was removed from the curriculum
+         -- (see inCurriculumFilter in lib/exercise-filters.ts).
+         AND ${inCurriculumSql('grammar_point_key')}
        ORDER BY ${freshFirstOrderBy(userId)}
        LIMIT ${OVERFETCH_PER_TYPE})
     `,

@@ -1,0 +1,6456 @@
+{
+ "decisions": [
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "alt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-family-people"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "billig",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "groß",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-family-people"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "kalt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "krank",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-health-body"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "leicht",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "nah",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-city-transport"
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "schwer",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-describing-words",
+   "word": "süß",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-cooking-restaurants"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "bezahlen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "einkaufen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "essen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-food-drink"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "fahren",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-city-transport"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "kochen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-free-time"
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "lesen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "regnen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-everyday-verbs",
+   "word": "schlafen",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "chef",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-work-school"
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "cousin",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "cousine",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "enkel",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "enkelkind",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "jüngere bruder",
+   "rows": 1,
+   "action": "demote",
+   "why": "inflected phrase, not a lexeme"
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "lehrer",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-work-school"
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "lehrerin",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-work-school"
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "oma",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-family-people",
+   "word": "opa",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-food-drink",
+   "word": "apfel",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-food-drink",
+   "word": "kalt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "de-a1-vocab-home-objects",
+   "word": "schreibtisch",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-housing-vocab"
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "freitag",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "herbst",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "mittag",
+   "rows": 1,
+   "action": "reapprove",
+   "why": "rejected target here but approved nowhere; core word for topic"
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "montag",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "sonntag",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a1-vocab-time-calendar",
+   "word": "winter",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "de-a2-housing-vocab",
+   "word": "badezimmer",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-housing-vocab",
+   "word": "küche",
+   "rows": 2,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-housing-vocab",
+   "word": "kühlschrank",
+   "rows": 3,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-housing-vocab",
+   "word": "schlafzimmer",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-housing-vocab",
+   "word": "wohnung",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-vocab-cooking-restaurants",
+   "word": "kochen",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-free-time"
+  },
+  {
+   "topic": "de-a2-vocab-cooking-restaurants",
+   "word": "rechnung",
+   "rows": 5,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-money-consumers"
+  },
+  {
+   "topic": "de-a2-vocab-health-body",
+   "word": "hand",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-movement-change-verbs",
+   "word": "sich erholen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-travel-tourism"
+  },
+  {
+   "topic": "de-a2-vocab-movement-change-verbs",
+   "word": "zurückgehen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-technology-communication",
+   "word": "anrufen",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-technology-communication",
+   "word": "herunterladen",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-technology-communication",
+   "word": "überweisen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-money-consumers"
+  },
+  {
+   "topic": "de-a2-vocab-time-daily-routine",
+   "word": "aufräumen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-time-daily-routine",
+   "word": "den tisch decken",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-time-daily-routine",
+   "word": "feierabend",
+   "rows": 5,
+   "action": "leave",
+   "why": "approved in de-b2-vocab-work-professional"
+  },
+  {
+   "topic": "de-a2-vocab-time-daily-routine",
+   "word": "sich anziehen",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "markt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "regen",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "reisebüro",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "wanderweg",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "zug",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "arbeitsplatz",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "arzt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-health-body"
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "fahrer",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "küche",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a1-vocab-home-objects"
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "schule",
+   "rows": 3,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-a2-vocab-work-school",
+   "word": "verkäufer",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "arbeitsbedingungen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "bildung",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "biologisch",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "co2-fußabdruck",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "defizit",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "energieverbrauch",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "erderwärmung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "erneuerbare energie",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "gehalt",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-education-career"
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "generation",
+   "rows": 1,
+   "action": "demote-quality",
+   "why": "prompt defines parents generation, not Generation"
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "gesundheitssystem",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "gesundheitswesen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "handel",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "konsum",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "landwirtschaft",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "luftverschmutzung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "massenproduktion",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "medien",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in de-b2-vocab-society-politics"
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "nachhaltig",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b2-vocab-economy-business"
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "naturschutz",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "schulden",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-money-consumers"
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "schulpflicht",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "tourismus",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "urbanisierung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "verkehrsnetz",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "öffentliche nahverkehr",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "ökotourismus",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-environment-vocab",
+   "word": "überalterung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-education-career",
+   "word": "führerschein",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-education-career",
+   "word": "zertifikat",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-emotions-relationships",
+   "word": "heimweh",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-health-lifestyle",
+   "word": "sich bewegen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-movement-change-verbs"
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "artikel",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "meldung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "nachrichtensendung",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "podcast",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "wettervorhersage",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-media-news",
+   "word": "zeitschrift",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-money-consumers",
+   "word": "sparen",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-environment-vocab"
+  },
+  {
+   "topic": "de-b1-vocab-prepositional-verbs",
+   "word": "aufkommen für",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-prepositional-verbs",
+   "word": "sich bewerben um",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-prepositional-verbs",
+   "word": "teilnehmen an",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b1-vocab-travel-tourism",
+   "word": "unterkunft",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in de-a2-vocab-travel-nature"
+  },
+  {
+   "topic": "de-b2-vocab-collocations-idioms",
+   "word": "einen kredit aufnehmen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-collocations-idioms",
+   "word": "prüfung ablegen",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-law-justice",
+   "word": "anzeigen",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-science-technology",
+   "word": "analyse",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b2-academic-noun-vocab"
+  },
+  {
+   "topic": "de-b2-vocab-science-technology",
+   "word": "onlinezahlung",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-science-technology",
+   "word": "router",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-science-technology",
+   "word": "wetterprognose",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "botschaft",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "bundestag",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "gesundheitssystem",
+   "rows": 1,
+   "action": "leave",
+   "why": "Gesundheitssystem homed in de-b1-environment"
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "politik",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in de-b1-vocab-opinions-society"
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "regierung",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "umweltpolitik",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "verbraucherschutz",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-society-politics",
+   "word": "wahlrecht",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-work-professional",
+   "word": "arbeitsvertrag",
+   "rows": 5,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-work-professional",
+   "word": "arbeitszeugnis",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-work-professional",
+   "word": "kündigungsschreiben",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "de-b2-vocab-work-professional",
+   "word": "mietvertrag",
+   "rows": 1,
+   "action": "demote",
+   "why": "housing word in work topic"
+  },
+  {
+   "topic": "de-b2-vocab-work-professional",
+   "word": "urlaubsantrag",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "apartamento",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "centro comercial",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "cibercafé",
+   "rows": 1,
+   "action": "demote",
+   "why": "dated/rare"
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "cine",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-free-time"
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "colegio",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "consultorio",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "correo",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "estación de autobuses",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "estadio",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "panadería",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-a1-vocab-city-places",
+   "word": "parada",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-describing-words",
+   "word": "dulce",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-food-drink"
+  },
+  {
+   "topic": "es-a1-vocab-describing-words",
+   "word": "enfermo",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-health-body"
+  },
+  {
+   "topic": "es-a1-vocab-describing-words",
+   "word": "frío",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "es-a1-vocab-describing-words",
+   "word": "nuevo",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-home-objects"
+  },
+  {
+   "topic": "es-a1-vocab-describing-words",
+   "word": "trabajador",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "comer",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-food-drink"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "comprar",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "dormir",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in es-b1-vocab-health-lifestyle"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "estudiar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-work-school"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "llover",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-weather-clothing,es-a2-vocab-travel-nature"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "mirar",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "nadar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-free-time"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "pagar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "trabajar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-work-school"
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "usar",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-everyday-verbs",
+   "word": "viajar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-travel-nature"
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "esposa",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "esposo",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "hermano mayor",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "hermano menor",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "médico",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-health-body"
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "nieto",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "sobrina",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-family-people",
+   "word": "sobrino",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-free-time",
+   "word": "comprar",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-a1-vocab-greetings-phrases",
+   "word": "buen viaje",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-greetings-phrases",
+   "word": "mucha suerte",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-greetings-phrases",
+   "word": "salud",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-b1-environment-vocab"
+  },
+  {
+   "topic": "es-a1-vocab-home-objects",
+   "word": "escritorio",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-home-objects",
+   "word": "frigorífico",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-home-objects",
+   "word": "pupitre",
+   "rows": 1,
+   "action": "demote",
+   "why": "classroom desk, not home"
+  },
+  {
+   "topic": "es-a1-vocab-home-objects",
+   "word": "sillón",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-home-objects",
+   "word": "televisor",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a1-vocab-time-calendar",
+   "word": "lunes",
+   "rows": 5,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "es-a1-vocab-time-calendar",
+   "word": "otoño",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "es-a1-vocab-time-calendar",
+   "word": "viernes",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "es-a2-vocab-movement-change-verbs",
+   "word": "devolver",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-a2-vocab-movement-change-verbs",
+   "word": "llegar",
+   "rows": 5,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a2-vocab-movement-change-verbs",
+   "word": "salir",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-everyday-verbs"
+  },
+  {
+   "topic": "es-a2-vocab-time-daily-routine",
+   "word": "desayuno",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "es-a2-vocab-time-daily-routine",
+   "word": "madrugada",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a2-vocab-time-daily-routine",
+   "word": "todos los días",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-time-frequency-adverbs"
+  },
+  {
+   "topic": "es-a2-vocab-time-frequency-adverbs",
+   "word": "siempre",
+   "rows": 4,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "es-a2-vocab-travel-nature",
+   "word": "cascada",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a2-vocab-travel-nature",
+   "word": "llanura",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a2-vocab-travel-nature",
+   "word": "océano",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-a2-vocab-travel-nature",
+   "word": "restaurante",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a1-vocab-city-places"
+  },
+  {
+   "topic": "es-a2-vocab-work-school",
+   "word": "colegio",
+   "rows": 2,
+   "action": "leave",
+   "why": "colegio homed in es-a1-city-places"
+  },
+  {
+   "topic": "es-a2-vocab-work-school",
+   "word": "enfermero",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "atmósfera",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "balanza comercial",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "biodiversidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "calentamiento global",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "cambio",
+   "rows": 1,
+   "action": "demote-quality",
+   "why": "prompt defines climate change; answer cambio is a fragment"
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "cambio climático",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "capa de ozono",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "comercio",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "conservación",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "contaminación ambiental",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "contaminación atmosférica",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "contaminantes",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "deforestación",
+   "rows": 7,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "desertificación",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "educación",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "efecto invernadero",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "emisiones",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "energía renovable",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "erosión",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "extinción",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "forestación",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "huelga",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "hábitat",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "impacto ambiental",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "inflación",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "juegos olímpicos",
+   "rows": 1,
+   "action": "demote",
+   "why": "sport event, not environment/society"
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "medio ambiente",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "ola de calor",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "recursos naturales",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "recursos renovables",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "reducción",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "reforestación",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "sanidad",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "sostenibilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "sostenible",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-b2-vocab-economy-business"
+  },
+  {
+   "topic": "es-b1-environment-vocab",
+   "word": "superpoblación",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-vocab-education-career",
+   "word": "dependiente",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-city-shopping"
+  },
+  {
+   "topic": "es-b1-vocab-education-career",
+   "word": "graduado",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-vocab-health-lifestyle",
+   "word": "estresarse",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-vocab-money-consumers",
+   "word": "ahorrar",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in es-b1-environment-vocab"
+  },
+  {
+   "topic": "es-b1-vocab-money-consumers",
+   "word": "reclamar",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in es-b1-vocab-travel-tourism"
+  },
+  {
+   "topic": "es-b1-vocab-prepositional-verbs",
+   "word": "acordarse de",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-vocab-prepositional-verbs",
+   "word": "pensar en",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b1-vocab-travel-tourism",
+   "word": "billete",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-a2-vocab-travel-nature"
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "adaptabilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "conciencia",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "desarrollo",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "empatía",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-b2-vocab-psychology-behaviour"
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "equidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "fiabilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "flexibilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "honradez",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "igualdad",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "imparcialidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "integridad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "justicia",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "lucidez",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "moral",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "objetividad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "perdurabilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "perseverancia",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "progreso",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "racionalidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "rectitud",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "resiliencia",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "sensatez",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "sostenibilidad",
+   "rows": 1,
+   "action": "leave",
+   "why": "sostenibilidad homed in es-b1-environment"
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "transparencia",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "versatilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "viabilidad",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "ética",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-collocations-idioms",
+   "word": "perder el tren",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-collocations-idioms",
+   "word": "prestar atención",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-culture-arts",
+   "word": "reseña",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-economy-business",
+   "word": "presupuesto",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in es-b2-vocab-work-professional"
+  },
+  {
+   "topic": "es-b2-vocab-formal-connectors",
+   "word": "no obstante",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in es-b1-vocab-connectors"
+  },
+  {
+   "topic": "es-b2-vocab-law-justice",
+   "word": "denuncia",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-psychology-behaviour",
+   "word": "receloso",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-psychology-behaviour",
+   "word": "tacaño",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "es-b2-vocab-work-professional",
+   "word": "contrato",
+   "rows": 4,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-a1-vocab-describing-words",
+   "word": "büyük",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-describing-words",
+   "word": "sağlıklı",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-health-body"
+  },
+  {
+   "topic": "tr-a1-vocab-describing-words",
+   "word": "sıcak",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "tr-a1-vocab-describing-words",
+   "word": "yeni",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-home-objects"
+  },
+  {
+   "topic": "tr-a1-vocab-everyday-verbs",
+   "word": "yağmak",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "tr-a1-vocab-everyday-verbs",
+   "word": "yemek",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-food-drink"
+  },
+  {
+   "topic": "tr-a1-vocab-family-people",
+   "word": "anneanne",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-family-people",
+   "word": "babaanne",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-family-people",
+   "word": "şoför",
+   "rows": 1,
+   "action": "demote",
+   "why": "job, not family"
+  },
+  {
+   "topic": "tr-a1-vocab-food-drink",
+   "word": "ekşi",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-cooking-restaurants"
+  },
+  {
+   "topic": "tr-a1-vocab-food-drink",
+   "word": "lezzetli",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-cooking-restaurants"
+  },
+  {
+   "topic": "tr-a1-vocab-food-drink",
+   "word": "soğuk",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "tr-a1-vocab-food-drink",
+   "word": "sıcak",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-weather-clothing"
+  },
+  {
+   "topic": "tr-a1-vocab-free-time",
+   "word": "bisiklet sürmek",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-free-time",
+   "word": "müzik dinlemek",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-free-time",
+   "word": "yemek yapmak",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-greetings-phrases",
+   "word": "afiyet olsun",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-cooking-restaurants"
+  },
+  {
+   "topic": "tr-a1-vocab-greetings-phrases",
+   "word": "iyi yolculuklar",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "dolap",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "gardırop",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "kanepe",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "koltuk",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "lavabo",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "misafir odası",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "mutfak masası",
+   "rows": 1,
+   "action": "demote",
+   "why": "compositional (kitchen table)"
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "oturma odası",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "sehpa",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "sıra",
+   "rows": 1,
+   "action": "demote",
+   "why": "classroom bench, off-topic"
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "tuvalet",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "yatak",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "yatak odası",
+   "rows": 6,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-time-calendar",
+   "word": "akşam",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-time-calendar",
+   "word": "gece",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "tr-a1-vocab-time-calendar",
+   "word": "pazartesi",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "tr-a1-vocab-time-calendar",
+   "word": "sabah",
+   "rows": 4,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-time-daily-routine"
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "alışveriş merkezi",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "apartman",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "bakkal",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "durak",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "dükkan",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "feribot",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "gar",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "iskele",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "ofis",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-work-school"
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "orman",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-travel-nature"
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "otobüs durağı",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "sinema",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "taksi durağı",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "tramvay",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "tren garı",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a1-vocab-transport-places",
+   "word": "vapur",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-celebrations-traditions",
+   "word": "bayram yemeği",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "alışveriş merkezi",
+   "rows": 1,
+   "action": "leave",
+   "why": "homed in tr-a1-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "bakkal",
+   "rows": 2,
+   "action": "leave",
+   "why": "homed in tr-a1-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "durak",
+   "rows": 1,
+   "action": "leave",
+   "why": "homed in tr-a1-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "döviz bürosu",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "dükkan",
+   "rows": 1,
+   "action": "leave",
+   "why": "homed in tr-a1-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "fırın",
+   "rows": 2,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-cooking-restaurants"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "kütüphane",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "okul",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-transport-places,tr-a2-vocab-work-school"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "otogar",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "park",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "pazar",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "sağlık merkezi",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "stadyum",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "süpermarket",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "teknoloji mağazası",
+   "rows": 1,
+   "action": "demote",
+   "why": "compositional (technology shop)"
+  },
+  {
+   "topic": "tr-a2-vocab-cooking-restaurants",
+   "word": "acı",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-food-drink"
+  },
+  {
+   "topic": "tr-a2-vocab-cooking-restaurants",
+   "word": "hesap",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in tr-a2-vocab-technology-communication"
+  },
+  {
+   "topic": "tr-a2-vocab-health-body",
+   "word": "boyun",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-health-body",
+   "word": "dil",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-health-body",
+   "word": "kalp",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-movement-change-verbs",
+   "word": "gitmek",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-a1-vocab-transport-places"
+  },
+  {
+   "topic": "tr-a2-vocab-movement-change-verbs",
+   "word": "iyileşmek",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-technology-communication",
+   "word": "göndermek",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-time-daily-routine",
+   "word": "kahvaltı",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-time-daily-routine",
+   "word": "öğleden sonra",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-travel-nature",
+   "word": "ova",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-travel-nature",
+   "word": "yolculuk",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-work-school",
+   "word": "doktor",
+   "rows": 2,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-a2-vocab-work-school",
+   "word": "eczacı",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-a2-vocab-work-school",
+   "word": "pilot",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "azim",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "değişkenlik",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "doğallık",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "güvenilirlik",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "kalite",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "sadakat",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "sağlık",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "sorumluluk",
+   "rows": 3,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-opinions-society"
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "temizlik",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-abstract-concepts",
+   "word": "çalışkanlık",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-case-governed-verbs",
+   "word": "bahsetmek",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-case-governed-verbs",
+   "word": "güvenmek",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-case-governed-verbs",
+   "word": "korkmak",
+   "rows": 5,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-education-career",
+   "word": "işyeri",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-education-career",
+   "word": "mezuniyet belgesi",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-emotions-relationships",
+   "word": "hayal kırıklığı",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-emotions-relationships",
+   "word": "mutluluk",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-abstract-concepts"
+  },
+  {
+   "topic": "tr-b1-vocab-health-lifestyle",
+   "word": "kilo vermek",
+   "rows": 4,
+   "action": "reapprove",
+   "why": "rejected target here but approved nowhere; core word for topic"
+  },
+  {
+   "topic": "tr-b1-vocab-media-news",
+   "word": "gazeteci",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-media-news",
+   "word": "haberci",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-media-news",
+   "word": "sunucu",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-money-consumers",
+   "word": "şikâyet etmek",
+   "rows": 5,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-travel-tourism"
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "değer",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "itiraz",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "kamuoyu",
+   "rows": 4,
+   "action": "leave",
+   "why": "approved in tr-b2-vocab-society-politics"
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "tartışma",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "uzlaşma",
+   "rows": 5,
+   "action": "leave",
+   "why": "approved in tr-b2-vocab-global-issues"
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "yorum",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-media-news"
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "çevre koruma",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "şikayet",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "şikâyet",
+   "rows": 2,
+   "action": "leave",
+   "why": "merged into şikayet target"
+  },
+  {
+   "topic": "tr-b1-vocab-travel-tourism",
+   "word": "kapora",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b1-vocab-travel-tourism",
+   "word": "kaçırmak",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-culture-arts",
+   "word": "eleştiri",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-b2-vocab-culture-arts",
+   "word": "yapıt",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-formal-connectors",
+   "word": "öte yandan",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-connectors"
+  },
+  {
+   "topic": "tr-b2-vocab-global-issues",
+   "word": "uluslararası göç",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-psychology-behaviour",
+   "word": "özgüven",
+   "rows": 4,
+   "action": "leave",
+   "why": "approved in tr-b1-vocab-abstract-concepts"
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "araştırma",
+   "rows": 2,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "fermantasyon",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "gelişme",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "meteoroloji",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "otomasyon",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "yatırım",
+   "rows": 1,
+   "action": "leave",
+   "why": "approved in tr-b2-vocab-economy-business"
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "başvuru",
+   "rows": 1,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "değerlendirme",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "değerlendirme görüşmesi",
+   "rows": 1,
+   "action": "demote",
+   "why": "duplicate of performans değerlendirmesi"
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "emeklilik",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "görev dağılımı",
+   "rows": 1,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "iş değerlendirmesi",
+   "rows": 1,
+   "action": "demote",
+   "why": "duplicate of performans değerlendirmesi"
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "iş sözleşmesi",
+   "rows": 2,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "işe alım",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "işe alım süreci",
+   "rows": 1,
+   "action": "demote",
+   "why": "duplicate of işe alım"
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "işten çıkarma",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "performans değerlendirmesi",
+   "rows": 4,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "personel",
+   "rows": 3,
+   "action": "add",
+   "why": ""
+  },
+  {
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "terfi",
+   "rows": 4,
+   "action": "demote",
+   "why": "curator rejected this word for this topic"
+  }
+ ],
+ "inserts": [
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-describing-words",
+   "cefr_level": "A1",
+   "lemma": "leicht",
+   "display_form": "leicht",
+   "gloss": "easy; light",
+   "example_sentence": "Der Film ist sehr leicht zu verstehen.",
+   "freq_rank": 544,
+   "tier": "core",
+   "pos": "adjective"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-describing-words",
+   "cefr_level": "A1",
+   "lemma": "schwer",
+   "display_form": "schwer",
+   "gloss": "heavy; difficult",
+   "example_sentence": "Mein Job ist sehr schwer, aber ich mag ihn.",
+   "freq_rank": 333,
+   "tier": "core",
+   "pos": "adjective"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-everyday-verbs",
+   "cefr_level": "A1",
+   "lemma": "lesen",
+   "display_form": "lesen",
+   "gloss": "to read",
+   "example_sentence": "Ich lese jeden Morgen die Zeitung.",
+   "freq_rank": 403,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-everyday-verbs",
+   "cefr_level": "A1",
+   "lemma": "regnen",
+   "display_form": "regnen",
+   "gloss": "to rain",
+   "example_sentence": "Heute regnet es den ganzen Tag.",
+   "freq_rank": 2520,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-everyday-verbs",
+   "cefr_level": "A1",
+   "lemma": "schlafen",
+   "display_form": "schlafen",
+   "gloss": "to sleep",
+   "example_sentence": "Ich schlafe jeden Abend acht Stunden.",
+   "freq_rank": 321,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Cousin",
+   "display_form": "der Cousin",
+   "gloss": "cousin (male)",
+   "example_sentence": "Mein Cousin arbeitet als Arzt in Berlin.",
+   "freq_rank": 1972,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Cousine",
+   "display_form": "die Cousine",
+   "gloss": "cousin (female)",
+   "example_sentence": "Meine Cousine geht in die gleiche Schule wie ich.",
+   "freq_rank": 3309,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Enkel",
+   "display_form": "der Enkel",
+   "gloss": "grandson",
+   "example_sentence": "Mein Enkel spielt jeden Tag im Garten.",
+   "freq_rank": 3475,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Enkelkind",
+   "display_form": "das Enkelkind",
+   "gloss": "grandchild",
+   "example_sentence": "Mein Enkelkind spielt jeden Tag im Garten.",
+   "freq_rank": 9110,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Oma",
+   "display_form": "die Oma",
+   "gloss": "grandma",
+   "example_sentence": "An Weihnachten besuchen wir die Oma, und sie backt Kekse für alle.",
+   "freq_rank": 1427,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "Opa",
+   "display_form": "der Opa",
+   "gloss": "grandpa",
+   "example_sentence": "Im Urlaub besuchen wir den Opa am Meer.",
+   "freq_rank": 1738,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-food-drink",
+   "cefr_level": "A1",
+   "lemma": "Apfel",
+   "display_form": "der Apfel",
+   "gloss": "apple",
+   "example_sentence": "Ich esse jeden Tag einen Apfel zum Frühstück.",
+   "freq_rank": 4518,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-time-calendar",
+   "cefr_level": "A1",
+   "lemma": "Freitag",
+   "display_form": "der Freitag",
+   "gloss": "Friday",
+   "example_sentence": "Am Freitag gehe ich nach der Arbeit mit Kollegen essen.",
+   "freq_rank": 1815,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-time-calendar",
+   "cefr_level": "A1",
+   "lemma": "Montag",
+   "display_form": "der Montag",
+   "gloss": "Monday",
+   "example_sentence": "Am Montag bringt mein Vater meine Schwester zur Schule.",
+   "freq_rank": 2071,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a1-vocab-time-calendar",
+   "cefr_level": "A1",
+   "lemma": "Sonntag",
+   "display_form": "der Sonntag",
+   "gloss": "Sunday",
+   "example_sentence": "Am Sonntag ist die Bank geschlossen.",
+   "freq_rank": 1953,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-health-body",
+   "cefr_level": "A2",
+   "lemma": "Hand",
+   "display_form": "die Hand",
+   "gloss": "hand",
+   "example_sentence": "Meine Hand tut weh, weil ich den ganzen Tag am Computer getippt habe.",
+   "freq_rank": 266,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-movement-change-verbs",
+   "cefr_level": "A2",
+   "lemma": "zurückgehen",
+   "display_form": "zurückgehen",
+   "gloss": "to go back, return",
+   "example_sentence": "Ich muss in das Geschäft zurückgehen, weil ich mein Portemonnaie vergessen habe.",
+   "freq_rank": 3328,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-technology-communication",
+   "cefr_level": "A2",
+   "lemma": "anrufen",
+   "display_form": "anrufen",
+   "gloss": "to call (on the phone)",
+   "example_sentence": "Ich rufe meine Mutter jeden Abend an.",
+   "freq_rank": 392,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-technology-communication",
+   "cefr_level": "A2",
+   "lemma": "herunterladen",
+   "display_form": "herunterladen",
+   "gloss": "to download",
+   "example_sentence": "Ich möchte eine Wetter-App herunterladen, damit ich immer die aktuelle Temperatur sehe.",
+   "freq_rank": 39729,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "aufräumen",
+   "display_form": "aufräumen",
+   "gloss": "to tidy up",
+   "example_sentence": "Jeden Samstag räume ich mein Zimmer auf.",
+   "freq_rank": 4663,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "den Tisch decken",
+   "display_form": "den Tisch decken",
+   "gloss": "to set the table",
+   "example_sentence": "Kannst du bitte den Tisch decken? Das Essen ist fast fertig.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "sich anziehen",
+   "display_form": "sich anziehen",
+   "gloss": "to get dressed",
+   "example_sentence": "Bevor wir zum Flughafen fahren, muss ich mich schnell anziehen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "Reisebüro",
+   "display_form": "das Reisebüro",
+   "gloss": "travel agency",
+   "example_sentence": "Wir kaufen unsere Flugtickets im Reisebüro.",
+   "freq_rank": 16339,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "Wanderweg",
+   "display_form": "der Wanderweg",
+   "gloss": "hiking trail",
+   "example_sentence": "Der Wanderweg durch die Berge ist sehr schön.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "Arbeitsplatz",
+   "display_form": "der Arbeitsplatz",
+   "gloss": "workplace; job",
+   "example_sentence": "Mein Arbeitsplatz ist sehr modern — wir haben neue Computer und schnelles Internet.",
+   "freq_rank": 5943,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "Fahrer",
+   "display_form": "der Fahrer",
+   "gloss": "driver",
+   "example_sentence": "Der Fahrer hält an der nächsten Haltestelle.",
+   "freq_rank": 1892,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "Verkäufer",
+   "display_form": "der Verkäufer",
+   "gloss": "salesperson (male)",
+   "example_sentence": "Der Verkäufer hilft mir, die richtige Größe zu finden.",
+   "freq_rank": 6276,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Arbeitsbedingungen",
+   "display_form": "die Arbeitsbedingungen",
+   "gloss": "working conditions",
+   "example_sentence": "In vielen Ländern kämpfen Gewerkschaften für bessere Arbeitsbedingungen.",
+   "freq_rank": 32746,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Bildung",
+   "display_form": "die Bildung",
+   "gloss": "education",
+   "example_sentence": "In vielen Ländern gilt Bildung als ein grundlegendes Menschenrecht.",
+   "freq_rank": 6563,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "biologisch",
+   "display_form": "biologisch",
+   "gloss": "organic; biological",
+   "example_sentence": "Viele Menschen kaufen lieber biologisch angebautes Gemüse, weil es besser für die Umwelt ist.",
+   "freq_rank": 6048,
+   "tier": "extended",
+   "pos": "adjective"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "CO2-Fußabdruck",
+   "display_form": "der CO2-Fußabdruck",
+   "gloss": "carbon footprint",
+   "example_sentence": "Wenn man mit dem Zug statt mit dem Flugzeug reist, kann man seinen CO2-Fußabdruck deutlich verringern.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Defizit",
+   "display_form": "das Defizit",
+   "gloss": "deficit",
+   "example_sentence": "Die Regierung versucht, das staatliche Defizit durch Steuererhöhungen zu reduzieren.",
+   "freq_rank": 32547,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Energieverbrauch",
+   "display_form": "der Energieverbrauch",
+   "gloss": "energy consumption",
+   "example_sentence": "Durch bessere Isolierung kann man den Energieverbrauch im Haus deutlich senken.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Erderwärmung",
+   "display_form": "die Erderwärmung",
+   "gloss": "global warming",
+   "example_sentence": "Die Erderwärmung führt dazu, dass Gletscher weltweit schmelzen.",
+   "freq_rank": 35325,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "erneuerbare Energie",
+   "display_form": "die erneuerbare Energie",
+   "gloss": "renewable energy",
+   "example_sentence": "Viele Haushalte in Deutschland decken ihren Strombedarf heute teilweise mit erneuerbarer Energie, zum Beispiel durch Solaranlagen auf dem Dach.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Gesundheitssystem",
+   "display_form": "das Gesundheitssystem",
+   "gloss": "health system",
+   "example_sentence": "In Deutschland ist das Gesundheitssystem so organisiert, dass fast alle Bürger krankenversichert sind.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Gesundheitswesen",
+   "display_form": "das Gesundheitswesen",
+   "gloss": "healthcare sector",
+   "example_sentence": "Die Regierung möchte das Gesundheitswesen modernisieren, damit alle Bürger bessere medizinische Versorgung bekommen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Handel",
+   "display_form": "der Handel",
+   "gloss": "trade, commerce",
+   "example_sentence": "Fairer Handel sorgt dafür, dass Produzenten in Entwicklungsländern gerecht bezahlt werden.",
+   "freq_rank": 3627,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Konsum",
+   "display_form": "der Konsum",
+   "gloss": "consumption",
+   "example_sentence": "Der nachhaltige Konsum wird immer wichtiger, weil viele Menschen die Umwelt schützen möchten.",
+   "freq_rank": 24881,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Landwirtschaft",
+   "display_form": "die Landwirtschaft",
+   "gloss": "agriculture",
+   "example_sentence": "Die Landwirtschaft spielt eine wichtige Rolle für die Ernährungssicherheit der Bevölkerung.",
+   "freq_rank": 12877,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Luftverschmutzung",
+   "display_form": "die Luftverschmutzung",
+   "gloss": "air pollution",
+   "example_sentence": "In vielen Großstädten ist die Luftverschmutzung durch den starken Verkehr ein ernstes Problem.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Massenproduktion",
+   "display_form": "die Massenproduktion",
+   "gloss": "mass production",
+   "example_sentence": "Die Massenproduktion von Fertiggerichten hat dazu geführt, dass viele Menschen weniger frisch kochen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Naturschutz",
+   "display_form": "der Naturschutz",
+   "gloss": "nature conservation",
+   "example_sentence": "Der Naturschutz ist ein wichtiges Thema in der deutschen Politik, weil viele Tier- und Pflanzenarten bedroht sind.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Schulpflicht",
+   "display_form": "die Schulpflicht",
+   "gloss": "compulsory schooling",
+   "example_sentence": "In Deutschland gilt die Schulpflicht ab dem sechsten Lebensjahr, und alle Kinder müssen eine staatlich anerkannte Schule besuchen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Tourismus",
+   "display_form": "der Tourismus",
+   "gloss": "tourism",
+   "example_sentence": "Der Tourismus ist für viele Länder eine wichtige Einnahmequelle, kann aber auch negative Folgen für die Umwelt haben.",
+   "freq_rank": 24669,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Urbanisierung",
+   "display_form": "die Urbanisierung",
+   "gloss": "urbanization",
+   "example_sentence": "Die Urbanisierung verändert das Leben vieler Familien, weil Eltern und Kinder oft in verschiedenen Städten wohnen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Verkehrsnetz",
+   "display_form": "das Verkehrsnetz",
+   "gloss": "transport network",
+   "example_sentence": "Das Verkehrsnetz in dieser Stadt ist sehr gut ausgebaut, sodass man überall schnell hinkommt.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "öffentlicher Nahverkehr",
+   "display_form": "der öffentliche Nahverkehr",
+   "gloss": "public transport",
+   "example_sentence": "Viele Städte investieren in den öffentlichen Nahverkehr, um den CO₂-Ausstoß zu senken und die Lebensqualität zu verbessern.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Ökotourismus",
+   "display_form": "der Ökotourismus",
+   "gloss": "ecotourism",
+   "example_sentence": "Immer mehr Reisende entscheiden sich für Ökotourismus, weil sie die Natur erleben und gleichzeitig die Umwelt schützen möchten.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "Überalterung",
+   "display_form": "die Überalterung",
+   "gloss": "ageing of the population",
+   "example_sentence": "Die Überalterung der Gesellschaft stellt das Rentensystem vor große Herausforderungen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-education-career",
+   "cefr_level": "B1",
+   "lemma": "Führerschein",
+   "display_form": "der Führerschein",
+   "gloss": "driving licence",
+   "example_sentence": "Nachdem sie die praktische Prüfung bestanden hatte, bekam sie endlich ihren Führerschein.",
+   "freq_rank": 3604,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-education-career",
+   "cefr_level": "B1",
+   "lemma": "Zertifikat",
+   "display_form": "das Zertifikat",
+   "gloss": "certificate",
+   "example_sentence": "Nach dem Online-Kurs hat sie ein Zertifikat in Datenschutz erhalten.",
+   "freq_rank": 30868,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-emotions-relationships",
+   "cefr_level": "B1",
+   "lemma": "Heimweh",
+   "display_form": "das Heimweh",
+   "gloss": "homesickness",
+   "example_sentence": "Nach zwei Wochen im Ausland hatte sie so starkes Heimweh, dass sie früher nach Hause flog.",
+   "freq_rank": 10107,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Artikel",
+   "display_form": "der Artikel",
+   "gloss": "article",
+   "example_sentence": "Ich habe einen interessanten Artikel über gesunde Ernährung in der Zeitung gelesen.",
+   "freq_rank": 1979,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Meldung",
+   "display_form": "die Meldung",
+   "gloss": "news report, announcement",
+   "example_sentence": "Im Urlaub hörten wir im Radio eine wichtige Meldung über das Wetter in der Region.",
+   "freq_rank": 4037,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Nachrichtensendung",
+   "display_form": "die Nachrichtensendung",
+   "gloss": "news broadcast",
+   "example_sentence": "In der heutigen Nachrichtensendung wurde über einen neuen Grippeausbruch in mehreren Städten berichtet.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Podcast",
+   "display_form": "der Podcast",
+   "gloss": "podcast",
+   "example_sentence": "Ich höre jeden Morgen einen Podcast über aktuelle Technologie-Nachrichten.",
+   "freq_rank": 31680,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Wettervorhersage",
+   "display_form": "die Wettervorhersage",
+   "gloss": "weather forecast",
+   "example_sentence": "Laut der Wettervorhersage soll es morgen den ganzen Tag regnen, also nehme ich einen Regenschirm mit.",
+   "freq_rank": 29159,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "Zeitschrift",
+   "display_form": "die Zeitschrift",
+   "gloss": "magazine",
+   "example_sentence": "In dieser Zeitschrift gibt es viele leckere Rezepte für Sommergerichte.",
+   "freq_rank": 6983,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-prepositional-verbs",
+   "cefr_level": "B1",
+   "lemma": "aufkommen für",
+   "display_form": "aufkommen für",
+   "gloss": "pay for, cover the cost of",
+   "example_sentence": "Die Versicherung kommt für alle Reparaturkosten auf.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-prepositional-verbs",
+   "cefr_level": "B1",
+   "lemma": "sich bewerben um",
+   "display_form": "sich bewerben um",
+   "gloss": "apply for",
+   "example_sentence": "Sie hat sich um einen Kredit bei der Bank beworben, aber die Bank hat den Antrag abgelehnt.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b1-vocab-prepositional-verbs",
+   "cefr_level": "B1",
+   "lemma": "teilnehmen an",
+   "display_form": "teilnehmen an",
+   "gloss": "take part in",
+   "example_sentence": "Alle Mitarbeiter sollen an dem neuen Schulungsprogramm teilnehmen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-collocations-idioms",
+   "cefr_level": "B2",
+   "lemma": "einen Kredit aufnehmen",
+   "display_form": "einen Kredit aufnehmen",
+   "gloss": "take out a loan",
+   "example_sentence": "Um das Haus zu kaufen, mussten sie einen Kredit aufnehmen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-collocations-idioms",
+   "cefr_level": "B2",
+   "lemma": "Prüfung ablegen",
+   "display_form": "eine Prüfung ablegen",
+   "gloss": "take an exam",
+   "example_sentence": "Nach dem Semester musste sie eine schwierige Prüfung ablegen, um ihren Abschluss zu bekommen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-law-justice",
+   "cefr_level": "B2",
+   "lemma": "anzeigen",
+   "display_form": "anzeigen",
+   "gloss": "report (to the police)",
+   "example_sentence": "Als mein Koffer am Flughafen gestohlen wurde, ging ich sofort zur Polizei, um den Diebstahl anzuzeigen.",
+   "freq_rank": 3637,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "Onlinezahlung",
+   "display_form": "die Onlinezahlung",
+   "gloss": "online payment",
+   "example_sentence": "Viele Kunden bevorzugen die Onlinezahlung, weil sie bequem und schnell ist.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "Router",
+   "display_form": "der Router",
+   "gloss": "router",
+   "example_sentence": "Seit wir einen neuen Router installiert haben, ist die Internetverbindung in der ganzen Wohnung viel stabiler.",
+   "freq_rank": 32547,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "Wetterprognose",
+   "display_form": "die Wetterprognose",
+   "gloss": "weather forecast (scientific)",
+   "example_sentence": "Laut der aktuellen Wetterprognose des Deutschen Wetterdienstes soll es morgen in ganz Bayern heftige Gewitter geben.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-society-politics",
+   "cefr_level": "B2",
+   "lemma": "Botschaft",
+   "display_form": "die Botschaft",
+   "gloss": "embassy; message",
+   "example_sentence": "Wer ein Visum für das Land beantragen möchte, muss einen Termin bei der Botschaft vereinbaren.",
+   "freq_rank": 1753,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-society-politics",
+   "cefr_level": "B2",
+   "lemma": "Bundestag",
+   "display_form": "der Bundestag",
+   "gloss": "German federal parliament",
+   "example_sentence": "Der Bundestag hat gestern ein neues Gesetz zur Mietpreisbremse verabschiedet, das viele Mieter in deutschen Städten entlasten soll.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-society-politics",
+   "cefr_level": "B2",
+   "lemma": "Umweltpolitik",
+   "display_form": "die Umweltpolitik",
+   "gloss": "environmental policy",
+   "example_sentence": "Die Umweltpolitik der neuen Regierung setzt stark auf erneuerbare Energien und den Schutz der Wälder.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-society-politics",
+   "cefr_level": "B2",
+   "lemma": "Verbraucherschutz",
+   "display_form": "der Verbraucherschutz",
+   "gloss": "consumer protection",
+   "example_sentence": "Der Verbraucherschutz spielt eine wichtige Rolle in der deutschen Politik, besonders beim Online-Shopping.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-society-politics",
+   "cefr_level": "B2",
+   "lemma": "Wahlrecht",
+   "display_form": "das Wahlrecht",
+   "gloss": "right to vote",
+   "example_sentence": "Als meine ältere Schwester achtzehn wurde, freute sie sich sehr darauf, endlich das Wahlrecht zu haben und bei der nächsten Wahl ihre Stimme abzugeben.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "Arbeitsvertrag",
+   "display_form": "der Arbeitsvertrag",
+   "gloss": "employment contract",
+   "example_sentence": "Bevor sie ihre neue Stelle antrat, hat sie den Arbeitsvertrag sorgfältig gelesen und unterschrieben.",
+   "freq_rank": 38581,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "Arbeitszeugnis",
+   "display_form": "das Arbeitszeugnis",
+   "gloss": "job reference",
+   "example_sentence": "Bevor sie sich bei der neuen Firma bewarb, bat sie ihren alten Chef um ein qualifiziertes Arbeitszeugnis.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "Kündigungsschreiben",
+   "display_form": "das Kündigungsschreiben",
+   "gloss": "letter of resignation/termination",
+   "example_sentence": "Die Redakteurin reichte ihr Kündigungsschreiben ein, nachdem sie ein Angebot von einem anderen Sender erhalten hatte.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "DE",
+   "umbrella_key": "de-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "Urlaubsantrag",
+   "display_form": "der Urlaubsantrag",
+   "gloss": "leave request",
+   "example_sentence": "Bevor sie in den Sommerurlaub fahren konnte, musste sie noch den Urlaubsantrag bei ihrer Vorgesetzten einreichen.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "apartamento",
+   "display_form": "el apartamento",
+   "gloss": "apartment, flat",
+   "example_sentence": "Vivo en un apartamento en el centro de la ciudad.",
+   "freq_rank": 1041,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "centro comercial",
+   "display_form": "el centro comercial",
+   "gloss": "shopping centre",
+   "example_sentence": "Voy al centro comercial para comprar zapatos nuevos.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "colegio",
+   "display_form": "el colegio",
+   "gloss": "school",
+   "example_sentence": "Los niños van al colegio todos los días.",
+   "freq_rank": 1288,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "consultorio",
+   "display_form": "el consultorio",
+   "gloss": "doctor's office",
+   "example_sentence": "El doctor está en el consultorio todos los lunes.",
+   "freq_rank": 9018,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "correo",
+   "display_form": "el correo",
+   "gloss": "post office; mail",
+   "example_sentence": "Necesito ir al correo para enviar una carta.",
+   "freq_rank": 1613,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "estación de autobuses",
+   "display_form": "la estación de autobuses",
+   "gloss": "bus station",
+   "example_sentence": "La estación de autobuses está cerca del centro de la ciudad.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "estadio",
+   "display_form": "el estadio",
+   "gloss": "stadium",
+   "example_sentence": "El estadio está cerca del centro de la ciudad.",
+   "freq_rank": 4776,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-city-places",
+   "cefr_level": "A1",
+   "lemma": "parada",
+   "display_form": "la parada",
+   "gloss": "(bus) stop",
+   "example_sentence": "Hay muchas personas en la parada del autobús.",
+   "freq_rank": 1988,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-describing-words",
+   "cefr_level": "A1",
+   "lemma": "trabajador",
+   "display_form": "trabajador",
+   "gloss": "hard-working",
+   "example_sentence": "El alumno es muy trabajador: siempre hace los deberes y estudia todos los días.",
+   "freq_rank": 1823,
+   "tier": "common",
+   "pos": "adjective"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-everyday-verbs",
+   "cefr_level": "A1",
+   "lemma": "mirar",
+   "display_form": "mirar",
+   "gloss": "to look at, watch",
+   "example_sentence": "Me gusta mirar el mar desde la ventana.",
+   "freq_rank": 93,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-everyday-verbs",
+   "cefr_level": "A1",
+   "lemma": "usar",
+   "display_form": "usar",
+   "gloss": "to use",
+   "example_sentence": "Yo uso el ordenador para trabajar.",
+   "freq_rank": 232,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "esposa",
+   "display_form": "la esposa",
+   "gloss": "wife",
+   "example_sentence": "Mi esposa prepara la cena para toda la familia.",
+   "freq_rank": 289,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "esposo",
+   "display_form": "el esposo",
+   "gloss": "husband",
+   "example_sentence": "Mi esposo y yo tenemos dos hijos.",
+   "freq_rank": 814,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "hermano mayor",
+   "display_form": "el hermano mayor",
+   "gloss": "older brother",
+   "example_sentence": "Mi hermano mayor sale en el programa de televisión esta noche.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "hermano menor",
+   "display_form": "el hermano menor",
+   "gloss": "younger brother",
+   "example_sentence": "Mi hermano menor tiene ocho años y le gusta jugar al fútbol.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "nieto",
+   "display_form": "el nieto",
+   "gloss": "grandson",
+   "example_sentence": "Mi nieto juega en el parque cuando hace buen tiempo.",
+   "freq_rank": 2708,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "sobrina",
+   "display_form": "la sobrina",
+   "gloss": "niece",
+   "example_sentence": "Mi sobrina viaja en autobús sola por primera vez hoy.",
+   "freq_rank": 24385,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "sobrino",
+   "display_form": "el sobrino",
+   "gloss": "nephew",
+   "example_sentence": "Mi sobrino viaja con nosotros a la playa este verano.",
+   "freq_rank": 2857,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-greetings-phrases",
+   "cefr_level": "A1",
+   "lemma": "buen viaje",
+   "display_form": "buen viaje",
+   "gloss": "have a good trip",
+   "example_sentence": "— ¡Buen viaje! Espero que disfrutes mucho las vacaciones.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-greetings-phrases",
+   "cefr_level": "A1",
+   "lemma": "mucha suerte",
+   "display_form": "mucha suerte",
+   "gloss": "good luck",
+   "example_sentence": "Antes del partido, el entrenador dijo: «¡Mucha suerte, equipo!»",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "escritorio",
+   "display_form": "el escritorio",
+   "gloss": "desk",
+   "example_sentence": "Hay una lámpara y muchos papeles encima del escritorio.",
+   "freq_rank": 2287,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "frigorífico",
+   "display_form": "el frigorífico",
+   "gloss": "fridge",
+   "example_sentence": "La leche está en el frigorífico.",
+   "freq_rank": 13485,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "sillón",
+   "display_form": "el sillón",
+   "gloss": "armchair",
+   "example_sentence": "Mi abuelo lee el periódico en el sillón cada mañana.",
+   "freq_rank": 6636,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "televisor",
+   "display_form": "el televisor",
+   "gloss": "television set",
+   "example_sentence": "El televisor está en el salón, encima de la mesa.",
+   "freq_rank": 5542,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-movement-change-verbs",
+   "cefr_level": "A2",
+   "lemma": "llegar",
+   "display_form": "llegar",
+   "gloss": "to arrive",
+   "example_sentence": "El tren llega a Madrid a las tres de la tarde.",
+   "freq_rank": 116,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "madrugada",
+   "display_form": "la madrugada",
+   "gloss": "early morning (after midnight)",
+   "example_sentence": "Nuestro vuelo sale a las tres de la madrugada, así que tenemos que salir del hotel muy pronto.",
+   "freq_rank": 6202,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "cascada",
+   "display_form": "la cascada",
+   "gloss": "waterfall",
+   "example_sentence": "Caminamos dos horas por el bosque para ver la cascada al final del sendero.",
+   "freq_rank": 23845,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "llanura",
+   "display_form": "la llanura",
+   "gloss": "plain",
+   "example_sentence": "Desde el tren, vimos una gran llanura verde con muchas vacas.",
+   "freq_rank": 11110,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "océano",
+   "display_form": "el océano",
+   "gloss": "ocean",
+   "example_sentence": "El barco viajó por el océano durante muchos días.",
+   "freq_rank": 2270,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "enfermero",
+   "display_form": "el enfermero",
+   "gloss": "nurse (male)",
+   "example_sentence": "El enfermero del hospital me tomó la temperatura y me dio la medicina.",
+   "freq_rank": 8697,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "atmósfera",
+   "display_form": "la atmósfera",
+   "gloss": "atmosphere",
+   "example_sentence": "La atmósfera terrestre contiene oxígeno y otros gases importantes para la vida.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "balanza comercial",
+   "display_form": "la balanza comercial",
+   "gloss": "balance of trade",
+   "example_sentence": "El gobierno anunció que la balanza comercial del país es negativa este año debido a las importaciones.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "biodiversidad",
+   "display_form": "la biodiversidad",
+   "gloss": "biodiversity",
+   "example_sentence": "La biodiversidad de la selva amazónica está en peligro por la deforestación.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "calentamiento global",
+   "display_form": "el calentamiento global",
+   "gloss": "global warming",
+   "example_sentence": "Los científicos advierten que el calentamiento global está provocando cambios extremos en el clima de todo el planeta.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "cambio climático",
+   "display_form": "el cambio climático",
+   "gloss": "climate change",
+   "example_sentence": "El cambio climático es uno de los problemas más graves de nuestra época.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "capa de ozono",
+   "display_form": "la capa de ozono",
+   "gloss": "ozone layer",
+   "example_sentence": "Los científicos están preocupados por el agujero en la capa de ozono sobre la Antártida.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "comercio",
+   "display_form": "el comercio",
+   "gloss": "trade, commerce",
+   "example_sentence": "El comercio entre los países de la Unión Europea ha crecido mucho en los últimos años.",
+   "freq_rank": 4117,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "conservación",
+   "display_form": "la conservación",
+   "gloss": "conservation",
+   "example_sentence": "La conservación de los océanos es fundamental para mantener el equilibrio ecológico del planeta.",
+   "freq_rank": 16337,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "contaminación ambiental",
+   "display_form": "la contaminación ambiental",
+   "gloss": "environmental pollution",
+   "example_sentence": "Cuando viajamos en avión con frecuencia, contribuimos a la contaminación ambiental porque los aviones emiten muchos gases.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "contaminación atmosférica",
+   "display_form": "la contaminación atmosférica",
+   "gloss": "air pollution",
+   "example_sentence": "La contaminación atmosférica en las grandes ciudades afecta la salud de millones de personas.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "contaminante",
+   "display_form": "los contaminantes",
+   "gloss": "pollutants",
+   "example_sentence": "Los contaminantes del aire pueden causar problemas respiratorios en la población.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "deforestación",
+   "display_form": "la deforestación",
+   "gloss": "deforestation",
+   "example_sentence": "La deforestación en la Amazonia es una de las mayores amenazas para el planeta.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "desertificación",
+   "display_form": "la desertificación",
+   "gloss": "desertification",
+   "example_sentence": "La desertificación es un problema grave en muchas regiones áridas del mundo.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "educación",
+   "display_form": "la educación",
+   "gloss": "education",
+   "example_sentence": "El gobierno prometió invertir más dinero en la educación pública para reducir las desigualdades sociales.",
+   "freq_rank": 2154,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "efecto invernadero",
+   "display_form": "el efecto invernadero",
+   "gloss": "greenhouse effect",
+   "example_sentence": "El efecto invernadero es necesario para la vida, pero el exceso de gases causa problemas.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "emisión",
+   "display_form": "las emisiones",
+   "gloss": "emissions",
+   "example_sentence": "Los expertos advierten que las emisiones de los coches en las ciudades grandes son una de las principales causas de la mala calidad del aire.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "energía renovable",
+   "display_form": "la energía renovable",
+   "gloss": "renewable energy",
+   "example_sentence": "Muchos países están invirtiendo en la energía renovable para reducir las emisiones de carbono.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "erosión",
+   "display_form": "la erosión",
+   "gloss": "erosion",
+   "example_sentence": "La erosión del suelo es un problema grave en las zonas deforestadas.",
+   "freq_rank": 25964,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "extinción",
+   "display_form": "la extinción",
+   "gloss": "extinction",
+   "example_sentence": "La extinción del tigre de Bengala sería una pérdida enorme para la biodiversidad del planeta.",
+   "freq_rank": 8981,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "forestación",
+   "display_form": "la forestación",
+   "gloss": "afforestation",
+   "example_sentence": "La forestación de las zonas áridas puede mejorar la calidad del suelo y aumentar la biodiversidad.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "hábitat",
+   "display_form": "el hábitat",
+   "gloss": "habitat",
+   "example_sentence": "La deforestación destruye el hábitat de muchas especies animales.",
+   "freq_rank": 13905,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "impacto ambiental",
+   "display_form": "el impacto ambiental",
+   "gloss": "environmental impact",
+   "example_sentence": "El impacto ambiental de la industria textil es muy grave para nuestro planeta.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "inflación",
+   "display_form": "la inflación",
+   "gloss": "inflation",
+   "example_sentence": "Debido a la inflación, los precios de los alimentos han subido mucho este año.",
+   "freq_rank": 15174,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "medio ambiente",
+   "display_form": "el medio ambiente",
+   "gloss": "environment",
+   "example_sentence": "Debemos proteger el medio ambiente para las generaciones futuras.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "ola de calor",
+   "display_form": "la ola de calor",
+   "gloss": "heatwave",
+   "example_sentence": "La ola de calor que afectó al país este verano causó graves problemas de salud en las ciudades.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "recursos naturales",
+   "display_form": "los recursos naturales",
+   "gloss": "natural resources",
+   "example_sentence": "Es importante proteger los recursos naturales para las futuras generaciones.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "recursos renovables",
+   "display_form": "los recursos renovables",
+   "gloss": "renewable resources",
+   "example_sentence": "Es importante invertir en los recursos renovables para proteger el planeta.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "reducción",
+   "display_form": "la reducción",
+   "gloss": "reduction",
+   "example_sentence": "La reducción de emisiones es fundamental para combatir el cambio climático.",
+   "freq_rank": 10474,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "reforestación",
+   "display_form": "la reforestación",
+   "gloss": "reforestation",
+   "example_sentence": "La reforestación es esencial para combatir el cambio climático.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "sanidad",
+   "display_form": "la sanidad",
+   "gloss": "public health; healthcare",
+   "example_sentence": "El gobierno prometió invertir más dinero en la sanidad para reducir las listas de espera.",
+   "freq_rank": 12222,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "sostenibilidad",
+   "display_form": "la sostenibilidad",
+   "gloss": "sustainability",
+   "example_sentence": "La sostenibilidad es fundamental para proteger nuestro planeta.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-environment-vocab",
+   "cefr_level": "B1",
+   "lemma": "superpoblación",
+   "display_form": "la superpoblación",
+   "gloss": "overpopulation",
+   "example_sentence": "La superpoblación en las grandes ciudades crea problemas de vivienda y transporte para las familias.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-vocab-education-career",
+   "cefr_level": "B1",
+   "lemma": "graduado",
+   "display_form": "el graduado",
+   "gloss": "graduate",
+   "example_sentence": "El nuevo chef del restaurante es un graduado de la escuela de gastronomía más reconocida del país.",
+   "freq_rank": 6826,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-vocab-health-lifestyle",
+   "cefr_level": "B1",
+   "lemma": "estresarse",
+   "display_form": "estresarse",
+   "gloss": "to get stressed",
+   "example_sentence": "Muchos periodistas se estresan cuando tienen que entregar noticias de última hora.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-vocab-prepositional-verbs",
+   "cefr_level": "B1",
+   "lemma": "acordarse de",
+   "display_form": "acordarse de",
+   "gloss": "to remember",
+   "example_sentence": "Espero que los estudiantes se acuerden de todos los verbos irregulares que practicamos en clase.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b1-vocab-prepositional-verbs",
+   "cefr_level": "B1",
+   "lemma": "pensar en",
+   "display_form": "pensar en",
+   "gloss": "to think about",
+   "example_sentence": "Cuando estoy lejos de casa, siempre pienso en mi familia.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "adaptabilidad",
+   "display_form": "la adaptabilidad",
+   "gloss": "adaptability",
+   "example_sentence": "La adaptabilidad es una habilidad esencial en el mundo laboral moderno.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "conciencia",
+   "display_form": "la conciencia",
+   "gloss": "conscience; awareness",
+   "example_sentence": "La conciencia colectiva de una nación puede impulsar cambios sociales profundos.",
+   "freq_rank": 2195,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "desarrollo",
+   "display_form": "el desarrollo",
+   "gloss": "development",
+   "example_sentence": "El desarrollo económico de un país depende en gran medida de la inversión en educación.",
+   "freq_rank": 3781,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "equidad",
+   "display_form": "la equidad",
+   "gloss": "equity, fairness",
+   "example_sentence": "La equidad en el acceso a la educación es fundamental para el desarrollo social.",
+   "freq_rank": 31228,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "fiabilidad",
+   "display_form": "la fiabilidad",
+   "gloss": "reliability",
+   "example_sentence": "La fiabilidad de los datos es esencial para cualquier investigación científica seria.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "flexibilidad",
+   "display_form": "la flexibilidad",
+   "gloss": "flexibility",
+   "example_sentence": "La flexibilidad es una característica esencial en el mercado laboral actual.",
+   "freq_rank": 20678,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "honradez",
+   "display_form": "la honradez",
+   "gloss": "honesty",
+   "example_sentence": "La honradez es un valor fundamental en cualquier profesión que requiera la confianza del público.",
+   "freq_rank": 20768,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "imparcialidad",
+   "display_form": "la imparcialidad",
+   "gloss": "impartiality",
+   "example_sentence": "La imparcialidad del juez fue cuestionada durante el juicio debido a sus conexiones personales con el acusado.",
+   "freq_rank": 32387,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "integridad",
+   "display_form": "la integridad",
+   "gloss": "integrity",
+   "example_sentence": "La integridad es un valor fundamental para cualquier líder que quiera ganarse la confianza de su equipo.",
+   "freq_rank": 5864,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "lucidez",
+   "display_form": "la lucidez",
+   "gloss": "lucidity",
+   "example_sentence": "La lucidez de sus argumentos convenció al jurado de que tenía razón.",
+   "freq_rank": 24620,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "moral",
+   "display_form": "la moral",
+   "gloss": "morals, morality",
+   "example_sentence": "El debate sobre la clonación humana plantea serias cuestiones sobre la moral y la ética científica.",
+   "freq_rank": 2400,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "objetividad",
+   "display_form": "la objetividad",
+   "gloss": "objectivity",
+   "example_sentence": "La objetividad es fundamental en el periodismo para presentar las noticias sin sesgos personales.",
+   "freq_rank": 24287,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "perdurabilidad",
+   "display_form": "la perdurabilidad",
+   "gloss": "durability, lastingness",
+   "example_sentence": "La perdurabilidad de las instituciones democráticas depende del compromiso ciudadano y del respeto a los valores fundamentales.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "perseverancia",
+   "display_form": "la perseverancia",
+   "gloss": "perseverance",
+   "example_sentence": "Gracias a su perseverancia, el científico logró publicar su investigación después de años de trabajo continuo.",
+   "freq_rank": 19695,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "progreso",
+   "display_form": "el progreso",
+   "gloss": "progress",
+   "example_sentence": "El progreso tecnológico de las últimas décadas ha transformado profundamente nuestra forma de comunicarnos.",
+   "freq_rank": 2940,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "racionalidad",
+   "display_form": "la racionalidad",
+   "gloss": "rationality",
+   "example_sentence": "La racionalidad es fundamental en la toma de decisiones empresariales importantes.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "rectitud",
+   "display_form": "la rectitud",
+   "gloss": "rectitude, uprightness",
+   "example_sentence": "La rectitud moral de la jueza nunca ha sido cuestionada durante su carrera.",
+   "freq_rank": 20578,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "resiliencia",
+   "display_form": "la resiliencia",
+   "gloss": "resilience",
+   "example_sentence": "La resiliencia es una característica fundamental para superar los desafíos de la vida moderna.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "sensatez",
+   "display_form": "la sensatez",
+   "gloss": "good sense",
+   "example_sentence": "La sensatez de su decisión quedó demostrada cuando el proyecto resultó un éxito a largo plazo.",
+   "freq_rank": 19349,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "transparencia",
+   "display_form": "la transparencia",
+   "gloss": "transparency",
+   "example_sentence": "La transparencia en las instituciones públicas es fundamental para combatir la corrupción.",
+   "freq_rank": 20792,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "versatilidad",
+   "display_form": "la versatilidad",
+   "gloss": "versatility",
+   "example_sentence": "La versatilidad de este software permite usarlo tanto en educación como en negocios.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "viabilidad",
+   "display_form": "la viabilidad",
+   "gloss": "viability, feasibility",
+   "example_sentence": "El comité estudió la viabilidad del proyecto antes de aprobar el presupuesto.",
+   "freq_rank": 34427,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-abstract-noun-vocab",
+   "cefr_level": "B2",
+   "lemma": "ética",
+   "display_form": "la ética",
+   "gloss": "ethics",
+   "example_sentence": "La ética profesional exige que los médicos antepongan el bienestar del paciente a cualquier otro interés.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-collocations-idioms",
+   "cefr_level": "B2",
+   "lemma": "perder el tren",
+   "display_form": "perder el tren",
+   "gloss": "to miss the train (miss the boat)",
+   "example_sentence": "Si no salimos ahora mismo, vamos a perder el tren y tendremos que esperar dos horas.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-collocations-idioms",
+   "cefr_level": "B2",
+   "lemma": "prestar atención",
+   "display_form": "prestar atención",
+   "gloss": "to pay attention",
+   "example_sentence": "Es importante prestar atención a las noticias para estar bien informado sobre lo que ocurre en el mundo.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-culture-arts",
+   "cefr_level": "B2",
+   "lemma": "reseña",
+   "display_form": "la reseña",
+   "gloss": "review (of a book, film)",
+   "example_sentence": "El chef estaba nervioso porque un famoso periodista gastronómico iba a publicar una reseña de su nuevo restaurante en la revista cultural más leída del país.",
+   "freq_rank": 22391,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-law-justice",
+   "cefr_level": "B2",
+   "lemma": "denuncia",
+   "display_form": "la denuncia",
+   "gloss": "report, complaint (to police)",
+   "example_sentence": "La víctima del robo fue a la comisaría para presentar una denuncia por el dinero que le habían robado.",
+   "freq_rank": 4468,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-psychology-behaviour",
+   "cefr_level": "B2",
+   "lemma": "receloso",
+   "display_form": "receloso",
+   "gloss": "suspicious, wary",
+   "example_sentence": "Después de vivir tanto tiempo aislado en el campo, se volvió muy receloso con los visitantes que llegaban a su granja.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "adjective"
+  },
+  {
+   "language": "ES",
+   "umbrella_key": "es-b2-vocab-psychology-behaviour",
+   "cefr_level": "B2",
+   "lemma": "tacaño",
+   "display_form": "tacaño",
+   "gloss": "stingy",
+   "example_sentence": "Mi vecino es tan tacaño que nunca invita a nadie a cenar, aunque tiene mucho dinero en el banco.",
+   "freq_rank": 9026,
+   "tier": "extended",
+   "pos": "adjective"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-describing-words",
+   "cefr_level": "A1",
+   "lemma": "büyük",
+   "display_form": "büyük",
+   "gloss": "big",
+   "example_sentence": "İstanbul çok büyük bir şehir.",
+   "freq_rank": 124,
+   "tier": "core",
+   "pos": "adjective"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "anneanne",
+   "display_form": "anneanne",
+   "gloss": "grandmother (mother's mother)",
+   "example_sentence": "Anneannem her gün okul çıkışında beni bekler.",
+   "freq_rank": 5970,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-family-people",
+   "cefr_level": "A1",
+   "lemma": "babaanne",
+   "display_form": "babaanne",
+   "gloss": "grandmother (father's mother)",
+   "example_sentence": "Bayramda babaannem bize çok güzel yemekler pişirdi.",
+   "freq_rank": 8869,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-free-time",
+   "cefr_level": "A1",
+   "lemma": "bisiklet sürmek",
+   "display_form": "bisiklet sürmek",
+   "gloss": "to ride a bike",
+   "example_sentence": "Hafta sonları parkta bisiklet sürmek çok eğlenceli.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-free-time",
+   "cefr_level": "A1",
+   "lemma": "müzik dinlemek",
+   "display_form": "müzik dinlemek",
+   "gloss": "to listen to music",
+   "example_sentence": "Akşamları evde müzik dinlemek çok güzel.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-free-time",
+   "cefr_level": "A1",
+   "lemma": "yemek yapmak",
+   "display_form": "yemek yapmak",
+   "gloss": "to cook",
+   "example_sentence": "Annem hobiyle yemek yapmayı çok seviyor.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-greetings-phrases",
+   "cefr_level": "A1",
+   "lemma": "iyi yolculuklar",
+   "display_form": "iyi yolculuklar",
+   "gloss": "have a good trip",
+   "example_sentence": "Uçağa binmeden önce arkadaşım bana \"iyi yolculuklar!\" dedi.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "phrase"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "dolap",
+   "display_form": "dolap",
+   "gloss": "cupboard, wardrobe",
+   "example_sentence": "Mutfaktaki dolap çok büyük.",
+   "freq_rank": 1276,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "gardırop",
+   "display_form": "gardırop",
+   "gloss": "wardrobe",
+   "example_sentence": "Yeni aldığım kıyafetleri gardıroba koydum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "kanepe",
+   "display_form": "kanepe",
+   "gloss": "sofa",
+   "example_sentence": "Oturma odasında büyük bir kanepe var.",
+   "freq_rank": 2515,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "koltuk",
+   "display_form": "koltuk",
+   "gloss": "armchair",
+   "example_sentence": "Babam akşamları oturma odasındaki koltuğa oturur.",
+   "freq_rank": 1263,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "lavabo",
+   "display_form": "lavabo",
+   "gloss": "washbasin, sink",
+   "example_sentence": "Ellerimi lavaboda yıkıyorum.",
+   "freq_rank": 2977,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "misafir odası",
+   "display_form": "misafir odası",
+   "gloss": "guest room",
+   "example_sentence": "Annem misafir odası için yeni bir yatak aldı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "oturma odası",
+   "display_form": "oturma odası",
+   "gloss": "living room",
+   "example_sentence": "Akşamları ailemle oturma odasında televizyon izliyoruz.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "sehpa",
+   "display_form": "sehpa",
+   "gloss": "coffee table",
+   "example_sentence": "Çay bardağını sehpanın üstüne koydum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "tuvalet",
+   "display_form": "tuvalet",
+   "gloss": "toilet",
+   "example_sentence": "Tuvalet evin sağında.",
+   "freq_rank": 893,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "yatak",
+   "display_form": "yatak",
+   "gloss": "bed",
+   "example_sentence": "Bu yatak çok rahat.",
+   "freq_rank": 458,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-home-objects",
+   "cefr_level": "A1",
+   "lemma": "yatak odası",
+   "display_form": "yatak odası",
+   "gloss": "bedroom",
+   "example_sentence": "Bizim evde iki yatak odası var.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-time-calendar",
+   "cefr_level": "A1",
+   "lemma": "akşam",
+   "display_form": "akşam",
+   "gloss": "evening",
+   "example_sentence": "Akşam yemeği saat yedide hazır.",
+   "freq_rank": 307,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "alışveriş merkezi",
+   "display_form": "alışveriş merkezi",
+   "gloss": "shopping mall",
+   "example_sentence": "Annem ve ben bugün alışveriş merkezine gidiyoruz.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "apartman",
+   "display_form": "apartman",
+   "gloss": "apartment building",
+   "example_sentence": "Biz büyük bir apartmanda oturuyoruz.",
+   "freq_rank": 3156,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "bakkal",
+   "display_form": "bakkal",
+   "gloss": "corner shop, grocer",
+   "example_sentence": "Her sabah bakkaldan ekmek alıyorum.",
+   "freq_rank": 8862,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "durak",
+   "display_form": "durak",
+   "gloss": "stop (bus etc.)",
+   "example_sentence": "Otobüs çok kalabalık, ama bir sonraki durak yakın.",
+   "freq_rank": 2817,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "dükkan",
+   "display_form": "dükkan",
+   "gloss": "shop",
+   "example_sentence": "Babam her sabah köşedeki dükkana gider.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "feribot",
+   "display_form": "feribot",
+   "gloss": "ferry (car ferry)",
+   "example_sentence": "Biz her sabah feribot ile karşıya geçiyoruz.",
+   "freq_rank": 9230,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "gar",
+   "display_form": "gar",
+   "gloss": "railway station",
+   "example_sentence": "Tren sabah sekizde gardan kalkıyor.",
+   "freq_rank": 11979,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "iskele",
+   "display_form": "iskele",
+   "gloss": "pier, landing stage",
+   "example_sentence": "Vapur her sabah bu iskelede duruyor.",
+   "freq_rank": 4307,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "otobüs durağı",
+   "display_form": "otobüs durağı",
+   "gloss": "bus stop",
+   "example_sentence": "Her sabah otobüs durağında on dakika bekliyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "sinema",
+   "display_form": "sinema",
+   "gloss": "cinema",
+   "example_sentence": "Bugün arkadaşlarımla sinemaya gidiyoruz.",
+   "freq_rank": 1635,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "taksi durağı",
+   "display_form": "taksi durağı",
+   "gloss": "taxi rank",
+   "example_sentence": "En yakın taksi durağı nerede?",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "tramvay",
+   "display_form": "tramvay",
+   "gloss": "tram",
+   "example_sentence": "Her sabah işe tramvayla gidiyorum.",
+   "freq_rank": 11426,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "tren garı",
+   "display_form": "tren garı",
+   "gloss": "railway station",
+   "example_sentence": "Annem beni sabah erkenden tren garına bıraktı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a1-vocab-transport-places",
+   "cefr_level": "A1",
+   "lemma": "vapur",
+   "display_form": "vapur",
+   "gloss": "ferry (passenger steamer)",
+   "example_sentence": "Her sabah işe gitmek için vapura biniyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-celebrations-traditions",
+   "cefr_level": "A2",
+   "lemma": "bayram yemeği",
+   "display_form": "bayram yemeği",
+   "gloss": "holiday (bayram) meal",
+   "example_sentence": "Annem her yıl büyük bir bayram yemeği hazırlar ve tüm aile birlikte yer.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "döviz bürosu",
+   "display_form": "döviz bürosu",
+   "gloss": "currency exchange office",
+   "example_sentence": "Tatilde Türkiye'ye geldiğimizde, döviz bürosuna gidip eurolarımızı liraya çevirdik.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "kütüphane",
+   "display_form": "kütüphane",
+   "gloss": "library",
+   "example_sentence": "Bu şehirde büyük bir kütüphane var; her gün oraya gidiyorum.",
+   "freq_rank": 2065,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "otogar",
+   "display_form": "otogar",
+   "gloss": "intercity bus station",
+   "example_sentence": "Ankara'ya gitmek için otogardan bilet aldım.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "pazar",
+   "display_form": "pazar",
+   "gloss": "market; Sunday",
+   "example_sentence": "Her Cumartesi sabahı annem taze sebze ve meyve almak için pazara gider.",
+   "freq_rank": 1191,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "sağlık merkezi",
+   "display_form": "sağlık merkezi",
+   "gloss": "health centre",
+   "example_sentence": "Başım çok ağrıyor; bugün sağlık merkezine gidiyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "stadyum",
+   "display_form": "stadyum",
+   "gloss": "stadium",
+   "example_sentence": "Bu şehirde çok büyük bir stadyum var; her hafta sonu maç izlemeye gidiyoruz.",
+   "freq_rank": 6657,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-city-shopping",
+   "cefr_level": "A2",
+   "lemma": "süpermarket",
+   "display_form": "süpermarket",
+   "gloss": "supermarket",
+   "example_sentence": "Bugün işten sonra süpermarkete uğrayıp ekmek ve süt alacağım.",
+   "freq_rank": 8075,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-health-body",
+   "cefr_level": "A2",
+   "lemma": "boyun",
+   "display_form": "boyun",
+   "gloss": "neck",
+   "example_sentence": "Uzun süre bilgisayara baktım ve boynum ağrıyor.",
+   "freq_rank": 1155,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-health-body",
+   "cefr_level": "A2",
+   "lemma": "dil",
+   "display_form": "dil",
+   "gloss": "tongue; language",
+   "example_sentence": "Bu yemek çok acı — dilim yanıyor!",
+   "freq_rank": 785,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-health-body",
+   "cefr_level": "A2",
+   "lemma": "kalp",
+   "display_form": "kalp",
+   "gloss": "heart",
+   "example_sentence": "Doktor benim kalbimi dinledi ve 'Çok sağlıklı!' dedi.",
+   "freq_rank": 360,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-movement-change-verbs",
+   "cefr_level": "A2",
+   "lemma": "iyileşmek",
+   "display_form": "iyileşmek",
+   "gloss": "to get better, recover",
+   "example_sentence": "Doktor dedi ki birkaç gün dinlenirsen çabuk iyileşeceksin.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-technology-communication",
+   "cefr_level": "A2",
+   "lemma": "göndermek",
+   "display_form": "göndermek",
+   "gloss": "to send",
+   "example_sentence": "Annem bana her gün bir mesaj gönderiyor.",
+   "freq_rank": 322,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "kahvaltı",
+   "display_form": "kahvaltı",
+   "gloss": "breakfast",
+   "example_sentence": "Her sabah saat yedide kahvaltı yapıyoruz.",
+   "freq_rank": 1173,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-time-daily-routine",
+   "cefr_level": "A2",
+   "lemma": "öğleden sonra",
+   "display_form": "öğleden sonra",
+   "gloss": "afternoon",
+   "example_sentence": "Genellikle öğleden sonra çay içerim ve biraz dinlenirim.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "ova",
+   "display_form": "ova",
+   "gloss": "plain (flat land)",
+   "example_sentence": "Otobüs, geniş ovadan geçerken manzara çok güzeldi.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-travel-nature",
+   "cefr_level": "A2",
+   "lemma": "yolculuk",
+   "display_form": "yolculuk",
+   "gloss": "journey, trip",
+   "example_sentence": "Ankara'dan İstanbul'a olan yolculuk yaklaşık dört saat sürdü.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "eczacı",
+   "display_form": "eczacı",
+   "gloss": "pharmacist",
+   "example_sentence": "Eczacı bana ilacı verdi ve nasıl kullanacağımı açıkladı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-a2-vocab-work-school",
+   "cefr_level": "A2",
+   "lemma": "pilot",
+   "display_form": "pilot",
+   "gloss": "pilot",
+   "example_sentence": "Uçağın pilotu yolcularla konuştu.",
+   "freq_rank": 1712,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "azim",
+   "display_form": "azim",
+   "gloss": "determination",
+   "example_sentence": "Başarıya ulaşmak için çok çalışmak ve azim gereklidir.",
+   "freq_rank": 5789,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "değişkenlik",
+   "display_form": "değişkenlik",
+   "gloss": "variability",
+   "example_sentence": "Havanın değişkenliği yüzünden ne giyeceğimize karar vermek çok zordu.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "doğallık",
+   "display_form": "doğallık",
+   "gloss": "naturalness",
+   "example_sentence": "Bu ürünlerin doğallık açısından çok daha iyi olduğunu düşünüyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "güvenilirlik",
+   "display_form": "güvenilirlik",
+   "gloss": "reliability",
+   "example_sentence": "Bir arkadaşta en çok aradığım şey güvenilirlik; her zaman yanımda olacağını bilmek istiyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "kalite",
+   "display_form": "kalite",
+   "gloss": "quality",
+   "example_sentence": "Bu mağazadaki ürünlerin kalitesi gerçekten çok yüksek, bu yüzden fiyatlar da biraz pahalı.",
+   "freq_rank": 2168,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "sadakat",
+   "display_form": "sadakat",
+   "gloss": "loyalty",
+   "example_sentence": "Annem ve babam otuz yıldır evliler; bu kadar uzun süren bir birlikteliğin sırrının sadakat olduğunu düşünüyorum.",
+   "freq_rank": 2724,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "sağlık",
+   "display_form": "sağlık",
+   "gloss": "health",
+   "example_sentence": "Düzenli egzersiz yapmak ve dengeli beslenmek, iyi bir sağlık için çok önemlidir.",
+   "freq_rank": 748,
+   "tier": "core",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "temizlik",
+   "display_form": "temizlik",
+   "gloss": "cleanliness; cleaning",
+   "example_sentence": "Annem her hafta sonu evde büyük bir temizlik yapar.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-abstract-concepts",
+   "cefr_level": "B1",
+   "lemma": "çalışkanlık",
+   "display_form": "çalışkanlık",
+   "gloss": "diligence",
+   "example_sentence": "Öğretmen, onun çalışkanlığını tüm sınıfa örnek gösterdi.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-case-governed-verbs",
+   "cefr_level": "B1",
+   "lemma": "bahsetmek",
+   "display_form": "bahsetmek",
+   "gloss": "to talk about, mention (-DAn)",
+   "example_sentence": "Satış görevlisi yeni indirimlerden bahsetti ve biz hemen ilgilendik.",
+   "freq_rank": 256,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-case-governed-verbs",
+   "cefr_level": "B1",
+   "lemma": "güvenmek",
+   "display_form": "güvenmek",
+   "gloss": "to trust (-A)",
+   "example_sentence": "Bu uygulamaya gerçekten güveniyorum; hiç sorun çıkarmadı.",
+   "freq_rank": 461,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-case-governed-verbs",
+   "cefr_level": "B1",
+   "lemma": "korkmak",
+   "display_form": "korkmak",
+   "gloss": "to be afraid of (-DAn)",
+   "example_sentence": "Birçok insan borç yapmaktan korkar, çünkü geri ödemek zor olabilir.",
+   "freq_rank": 267,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-education-career",
+   "cefr_level": "B1",
+   "lemma": "işyeri",
+   "display_form": "işyeri",
+   "gloss": "workplace",
+   "example_sentence": "Her sabah sekizde işyerime gidiyorum ve akşam altıda çıkıyorum.",
+   "freq_rank": 5659,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-education-career",
+   "cefr_level": "B1",
+   "lemma": "mezuniyet belgesi",
+   "display_form": "mezuniyet belgesi",
+   "gloss": "diploma, graduation certificate",
+   "example_sentence": "İş başvurusu yaparken mezuniyet belgesini hazır bulundurman gerekiyor.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-emotions-relationships",
+   "cefr_level": "B1",
+   "lemma": "hayal kırıklığı",
+   "display_form": "hayal kırıklığı",
+   "gloss": "disappointment",
+   "example_sentence": "Arkadaşım sözünü tutmadığında çok büyük bir hayal kırıklığı yaşadım.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "gazeteci",
+   "display_form": "gazeteci",
+   "gloss": "journalist",
+   "example_sentence": "Genç gazeteci, olayı yerinde inceleyerek kapsamlı bir haber hazırladı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "haberci",
+   "display_form": "haberci",
+   "gloss": "reporter; messenger",
+   "example_sentence": "Televizyon kanalının habercisi, depremin olduğu bölgeden canlı yayın yaptı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-media-news",
+   "cefr_level": "B1",
+   "lemma": "sunucu",
+   "display_form": "sunucu",
+   "gloss": "presenter, host",
+   "example_sentence": "Akşam haberlerinin sunucusu izleyicilere günün en önemli gelişmelerini aktardı.",
+   "freq_rank": 4833,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-opinions-society",
+   "cefr_level": "B1",
+   "lemma": "itiraz",
+   "display_form": "itiraz",
+   "gloss": "objection",
+   "example_sentence": "Takım kaptanı hakeme itiraz etti ve kararın değiştirilmesini istedi.",
+   "freq_rank": 1830,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-opinions-society",
+   "cefr_level": "B1",
+   "lemma": "tartışma",
+   "display_form": "tartışma",
+   "gloss": "discussion, debate",
+   "example_sentence": "Öğrenciler sınıfta çevre sorunları hakkında kapsamlı bir tartışma yaptı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-opinions-society",
+   "cefr_level": "B1",
+   "lemma": "çevre koruma",
+   "display_form": "çevre koruma",
+   "gloss": "environmental protection",
+   "example_sentence": "Gençler, çevre koruma konusunda hükümetin daha fazla önlem almasını istiyor.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-opinions-society",
+   "cefr_level": "B1",
+   "lemma": "şikayet",
+   "display_form": "şikâyet",
+   "gloss": "complaint",
+   "example_sentence": "Yolcular, otobüslerin sık sık geç kalması nedeniyle belediyeye şikayet ilettiler.",
+   "freq_rank": 1498,
+   "tier": "common",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-travel-tourism",
+   "cefr_level": "B1",
+   "lemma": "kapora",
+   "display_form": "kapora",
+   "gloss": "deposit (down payment)",
+   "example_sentence": "Oteli rezerve etmek için 200 lira kapora ödedik.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b1-vocab-travel-tourism",
+   "cefr_level": "B1",
+   "lemma": "kaçırmak",
+   "display_form": "kaçırmak",
+   "gloss": "to miss (a bus, train)",
+   "example_sentence": "Sabah geç kalktığım için treni kaçırdım ve bir sonraki seferi iki saat beklemek zorunda kaldım.",
+   "freq_rank": 445,
+   "tier": "core",
+   "pos": "verb"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-culture-arts",
+   "cefr_level": "B2",
+   "lemma": "yapıt",
+   "display_form": "yapıt",
+   "gloss": "work (of art)",
+   "example_sentence": "Müzedeki en çarpıcı yapıt, 19. yüzyıldan kalma büyük bir yağlıboya tablosuydu.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-global-issues",
+   "cefr_level": "B2",
+   "lemma": "uluslararası göç",
+   "display_form": "uluslararası göç",
+   "gloss": "international migration",
+   "example_sentence": "Uluslararası göç, dünya genelinde milyonlarca insanı etkileyen karmaşık bir sosyal olgudur.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "fermantasyon",
+   "display_form": "fermantasyon",
+   "gloss": "fermentation",
+   "example_sentence": "Yoğurdun oluşması için sütün fermantasyon sürecinden geçmesi gerekir.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "gelişme",
+   "display_form": "gelişme",
+   "gloss": "development, progress",
+   "example_sentence": "Uzay araştırmalarındaki son gelişmeler, insanlığın Mars'a ulaşmasını mümkün kılabilir.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "meteoroloji",
+   "display_form": "meteoroloji",
+   "gloss": "meteorology",
+   "example_sentence": "Meteoroloji, önümüzdeki hafta şiddetli fırtına beklendiğini açıkladı.",
+   "freq_rank": 10595,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-science-technology",
+   "cefr_level": "B2",
+   "lemma": "otomasyon",
+   "display_form": "otomasyon",
+   "gloss": "automation",
+   "example_sentence": "Ev otomasyon sistemleri sayesinde ışıkları ve ısıtmayı telefonumdan kontrol edebiliyorum.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "değerlendirme",
+   "display_form": "değerlendirme",
+   "gloss": "evaluation, assessment",
+   "example_sentence": "Sınav sonuçlarının değerlendirmesi bir hafta sürecek.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "emeklilik",
+   "display_form": "emeklilik",
+   "gloss": "retirement",
+   "example_sentence": "Şirketin en deneyimli çalışanı, kırk yıllık hizmetinin ardından emeklilik töreninde duygusal bir konuşma yaptı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "görev dağılımı",
+   "display_form": "görev dağılımı",
+   "gloss": "division of tasks",
+   "example_sentence": "Proje başlamadan önce müdür, ekip içindeki görev dağılımını netleştirdi.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "iş sözleşmesi",
+   "display_form": "iş sözleşmesi",
+   "gloss": "employment contract",
+   "example_sentence": "Yeni pozisyon için iş sözleşmesini imzalamadan önce tüm maddeleri dikkatlice okumanızı tavsiye ederiz.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "işe alım",
+   "display_form": "işe alım",
+   "gloss": "recruitment, hiring",
+   "example_sentence": "Şirketin işe alım süreci genellikle üç aşamadan oluşur: ön eleme, mülakat ve teklif.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "işten çıkarma",
+   "display_form": "işten çıkarma",
+   "gloss": "dismissal, layoff",
+   "example_sentence": "Şirket, bütçe kesintileri nedeniyle on çalışanın işten çıkarma sürecini başlattı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "performans değerlendirmesi",
+   "display_form": "performans değerlendirmesi",
+   "gloss": "performance review",
+   "example_sentence": "Yıllık performans değerlendirmesi sırasında yöneticim güçlü yönlerimi ve geliştirilmesi gereken alanları benimle paylaştı.",
+   "freq_rank": null,
+   "tier": "extended",
+   "pos": "noun"
+  },
+  {
+   "language": "TR",
+   "umbrella_key": "tr-b2-vocab-work-professional",
+   "cefr_level": "B2",
+   "lemma": "personel",
+   "display_form": "personel",
+   "gloss": "staff, personnel",
+   "example_sentence": "Şirket, yeni projeyi hayata geçirebilmek için ek personel almaya karar verdi.",
+   "freq_rank": 2119,
+   "tier": "common",
+   "pos": "noun"
+  }
+ ],
+ "demotes": [
+  {
+   "id": "78764390-3e8e-5854-b094-18b823d9c7cd",
+   "reason": "pool-hygiene",
+   "topic": "de-a1-vocab-family-people",
+   "word": "der jüngere Bruder",
+   "why": "inflected phrase, not a lexeme",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "8df818d7-d1c7-5005-9065-84e94180a488",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "das Badezimmer",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "6e5a6d19-4691-58cb-b4c6-16479684c266",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "die Küche",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "979bc671-7d60-56e3-9ab1-ea6f55e0e8ee",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "die Küche",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "0f160e9b-9784-5cb1-b492-8d1db2737044",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "der Kühlschrank",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "0f60b2ac-2f65-5270-81c4-297c5c5ae559",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "der Kühlschrank",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "0da8f631-b758-50cb-9361-7027715ed246",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "der Kühlschrank",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "907ea870-66d3-5c9c-a5f2-0030cb491015",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "das Schlafzimmer",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "c763bace-3956-5f04-ab88-014804aab999",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-housing-vocab",
+   "word": "Wohnung",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "943d3de9-c65e-5c19-b1d9-e9d59886d518",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "der Regen",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "569e7c72-042b-57f0-9170-c4dc609633ad",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-vocab-travel-nature",
+   "word": "der Zug",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "8ceea41f-1b8a-5d0f-a886-65037356f50e",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-vocab-work-school",
+   "word": "die Schule",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "b930e3c0-e9de-565e-8cb8-5172c86a087b",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-vocab-work-school",
+   "word": "die Schule",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "fc188782-7039-58b0-b230-491c0d238d9d",
+   "reason": "pool-hygiene",
+   "topic": "de-a2-vocab-work-school",
+   "word": "die Schule",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "80b81987-975f-58f7-a822-a3bb083f68a6",
+   "reason": "quality",
+   "topic": "de-b1-environment-vocab",
+   "word": "Generation",
+   "why": "prompt defines parents generation, not Generation",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "d91f2a16-1c5e-59a4-90c4-a33891c7b0f9",
+   "reason": "pool-hygiene",
+   "topic": "de-b2-vocab-society-politics",
+   "word": "die Regierung",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "d137f2eb-be48-58a9-8133-0305a9a60ea4",
+   "reason": "pool-hygiene",
+   "topic": "de-b2-vocab-work-professional",
+   "word": "der Mietvertrag",
+   "why": "housing word in work topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "f2bbf982-17b8-5678-80ce-d914fc10338d",
+   "reason": "pool-hygiene",
+   "topic": "es-a1-vocab-city-places",
+   "word": "el cibercafé",
+   "why": "dated/rare",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "2b963af7-051a-50b1-8604-72bdf3b03314",
+   "reason": "quality",
+   "topic": "es-a1-vocab-family-people",
+   "word": "esposa",
+   "why": "esposa prompt: woman married to your father",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "cf6bf6d4-c402-5478-ac89-9e44d7dd96a1",
+   "reason": "quality",
+   "topic": "es-a1-vocab-family-people",
+   "word": "esposa",
+   "why": "esposa prompt: woman married to your father",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "6f15a958-f1ff-5bd0-8028-746c229c0a01",
+   "reason": "quality",
+   "topic": "es-a1-vocab-family-people",
+   "word": "esposo",
+   "why": "esposo prompt garbled",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "58a11b38-8ee7-5e70-b03d-3f4c8a80e861",
+   "reason": "pool-hygiene",
+   "topic": "es-a1-vocab-home-objects",
+   "word": "el pupitre",
+   "why": "classroom desk, not home",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "154b5067-6b2e-54cf-889d-7d43fdda561e",
+   "reason": "pool-hygiene",
+   "topic": "es-a2-vocab-time-daily-routine",
+   "word": "desayuno",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "4e7b9e6c-f267-5290-a452-de2ccf803d09",
+   "reason": "quality",
+   "topic": "es-b1-environment-vocab",
+   "word": "cambio",
+   "why": "prompt defines climate change; answer cambio is a fragment",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "27581b20-ae11-5d04-be61-e648568bede5",
+   "reason": "pool-hygiene",
+   "topic": "es-b1-environment-vocab",
+   "word": "huelga",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "069fd2a9-7628-5027-b527-b26b129a7612",
+   "reason": "pool-hygiene",
+   "topic": "es-b1-environment-vocab",
+   "word": "los Juegos Olímpicos",
+   "why": "sport event, not environment/society",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "66318b5b-5310-5d05-a603-f4d9f239bb58",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "igualdad",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "cd775e96-f6d1-5626-b121-39da45117a8f",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-abstract-noun-vocab",
+   "word": "la justicia",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "f6c763a5-6b31-5e51-9e93-703dacc34cb0",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-vocab-work-professional",
+   "word": "contrato",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "88439e62-3a80-5e3c-8ff2-14d0c79d8d81",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-vocab-work-professional",
+   "word": "contrato",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "ed23b60b-8469-515f-b751-c713807fb79e",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-vocab-work-professional",
+   "word": "contrato",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "c469cc4c-d2b1-5c7e-95ba-e8d2baa994ab",
+   "reason": "pool-hygiene",
+   "topic": "es-b2-vocab-work-professional",
+   "word": "contrato",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "d176a777-9c5f-59a7-bbed-e14b860527e6",
+   "reason": "pool-hygiene",
+   "topic": "tr-a1-vocab-family-people",
+   "word": "şoför",
+   "why": "job, not family",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "63bbb12d-8ad5-53bb-a18e-ece738ce9556",
+   "reason": "pool-hygiene",
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "mutfak masası",
+   "why": "compositional (kitchen table)",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "d61fdbe5-49ec-5903-a411-973f8433cd5e",
+   "reason": "pool-hygiene",
+   "topic": "tr-a1-vocab-home-objects",
+   "word": "sıra",
+   "why": "classroom bench, off-topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "493acac1-1337-54e7-aed0-3a4bb6ec573a",
+   "reason": "pool-hygiene",
+   "topic": "tr-a2-vocab-city-shopping",
+   "word": "teknoloji mağazası",
+   "why": "compositional (technology shop)",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "9bf2de89-cc4c-56a1-843e-530d915b8f20",
+   "reason": "pool-hygiene",
+   "topic": "tr-a2-vocab-work-school",
+   "word": "doktor",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "b8158dcd-ea4b-5519-847b-50753ecc1920",
+   "reason": "pool-hygiene",
+   "topic": "tr-a2-vocab-work-school",
+   "word": "doktor",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "25618835-bfa2-5b2b-a1c7-bcf700a12d46",
+   "reason": "pool-hygiene",
+   "topic": "tr-b1-vocab-opinions-society",
+   "word": "değer",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "3369d922-aa90-581e-b16e-72a2df4e101f",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-culture-arts",
+   "word": "eleştiri",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "3d17b931-8c2b-5639-942d-0205a37d1a90",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "araştırma",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "dd33e1c6-21c4-50ec-887d-887061030929",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-science-technology",
+   "word": "araştırma",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "9bea147a-252a-5e1c-8c8a-a73080b847e9",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "başvuru",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "5ea71256-38c8-58ce-a5f1-b9f24eb2a77f",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "değerlendirme görüşmesi",
+   "why": "duplicate of performans değerlendirmesi",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "1922d6ab-1612-5f5f-b82a-74c35fda5cbe",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "iş değerlendirmesi",
+   "why": "duplicate of performans değerlendirmesi",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "8a2104ee-b8c1-53a0-89ac-e7fc4704bced",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "işe alım süreci",
+   "why": "duplicate of işe alım",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "a5c06340-9cef-5d42-be61-47cee14056cf",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "terfi",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "a6c064d3-1e0c-5b07-bf61-496b6023b8fe",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "terfi",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "abc06cb2-9f28-58cc-b861-3e20da94a3e9",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "terfi",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  },
+  {
+   "id": "a8c067f9-1bd2-5f7d-bd61-46315dea7d5c",
+   "reason": "pool-hygiene",
+   "topic": "tr-b2-vocab-work-professional",
+   "word": "terfi",
+   "why": "curator rejected this word for this topic",
+   "prior_status": "auto-approved",
+   "prior_demotion_reason": null
+  }
+ ],
+ "reapprove": [
+  [
+   "DE",
+   "de-a1-vocab-time-calendar",
+   "Mittag"
+  ],
+  [
+   "TR",
+   "tr-b1-vocab-health-lifestyle",
+   "kilo vermek"
+  ]
+ ]
+}

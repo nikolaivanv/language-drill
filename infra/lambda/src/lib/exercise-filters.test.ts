@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PgDialect } from 'drizzle-orm/pg-core';
-import { freshFirstOrderBy } from './exercise-filters';
+import { ALL_CURRICULA, exercises } from '@language-drill/db';
+import { freshFirstOrderBy, inCurriculumFilter, inCurriculumSql } from './exercise-filters';
 
 describe('freshFirstOrderBy', () => {
   it('orders never-seen first (nulls first), then oldest-seen, then random, binding the userId', () => {
@@ -12,6 +13,49 @@ describe('freshFirstOrderBy', () => {
     expect(lower).toContain('nulls first');
     expect(lower).toContain('random()');
     expect(params).toContain('user_abc');
+  });
+});
+
+// Points removed from the curriculum on 2026-06-07 whose rows kept being served
+// until 2026-11-15 — the regression these predicates exist for.
+const REMOVED_KEYS = ['tr-a1-everyday-vocab', 'tr-a2-everyday-vocab'];
+
+describe('inCurriculumFilter', () => {
+  it('keeps NULL-keyed rows and binds every live curriculum key, never a removed one', () => {
+    const { sql, params } = new PgDialect().sqlToQuery(inCurriculumFilter(exercises));
+    expect(sql).toContain('"grammar_point_key" is null');
+    expect(sql.toLowerCase()).toContain(' in (');
+    expect(params).toHaveLength(ALL_CURRICULA.length);
+    expect(params).toEqual(expect.arrayContaining(['tr-a1-vocab-home-objects', 'es-a2-imperfect']));
+    for (const key of REMOVED_KEYS) expect(params).not.toContain(key);
+  });
+});
+
+describe('inCurriculumSql', () => {
+  it('renders the same predicate against the given raw column, one bound param per key', () => {
+    const { sql, params } = new PgDialect().sqlToQuery(inCurriculumSql('e.grammar_point_key'));
+    expect(sql).toMatch(/^\(e\.grammar_point_key IS NULL OR e\.grammar_point_key IN \(\$1, \$2/);
+    expect(params).toHaveLength(ALL_CURRICULA.length);
+    expect(params).toContain('tr-a1-vocab-home-objects');
+    for (const key of REMOVED_KEYS) expect(params).not.toContain(key);
+  });
+});
+
+// Same file-level guard as the scoring one below: route tests mock the filter
+// module, so they can only prove a call, not that every pool-discovery file
+// still applies the predicate. A new pool draw in one of these files that
+// forgets it is not caught here; a file that drops it entirely is.
+const POOL_DISCOVERY_SURFACES = [
+  '../routes/exercises.ts',
+  '../routes/sessions.ts',
+  '../routes/fluency.ts',
+  '../routes/public.ts',
+];
+
+describe('inCurriculum call sites', () => {
+  it.each(POOL_DISCOVERY_SURFACES)('%s gates its pool draws on curriculum membership', (rel) => {
+    const src = readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
+    expect(src).toMatch(/inCurriculum(Filter|Sql)\(/);
   });
 });
 

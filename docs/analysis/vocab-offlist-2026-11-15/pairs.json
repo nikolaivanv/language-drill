@@ -1,0 +1,6986 @@
+[
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "alt",
+  "raws": [
+   "alt"
+  ],
+  "n": 1,
+  "prompt": "The adjective used to describe someone who has lived for many years — the opposite of \"jung\" (young). Use it to describe an elderly grandparent, for example.",
+  "ex": "Meine Großmutter ist sehr alt und erzählt tolle Geschichten.",
+  "elsewhere": [
+   "de-a1-vocab-family-people:approved"
+  ],
+  "freq": 152,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "billig",
+  "raws": [
+   "billig"
+  ],
+  "n": 1,
+  "prompt": "This adjective describes something that costs very little money — the opposite of \"teuer\" (expensive).",
+  "ex": "Das T-Shirt ist sehr billig — es kostet nur zwei Euro.",
+  "elsewhere": [
+   "de-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 2313,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "groß",
+  "raws": [
+   "groß"
+  ],
+  "n": 2,
+  "prompt": "A word describing something that has a very large size — the opposite of \"klein\" (small). You might use it to describe a tall tree or a wide lake.",
+  "ex": "Der Baum im Park ist sehr groß.",
+  "elsewhere": [
+   "de-a1-vocab-family-people:approved"
+  ],
+  "freq": 147,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "kalt",
+  "raws": [
+   "kalt"
+  ],
+  "n": 1,
+  "prompt": "Describing weather or a room when the temperature is very low — the opposite of \"warm\".",
+  "ex": "Im Winter ist es in Deutschland sehr kalt.",
+  "elsewhere": [
+   "de-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 810,
+  "pos_all": [
+   "ADJ",
+   "ADV"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "krank",
+  "raws": [
+   "krank"
+  ],
+  "n": 1,
+  "prompt": "The adjective used to describe someone who is not well — feeling unwell or having an illness. The opposite of \"gesund\" (healthy).",
+  "ex": "Heute bleibe ich zu Hause, weil ich krank bin.",
+  "elsewhere": [
+   "de-a2-vocab-health-body:approved"
+  ],
+  "freq": 575,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "leicht",
+  "raws": [
+   "leicht"
+  ],
+  "n": 1,
+  "prompt": "A word describing something that is not difficult to understand — the opposite of \"schwer\" (hard/difficult). Used to describe a book, film, or text that is easy to follow.",
+  "ex": "Der Film ist sehr leicht zu verstehen.",
+  "elsewhere": [],
+  "freq": 544,
+  "pos_all": [
+   "ADJ",
+   "ADV"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "nah",
+  "raws": [
+   "nah"
+  ],
+  "n": 1,
+  "prompt": "Use this word to describe something that is not far away — close in distance. You might use it to describe a hotel that is near the train station.",
+  "ex": "Das Hotel ist sehr nah — nur fünf Minuten zu Fuß.",
+  "elsewhere": [
+   "de-a1-vocab-city-transport:approved"
+  ],
+  "freq": 486,
+  "pos_all": [
+   "ADJ",
+   "ADV"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "schwer",
+  "raws": [
+   "schwer"
+  ],
+  "n": 1,
+  "prompt": "This adjective describes a job, task, or workplace that involves a lot of effort and does not feel easy. It is the opposite of \"leicht\" (easy).",
+  "ex": "Mein Job ist sehr schwer, aber ich mag ihn.",
+  "elsewhere": [],
+  "freq": 333,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-describing-words",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "süß",
+  "raws": [
+   "süß"
+  ],
+  "n": 1,
+  "prompt": "Describes food or a drink that has a strong, sweet taste — the opposite of bitter or sour. (Think of honey or ripe fruit.)",
+  "ex": "Diese Erdbeeren sind sehr süß — ich mag sie sehr gern!",
+  "elsewhere": [
+   "de-a2-vocab-cooking-restaurants:approved"
+  ],
+  "freq": 490,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "bezahlen",
+  "raws": [
+   "bezahlen"
+  ],
+  "n": 1,
+  "prompt": "To pay for something, for example at a shop or restaurant — what is the German verb for this action?",
+  "ex": "Ich möchte jetzt bezahlen, bitte.",
+  "elsewhere": [
+   "de-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 434,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "einkaufen",
+  "raws": [
+   "einkaufen"
+  ],
+  "n": 1,
+  "prompt": "To go shopping for groceries or everyday items — often used with \"gehen\" to mean \"to go and buy things at a shop\". It is a separable verb.",
+  "ex": "Ich gehe jeden Samstag einkaufen.",
+  "elsewhere": [
+   "de-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 2478,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "essen",
+  "raws": [
+   "essen"
+  ],
+  "n": 1,
+  "prompt": "To eat; what you do with food when you are hungry.",
+  "ex": "Ich esse jeden Morgen ein Brötchen zum Frühstück.",
+  "elsewhere": [
+   "de-a1-vocab-food-drink:approved"
+  ],
+  "freq": 249,
+  "pos_all": [
+   "NOUN",
+   "PROPN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "fahren",
+  "raws": [
+   "fahren"
+  ],
+  "n": 2,
+  "prompt": "To travel by car, bus, train, or another vehicle — the general German verb for riding or driving as a passenger or driver.",
+  "ex": "Wir fahren morgen mit dem Zug nach Berlin.",
+  "elsewhere": [
+   "de-a1-vocab-city-transport:approved"
+  ],
+  "freq": 221,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "kochen",
+  "raws": [
+   "kochen"
+  ],
+  "n": 1,
+  "prompt": "To prepare and cook a meal — what people do in the kitchen to make food ready to eat.",
+  "ex": "Meine Mutter kocht jeden Abend eine warme Suppe.",
+  "elsewhere": [
+   "de-a1-vocab-free-time:approved"
+  ],
+  "freq": 1182,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "lesen",
+  "raws": [
+   "lesen"
+  ],
+  "n": 1,
+  "prompt": "To look at and understand written words, for example in a book, newspaper, or on a screen. (verb, infinitive)",
+  "ex": "Ich lese jeden Morgen die Zeitung.",
+  "elsewhere": [],
+  "freq": 403,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "regnen",
+  "raws": [
+   "regnen"
+  ],
+  "n": 1,
+  "prompt": "To rain — what the weather does when water falls from the clouds. (This is a common German verb used to describe rainy weather.)",
+  "ex": "Heute regnet es den ganzen Tag.",
+  "elsewhere": [],
+  "freq": 2520,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-everyday-verbs",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "schlafen",
+  "raws": [
+   "schlafen"
+  ],
+  "n": 2,
+  "prompt": "To sleep; what you do at night to rest your body and mind.",
+  "ex": "Ich schlafe jeden Abend acht Stunden.",
+  "elsewhere": [
+   "de-b1-vocab-health-lifestyle:rejected"
+  ],
+  "freq": 321,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "chef",
+  "raws": [
+   "der Chef"
+  ],
+  "n": 1,
+  "prompt": "The male person you work for — your male boss or employer.",
+  "ex": "Mein Chef arbeitet jeden Tag im Büro.",
+  "elsewhere": [
+   "de-a2-vocab-work-school:approved"
+  ],
+  "freq": 849,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "cousin",
+  "raws": [
+   "der Cousin"
+  ],
+  "n": 1,
+  "prompt": "The son of your parents' sibling — your uncle's or aunt's child who is male. He might work in a different city and call you on weekends.",
+  "ex": "Mein Cousin arbeitet als Arzt in Berlin.",
+  "elsewhere": [],
+  "freq": 1972,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "cousine",
+  "raws": [
+   "die Cousine"
+  ],
+  "n": 1,
+  "prompt": "The daughter of your parent's sibling — your aunt or uncle's child — who is a girl. She is part of your extended family but not your sister.",
+  "ex": "Meine Cousine geht in die gleiche Schule wie ich.",
+  "elsewhere": [],
+  "freq": 3309,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "enkel",
+  "raws": [
+   "der Enkel"
+  ],
+  "n": 2,
+  "prompt": "The son of your son or daughter; your child's male child.",
+  "ex": "Mein Enkel spielt jeden Tag im Garten.",
+  "elsewhere": [],
+  "freq": 3475,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "enkelkind",
+  "raws": [
+   "das Enkelkind"
+  ],
+  "n": 1,
+  "prompt": "The child of your son or daughter — the little one who calls you \"Oma\" or \"Opa\".",
+  "ex": "Mein Enkelkind spielt jeden Tag im Garten.",
+  "elsewhere": [],
+  "freq": 9110,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "jüngere bruder",
+  "raws": [
+   "der jüngere Bruder"
+  ],
+  "n": 1,
+  "prompt": "The son of your parents — your male sibling who is younger than you.",
+  "ex": "Mein jüngerer Bruder spielt jeden Tag Fußball im Park.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "lehrer",
+  "raws": [
+   "der Lehrer"
+  ],
+  "n": 1,
+  "prompt": "The male person who teaches you at school — he stands at the front of the class and explains lessons.",
+  "ex": "Mein Lehrer erklärt die Aufgabe sehr gut.",
+  "elsewhere": [
+   "de-a2-vocab-work-school:approved",
+   "de-b1-vocab-education-career:rejected"
+  ],
+  "freq": 1428,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "lehrerin",
+  "raws": [
+   "die Lehrerin"
+  ],
+  "n": 1,
+  "prompt": "The female person who teaches you at school — she stands at the front of the class and explains lessons.",
+  "ex": "Unsere Lehrerin erklärt die Aufgabe sehr gut.",
+  "elsewhere": [
+   "de-a2-vocab-work-school:approved"
+  ],
+  "freq": 2871,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "oma",
+  "raws": [
+   "die Oma"
+  ],
+  "n": 2,
+  "prompt": "Your father's mother — the older woman in the family who often spoils you with treats during holiday visits.",
+  "ex": "An Weihnachten besuchen wir die Oma, und sie backt Kekse für alle.",
+  "elsewhere": [],
+  "freq": 1427,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-family-people",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "opa",
+  "raws": [
+   "der Opa"
+  ],
+  "n": 4,
+  "prompt": "Your father's father — the male grandparent on your father's side.",
+  "ex": "Im Urlaub besuchen wir den Opa am Meer.",
+  "elsewhere": [],
+  "freq": 1738,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-food-drink",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "apfel",
+  "raws": [
+   "der Apfel"
+  ],
+  "n": 1,
+  "prompt": "A sweet, red or green fruit that grows on a tree and is eaten as a common everyday snack — one of the most basic fruits you know.",
+  "ex": "Ich esse jeden Tag einen Apfel zum Frühstück.",
+  "elsewhere": [],
+  "freq": 4518,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-food-drink",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "kalt",
+  "raws": [
+   "kalt"
+  ],
+  "n": 1,
+  "prompt": "Having a very low temperature — the opposite of warm or hot. Used to describe cold weather, cold water, or cold food and drinks taken straight from the fridge.",
+  "ex": "Das Wasser ist kalt – ich möchte lieber Tee.",
+  "elsewhere": [
+   "de-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 810,
+  "pos_all": [
+   "ADJ",
+   "ADV"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-home-objects",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "schreibtisch",
+  "raws": [
+   "der Schreibtisch"
+  ],
+  "n": 1,
+  "prompt": "A piece of furniture with a flat top and four legs, used in an office for writing or working at a computer.",
+  "ex": "Mein Schreibtisch ist sehr groß und hat viele Schubladen.",
+  "elsewhere": [
+   "de-a2-housing-vocab:approved"
+  ],
+  "freq": 2572,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "freitag",
+  "raws": [
+   "Freitag"
+  ],
+  "n": 1,
+  "prompt": "The day of the week that comes after Thursday — many workers look forward to it because the weekend is almost here.",
+  "ex": "Am Freitag gehe ich nach der Arbeit mit Kollegen essen.",
+  "elsewhere": [],
+  "freq": 1815,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "herbst",
+  "raws": [
+   "Herbst"
+  ],
+  "n": 1,
+  "prompt": "The season that comes after summer, when leaves fall from the trees and the weather gets cooler.",
+  "ex": "Im Herbst sind die Wälder sehr schön.",
+  "elsewhere": [
+   "de-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 4982,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "mittag",
+  "raws": [
+   "der Mittag"
+  ],
+  "n": 1,
+  "prompt": "The part of the day when you eat your midday meal — it comes after the morning and before the afternoon.",
+  "ex": "Am Mittag esse ich meistens eine Suppe.",
+  "elsewhere": [
+   "de-a1-vocab-time-calendar:rejected"
+  ],
+  "freq": 2320,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "montag",
+  "raws": [
+   "Montag"
+  ],
+  "n": 4,
+  "prompt": "The day of the week that comes right after Sunday and starts the working week — the first weekday.",
+  "ex": "Am Montag bringt mein Vater meine Schwester zur Schule.",
+  "elsewhere": [],
+  "freq": 2071,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "sonntag",
+  "raws": [
+   "Sonntag"
+  ],
+  "n": 1,
+  "prompt": "The day of the week when most banks and shops are closed and people do not go to work — the last day of the weekend.",
+  "ex": "Am Sonntag ist die Bank geschlossen.",
+  "elsewhere": [],
+  "freq": 1953,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a1-vocab-time-calendar",
+  "lang": "DE",
+  "cefr": "A1",
+  "w": "winter",
+  "raws": [
+   "der Winter"
+  ],
+  "n": 1,
+  "prompt": "The season that comes after autumn (Herbst), when it is cold and it often snows — the coldest of the four seasons.",
+  "ex": "Im Winter ist es sehr kalt und es schneit oft.",
+  "elsewhere": [
+   "de-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 2195,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a2-housing-vocab",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "badezimmer",
+  "raws": [
+   "das Badezimmer"
+  ],
+  "n": 1,
+  "prompt": "The room in a home where you can wash your hands, brush your teeth, and take a shower or bath.",
+  "ex": "Das Badezimmer in unserer Wohnung ist klein, aber es hat eine Dusche und ein Waschbecken.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 3239,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-housing-vocab",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "küche",
+  "raws": [
+   "die Küche"
+  ],
+  "n": 2,
+  "prompt": "The room in a home where you cook meals — it has a stove, a sink, and often a refrigerator.",
+  "ex": "Wenn es draußen regnet, koche ich gerne in der Küche eine warme Suppe.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 1150,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-housing-vocab",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "kühlschrank",
+  "raws": [
+   "der Kühlschrank"
+  ],
+  "n": 3,
+  "prompt": "The large appliance in the kitchen used to keep food and drinks cold.",
+  "ex": "Im Kühlschrank sind noch Milch und Käse.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 2871,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-housing-vocab",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "schlafzimmer",
+  "raws": [
+   "das Schlafzimmer"
+  ],
+  "n": 1,
+  "prompt": "The room in a home or hotel where you sleep, usually containing a bed. What is this room called in German?",
+  "ex": "Im Hotel hat das Schlafzimmer ein großes Bett und ein Fenster mit Blick auf die Stadt.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 2107,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-housing-vocab",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "wohnung",
+  "raws": [
+   "Wohnung"
+  ],
+  "n": 1,
+  "prompt": "What is the German word for \"apartment\"?",
+  "ex": "Meine Wohnung hat drei Zimmer und einen Balkon.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 669,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-cooking-restaurants",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "kochen",
+  "raws": [
+   "kochen"
+  ],
+  "n": 3,
+  "prompt": "The verb meaning \"to boil\" or \"to cook\" (food on the stove) — also used when water reaches 100°C. A student might do this to make pasta or soup in a shared kitchen.",
+  "ex": "In der Schulküche lernen wir, wie man Suppe kocht.",
+  "elsewhere": [
+   "de-a1-vocab-free-time:approved"
+  ],
+  "freq": 1182,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-cooking-restaurants",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "rechnung",
+  "raws": [
+   "die Rechnung"
+  ],
+  "n": 5,
+  "prompt": "The bill or check you ask for at the end of a meal in a restaurant, so you can pay for what you ordered.",
+  "ex": "Am Ende des Abendessens hat der Kellner die Rechnung gebracht.",
+  "elsewhere": [
+   "de-b1-vocab-money-consumers:approved"
+  ],
+  "freq": 1958,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-health-body",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "hand",
+  "raws": [
+   "die Hand"
+  ],
+  "n": 2,
+  "prompt": "The part of your body at the end of your arm that you use to type on a keyboard or touch a screen — it has five fingers.",
+  "ex": "Meine Hand tut weh, weil ich den ganzen Tag am Computer getippt habe.",
+  "elsewhere": [],
+  "freq": 266,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-movement-change-verbs",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "sich erholen",
+  "raws": [
+   "sich erholen"
+  ],
+  "n": 1,
+  "prompt": "To get better or recover after being sick — a movement from illness back to health. (verb, infinitive)",
+  "ex": "Nach der Grippe braucht man Zeit, um sich zu erholen.",
+  "elsewhere": [
+   "de-b1-vocab-travel-tourism:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-a2-vocab-movement-change-verbs",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "zurückgehen",
+  "raws": [
+   "zurückgehen"
+  ],
+  "n": 1,
+  "prompt": "To go back to a shop or place — to return to somewhere you have been before. (verb, infinitive)",
+  "ex": "Ich muss in das Geschäft zurückgehen, weil ich mein Portemonnaie vergessen habe.",
+  "elsewhere": [],
+  "freq": 3328,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-technology-communication",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "anrufen",
+  "raws": [
+   "anrufen"
+  ],
+  "n": 4,
+  "prompt": "To call someone on the phone — the German verb for making a phone call to a person (takes an accusative object, not dative).",
+  "ex": "Ich rufe meine Mutter jeden Abend an.",
+  "elsewhere": [],
+  "freq": 392,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-technology-communication",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "herunterladen",
+  "raws": [
+   "herunterladen"
+  ],
+  "n": 3,
+  "prompt": "To download something — for example, a weather app — from the internet onto your phone or computer. (verb, infinitive)",
+  "ex": "Ich möchte eine Wetter-App herunterladen, damit ich immer die aktuelle Temperatur sehe.",
+  "elsewhere": [],
+  "freq": 39729,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-technology-communication",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "überweisen",
+  "raws": [
+   "überweisen"
+  ],
+  "n": 1,
+  "prompt": "To transfer money electronically when paying for something online — for example, when you buy clothes from a website and pay through your bank account.",
+  "ex": "Ich kann den Betrag sofort überweisen, wenn du mir deine Kontonummer schickst.",
+  "elsewhere": [
+   "de-b1-vocab-money-consumers:approved"
+  ],
+  "freq": 6721,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-time-daily-routine",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "aufräumen",
+  "raws": [
+   "aufräumen"
+  ],
+  "n": 1,
+  "prompt": "To tidy up or put things in order — for example, cleaning up a room, clearing the table, or organising belongings at home. It is a separable verb.",
+  "ex": "Jeden Samstag räume ich mein Zimmer auf.",
+  "elsewhere": [],
+  "freq": 4663,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-time-daily-routine",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "den tisch decken",
+  "raws": [
+   "den Tisch decken"
+  ],
+  "n": 1,
+  "prompt": "A separable verb meaning \"to set the table\" — what you do before a meal to arrange the plates, cutlery, and glasses.",
+  "ex": "Kannst du bitte den Tisch decken? Das Essen ist fast fertig.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-a2-vocab-time-daily-routine",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "feierabend",
+  "raws": [
+   "der Feierabend"
+  ],
+  "n": 5,
+  "prompt": "The noun for the end of the working day — the moment when you finish work and are finally free to go home. Often used in expressions like \"nach dem ___\" (after work).",
+  "ex": "Nach einem langen Tag bei dem schlechten Wetter freue ich mich auf meinen Feierabend.",
+  "elsewhere": [
+   "de-b2-vocab-work-professional:approved"
+  ],
+  "freq": 5024,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-time-daily-routine",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "sich anziehen",
+  "raws": [
+   "sich anziehen"
+  ],
+  "n": 3,
+  "prompt": "To get dressed — a reflexive action you do every morning before leaving the house or hotel room. (German separable + reflexive verb)",
+  "ex": "Bevor wir zum Flughafen fahren, muss ich mich schnell anziehen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-a2-vocab-travel-nature",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "markt",
+  "raws": [
+   "der Markt"
+  ],
+  "n": 1,
+  "prompt": "A place where you can buy fresh food, souvenirs, and other goods, often held outdoors in a town square or along a street — popular with tourists and locals alike.",
+  "ex": "Wir kaufen frisches Obst und Gemüse auf dem Markt.",
+  "elsewhere": [
+   "de-b1-environment-vocab:rejected",
+   "de-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 2522,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-travel-nature",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "regen",
+  "raws": [
+   "der Regen"
+  ],
+  "n": 1,
+  "prompt": "Das Wasser, das vom Himmel fällt — oft wenn der Himmel grau ist. (the water that falls from the sky, often when the sky is grey)",
+  "ex": "Im Herbst gibt es in Deutschland viel Regen.",
+  "elsewhere": [
+   "de-a2-vocab-travel-nature:rejected",
+   "de-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 6329,
+  "pos_all": [
+   "NOUN",
+   "PROPN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-travel-nature",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "reisebüro",
+  "raws": [
+   "das Reisebüro"
+  ],
+  "n": 1,
+  "prompt": "A place you visit to exchange money, buy travel tickets, or get information before a trip. It is a building or office, not a vehicle or a stop on the road.",
+  "ex": "Wir kaufen unsere Flugtickets im Reisebüro.",
+  "elsewhere": [],
+  "freq": 16339,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-travel-nature",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "wanderweg",
+  "raws": [
+   "der Wanderweg"
+  ],
+  "n": 1,
+  "prompt": "A place in nature where you can walk on marked paths, often through forests or mountains, to enjoy fresh air and improve your health. (German noun with article)",
+  "ex": "Der Wanderweg durch den Bergen ist sehr schön und gut für die Gesundheit.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-a2-vocab-travel-nature",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "zug",
+  "raws": [
+   "der Zug"
+  ],
+  "n": 1,
+  "prompt": "A large vehicle that runs on rails and carries many passengers from one city to another. (Include the definite article.)",
+  "ex": "Der Zug nach Berlin fährt um neun Uhr ab.",
+  "elsewhere": [
+   "de-a2-vocab-travel-nature:rejected",
+   "de-a1-vocab-city-transport:approved"
+  ],
+  "freq": 901,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "arbeitsplatz",
+  "raws": [
+   "der Arbeitsplatz"
+  ],
+  "n": 2,
+  "prompt": "The place where you go every day to do your job — an office, a shop, a factory, or any other location where people work.",
+  "ex": "Mein Arbeitsplatz ist sehr modern — wir haben neue Computer und schnelles Internet.",
+  "elsewhere": [],
+  "freq": 5943,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "arzt",
+  "raws": [
+   "der Arzt"
+  ],
+  "n": 1,
+  "prompt": "The person whose job it is to treat sick people and give medical advice — you visit this professional at a clinic or hospital when you feel unwell.",
+  "ex": "Mein Vater ist seit zwanzig Jahren als Arzt in einem Krankenhaus tätig.",
+  "elsewhere": [
+   "de-a2-vocab-health-body:approved"
+  ],
+  "freq": 547,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "fahrer",
+  "raws": [
+   "der Fahrer"
+  ],
+  "n": 1,
+  "prompt": "The person whose job it is to drive a bus, taxi, or truck, transporting passengers or goods from one place to another.",
+  "ex": "Der Fahrer hält an der nächsten Haltestelle.",
+  "elsewhere": [],
+  "freq": 1892,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "küche",
+  "raws": [
+   "die Küche"
+  ],
+  "n": 1,
+  "prompt": "The place where you work if you cook meals professionally — a room with stoves, ovens, and preparation surfaces found in a restaurant or school canteen.",
+  "ex": "Der Koch arbeitet jeden Tag in der Küche des Restaurants.",
+  "elsewhere": [
+   "de-a2-housing-vocab:rejected",
+   "de-a1-vocab-home-objects:approved"
+  ],
+  "freq": 1150,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "schule",
+  "raws": [
+   "die Schule"
+  ],
+  "n": 3,
+  "prompt": "The place where you go to learn — a building where children and teenagers attend classes every day. (Not a university.)",
+  "ex": "Meine Schwester geht jeden Tag mit dem Bus zur Schule.",
+  "elsewhere": [
+   "de-a2-vocab-work-school:rejected",
+   "de-b1-vocab-education-career:rejected",
+   "de-a1-vocab-city-transport:approved"
+  ],
+  "freq": 463,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-a2-vocab-work-school",
+  "lang": "DE",
+  "cefr": "A2",
+  "w": "verkäufer",
+  "raws": [
+   "der Verkäufer"
+  ],
+  "n": 1,
+  "prompt": "The person whose job is to sell goods to customers in a shop. (masculine form)",
+  "ex": "Der Verkäufer hilft mir, die richtige Größe zu finden.",
+  "elsewhere": [],
+  "freq": 6276,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "arbeitsbedingungen",
+  "raws": [
+   "Arbeitsbedingungen"
+  ],
+  "n": 1,
+  "prompt": "Die Gesamtheit der Bedingungen, unter denen Menschen arbeiten – z. B. Sicherheit, Lärm, Arbeitszeit und Atmosphäre am Arbeitsplatz.",
+  "ex": "In vielen Ländern kämpfen Gewerkschaften für bessere Arbeitsbedingungen.",
+  "elsewhere": [],
+  "freq": 32746,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "bildung",
+  "raws": [
+   "die Bildung"
+  ],
+  "n": 2,
+  "prompt": "Die Möglichkeit, etwas zu lernen oder eine Schule oder Universität zu besuchen; das Recht auf Bildung und Wissen — ein zentrales Thema in der Gesellschaft.",
+  "ex": "In vielen Ländern gilt Bildung als ein grundlegendes Menschenrecht.",
+  "elsewhere": [],
+  "freq": 6563,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "biologisch",
+  "raws": [
+   "biologisch"
+  ],
+  "n": 1,
+  "prompt": "Der Anbau von Lebensmitteln auf eine Weise, die die Natur schützt und keine schädlichen Chemikalien verwendet — oft auf dem Etikett von Produkten im Supermarkt zu sehen. (Hint: It refers to a method of farming/production, not a certification body.)",
+  "ex": "Viele Menschen kaufen lieber biologisch angebautes Gemüse, weil es besser für die Umwelt ist.",
+  "elsewhere": [],
+  "freq": 6048,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "co2-fußabdruck",
+  "raws": [
+   "der CO2-Fußabdruck"
+  ],
+  "n": 1,
+  "prompt": "Die Menge an Kohlendioxid und anderen schädlichen Gasen, die durch Reisen – zum Beispiel mit dem Flugzeug oder Auto – in die Atmosphäre freigesetzt wird. Dieses Konzept ist wichtig, wenn man über umweltfreundliches Reisen spricht.",
+  "ex": "Wenn man mit dem Zug statt mit dem Flugzeug reist, kann man seinen CO2-Fußabdruck deutlich verringern.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "defizit",
+  "raws": [
+   "das Defizit"
+  ],
+  "n": 1,
+  "prompt": "The difference between how much money a government or organization earns and how much it spends, especially when it spends more than it earns — a key topic in economic and political discussions.",
+  "ex": "Die Regierung versucht, das staatliche Defizit durch Steuererhöhungen zu reduzieren.",
+  "elsewhere": [],
+  "freq": 32547,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "energieverbrauch",
+  "raws": [
+   "Energieverbrauch"
+  ],
+  "n": 1,
+  "prompt": "Der Verbrauch von Strom, Gas oder Wasser in einem Haushalt — und die Auswirkung, die dieser Verbrauch auf die natürlichen Ressourcen der Erde hat. (Hint: it is a compound noun referring to energy use in the home context.)",
+  "ex": "Durch bessere Isolierung kann man den Energieverbrauch im Haus deutlich senken.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "erderwärmung",
+  "raws": [
+   "Erderwärmung"
+  ],
+  "n": 1,
+  "prompt": "Die Erwärmung der Erde durch den Anstieg von Treibhausgasen in der Atmosphäre – ein zentrales Umweltproblem unserer Zeit. (Hint: It is a compound noun, and NOT the same word as \"Klimawandel\".)",
+  "ex": "Die Erderwärmung führt dazu, dass Gletscher weltweit schmelzen.",
+  "elsewhere": [],
+  "freq": 35325,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "erneuerbare energie",
+  "raws": [
+   "erneuerbare Energie"
+  ],
+  "n": 1,
+  "prompt": "Die Energie, die aus natürlichen Quellen wie Sonne, Wind oder Wasser gewonnen wird und sich erneuert – im Gegensatz zu fossilen Brennstoffen.",
+  "ex": "Viele Haushalte in Deutschland decken ihren Strombedarf heute teilweise mit erneuerbarer Energie, zum Beispiel durch Solaranlagen auf dem Dach.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "gehalt",
+  "raws": [
+   "das Gehalt"
+  ],
+  "n": 1,
+  "prompt": "Die Menge Geld, die jemand regelmäßig für seine Arbeit bekommt — zum Beispiel jeden Monat vom Arbeitgeber überwiesen. (Hint: It refers specifically to a fixed monthly payment, not an hourly wage.)",
+  "ex": "Ihr monatliches Gehalt reicht kaum aus, um die Miete und die Lebenshaltungskosten zu decken.",
+  "elsewhere": [
+   "de-b2-vocab-work-professional:rejected",
+   "de-b1-vocab-education-career:approved"
+  ],
+  "freq": 4202,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "generation",
+  "raws": [
+   "Generation"
+  ],
+  "n": 1,
+  "prompt": "The generation of people who are currently raising children — positioned between the older and younger generations in a family. In social discussions, this word also refers to a group of people born around the same time who share similar life experiences.",
+  "ex": "Meine Eltern gehören einer Generation an, die ohne das Internet aufgewachsen ist.",
+  "elsewhere": [],
+  "freq": 3750,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "gesundheitssystem",
+  "raws": [
+   "Gesundheitssystem"
+  ],
+  "n": 2,
+  "prompt": "Die Gesamtheit aller Maßnahmen und Einrichtungen, die dazu dienen, die Gesundheit der Bevölkerung zu erhalten und zu fördern – ein wichtiges gesellschaftliches Thema in politischen Diskussionen.",
+  "ex": "In Deutschland ist das Gesundheitssystem so organisiert, dass fast alle Bürger krankenversichert sind.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "gesundheitswesen",
+  "raws": [
+   "Gesundheitswesen"
+  ],
+  "n": 1,
+  "prompt": "Das Gesundheitssystem eines Landes, das für die medizinische Versorgung der Bevölkerung zuständig ist — oft ein wichtiges Thema in der Gesellschaft.",
+  "ex": "Die Regierung möchte das Gesundheitswesen modernisieren, damit alle Bürger bessere medizinische Versorgung bekommen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "handel",
+  "raws": [
+   "der Handel"
+  ],
+  "n": 1,
+  "prompt": "The act of buying and selling goods in a store or market; a general term for trade or commercial exchange, often discussed when talking about fair or ethical practices.",
+  "ex": "Fairer Handel sorgt dafür, dass Produzenten in Entwicklungsländern gerecht bezahlt werden.",
+  "elsewhere": [],
+  "freq": 3627,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "konsum",
+  "raws": [
+   "der Konsum"
+  ],
+  "n": 1,
+  "prompt": "Der Verbrauch von Waren und Dienstleistungen durch Einzelpersonen oder die Gesellschaft; oft im Zusammenhang mit nachhaltigem Einkaufen diskutiert. (The consumption of goods and services by individuals or society; often discussed in the context of sustainable shopping.)",
+  "ex": "Der nachhaltige Konsum wird immer wichtiger, weil viele Menschen die Umwelt schützen möchten.",
+  "elsewhere": [],
+  "freq": 24881,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "landwirtschaft",
+  "raws": [
+   "die Landwirtschaft"
+  ],
+  "n": 1,
+  "prompt": "Der Anbau von Pflanzen und die Haltung von Tieren zur Erzeugung von Lebensmitteln – ein wichtiger Wirtschaftszweig, der die Grundlage unserer Ernährung bildet. (agriculture / farming)",
+  "ex": "Die Landwirtschaft spielt eine wichtige Rolle für die Ernährungssicherheit der Bevölkerung.",
+  "elsewhere": [],
+  "freq": 12877,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "luftverschmutzung",
+  "raws": [
+   "die Luftverschmutzung"
+  ],
+  "n": 1,
+  "prompt": "The pollution caused by cars, trucks, planes, and other vehicles — a major environmental problem in cities and near busy roads. (noun, feminine)",
+  "ex": "In vielen Großstädten ist die Luftverschmutzung durch den starken Verkehr ein ernstes Problem.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "massenproduktion",
+  "raws": [
+   "die Massenproduktion"
+  ],
+  "n": 1,
+  "prompt": "Die Herstellung von Lebensmitteln in großen Mengen durch Maschinen und industrielle Prozesse, die oft Fragen zur Qualität und Nachhaltigkeit aufwirft.",
+  "ex": "Die Massenproduktion von Fertiggerichten hat dazu geführt, dass viele Menschen weniger frisch kochen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "medien",
+  "raws": [
+   "die Medien"
+  ],
+  "n": 3,
+  "prompt": "The noun for the set of all media channels — television, radio, newspapers, and online platforms — through which information and news are communicated to the public. Often discussed when talking about press freedom or media influence on society.",
+  "ex": "Die Medien spielen eine wichtige Rolle in einer demokratischen Gesellschaft.",
+  "elsewhere": [
+   "de-b2-vocab-society-politics:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "nachhaltig",
+  "raws": [
+   "nachhaltig"
+  ],
+  "n": 1,
+  "prompt": "Der bewusste Kauf von Produkten, die unter fairen Bedingungen hergestellt wurden und die Umwelt schonen – ein Thema, das beim Einkaufen immer wichtiger wird. (Adjektiv, das dieses Verhalten beschreibt)",
+  "ex": "Viele Verbraucher achten beim Einkaufen darauf, nachhaltige Produkte zu wählen, um die Umwelt zu schützen.",
+  "elsewhere": [
+   "de-b2-vocab-economy-business:approved"
+  ],
+  "freq": 34506,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "naturschutz",
+  "raws": [
+   "Naturschutz"
+  ],
+  "n": 1,
+  "prompt": "Die Unterstützung oder der Schutz der natürlichen Welt, zum Beispiel von Wäldern, Tieren und Flüssen — oft ein wichtiges Thema in gesellschaftlichen Debatten.",
+  "ex": "Der Naturschutz ist ein wichtiges Thema in der deutschen Politik, weil viele Tier- und Pflanzenarten bedroht sind.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "schulden",
+  "raws": [
+   "die Schulden"
+  ],
+  "n": 1,
+  "prompt": "Die Lücke zwischen dem Geld, das man verdient, und dem Geld, das man ausgibt – wenn man mehr ausgibt als man hat, gerät man in diese Situation. Auf Englisch: \"debt\".",
+  "ex": "Viele junge Menschen machen nach dem Studium hohe Schulden, weil sie einen Kredit aufnehmen müssen.",
+  "elsewhere": [
+   "de-b1-vocab-money-consumers:approved"
+  ],
+  "freq": 992,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "schulpflicht",
+  "raws": [
+   "die Schulpflicht"
+  ],
+  "n": 1,
+  "prompt": "The German noun for compulsory schooling or the legal obligation to attend school — a topic often discussed in debates about educational policy and children's rights.",
+  "ex": "In Deutschland gilt die Schulpflicht ab dem sechsten Lebensjahr, und alle Kinder müssen eine staatlich anerkannte Schule besuchen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "tourismus",
+  "raws": [
+   "der Tourismus"
+  ],
+  "n": 1,
+  "prompt": "Das Reisen in ferne Länder, oft mit dem Flugzeug, um andere Kulturen kennenzulernen und Urlaub zu machen. Dieses Wort beschreibt auch die Branche, die solche Reisen organisiert und anbietet.",
+  "ex": "Der Tourismus ist für viele Länder eine wichtige Einnahmequelle, kann aber auch negative Folgen für die Umwelt haben.",
+  "elsewhere": [],
+  "freq": 24669,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "urbanisierung",
+  "raws": [
+   "Urbanisierung"
+  ],
+  "n": 1,
+  "prompt": "Die Situation, in der immer mehr Menschen in Städten leben und ländliche Gebiete verlassen, oft um Arbeit oder bessere Möglichkeiten zu finden — ein wichtiges gesellschaftliches Thema in vielen Ländern.",
+  "ex": "Die Urbanisierung verändert das Leben vieler Familien, weil Eltern und Kinder oft in verschiedenen Städten wohnen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "verkehrsnetz",
+  "raws": [
+   "Verkehrsnetz"
+  ],
+  "n": 1,
+  "prompt": "Das Netz aus Straßen, Schienen, Flughäfen und anderen Wegen, das Menschen und Güter von einem Ort zum anderen bringt. (Hint: a compound noun, neuter gender)",
+  "ex": "Das Verkehrsnetz in dieser Stadt ist sehr gut ausgebaut, sodass man überall schnell hinkommt.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "öffentliche nahverkehr",
+  "raws": [
+   "der öffentliche Nahverkehr"
+  ],
+  "n": 1,
+  "prompt": "Das öffentliche Verkehrssystem einer Stadt, das Busse, U-Bahnen und Straßenbahnen umfasst und dazu beiträgt, den Autoverkehr und damit die Luftverschmutzung zu reduzieren.",
+  "ex": "Viele Städte investieren in den öffentlichen Nahverkehr, um den CO₂-Ausstoß zu senken und die Lebensqualität zu verbessern.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "ökotourismus",
+  "raws": [
+   "Ökotourismus"
+  ],
+  "n": 1,
+  "prompt": "Das Reisen in ferne Länder oder Regionen, um Natur und Tierwelt zu beobachten und gleichzeitig die Umwelt zu schützen – eine nachhaltige Form des Tourismus.",
+  "ex": "Immer mehr Reisende entscheiden sich für Ökotourismus, weil sie die Natur erleben und gleichzeitig die Umwelt schützen möchten.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-environment-vocab",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "überalterung",
+  "raws": [
+   "Überalterung"
+  ],
+  "n": 1,
+  "prompt": "Der Anteil der älteren Menschen in der Gesellschaft wächst, weil die Geburtenrate sinkt und die Lebenserwartung steigt. Wie nennt man dieses gesellschaftliche Phänomen auf Deutsch? (Hint: it is a compound noun describing the ageing of the population/society.)",
+  "ex": "Die Überalterung der Gesellschaft stellt das Rentensystem vor große Herausforderungen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-education-career",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "führerschein",
+  "raws": [
+   "der Führerschein"
+  ],
+  "n": 1,
+  "prompt": "A formal document or certificate that proves you have passed a test and are officially allowed to drive a motor vehicle on public roads.",
+  "ex": "Nachdem sie die praktische Prüfung bestanden hatte, bekam sie endlich ihren Führerschein.",
+  "elsewhere": [],
+  "freq": 3604,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-education-career",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "zertifikat",
+  "raws": [
+   "das Zertifikat"
+  ],
+  "n": 1,
+  "prompt": "Ein offizielles Dokument oder Zeugnis, das beweist, dass man eine Prüfung bestanden oder eine Qualifikation erworben hat – zum Beispiel nach einem Kurs oder einer Weiterbildung im IT-Bereich.",
+  "ex": "Nach dem Online-Kurs hat sie ein Zertifikat in Datenschutz erhalten.",
+  "elsewhere": [],
+  "freq": 30868,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-emotions-relationships",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "heimweh",
+  "raws": [
+   "das Heimweh"
+  ],
+  "n": 1,
+  "prompt": "Das Gefühl, wenn man jemanden sehr vermisst und sich nach Hause sehnt — zum Beispiel auf einer langen Reise im Ausland. (noun, with article)",
+  "ex": "Nach zwei Wochen im Ausland hatte sie so starkes Heimweh, dass sie früher nach Hause flog.",
+  "elsewhere": [],
+  "freq": 10107,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-health-lifestyle",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "sich bewegen",
+  "raws": [
+   "sich bewegen"
+  ],
+  "n": 1,
+  "prompt": "To move your body regularly and physically in order to stay fit and healthy — used especially when talking about healthy habits. (verb, reflexive)",
+  "ex": "Wenn man sich regelmäßig bewegt und gesund isst, fühlt man sich viel besser.",
+  "elsewhere": [
+   "de-a2-vocab-movement-change-verbs:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "artikel",
+  "raws": [
+   "der Artikel"
+  ],
+  "n": 1,
+  "prompt": "A piece of journalism — longer than a short news item — that examines a topic in depth, often appearing in a newspaper or magazine. In German, it uses a masculine article.",
+  "ex": "Ich habe einen interessanten Artikel über gesunde Ernährung in der Zeitung gelesen.",
+  "elsewhere": [],
+  "freq": 1979,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "meldung",
+  "raws": [
+   "die Meldung"
+  ],
+  "n": 1,
+  "prompt": "A written or spoken account of events, facts, or news — for example, a journalist's coverage of a story in a newspaper or on TV. (Not a magazine or a broadcast channel itself, but a single piece of reporting.)",
+  "ex": "Im Urlaub hörten wir im Radio eine wichtige Meldung über das Wetter in der Region.",
+  "elsewhere": [],
+  "freq": 4037,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "nachrichtensendung",
+  "raws": [
+   "die Nachrichtensendung"
+  ],
+  "n": 3,
+  "prompt": "Eine Sendung im Radio oder Fernsehen, die regelmäßig über aktuelle Ereignisse und Neuigkeiten berichtet — zum Beispiel über Gesundheitsthemen wie neue Medikamente oder Krankheitsausbrüche.",
+  "ex": "In der heutigen Nachrichtensendung wurde über einen neuen Grippeausbruch in mehreren Städten berichtet.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "podcast",
+  "raws": [
+   "der Podcast"
+  ],
+  "n": 3,
+  "prompt": "Eine regelmäßige Sendung, die im Internet veröffentlicht wird und die man abonnieren und jederzeit anhören kann – oft zu einem bestimmten Thema wie Technologie, Nachrichten oder Kultur.",
+  "ex": "Ich höre jeden Morgen einen Podcast über aktuelle Technologie-Nachrichten.",
+  "elsewhere": [],
+  "freq": 31680,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "wettervorhersage",
+  "raws": [
+   "die Wettervorhersage"
+  ],
+  "n": 1,
+  "prompt": "Ein Bericht im Fernsehen oder Radio, der aktuelle Informationen über das Wetter gibt — zum Beispiel, ob es morgen regnen oder scheinen wird. (A broadcast segment that gives current information about the weather — for example, whether it will rain or shine tomorrow.)",
+  "ex": "Laut der Wettervorhersage soll es morgen den ganzen Tag regnen, also nehme ich einen Regenschirm mit.",
+  "elsewhere": [],
+  "freq": 29159,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-media-news",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "zeitschrift",
+  "raws": [
+   "die Zeitschrift"
+  ],
+  "n": 2,
+  "prompt": "A printed or digital publication — larger and thicker than a newspaper — that appears weekly or monthly and contains articles, photos, and stories on topics like food, fashion, or travel. It is NOT a daily newspaper.",
+  "ex": "In dieser Zeitschrift gibt es viele leckere Rezepte für Sommergerichte.",
+  "elsewhere": [],
+  "freq": 6983,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-money-consumers",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "sparen",
+  "raws": [
+   "sparen"
+  ],
+  "n": 1,
+  "prompt": "To set aside money regularly instead of spending it — for example, to buy new sports equipment or save up for a gym membership.",
+  "ex": "Er spart jeden Monat etwas Geld, um sich neue Laufschuhe kaufen zu können.",
+  "elsewhere": [
+   "de-b1-environment-vocab:approved"
+  ],
+  "freq": 1823,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-b1-vocab-prepositional-verbs",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "aufkommen für",
+  "raws": [
+   "aufkommen für"
+  ],
+  "n": 1,
+  "prompt": "To be responsible for paying something; to cover the cost of something — used when someone takes on the financial obligation for a bill or expense. (verb + preposition, citation form)",
+  "ex": "Die Versicherung kommt für alle Reparaturkosten auf.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-prepositional-verbs",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "sich bewerben um",
+  "raws": [
+   "sich bewerben um"
+  ],
+  "n": 1,
+  "prompt": "To formally request or apply for something (e.g. a job, a loan, or a grant) — a reflexive verb used with a fixed preposition meaning \"for/about\".",
+  "ex": "Sie hat sich um einen Kredit bei der Bank beworben, aber die Bank hat den Antrag abgelehnt.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-prepositional-verbs",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "teilnehmen an",
+  "raws": [
+   "teilnehmen an"
+  ],
+  "n": 3,
+  "prompt": "To take part in something, such as a meeting, a project, or a competition — used with the preposition \"an\". Give the full verb + preposition combination.",
+  "ex": "Alle Mitarbeiter sollen an dem neuen Schulungsprogramm teilnehmen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b1-vocab-travel-tourism",
+  "lang": "DE",
+  "cefr": "B1",
+  "w": "unterkunft",
+  "raws": [
+   "die Unterkunft"
+  ],
+  "n": 3,
+  "prompt": "A place where you stay overnight when travelling — not your own home, but a rented room, apartment, or hotel. (German noun)",
+  "ex": "Wir haben eine günstige Unterkunft in der Nähe des Bahnhofs gebucht.",
+  "elsewhere": [
+   "de-a2-vocab-travel-nature:approved"
+  ],
+  "freq": 6430,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-collocations-idioms",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "einen kredit aufnehmen",
+  "raws": [
+   "einen Kredit aufnehmen"
+  ],
+  "n": 1,
+  "prompt": "The fixed German collocation meaning \"to take out a loan\" — used when someone borrows money from a bank or lender. It consists of a verb meaning \"to take/accept\" and a noun meaning \"loan/credit\".",
+  "ex": "Um das Haus zu kaufen, mussten sie einen Kredit aufnehmen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-collocations-idioms",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "prüfung ablegen",
+  "raws": [
+   "eine Prüfung ablegen"
+  ],
+  "n": 1,
+  "prompt": "The fixed German collocation meaning \"to take an exam\" — used when a student sits an official test or assessment. Note: the verb used is NOT *machen*.",
+  "ex": "Nach dem Semester musste sie eine schwierige Prüfung ablegen, um ihren Abschluss zu bekommen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-law-justice",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "anzeigen",
+  "raws": [
+   "anzeigen"
+  ],
+  "n": 4,
+  "prompt": "To officially report someone to the police for a crime they have committed — for example, when your passport is stolen while travelling abroad and you go to the police station to make a formal complaint against the unknown thief.",
+  "ex": "Als mein Koffer am Flughafen gestohlen wurde, ging ich sofort zur Polizei, um den Diebstahl anzuzeigen.",
+  "elsewhere": [],
+  "freq": 3637,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-science-technology",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "analyse",
+  "raws": [
+   "Analyse"
+  ],
+  "n": 1,
+  "prompt": "Die Untersuchung oder Prüfung von Lebensmitteln mithilfe wissenschaftlicher Methoden, um ihre Inhaltsstoffe, Qualität oder Sicherheit zu bestimmen. (Nomen, Plural: Analysen)",
+  "ex": "Die chemische Analyse des Lebensmittels ergab, dass es keine künstlichen Farbstoffe enthält.",
+  "elsewhere": [
+   "de-b2-academic-noun-vocab:approved"
+  ],
+  "freq": 4691,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-science-technology",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "onlinezahlung",
+  "raws": [
+   "die Onlinezahlung"
+  ],
+  "n": 1,
+  "prompt": "Das Bezahlen von Waren oder Dienstleistungen über das Internet, z. B. mit Kreditkarte oder digitalem Wallet – ein zentrales Merkmal des modernen Online-Shoppings.",
+  "ex": "Viele Kunden bevorzugen die Onlinezahlung, weil sie bequem und schnell ist.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-science-technology",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "router",
+  "raws": [
+   "der Router"
+  ],
+  "n": 1,
+  "prompt": "Das Gerät oder System, das ein Haus mit dem Internet verbindet und es ermöglicht, Daten drahtlos zu übertragen – oft als kleines Kästchen in der Wohnung aufgestellt.",
+  "ex": "Seit wir einen neuen Router installiert haben, ist die Internetverbindung in der ganzen Wohnung viel stabiler.",
+  "elsewhere": [],
+  "freq": 32547,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-science-technology",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "wetterprognose",
+  "raws": [
+   "die Wetterprognose"
+  ],
+  "n": 1,
+  "prompt": "Eine Vorhersage, die mithilfe von Computern, Satellitendaten und wissenschaftlichen Modellen erstellt wird, um das Wetter für die kommenden Tage zu prognostizieren. (Nomen, femininum)",
+  "ex": "Laut der aktuellen Wetterprognose des Deutschen Wetterdienstes soll es morgen in ganz Bayern heftige Gewitter geben.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "botschaft",
+  "raws": [
+   "die Botschaft"
+  ],
+  "n": 1,
+  "prompt": "Die offizielle Stelle, die Reisedokumente wie Pässe und Visa ausstellt und die Interessen eines Landes im Ausland vertritt.",
+  "ex": "Wer ein Visum für das Land beantragen möchte, muss einen Termin bei der Botschaft vereinbaren.",
+  "elsewhere": [],
+  "freq": 1753,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "bundestag",
+  "raws": [
+   "der Bundestag"
+  ],
+  "n": 1,
+  "prompt": "Die gewählte Vertretung des Volkes auf nationaler Ebene, die Gesetze beschließt und die Regierung kontrolliert — welches Wort beschreibt dieses politische Organ? (Hint: think of the institution where elected representatives debate and vote on laws.)",
+  "ex": "Der Bundestag hat gestern ein neues Gesetz zur Mietpreisbremse verabschiedet, das viele Mieter in deutschen Städten entlasten soll.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "gesundheitssystem",
+  "raws": [
+   "das Gesundheitssystem"
+  ],
+  "n": 1,
+  "prompt": "Das staatliche System, das die medizinische Versorgung der Bevölkerung organisiert und finanziert — oft durch Beiträge der Arbeitnehmer und Arbeitgeber.",
+  "ex": "Viele Bürger fordern, dass das Gesundheitssystem besser finanziert werden sollte, damit alle Menschen Zugang zu medizinischer Versorgung haben.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "politik",
+  "raws": [
+   "die Politik"
+  ],
+  "n": 1,
+  "prompt": "Die Gesamtheit der Regeln und Gesetze, nach denen ein Staat oder eine Organisation geführt wird; auch: die Tätigkeit, die sich mit der Gestaltung des öffentlichen Lebens befasst.",
+  "ex": "In der digitalen Gesellschaft spielt die Politik eine entscheidende Rolle bei der Regulierung von sozialen Netzwerken und Datenschutz.",
+  "elsewhere": [
+   "de-b1-vocab-opinions-society:approved"
+  ],
+  "freq": 2415,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "regierung",
+  "raws": [
+   "die Regierung"
+  ],
+  "n": 1,
+  "prompt": "Die offizielle Behörde oder Einrichtung, die für ein bestimmtes Land oder eine Region verantwortlich ist und Entscheidungen im Namen der Bevölkerung trifft. (Hint: Think of the body that passes laws and runs a country's affairs.)",
+  "ex": "Die Regierung hat neue Maßnahmen angekündigt, um die Bevölkerung vor extremen Wetterereignissen zu schützen.",
+  "elsewhere": [
+   "de-b1-environment-vocab:rejected",
+   "de-b1-vocab-opinions-society:approved",
+   "de-b2-vocab-society-politics:rejected"
+  ],
+  "freq": 1015,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "umweltpolitik",
+  "raws": [
+   "die Umweltpolitik"
+  ],
+  "n": 1,
+  "prompt": "Die Gesamtheit der Maßnahmen und Entscheidungen, die eine Regierung oder Organisation trifft, um die natürliche Umwelt zu schützen und nachhaltig zu gestalten — ein zentrales Thema in der politischen Debatte.",
+  "ex": "Die Umweltpolitik der neuen Regierung setzt stark auf erneuerbare Energien und den Schutz der Wälder.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "verbraucherschutz",
+  "raws": [
+   "der Verbraucherschutz"
+  ],
+  "n": 1,
+  "prompt": "Eine öffentliche Einrichtung oder ein Gesetz, das Verbraucher vor unfairen Geschäftspraktiken schützt — das zugehörige Substantiv für den Schutz der Käufer als gesellschaftliches Recht.",
+  "ex": "Der Verbraucherschutz spielt eine wichtige Rolle in der deutschen Politik, besonders beim Online-Shopping.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-society-politics",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "wahlrecht",
+  "raws": [
+   "das Wahlrecht"
+  ],
+  "n": 1,
+  "prompt": "Das Recht, als Bürger oder Bürgerin an politischen Entscheidungen teilzunehmen, zum Beispiel durch Wahlen – oft diskutiert im Zusammenhang mit Familienangehörigen, die zum ersten Mal wählen dürfen.",
+  "ex": "Als meine ältere Schwester achtzehn wurde, freute sie sich sehr darauf, endlich das Wahlrecht zu haben und bei der nächsten Wahl ihre Stimme abzugeben.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-work-professional",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "arbeitsvertrag",
+  "raws": [
+   "Arbeitsvertrag",
+   "der Arbeitsvertrag"
+  ],
+  "n": 5,
+  "prompt": "Ein offizielles schriftliches Dokument, das die Bedingungen einer Vereinbarung zwischen zwei Parteien — zum Beispiel einem Arbeitgeber und einem Arbeitnehmer — rechtlich bindend festlegt.",
+  "ex": "Bevor sie ihre neue Stelle antrat, hat sie den Arbeitsvertrag sorgfältig gelesen und unterschrieben.",
+  "elsewhere": [],
+  "freq": 38581,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-work-professional",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "arbeitszeugnis",
+  "raws": [
+   "das Arbeitszeugnis"
+  ],
+  "n": 1,
+  "prompt": "A formal written document, issued by an employer, that evaluates an employee's performance and conduct during their time at a company — often required when applying for a new job.",
+  "ex": "Bevor sie sich bei der neuen Firma bewarb, bat sie ihren alten Chef um ein qualifiziertes Arbeitszeugnis.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-work-professional",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "kündigungsschreiben",
+  "raws": [
+   "das Kündigungsschreiben"
+  ],
+  "n": 2,
+  "prompt": "Ein offizielles Schreiben, das ein Arbeitsverhältnis oder einen Vertrag rechtswirksam beendet – zum Beispiel, wenn ein Mitarbeiter eine Stelle aufgibt oder ein Arbeitgeber jemanden entlässt. Im Medienbereich ist dieses Dokument besonders wichtig bei befristeten Produktionsverträgen.",
+  "ex": "Die Redakteurin reichte ihr Kündigungsschreiben ein, nachdem sie ein Angebot von einem anderen Sender erhalten hatte.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "de-b2-vocab-work-professional",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "mietvertrag",
+  "raws": [
+   "der Mietvertrag"
+  ],
+  "n": 1,
+  "prompt": "Ein offizielles Dokument, das die Bedingungen einer Vereinbarung zwischen zwei Parteien schriftlich festhält – zum Beispiel zwischen einem Vermieter und einem Mieter über die Nutzung einer Wohnung.",
+  "ex": "Bevor sie in die neue Wohnung einzog, unterzeichnete sie den Mietvertrag sorgfältig und behielt eine Kopie für sich.",
+  "elsewhere": [],
+  "freq": 13608,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "de-b2-vocab-work-professional",
+  "lang": "DE",
+  "cefr": "B2",
+  "w": "urlaubsantrag",
+  "raws": [
+   "der Urlaubsantrag"
+  ],
+  "n": 1,
+  "prompt": "Ein offizieller Antrag, den ein Arbeitnehmer stellt, um für einen bestimmten Zeitraum von der Arbeit freigestellt zu werden – zum Beispiel für eine Reise oder Erholung.",
+  "ex": "Bevor sie in den Sommerurlaub fahren konnte, musste sie noch den Urlaubsantrag bei ihrer Vorgesetzten einreichen.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "apartamento",
+  "raws": [
+   "el apartamento"
+  ],
+  "n": 1,
+  "prompt": "A building where many families live, each in their own separate home on a different floor — you might take the stairs or a lift to reach your door.",
+  "ex": "Vivo en un apartamento en el centro de la ciudad.",
+  "elsewhere": [],
+  "freq": 1041,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "centro comercial",
+  "raws": [
+   "el centro comercial"
+  ],
+  "n": 1,
+  "prompt": "A large building or area where many different shops are found under one roof — people go here to buy clothes, food, and other things.",
+  "ex": "Voy al centro comercial para comprar zapatos nuevos.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "cibercafé",
+  "raws": [
+   "el cibercafé"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can use computers, access the internet, and sometimes print documents — open to the public.",
+  "ex": "Hay un cibercafé cerca de la plaza donde puedo usar internet.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "cine",
+  "raws": [
+   "el cine"
+  ],
+  "n": 1,
+  "prompt": "A building or room where people go to watch films on a big screen.",
+  "ex": "El sábado voy al cine con mis amigos.",
+  "elsewhere": [
+   "es-a1-vocab-free-time:approved"
+  ],
+  "freq": 1213,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "colegio",
+  "raws": [
+   "el colegio"
+  ],
+  "n": 1,
+  "prompt": "A building where students go to study and learn, usually for young children. (It is NOT a university.)",
+  "ex": "Los niños van al colegio todos los días.",
+  "elsewhere": [],
+  "freq": 1288,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "consultorio",
+  "raws": [
+   "el consultorio"
+  ],
+  "n": 1,
+  "prompt": "A place in the city where a doctor works and sick people go to get help — not a large hospital, but a small local clinic or health centre.",
+  "ex": "El doctor está en el consultorio todos los lunes.",
+  "elsewhere": [],
+  "freq": 9018,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "correo",
+  "raws": [
+   "el correo"
+  ],
+  "n": 4,
+  "prompt": "A building where you can buy stamps, send letters, and receive packages.",
+  "ex": "Necesito ir al correo para enviar una carta.",
+  "elsewhere": [],
+  "freq": 1613,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "estación de autobuses",
+  "raws": [
+   "la estación de autobuses"
+  ],
+  "n": 1,
+  "prompt": "A place in the city where buses arrive and depart, and where you can buy a ticket for your journey.",
+  "ex": "La estación de autobuses está cerca del centro de la ciudad.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "estadio",
+  "raws": [
+   "el estadio"
+  ],
+  "n": 1,
+  "prompt": "A large outdoor area with a running track and seating for spectators, where athletic competitions and football matches are held.",
+  "ex": "El estadio está cerca del centro de la ciudad.",
+  "elsewhere": [],
+  "freq": 4776,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "panadería",
+  "raws": [
+   "la panadería"
+  ],
+  "n": 2,
+  "prompt": "A place in the city where you can buy fresh bread, pastries, and other baked goods.",
+  "ex": "Hay una panadería cerca del parque donde venden baguettes muy ricas.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-city-places",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "parada",
+  "raws": [
+   "la parada"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can catch a bus or wait for public transport to arrive.",
+  "ex": "Hay muchas personas en la parada del autobús.",
+  "elsewhere": [],
+  "freq": 1988,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "PROPN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-describing-words",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "dulce",
+  "raws": [
+   "dulce"
+  ],
+  "n": 2,
+  "prompt": "A word describing food or a drink that has a strong, sweet flavour — like honey or ripe fruit. The opposite of bitter or sour.",
+  "ex": "Este pastel es muy dulce — me gusta mucho.",
+  "elsewhere": [
+   "es-a1-vocab-food-drink:approved"
+  ],
+  "freq": 625,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-describing-words",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "enfermo",
+  "raws": [
+   "enfermo"
+  ],
+  "n": 1,
+  "prompt": "Describes a person who is not well — feeling ill or unwell. (adjective, masculine singular)",
+  "ex": "El niño está enfermo y no va al colegio hoy.",
+  "elsewhere": [
+   "es-a2-vocab-health-body:approved"
+  ],
+  "freq": 899,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-describing-words",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "frío",
+  "raws": [
+   "frío"
+  ],
+  "n": 1,
+  "prompt": "Describes weather or a temperature that is the opposite of hot — the way a winter day feels when you need a coat.",
+  "ex": "Hoy el día está muy frío y necesito un abrigo.",
+  "elsewhere": [
+   "es-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 871,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-describing-words",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "nuevo",
+  "raws": [
+   "nuevo"
+  ],
+  "n": 1,
+  "prompt": "An adjective meaning \"new\" — used to describe a device, gadget, or product that has just come out or has not been used before.",
+  "ex": "Mi hermano tiene un ordenador nuevo en casa.",
+  "elsewhere": [
+   "es-a1-vocab-home-objects:approved"
+  ],
+  "freq": 104,
+  "pos_all": [
+   "ADJ",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-describing-words",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "trabajador",
+  "raws": [
+   "trabajador"
+  ],
+  "n": 1,
+  "prompt": "Use this word to describe a student or person who works hard, puts in a lot of effort, and does not give up easily — the opposite of lazy.",
+  "ex": "El alumno es muy trabajador: siempre hace los deberes y estudia todos los días.",
+  "elsewhere": [],
+  "freq": 1823,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "comer",
+  "raws": [
+   "comer"
+  ],
+  "n": 1,
+  "prompt": "To take food or drink into your mouth and swallow it; the main thing you do at mealtimes.",
+  "ex": "Me gusta comer pizza los viernes.",
+  "elsewhere": [
+   "es-a1-vocab-food-drink:approved"
+  ],
+  "freq": 307,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "comprar",
+  "raws": [
+   "comprar"
+  ],
+  "n": 2,
+  "prompt": "To exchange money or goods for something; what you do at a shop when you want to take something home.",
+  "ex": "Quiero comprar una camiseta en la tienda.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 366,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "dormir",
+  "raws": [
+   "dormir"
+  ],
+  "n": 3,
+  "prompt": "To sleep — the action of resting with your eyes closed, usually in a bed at night.",
+  "ex": "Me gusta dormir ocho horas cada noche.",
+  "elsewhere": [
+   "es-b1-vocab-health-lifestyle:approved"
+  ],
+  "freq": 300,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "estudiar",
+  "raws": [
+   "estudiar"
+  ],
+  "n": 1,
+  "prompt": "To look carefully at books, notes, or lessons in order to learn something new or prepare for a test.",
+  "ex": "Me gusta estudiar por las mañanas antes de ir a clase.",
+  "elsewhere": [
+   "es-a2-vocab-work-school:approved"
+  ],
+  "freq": 1032,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "llover",
+  "raws": [
+   "llover"
+  ],
+  "n": 1,
+  "prompt": "To rain — what the sky does when water falls from the clouds.",
+  "ex": "Hoy va a llover mucho, así que llevo un paraguas.",
+  "elsewhere": [
+   "es-a1-vocab-weather-clothing:approved",
+   "es-a2-vocab-travel-nature:approved"
+  ],
+  "freq": 2430,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "mirar",
+  "raws": [
+   "mirar"
+  ],
+  "n": 1,
+  "prompt": "To direct your eyes toward something and pay attention to it — used especially when watching television, a film, or a video.",
+  "ex": "Me gusta mirar películas en casa los fines de semana.",
+  "elsewhere": [],
+  "freq": 93,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "nadar",
+  "raws": [
+   "nadar"
+  ],
+  "n": 1,
+  "prompt": "To move your body through water by using your arms and legs — a common sport done in a pool or the sea.",
+  "ex": "A mí me gusta nadar en la piscina por las mañanas.",
+  "elsewhere": [
+   "es-a1-vocab-free-time:approved"
+  ],
+  "freq": 2065,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "pagar",
+  "raws": [
+   "pagar"
+  ],
+  "n": 1,
+  "prompt": "To pay (for something, e.g. at a shop or restaurant).",
+  "ex": "Quiero pagar la cuenta, por favor.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 262,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "trabajar",
+  "raws": [
+   "trabajar"
+  ],
+  "n": 1,
+  "prompt": "To do or perform a job or task; what you do at an office, a shop, or a factory to earn money.",
+  "ex": "Yo trabajo en una oficina de lunes a viernes.",
+  "elsewhere": [
+   "es-a2-vocab-work-school:approved"
+  ],
+  "freq": 168,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "usar",
+  "raws": [
+   "usar"
+  ],
+  "n": 1,
+  "prompt": "To use a device, app, or tool — to operate or make use of something (a computer, a phone, a program).",
+  "ex": "Yo uso el ordenador para trabajar.",
+  "elsewhere": [],
+  "freq": 232,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-everyday-verbs",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "viajar",
+  "raws": [
+   "viajar"
+  ],
+  "n": 1,
+  "prompt": "To move from one place to another, especially on a trip or journey — what people do when they go to a new city or country.",
+  "ex": "Me gusta viajar a países nuevos en verano.",
+  "elsewhere": [
+   "es-a2-vocab-travel-nature:approved"
+  ],
+  "freq": 1157,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "esposa",
+  "raws": [
+   "esposa"
+  ],
+  "n": 2,
+  "prompt": "The woman who is married to your father — she takes care of the home and family together with him.",
+  "ex": "La esposa de mi padre cocina muy bien en casa.",
+  "elsewhere": [],
+  "freq": 289,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "esposo",
+  "raws": [
+   "esposo"
+  ],
+  "n": 1,
+  "prompt": "The mother's husband and the father of your children — what do you call him in Spanish?",
+  "ex": "Mi esposo y yo tenemos dos hijos.",
+  "elsewhere": [],
+  "freq": 814,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "hermano mayor",
+  "raws": [
+   "hermano mayor"
+  ],
+  "n": 4,
+  "prompt": "The male person in your family who has the same parents as you — your brother. What is the Spanish word for the OLDER one of these?",
+  "ex": "Mi hermano mayor sale en el programa de televisión esta noche.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "hermano menor",
+  "raws": [
+   "hermano menor"
+  ],
+  "n": 1,
+  "prompt": "Your parent's son who is younger than you — your little ___.",
+  "ex": "Mi hermano menor tiene ocho años y le gusta jugar al fútbol.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "médico",
+  "raws": [
+   "médico"
+  ],
+  "n": 1,
+  "prompt": "The male doctor or physician who takes care of patients when they are sick — a man who works in a hospital or clinic.",
+  "ex": "Mi padre es médico y trabaja en un hospital grande.",
+  "elsewhere": [
+   "es-a2-vocab-health-body:approved"
+  ],
+  "freq": 430,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "nieto",
+  "raws": [
+   "nieto"
+  ],
+  "n": 4,
+  "prompt": "The son of your son or daughter; a male grandchild.",
+  "ex": "Mi nieto juega en el parque cuando hace buen tiempo.",
+  "elsewhere": [],
+  "freq": 2708,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "sobrina",
+  "raws": [
+   "sobrina"
+  ],
+  "n": 3,
+  "prompt": "The son or daughter of your brother or sister — in other words, your brother's or sister's child.",
+  "ex": "Mi sobrina viaja en autobús sola por primera vez hoy.",
+  "elsewhere": [],
+  "freq": 24385,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-family-people",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "sobrino",
+  "raws": [
+   "sobrino"
+  ],
+  "n": 4,
+  "prompt": "The son or daughter of your brother or sister — the young relative who might travel with your family on holiday.",
+  "ex": "Mi sobrino viaja con nosotros a la playa este verano.",
+  "elsewhere": [],
+  "freq": 2857,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-free-time",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "comprar",
+  "raws": [
+   "comprar"
+  ],
+  "n": 1,
+  "prompt": "To go to a shop or market and spend money on things you want or need — what verb describes this free-time activity?",
+  "ex": "Me gusta comprar ropa nueva los fines de semana.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 366,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-greetings-phrases",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "buen viaje",
+  "raws": [
+   "buen viaje"
+  ],
+  "n": 1,
+  "prompt": "The polite expression you say to wish someone well when they are about to leave on a trip or start a holiday — meaning \"have a good trip!\"",
+  "ex": "— ¡Buen viaje! Espero que disfrutes mucho las vacaciones.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-greetings-phrases",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "mucha suerte",
+  "raws": [
+   "mucha suerte"
+  ],
+  "n": 1,
+  "prompt": "The polite expression you say to wish someone good luck or encourage them before a match or competition — literally meaning \"much luck!\"",
+  "ex": "Antes del partido, el entrenador dijo: «¡Mucha suerte, equipo!»",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-greetings-phrases",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "salud",
+  "raws": [
+   "salud"
+  ],
+  "n": 1,
+  "prompt": "The polite phrase you say when someone sneezes, wishing them good health — used the way English speakers say \"Bless you!\"",
+  "ex": "Cuando mi compañero estornudó, le dije: \"¡Salud!\"",
+  "elsewhere": [
+   "es-b1-environment-vocab:approved"
+  ],
+  "freq": 861,
+  "pos_all": [
+   "INTJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-home-objects",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "escritorio",
+  "raws": [
+   "el escritorio"
+  ],
+  "n": 1,
+  "prompt": "A piece of furniture with four legs and a flat top surface, commonly found in an office, where you sit to work or use a computer.",
+  "ex": "Hay una lámpara y muchos papeles encima del escritorio.",
+  "elsewhere": [],
+  "freq": 2287,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-home-objects",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "frigorífico",
+  "raws": [
+   "el frigorífico"
+  ],
+  "n": 1,
+  "prompt": "The large appliance in the kitchen used to keep food cold and fresh.",
+  "ex": "La leche está en el frigorífico.",
+  "elsewhere": [],
+  "freq": 13485,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-home-objects",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "pupitre",
+  "raws": [
+   "el pupitre"
+  ],
+  "n": 1,
+  "prompt": "The piece of furniture with a flat surface and legs that students sit at in a classroom to read, write, or draw.",
+  "ex": "El niño pone sus libros en el pupitre antes de la clase.",
+  "elsewhere": [],
+  "freq": 32565,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-home-objects",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "sillón",
+  "raws": [
+   "el sillón"
+  ],
+  "n": 1,
+  "prompt": "The piece of furniture you sit on, usually found in the living room — it has a back and arms, and fits one person. (Not a sofa.)",
+  "ex": "Mi abuelo lee el periódico en el sillón cada mañana.",
+  "elsewhere": [],
+  "freq": 6636,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-home-objects",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "televisor",
+  "raws": [
+   "el televisor"
+  ],
+  "n": 1,
+  "prompt": "The screen you use at home to watch films, series, or the news — it hangs on the wall or sits on a stand in the living room.",
+  "ex": "El televisor está en el salón, encima de la mesa.",
+  "elsewhere": [],
+  "freq": 5542,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-time-calendar",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "lunes",
+  "raws": [
+   "lunes"
+  ],
+  "n": 5,
+  "prompt": "The day of the week that comes right after Sunday — many shops are closed on this day at the start of the week.",
+  "ex": "La tienda está cerrada el lunes, pero abre el martes por la mañana.",
+  "elsewhere": [
+   "es-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 1892,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a1-vocab-time-calendar",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "otoño",
+  "raws": [
+   "otoño"
+  ],
+  "n": 2,
+  "prompt": "The season that comes after summer, when the weather gets cooler and leaves fall from trees.",
+  "ex": "En otoño hace frío por las mañanas.",
+  "elsewhere": [
+   "es-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a1-vocab-time-calendar",
+  "lang": "ES",
+  "cefr": "A1",
+  "w": "viernes",
+  "raws": [
+   "viernes"
+  ],
+  "n": 1,
+  "prompt": "The day of the week that comes after jueves (Thursday) and before sábado (Saturday) — a common last workday of the week.",
+  "ex": "El viernes tengo una reunión importante en la oficina.",
+  "elsewhere": [
+   "es-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 1486,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-movement-change-verbs",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "devolver",
+  "raws": [
+   "devolver"
+  ],
+  "n": 1,
+  "prompt": "To return money that you borrowed — to give back what you owe.",
+  "ex": "Tengo que devolver el dinero que me prestó mi amigo la semana pasada.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 1461,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-movement-change-verbs",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "llegar",
+  "raws": [
+   "llegar"
+  ],
+  "n": 5,
+  "prompt": "To reach a destination — the action of getting to a place after travelling there (e.g. at a station, airport, or city).",
+  "ex": "El tren llega a Madrid a las tres de la tarde.",
+  "elsewhere": [
+   "es-a1-vocab-time-calendar:rejected"
+  ],
+  "freq": 116,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-movement-change-verbs",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "salir",
+  "raws": [
+   "salir"
+  ],
+  "n": 1,
+  "prompt": "To exit or leave a place, such as a shop or a building — the opposite of entering. (a verb of movement, infinitive)",
+  "ex": "Después de pagar, voy a salir de la tienda con mis bolsas.",
+  "elsewhere": [
+   "es-a1-vocab-everyday-verbs:approved"
+  ],
+  "freq": 123,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-time-daily-routine",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "desayuno",
+  "raws": [
+   "desayuno"
+  ],
+  "n": 1,
+  "prompt": "The Spanish word for \"breakfast\".",
+  "ex": "El desayuno es la comida más importante del día.",
+  "elsewhere": [
+   "es-a1-vocab-food-drink:approved",
+   "es-a2-vocab-time-daily-routine:rejected"
+  ],
+  "freq": 1670,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-time-daily-routine",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "madrugada",
+  "raws": [
+   "madrugada"
+  ],
+  "n": 1,
+  "prompt": "The part of the day that comes after midnight and before the sun rises — when most travellers are still asleep on an overnight train or bus.",
+  "ex": "Nuestro vuelo sale a las tres de la madrugada, así que tenemos que salir del hotel muy pronto.",
+  "elsewhere": [],
+  "freq": 6202,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-time-daily-routine",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "todos los días",
+  "raws": [
+   "todos los días"
+  ],
+  "n": 1,
+  "prompt": "An expression meaning \"every day\" — used to describe something that happens on a daily basis, without exception, as part of a regular routine.",
+  "ex": "Tomo el autobús todos los días para ir al trabajo.",
+  "elsewhere": [
+   "es-a2-vocab-time-frequency-adverbs:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-a2-vocab-time-frequency-adverbs",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "siempre",
+  "raws": [
+   "siempre"
+  ],
+  "n": 4,
+  "prompt": "How do you say in Spanish that something happens at all times, without exception — the opposite of \"nunca\"? (It is an adverb of frequency used for habits and routines.)",
+  "ex": "Mi abuela siempre prepara la cena para toda la familia los domingos.",
+  "elsewhere": [
+   "es-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 109,
+  "pos_all": [
+   "ADV"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-travel-nature",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "cascada",
+  "raws": [
+   "cascada"
+  ],
+  "n": 1,
+  "prompt": "Un lugar natural donde el agua cae desde una altura, como por una roca o una montaña. (A natural place where water falls from a height, such as over a rock or a mountain.)",
+  "ex": "Caminamos dos horas por el bosque para ver la cascada al final del sendero.",
+  "elsewhere": [],
+  "freq": 23845,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-travel-nature",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "llanura",
+  "raws": [
+   "la llanura"
+  ],
+  "n": 2,
+  "prompt": "A large area of flat or gently rolling land, often covered with grass, with few or no trees. Common in the countryside and used for farming or grazing animals.",
+  "ex": "Desde el tren, vimos una gran ___ verde con muchas vacas.",
+  "elsewhere": [],
+  "freq": 11110,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-travel-nature",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "océano",
+  "raws": [
+   "el océano"
+  ],
+  "n": 2,
+  "prompt": "Una extensión grande de agua salada que cubre gran parte de la Tierra. (A large body of salt water that covers much of the Earth.)",
+  "ex": "El barco viajó por el océano durante muchos días.",
+  "elsewhere": [],
+  "freq": 2270,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-travel-nature",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "restaurante",
+  "raws": [
+   "el restaurante"
+  ],
+  "n": 1,
+  "prompt": "A place where people go to eat a meal prepared and served by others, usually paying for it. It is not a home kitchen — it is a dedicated establishment you visit.",
+  "ex": "Cuando estamos de vacaciones, nos gusta comer en un restaurante cerca del mar.",
+  "elsewhere": [
+   "es-a1-vocab-city-places:approved"
+  ],
+  "freq": 1161,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-work-school",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "colegio",
+  "raws": [
+   "colegio",
+   "el colegio"
+  ],
+  "n": 2,
+  "prompt": "El lugar donde los niños y los adolescentes van a aprender, con aulas, profesores y recreo. No es la universidad.",
+  "ex": "Mis hijos van al colegio todos los días de lunes a viernes.",
+  "elsewhere": [],
+  "freq": 1288,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-a2-vocab-work-school",
+  "lang": "ES",
+  "cefr": "A2",
+  "w": "enfermero",
+  "raws": [
+   "enfermero"
+  ],
+  "n": 1,
+  "prompt": "A person whose job is to care for sick or injured people in a hospital or clinic, working alongside doctors.",
+  "ex": "El enfermero del hospital me tomó la temperatura y me dio la medicina.",
+  "elsewhere": [],
+  "freq": 8697,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "atmósfera",
+  "raws": [
+   "la atmósfera"
+  ],
+  "n": 1,
+  "prompt": "The layer of gases that surrounds the Earth and protects us from the sun's harmful rays.",
+  "ex": "La atmósfera terrestre contiene oxígeno y otros gases importantes para la vida.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "balanza comercial",
+  "raws": [
+   "la balanza comercial"
+  ],
+  "n": 1,
+  "prompt": "The difference between a country's income from exports and its spending on imports; when negative, it signals an economic problem discussed in the news and politics.",
+  "ex": "El gobierno anunció que la balanza comercial del país es negativa este año debido a las importaciones.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "biodiversidad",
+  "raws": [
+   "la biodiversidad"
+  ],
+  "n": 1,
+  "prompt": "The natural world and living things that exist in a particular area; the variety of plant and animal life in a habitat.",
+  "ex": "La biodiversidad de la selva amazónica está en peligro por la deforestación.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "calentamiento global",
+  "raws": [
+   "el calentamiento global"
+  ],
+  "n": 1,
+  "prompt": "El aumento de la temperatura media de la Tierra causado por la acumulación de gases en la atmósfera — ¿cómo se llama este fenómeno?",
+  "ex": "Los científicos advierten que el calentamiento global está provocando cambios extremos en el clima de todo el planeta.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "cambio",
+  "raws": [
+   "cambio"
+  ],
+  "n": 1,
+  "prompt": "El aumento de la temperatura global causado principalmente por las emisiones de gases de efecto invernadero. En español se llama \"el ___ climático\".",
+  "ex": "El cambio climático es uno de los problemas más graves de nuestro tiempo.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 467,
+  "pos_all": [
+   "INTJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "cambio climático",
+  "raws": [
+   "cambio climático"
+  ],
+  "n": 2,
+  "prompt": "El aumento de la temperatura media de la Tierra causado principalmente por las emisiones de gases de efecto invernadero. (Two words: \"el cambio ___\")",
+  "ex": "El cambio climático es uno de los problemas más graves de nuestra época.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "capa de ozono",
+  "raws": [
+   "la capa de ozono"
+  ],
+  "n": 1,
+  "prompt": "The natural layer of gases that protects Earth from the sun's harmful radiation and helps maintain temperature. When damaged, it can cause health problems.",
+  "ex": "Los científicos están preocupados por el agujero en la capa de ozono sobre la Antártida.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "comercio",
+  "raws": [
+   "comercio",
+   "el comercio"
+  ],
+  "n": 2,
+  "prompt": "The act of buying and selling goods in large quantities, especially between countries; trade that takes place on a national or international scale and is often discussed in news and current affairs.",
+  "ex": "El comercio entre los países de la Unión Europea ha crecido mucho en los últimos años.",
+  "elsewhere": [],
+  "freq": 4117,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "conservación",
+  "raws": [
+   "la conservación"
+  ],
+  "n": 1,
+  "prompt": "The process of protecting and preserving natural resources and wildlife for future generations.",
+  "ex": "La conservación de los océanos es fundamental para mantener el equilibrio ecológico del planeta.",
+  "elsewhere": [],
+  "freq": 16337,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "contaminación ambiental",
+  "raws": [
+   "la contaminación ambiental"
+  ],
+  "n": 1,
+  "prompt": "El conjunto de gases y sustancias dañinas que se liberan al aire, al agua o al suelo, especialmente como resultado del transporte o la industria, y que perjudican el planeta.",
+  "ex": "Cuando viajamos en avión con frecuencia, contribuimos a la contaminación ambiental porque los aviones emiten muchos gases.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "contaminación atmosférica",
+  "raws": [
+   "la contaminación atmosférica"
+  ],
+  "n": 1,
+  "prompt": "The emission of gases and particles into the air that causes harm to the environment and health.",
+  "ex": "La contaminación atmosférica en las grandes ciudades afecta la salud de millones de personas.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "contaminantes",
+  "raws": [
+   "los contaminantes"
+  ],
+  "n": 1,
+  "prompt": "The harmful substances released into the air, water, or soil that damage the environment. Often caused by factories, vehicles, and industrial activities.",
+  "ex": "Los contaminantes del aire pueden causar problemas respiratorios en la población.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "deforestación",
+  "raws": [
+   "deforestación",
+   "la deforestación"
+  ],
+  "n": 7,
+  "prompt": "The cutting down of large areas of trees, which reduces natural habitats and contributes to climate problems.",
+  "ex": "La deforestación en la Amazonia es una de las mayores amenazas para el planeta.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "desertificación",
+  "raws": [
+   "la desertificación"
+  ],
+  "n": 1,
+  "prompt": "The process of land becoming desert, often caused by climate change, deforestation, or poor agricultural practices",
+  "ex": "La desertificación es un problema grave en muchas regiones áridas del mundo.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "educación",
+  "raws": [
+   "educación",
+   "la educación"
+  ],
+  "n": 2,
+  "prompt": "El derecho que tienen todas las personas de recibir instrucción formal, especialmente en escuelas y universidades; un tema clave en los debates sobre igualdad social.",
+  "ex": "El gobierno prometió invertir más dinero en la educación pública para reducir las desigualdades sociales.",
+  "elsewhere": [],
+  "freq": 2154,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "efecto invernadero",
+  "raws": [
+   "el efecto invernadero"
+  ],
+  "n": 1,
+  "prompt": "The effect that causes the Earth's atmosphere to trap heat, contributing to global warming.",
+  "ex": "El efecto invernadero es necesario para la vida, pero el exceso de gases causa problemas.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "emisiones",
+  "raws": [
+   "emisiones"
+  ],
+  "n": 1,
+  "prompt": "El gas o conjunto de sustancias nocivas que los vehículos y las fábricas liberan al aire, dañando la calidad del aire en las ciudades y contribuyendo al deterioro del medio ambiente.",
+  "ex": "Los expertos advierten que las emisiones de los coches en las ciudades grandes son una de las principales causas de la mala calidad del aire.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "energía renovable",
+  "raws": [
+   "la energía renovable"
+  ],
+  "n": 1,
+  "prompt": "Energy that comes from sources that naturally replenish themselves, such as solar or wind power.",
+  "ex": "Muchos países están invirtiendo en la energía renovable para reducir las emisiones de carbono.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "erosión",
+  "raws": [
+   "la erosión"
+  ],
+  "n": 1,
+  "prompt": "The process of gradually wearing away or destroying something, especially soil or rock by natural forces like wind and water.",
+  "ex": "La erosión del suelo es un problema grave en las zonas deforestadas.",
+  "elsewhere": [],
+  "freq": 25964,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "extinción",
+  "raws": [
+   "extinción",
+   "la extinción"
+  ],
+  "n": 2,
+  "prompt": "La desaparición permanente de una especie animal o vegetal de la Tierra, a menudo causada por la acción humana o la destrucción de su hábitat natural.",
+  "ex": "La extinción del tigre de Bengala sería una pérdida enorme para la biodiversidad del planeta.",
+  "elsewhere": [],
+  "freq": 8981,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "forestación",
+  "raws": [
+   "la forestación"
+  ],
+  "n": 1,
+  "prompt": "The process of planting trees in an area where there were none before, helping to combat climate change and restore ecosystems.",
+  "ex": "La forestación de las zonas áridas puede mejorar la calidad del suelo y aumentar la biodiversidad.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "huelga",
+  "raws": [
+   "huelga"
+  ],
+  "n": 1,
+  "prompt": "El derecho legal que tienen los trabajadores a parar de trabajar para protestar por sus condiciones laborales.",
+  "ex": "Los trabajadores del metro convocaron una huelga para pedir mejores salarios y condiciones de trabajo.",
+  "elsewhere": [
+   "es-b2-vocab-society-politics:rejected",
+   "es-b2-vocab-work-professional:approved",
+   "es-b1-environment-vocab:rejected"
+  ],
+  "freq": 3887,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "hábitat",
+  "raws": [
+   "el hábitat"
+  ],
+  "n": 1,
+  "prompt": "The natural home or environment where a plant, animal, or organism lives",
+  "ex": "La deforestación destruye el hábitat de muchas especies animales.",
+  "elsewhere": [],
+  "freq": 13905,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "impacto ambiental",
+  "raws": [
+   "el impacto ambiental"
+  ],
+  "n": 1,
+  "prompt": "The negative effect or impact that human activities have on the natural world, especially pollution and damage to ecosystems.",
+  "ex": "El impacto ambiental de la industria textil es muy grave para nuestro planeta.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "inflación",
+  "raws": [
+   "la inflación"
+  ],
+  "n": 1,
+  "prompt": "The general rise in prices over time that reduces the purchasing power of money — a key economic and social concern discussed in the news.",
+  "ex": "Debido a la inflación, los precios de los alimentos han subido mucho este año.",
+  "elsewhere": [],
+  "freq": 15174,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "juegos olímpicos",
+  "raws": [
+   "los Juegos Olímpicos"
+  ],
+  "n": 1,
+  "prompt": "A sporting event held every four years in which athletes from countries all over the world compete against each other — often discussed in the context of international society and national pride.",
+  "ex": "Millones de personas de todo el mundo siguen los Juegos Olímpicos por televisión cada cuatro años.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "medio ambiente",
+  "raws": [
+   "medio ambiente"
+  ],
+  "n": 1,
+  "prompt": "El conjunto de condiciones naturales que rodean a los seres vivos, incluyendo el aire, el agua y la tierra. Es la palabra clave en debates sobre ecología y sostenibilidad.",
+  "ex": "Debemos proteger el medio ambiente para las generaciones futuras.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "ola de calor",
+  "raws": [
+   "ola de calor"
+  ],
+  "n": 1,
+  "prompt": "A period of unusually hot weather that lasts for several days and can be dangerous to health, often discussed in the context of climate and public safety.",
+  "ex": "La ola de calor que afectó al país este verano causó graves problemas de salud en las ciudades.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "recursos naturales",
+  "raws": [
+   "los recursos naturales"
+  ],
+  "n": 1,
+  "prompt": "The natural materials and energy that come from the earth, such as water, forests, minerals, and oil, which humans use for economic activities.",
+  "ex": "Es importante proteger los recursos naturales para las futuras generaciones.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "recursos renovables",
+  "raws": [
+   "los recursos renovables"
+  ],
+  "n": 1,
+  "prompt": "The natural resources that can be replaced or renewed naturally, such as solar energy, wind, or water.",
+  "ex": "Es importante invertir en los recursos renovables para proteger el planeta.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "reducción",
+  "raws": [
+   "la reducción"
+  ],
+  "n": 1,
+  "prompt": "The act of reducing or lessening something harmful, especially pollution or environmental damage",
+  "ex": "La reducción de emisiones es fundamental para combatir el cambio climático.",
+  "elsewhere": [],
+  "freq": 10474,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "reforestación",
+  "raws": [
+   "la reforestación"
+  ],
+  "n": 1,
+  "prompt": "The process of replanting trees in areas where forests have been cut down or destroyed",
+  "ex": "La reforestación es esencial para combatir el cambio climático.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "sanidad",
+  "raws": [
+   "sanidad"
+  ],
+  "n": 2,
+  "prompt": "El conjunto de medidas y servicios que un gobierno o sociedad ofrece para proteger la salud de sus ciudadanos, incluyendo hospitales, médicos y campañas de prevención.",
+  "ex": "El gobierno prometió invertir más dinero en la sanidad para reducir las listas de espera.",
+  "elsewhere": [],
+  "freq": 12222,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "sostenibilidad",
+  "raws": [
+   "la sostenibilidad"
+  ],
+  "n": 1,
+  "prompt": "The protection and careful use of natural resources to prevent waste and ensure they last for future generations.",
+  "ex": "La sostenibilidad es fundamental para proteger nuestro planeta.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "sostenible",
+  "raws": [
+   "sostenible"
+  ],
+  "n": 1,
+  "prompt": "La práctica de comprar y comer alimentos producidos de forma que no dañan el medio ambiente ni agotan los recursos naturales, pensando en las generaciones futuras.",
+  "ex": "Cada vez más personas prefieren comprar productos de agricultura sostenible para proteger el planeta.",
+  "elsewhere": [
+   "es-b2-vocab-economy-business:approved"
+  ],
+  "freq": 25366,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "es-b1-environment-vocab",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "superpoblación",
+  "raws": [
+   "superpoblación"
+  ],
+  "n": 2,
+  "prompt": "The situation in which the number of people in a country or region is growing rapidly, often discussed as a social and environmental challenge. (One or two words.)",
+  "ex": "La superpoblación en las grandes ciudades crea problemas de vivienda y transporte para las familias.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-vocab-education-career",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "dependiente",
+  "raws": [
+   "el dependiente"
+  ],
+  "n": 1,
+  "prompt": "A person whose job is to sell products in a shop, helping customers find what they need.",
+  "ex": "El dependiente me ayudó a encontrar los zapatos de mi talla.",
+  "elsewhere": [
+   "es-a2-vocab-city-shopping:approved"
+  ],
+  "freq": 13496,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b1-vocab-education-career",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "graduado",
+  "raws": [
+   "graduado"
+  ],
+  "n": 1,
+  "prompt": "Una persona que ha completado estudios en una universidad o escuela profesional y ha recibido un certificado oficial que lo demuestra. En el mundo laboral, muchas empresas de alimentación buscan a este tipo de profesional con estudios en nutrición o gastronomía.",
+  "ex": "El nuevo chef del restaurante es un graduado de la escuela de gastronomía más reconocida del país.",
+  "elsewhere": [],
+  "freq": 6826,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-vocab-health-lifestyle",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "estresarse",
+  "raws": [
+   "estresarse"
+  ],
+  "n": 2,
+  "prompt": "To feel or suffer from mental or emotional pressure, tension, or anxiety — often caused by work, deadlines, or too much to do. (verb)",
+  "ex": "Muchos periodistas se estresan cuando tienen que entregar noticias de última hora.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-vocab-money-consumers",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "ahorrar",
+  "raws": [
+   "ahorrar"
+  ],
+  "n": 2,
+  "prompt": "To put money aside regularly instead of spending it, often with a future goal in mind — for example, to buy new sports equipment or pay for a gym membership.",
+  "ex": "Quiero ahorrar dinero durante seis meses para comprar una bicicleta nueva.",
+  "elsewhere": [
+   "es-b1-environment-vocab:approved"
+  ],
+  "freq": 3291,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-vocab-money-consumers",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "reclamar",
+  "raws": [
+   "reclamar"
+  ],
+  "n": 3,
+  "prompt": "To formally demand compensation, a refund, or the correction of a problem — especially as a customer or employee who believes their rights have not been respected.",
+  "ex": "Después de que la empresa no le pagó las horas extra, decidió reclamar sus derechos ante el departamento de recursos humanos.",
+  "elsewhere": [
+   "es-b1-vocab-travel-tourism:approved"
+  ],
+  "freq": 4053,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b1-vocab-prepositional-verbs",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "acordarse de",
+  "raws": [
+   "acordarse de"
+  ],
+  "n": 1,
+  "prompt": "To call back to mind something you have studied or experienced; a pronominal verb that always takes the preposition \"de\" before its object. (Hint: it is NOT the same as \"recordar.\")",
+  "ex": "Espero que los estudiantes se acuerden de todos los verbos irregulares que practicamos en clase.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-vocab-prepositional-verbs",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "pensar en",
+  "raws": [
+   "pensar en"
+  ],
+  "n": 3,
+  "prompt": "To think about someone or something, often with affection or longing — for example, when a family member is far away and you keep them in your thoughts. (Give the verb + its fixed preposition.)",
+  "ex": "Cuando estoy lejos de casa, siempre pienso en mi familia.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b1-vocab-travel-tourism",
+  "lang": "ES",
+  "cefr": "B1",
+  "w": "billete",
+  "raws": [
+   "billete"
+  ],
+  "n": 1,
+  "prompt": "A document or electronic pass that allows you to travel on a bus, train, or plane — not to enter an event or museum.",
+  "ex": "Necesito comprar un billete de tren para viajar a Madrid el próximo viernes.",
+  "elsewhere": [
+   "es-a2-vocab-travel-nature:approved"
+  ],
+  "freq": 1908,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "adaptabilidad",
+  "raws": [
+   "adaptabilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to change or adapt easily to new circumstances or conditions.",
+  "ex": "La adaptabilidad es una habilidad esencial en el mundo laboral moderno.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "conciencia",
+  "raws": [
+   "la conciencia"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de un individuo o una sociedad para reconocer lo que está bien y lo que está mal, y actuar conforme a principios morales.",
+  "ex": "La conciencia colectiva de una nación puede impulsar cambios sociales profundos.",
+  "elsewhere": [],
+  "freq": 2195,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "desarrollo",
+  "raws": [
+   "el desarrollo"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de una persona o sociedad para mejorar sus condiciones de vida de forma progresiva y duradera; también se usa para referirse al crecimiento económico o social a largo plazo.",
+  "ex": "El desarrollo económico de un país depende en gran medida de la inversión en educación.",
+  "elsewhere": [],
+  "freq": 3781,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "empatía",
+  "raws": [
+   "empatía"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de comprender y compartir los sentimientos de otra persona; ponerse en el lugar del otro.",
+  "ex": "La empatía es una cualidad esencial para trabajar en profesiones de ayuda, como la medicina o la psicología.",
+  "elsewhere": [
+   "es-b2-vocab-psychology-behaviour:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "equidad",
+  "raws": [
+   "equidad"
+  ],
+  "n": 1,
+  "prompt": "The quality or state of being fair and impartial, especially in the distribution of resources or opportunities.",
+  "ex": "La equidad en el acceso a la educación es fundamental para el desarrollo social.",
+  "elsewhere": [],
+  "freq": 31228,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "fiabilidad",
+  "raws": [
+   "fiabilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to be trusted or depended upon; reliability.",
+  "ex": "La fiabilidad de los datos es esencial para cualquier investigación científica seria.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "flexibilidad",
+  "raws": [
+   "flexibilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to change or be changed easily according to the situation; adaptability",
+  "ex": "La flexibilidad es una característica esencial en el mercado laboral actual.",
+  "elsewhere": [],
+  "freq": 20678,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "honradez",
+  "raws": [
+   "honradez"
+  ],
+  "n": 1,
+  "prompt": "The quality of being honest and having strong moral principles; moral uprightness. This term is essential when discussing ethics in business or personal character.",
+  "ex": "La honradez es un valor fundamental en cualquier profesión que requiera la confianza del público.",
+  "elsewhere": [],
+  "freq": 20768,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "igualdad",
+  "raws": [
+   "igualdad"
+  ],
+  "n": 1,
+  "prompt": "The quality or state of being equal, especially in rights, opportunities, or status. Often discussed in social and political contexts.",
+  "ex": "La igualdad de género es un objetivo fundamental en las sociedades democráticas modernas.",
+  "elsewhere": [
+   "es-b1-vocab-opinions-society:approved",
+   "es-b1-environment-vocab:rejected",
+   "es-b2-abstract-noun-vocab:rejected",
+   "es-b2-vocab-society-politics:rejected"
+  ],
+  "freq": 8339,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "imparcialidad",
+  "raws": [
+   "la imparcialidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being fair and impartial in treatment or judgment; often discussed in legal and social contexts.",
+  "ex": "La imparcialidad del juez fue cuestionada durante el juicio debido a sus conexiones personales con el acusado.",
+  "elsewhere": [],
+  "freq": 32387,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "integridad",
+  "raws": [
+   "la integridad"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de actuar según los propios principios morales y de ser honesto en las relaciones con los demás; la coherencia entre los valores que se defienden y las acciones que se realizan.",
+  "ex": "La integridad es un valor fundamental para cualquier líder que quiera ganarse la confianza de su equipo.",
+  "elsewhere": [],
+  "freq": 5864,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "justicia",
+  "raws": [
+   "la justicia"
+  ],
+  "n": 1,
+  "prompt": "The quality of being fair and impartial in judgment or treatment; the principle that outcomes should match what people deserve.",
+  "ex": "El abogado dedicó su carrera a luchar por la justicia social en comunidades marginadas.",
+  "elsewhere": [
+   "es-b2-abstract-noun-vocab:rejected",
+   "es-b1-vocab-opinions-society:approved"
+  ],
+  "freq": 1198,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "lucidez",
+  "raws": [
+   "la lucidez"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de pensar con claridad, de forma lógica y coherente, especialmente al analizar problemas o construir argumentos. (The ability to think clearly, logically, and coherently, especially when analysing problems or building arguments.)",
+  "ex": "La lucidez de sus argumentos convenció al jurado de que tenía razón.",
+  "elsewhere": [],
+  "freq": 24620,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "moral",
+  "raws": [
+   "la moral"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de distinguir entre lo que está bien y lo que está mal; el conjunto de principios éticos que guían el comportamiento de una persona o de una sociedad.",
+  "ex": "El debate sobre la clonación humana plantea serias cuestiones sobre la moral y la ética científica.",
+  "elsewhere": [],
+  "freq": 2400,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "objetividad",
+  "raws": [
+   "objetividad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to understand and judge things clearly using reason and logic, without being influenced by emotions.",
+  "ex": "La objetividad es fundamental en el periodismo para presentar las noticias sin sesgos personales.",
+  "elsewhere": [],
+  "freq": 24287,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "perdurabilidad",
+  "raws": [
+   "perdurabilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to last or continue over a long period of time without losing effectiveness or value; permanence.",
+  "ex": "La perdurabilidad de las instituciones democráticas depende del compromiso ciudadano y del respeto a los valores fundamentales.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "perseverancia",
+  "raws": [
+   "la perseverancia"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de mantenerse firme ante las dificultades y seguir adelante sin rendirse; la constancia en el esfuerzo a lo largo del tiempo.",
+  "ex": "Gracias a su perseverancia, el científico logró publicar su investigación después de años de trabajo continuo.",
+  "elsewhere": [],
+  "freq": 19695,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "progreso",
+  "raws": [
+   "el progreso"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de una persona o sociedad para adaptarse, mejorar y alcanzar metas a lo largo del tiempo; el proceso de avanzar hacia un estado más completo o avanzado.",
+  "ex": "El progreso tecnológico de las últimas décadas ha transformado profundamente nuestra forma de comunicarnos.",
+  "elsewhere": [],
+  "freq": 2940,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "racionalidad",
+  "raws": [
+   "racionalidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to think clearly and make good decisions based on logic and evidence rather than emotion.",
+  "ex": "La racionalidad es fundamental en la toma de decisiones empresariales importantes.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "rectitud",
+  "raws": [
+   "rectitud"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to be trusted to do what is right and to act according to moral principles; uprightness of character.",
+  "ex": "La rectitud moral de la jueza nunca ha sido cuestionada durante su carrera.",
+  "elsewhere": [],
+  "freq": 20578,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "resiliencia",
+  "raws": [
+   "resiliencia"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to recover quickly from difficulties or setbacks; the capacity to bounce back from adversity.",
+  "ex": "La resiliencia es una característica fundamental para superar los desafíos de la vida moderna.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "sensatez",
+  "raws": [
+   "la sensatez"
+  ],
+  "n": 1,
+  "prompt": "La cualidad de quien actúa con prudencia, sentido común y buen juicio; la capacidad de tomar decisiones acertadas basándose en la razón y la experiencia.",
+  "ex": "La sensatez de su decisión quedó demostrada cuando el proyecto resultó un éxito a largo plazo.",
+  "elsewhere": [],
+  "freq": 19349,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "sostenibilidad",
+  "raws": [
+   "sostenibilidad"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de mantenerse o de mantener algo a lo largo del tiempo sin agotar los recursos naturales ni dañar el entorno; concepto clave en debates sobre el medio ambiente y la economía.",
+  "ex": "El informe destaca que la sostenibilidad del modelo económico actual depende de una reducción urgente de las emisiones de carbono.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "transparencia",
+  "raws": [
+   "transparencia"
+  ],
+  "n": 1,
+  "prompt": "The quality of being transparent and open in communication and decision-making processes, especially in organizations and governments.",
+  "ex": "La transparencia en las instituciones públicas es fundamental para combatir la corrupción.",
+  "elsewhere": [],
+  "freq": 20792,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "versatilidad",
+  "raws": [
+   "versatilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to change or be changed easily to suit different conditions or situations.",
+  "ex": "La versatilidad de este software permite usarlo tanto en educación como en negocios.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "viabilidad",
+  "raws": [
+   "viabilidad"
+  ],
+  "n": 1,
+  "prompt": "The quality of being able to be achieved or accomplished; the state of something being practical and realistic.",
+  "ex": "El comité estudió la viabilidad del proyecto antes de aprobar el presupuesto.",
+  "elsewhere": [],
+  "freq": 34427,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-abstract-noun-vocab",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "ética",
+  "raws": [
+   "la ética"
+  ],
+  "n": 1,
+  "prompt": "La capacidad de distinguir entre el bien y el mal, y de actuar conforme a principios morales; el conjunto de valores que guían el comportamiento de una persona o sociedad.",
+  "ex": "La ética profesional exige que los médicos antepongan el bienestar del paciente a cualquier otro interés.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-vocab-collocations-idioms",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "perder el tren",
+  "raws": [
+   "perder el tren"
+  ],
+  "n": 1,
+  "prompt": "The fixed Spanish expression meaning \"to miss\" a bus, train, or plane — used when you arrive too late and the vehicle has already left. It is a verb + noun collocation, not a single word.",
+  "ex": "Si no salimos ahora mismo, vamos a perder el tren y tendremos que esperar dos horas.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-vocab-collocations-idioms",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "prestar atención",
+  "raws": [
+   "prestar atención"
+  ],
+  "n": 1,
+  "prompt": "The fixed Spanish expression meaning \"to pay attention\" or \"to take notice of\" something — used, for example, when you advise someone to watch a news report or advertisement carefully. It is a verb + noun collocation; do NOT calque the English \"pagar atención\".",
+  "ex": "Es importante prestar atención a las noticias para estar bien informado sobre lo que ocurre en el mundo.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-vocab-culture-arts",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "reseña",
+  "raws": [
+   "la reseña"
+  ],
+  "n": 2,
+  "prompt": "Una valoración crítica, publicada en un periódico o revista, en la que un experto evalúa la calidad de un restaurante, un libro, una película u otra obra cultural.",
+  "ex": "El chef estaba nervioso porque un famoso periodista gastronómico iba a publicar una reseña de su nuevo restaurante en la revista cultural más leída del país.",
+  "elsewhere": [],
+  "freq": 22391,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-vocab-economy-business",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "presupuesto",
+  "raws": [
+   "presupuesto"
+  ],
+  "n": 1,
+  "prompt": "El dinero que se destina para cubrir los gastos de una institución educativa, un proyecto o una organización durante un período determinado.",
+  "ex": "El rector presentó el presupuesto anual de la universidad ante el consejo académico.",
+  "elsewhere": [
+   "es-b2-vocab-society-politics:rejected",
+   "es-b2-vocab-work-professional:approved"
+  ],
+  "freq": 3614,
+  "pos_all": [
+   "ADJ",
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-vocab-formal-connectors",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "no obstante",
+  "raws": [
+   "no obstante"
+  ],
+  "n": 3,
+  "prompt": "A formal connector used in written argumentation to introduce a contrasting idea — meaning \"however\" or \"nevertheless\" — signalling that what follows limits or contradicts what was just stated. It is a more formal alternative to \"pero\".",
+  "ex": "La empresa ofrece un salario competitivo; no obstante, las condiciones de trabajo dejan mucho que desear.",
+  "elsewhere": [
+   "es-b1-vocab-connectors:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-vocab-law-justice",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "denuncia",
+  "raws": [
+   "denuncia"
+  ],
+  "n": 1,
+  "prompt": "The formal legal act of reporting a crime or wrongdoing to the authorities, such as filing a complaint with the police about fraud or theft.",
+  "ex": "La víctima del robo fue a la comisaría para presentar una denuncia por el dinero que le habían robado.",
+  "elsewhere": [],
+  "freq": 4468,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "es-b2-vocab-psychology-behaviour",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "receloso",
+  "raws": [
+   "receloso"
+  ],
+  "n": 1,
+  "prompt": "Adjective describing a person who tends to doubt or mistrust others, always suspecting bad intentions — even in everyday situations like meeting new people or working in a team.",
+  "ex": "Después de vivir tanto tiempo aislado en el campo, se volvió muy receloso con los visitantes que llegaban a su granja.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "es-b2-vocab-psychology-behaviour",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "tacaño",
+  "raws": [
+   "tacaño"
+  ],
+  "n": 1,
+  "prompt": "Adjective describing a person who is excessively focused on accumulating money or possessions and is unwilling to share or spend; the opposite of generous.",
+  "ex": "Mi vecino es tan tacaño que nunca invita a nadie a cenar, aunque tiene mucho dinero en el banco.",
+  "elsewhere": [],
+  "freq": 9026,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "es-b2-vocab-work-professional",
+  "lang": "ES",
+  "cefr": "B2",
+  "w": "contrato",
+  "raws": [
+   "contrato"
+  ],
+  "n": 4,
+  "prompt": "A formal written agreement between two parties — for example, between a landlord and a tenant — that sets out the terms, rights, and obligations of each side. It is legally binding once signed.",
+  "ex": "Antes de mudarte al nuevo piso, debes leer el contrato de alquiler con atención y firmarlo en presencia del propietario.",
+  "elsewhere": [
+   "es-b1-vocab-education-career:approved",
+   "es-b2-vocab-work-professional:rejected"
+  ],
+  "freq": 1310,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-describing-words",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "büyük",
+  "raws": [
+   "büyük"
+  ],
+  "n": 1,
+  "prompt": "The Turkish word for \"big\" or \"large\" — used to describe a city, a bag, or an airport that is not small.",
+  "ex": "İstanbul çok büyük bir şehir.",
+  "elsewhere": [
+   "tr-a1-vocab-transport-places:rejected"
+  ],
+  "freq": 124,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-describing-words",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sağlıklı",
+  "raws": [
+   "sağlıklı"
+  ],
+  "n": 1,
+  "prompt": "Describing someone who is not sick and feels well — the opposite of \"hasta\" (sick).",
+  "ex": "Her gün meyve yiyen insanlar genellikle sağlıklı olur.",
+  "elsewhere": [
+   "tr-a2-vocab-health-body:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-describing-words",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sıcak",
+  "raws": [
+   "sıcak"
+  ],
+  "n": 1,
+  "prompt": "Describes weather or a drink that has a very high temperature — the opposite of \"soğuk\" (cold).",
+  "ex": "Bugün hava çok sıcak, dışarı çıkmak istemiyorum.",
+  "elsewhere": [
+   "tr-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 639,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-describing-words",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yeni",
+  "raws": [
+   "yeni"
+  ],
+  "n": 2,
+  "prompt": "This adjective describes something that is not old — it has existed or been made only a short time ago. You might use it to talk about a baby in the family or a recently bought item.",
+  "ex": "Benim yeni bir kardeşim var — o çok küçük ve sevimli!",
+  "elsewhere": [
+   "tr-a1-vocab-home-objects:approved"
+  ],
+  "freq": 147,
+  "pos_all": [
+   "ADJ"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-everyday-verbs",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yağmak",
+  "raws": [
+   "yağmak"
+  ],
+  "n": 2,
+  "prompt": "To rain — the action of water falling from clouds in the sky. (What is the Turkish verb for this weather event, in its infinitive form?)",
+  "ex": "Bugün hava çok bulutlu; her an yağmak üzere.",
+  "elsewhere": [
+   "tr-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 2154,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-everyday-verbs",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yemek",
+  "raws": [
+   "yemek"
+  ],
+  "n": 1,
+  "prompt": "To take food or drink into your mouth and swallow it; what you do at mealtimes.",
+  "ex": "Her sabah kahvaltı yemek istiyorum.",
+  "elsewhere": [
+   "tr-a1-vocab-food-drink:approved"
+  ],
+  "freq": 85,
+  "pos_all": [
+   "NOUN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-family-people",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "anneanne",
+  "raws": [
+   "anneanne"
+  ],
+  "n": 1,
+  "prompt": "Your mother's mother — the grandmother on your mother's side of the family.",
+  "ex": "Anneanne her gün okul çıkışında beni bekler.",
+  "elsewhere": [],
+  "freq": 5970,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-family-people",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "babaanne",
+  "raws": [
+   "babaanne"
+  ],
+  "n": 4,
+  "prompt": "Your father's mother — the grandmother on your father's side of the family.",
+  "ex": "Bayramda babaanne bize çok güzel yemekler pişirdi.",
+  "elsewhere": [],
+  "freq": 8869,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-family-people",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "şoför",
+  "raws": [
+   "şoför"
+  ],
+  "n": 1,
+  "prompt": "The person who drives a bus, taxi, or car — someone who takes you from one place to another.",
+  "ex": "Otobüsün şoförü çok kibar bir insandı.",
+  "elsewhere": [],
+  "freq": 2044,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-food-drink",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "ekşi",
+  "raws": [
+   "ekşi"
+  ],
+  "n": 2,
+  "prompt": "The taste of lemons, unripe fruit, or vinegar — the opposite of sweet. What is the Turkish adjective for this flavour?",
+  "ex": "Bu limon çok ekşi — ağzım büzüldü!",
+  "elsewhere": [
+   "tr-a2-vocab-cooking-restaurants:approved"
+  ],
+  "freq": 7009,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-food-drink",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "lezzetli",
+  "raws": [
+   "lezzetli"
+  ],
+  "n": 1,
+  "prompt": "Describes food or a drink that has a strong, pleasing taste — the opposite of bland or tasteless. You might say this about a delicious home-cooked meal.",
+  "ex": "Ofiste çalışanlar öğle yemeğini çok lezzetli buldu.",
+  "elsewhere": [
+   "tr-a2-vocab-cooking-restaurants:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-food-drink",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "soğuk",
+  "raws": [
+   "soğuk"
+  ],
+  "n": 2,
+  "prompt": "Describing food or a drink that is not hot — it has a low temperature, like water straight from the refrigerator.",
+  "ex": "Okul kantininde soğuk su içiyorum.",
+  "elsewhere": [
+   "tr-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 764,
+  "pos_all": [
+   "ADJ",
+   "ADV",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-food-drink",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sıcak",
+  "raws": [
+   "sıcak"
+  ],
+  "n": 1,
+  "prompt": "Describing weather or food that has a very high temperature — the opposite of \"soğuk\" (cold).",
+  "ex": "Bugün hava çok sıcak, su içmek istiyorum.",
+  "elsewhere": [
+   "tr-a1-vocab-weather-clothing:approved"
+  ],
+  "freq": 639,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-free-time",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "bisiklet sürmek",
+  "raws": [
+   "bisiklet sürmek"
+  ],
+  "n": 1,
+  "prompt": "To ride a bicycle — to pedal and balance on two wheels as a way of getting around or having fun.",
+  "ex": "Hafta sonları parkta bisiklet sürmek çok eğlenceli.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-free-time",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "müzik dinlemek",
+  "raws": [
+   "müzik dinlemek"
+  ],
+  "n": 1,
+  "prompt": "To listen to music at home for fun — a common free-time activity you do with your ears.",
+  "ex": "Akşamları evde müzik dinlemek çok güzel.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-free-time",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yemek yapmak",
+  "raws": [
+   "yemek yapmak"
+  ],
+  "n": 1,
+  "prompt": "To cook or prepare a meal at home as a hobby or leisure activity — the verb used when someone enjoys making food in their free time.",
+  "ex": "Annem hobiyle yemek yapmayı çok seviyor.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-greetings-phrases",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "afiyet olsun",
+  "raws": [
+   "afiyet olsun"
+  ],
+  "n": 1,
+  "prompt": "The polite expression you say to someone who is eating, wishing them enjoyment of their meal — the Turkish equivalent of \"enjoy your meal\" or \"bon appétit\".",
+  "ex": "Annem yemeği masaya koydu ve hepimize \"Afiyet olsun!\" dedi.",
+  "elsewhere": [
+   "tr-a2-vocab-cooking-restaurants:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-greetings-phrases",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "iyi yolculuklar",
+  "raws": [
+   "iyi yolculuklar"
+  ],
+  "n": 2,
+  "prompt": "The polite phrase you say to a traveller or someone about to set off on a journey, wishing them a good trip.",
+  "ex": "Uçağa binmeden önce arkadaşım bana \"iyi yolculuklar!\" dedi.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "dolap",
+  "raws": [
+   "dolap"
+  ],
+  "n": 4,
+  "prompt": "A large piece of furniture with shelves or a flat surface, often placed against the wall, used to store books, dishes, or decorative items in a home.",
+  "ex": "Mutfaktaki dolap çok büyük.",
+  "elsewhere": [],
+  "freq": 1276,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "gardırop",
+  "raws": [
+   "gardırop"
+  ],
+  "n": 1,
+  "prompt": "The piece of furniture in a home where you store clothes, hanging them inside or folding them onto shelves — like a wardrobe or closet.",
+  "ex": "Yeni aldığım kıyafetleri gardıroba koydum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "kanepe",
+  "raws": [
+   "kanepe"
+  ],
+  "n": 4,
+  "prompt": "A large piece of furniture with a soft surface where you sit and relax, usually found in the living room. It can seat more than one person.",
+  "ex": "Oturma odasında büyük bir kanepe var.",
+  "elsewhere": [],
+  "freq": 2515,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "koltuk",
+  "raws": [
+   "koltuk"
+  ],
+  "n": 2,
+  "prompt": "The piece of furniture in a room where you sit and relax, often with cushions and a soft back — like a sofa or couch.",
+  "ex": "Babam akşamları oturma odasındaki koltuğa oturur.",
+  "elsewhere": [],
+  "freq": 1263,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "lavabo",
+  "raws": [
+   "lavabo"
+  ],
+  "n": 1,
+  "prompt": "The piece of furniture in a bathroom or kitchen where water comes out — you use it to wash your hands or dishes.",
+  "ex": "Ellerimi lavaboda yıkıyorum.",
+  "elsewhere": [],
+  "freq": 2977,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "misafir odası",
+  "raws": [
+   "misafir odası"
+  ],
+  "n": 1,
+  "prompt": "A room in a home where guests sleep when they visit — it has a bed and often a wardrobe.",
+  "ex": "Annem misafir odası için yeni bir yatak aldı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "mutfak masası",
+  "raws": [
+   "mutfak masası"
+  ],
+  "n": 1,
+  "prompt": "The piece of furniture in the kitchen or dining room where you place your plates and food when you eat a meal — it has a flat top and legs.",
+  "ex": "Akşam yemeğini mutfak masasında yiyoruz.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "oturma odası",
+  "raws": [
+   "oturma odası"
+  ],
+  "n": 2,
+  "prompt": "The room in a house where you sit, relax, and spend time with family — it usually has a sofa and a TV.",
+  "ex": "Akşamları ailemle oturma odasında televizyon izliyoruz.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sehpa",
+  "raws": [
+   "sehpa"
+  ],
+  "n": 1,
+  "prompt": "A piece of furniture with a flat surface and legs, found in a living room or bedroom, usually placed in front of a sofa — people put drinks, books, or the TV remote on it.",
+  "ex": "Çay bardağını sehpanın üstüne koydum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sıra",
+  "raws": [
+   "sıra"
+  ],
+  "n": 1,
+  "prompt": "A piece of furniture with a flat surface and legs, found in a classroom, where a student sits to read or write — not a chair, but what they place their books on.",
+  "ex": "Ahmet her gün sırasına oturur ve defterini açar.",
+  "elsewhere": [],
+  "freq": 314,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "tuvalet",
+  "raws": [
+   "tuvalet"
+  ],
+  "n": 1,
+  "prompt": "The room in a home where you wash your hands, brush your teeth, and take care of your body — but NOT the room with the bath or shower.",
+  "ex": "Tuvalet evin sağında.",
+  "elsewhere": [],
+  "freq": 893,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yatak",
+  "raws": [
+   "yatak"
+  ],
+  "n": 4,
+  "prompt": "A large piece of furniture you sleep on, found in the bedroom.",
+  "ex": "Bu yatak çok rahat.",
+  "elsewhere": [],
+  "freq": 458,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-home-objects",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "yatak odası",
+  "raws": [
+   "yatak odası"
+  ],
+  "n": 6,
+  "prompt": "The room in a home where you sleep, usually containing a bed.",
+  "ex": "Bizim evde iki yatak odası var.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-time-calendar",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "akşam",
+  "raws": [
+   "akşam"
+  ],
+  "n": 2,
+  "prompt": "The part of the day after the sun goes down and before you go to sleep — when families are at home, the lights are on, and dinner is usually eaten.",
+  "ex": "Akşam yemeği saat yedide hazır.",
+  "elsewhere": [
+   "tr-a2-vocab-time-daily-routine:rejected"
+  ],
+  "freq": 307,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-time-calendar",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "gece",
+  "raws": [
+   "gece"
+  ],
+  "n": 1,
+  "prompt": "The part of the day that comes after midnight and before the sun rises — early morning hours when it is still dark outside.",
+  "ex": "Otobüs gece on ikide kalkıyor.",
+  "elsewhere": [
+   "tr-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 110,
+  "pos_all": [
+   "ADJ",
+   "ADV",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-time-calendar",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "pazartesi",
+  "raws": [
+   "pazartesi"
+  ],
+  "n": 3,
+  "prompt": "The day of the week that comes after Sunday and starts the work week — the first weekday.",
+  "ex": "Uçuşumuz pazartesi sabahı saat sekizde.",
+  "elsewhere": [
+   "tr-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 1810,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-time-calendar",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sabah",
+  "raws": [
+   "sabah"
+  ],
+  "n": 4,
+  "prompt": "The part of the day when you wake up, before noon — often when people take their medicine or eat breakfast.",
+  "ex": "Doktor, ilacı her sabah bir kez almanızı söyledi.",
+  "elsewhere": [
+   "tr-a2-vocab-time-daily-routine:approved"
+  ],
+  "freq": 328,
+  "pos_all": [
+   "ADV",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "alışveriş merkezi",
+  "raws": [
+   "alışveriş merkezi"
+  ],
+  "n": 1,
+  "prompt": "A large building where many different shops and stores are all found under one roof — people go there to buy clothes, food, and other everyday items.",
+  "ex": "Annem ve ben bugün alışveriş merkezine gidiyoruz.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "apartman",
+  "raws": [
+   "apartman"
+  ],
+  "n": 1,
+  "prompt": "A building or place where many people live together, often with many floors and separate units — a common type of home in Turkish cities.",
+  "ex": "Biz büyük bir apartmanda oturuyoruz.",
+  "elsewhere": [],
+  "freq": 3156,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "bakkal",
+  "raws": [
+   "bakkal"
+  ],
+  "n": 1,
+  "prompt": "A place where you go to buy groceries and everyday food items, with shelves of products inside a building — smaller than a supermarket.",
+  "ex": "Her sabah bakkaldan ekmek alıyorum.",
+  "elsewhere": [],
+  "freq": 8862,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "durak",
+  "raws": [
+   "durak"
+  ],
+  "n": 4,
+  "prompt": "A place where you go to catch a bus or wait for public transport on the street.",
+  "ex": "Otobüs çok kalabalık, ama bir sonraki durak yakın.",
+  "elsewhere": [],
+  "freq": 2817,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "dükkan",
+  "raws": [
+   "dükkan"
+  ],
+  "n": 1,
+  "prompt": "A place where you can buy things like food, clothes, or everyday items — a shop or store.",
+  "ex": "Babam her sabah köşedeki dükkan'a gider.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "feribot",
+  "raws": [
+   "feribot"
+  ],
+  "n": 1,
+  "prompt": "A vehicle that travels on water and carries passengers or cars from one side to another — often across a river, lake, or sea.",
+  "ex": "Biz her sabah feribot ile karşıya geçiyoruz.",
+  "elsewhere": [],
+  "freq": 9230,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "gar",
+  "raws": [
+   "gar"
+  ],
+  "n": 1,
+  "prompt": "A place where you can buy tickets and board long-distance trains; it has platforms and waiting areas.",
+  "ex": "Tren sabah sekizde gardan kalkıyor.",
+  "elsewhere": [],
+  "freq": 11979,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "iskele",
+  "raws": [
+   "iskele"
+  ],
+  "n": 4,
+  "prompt": "A place where you can board and exit a ship or ferry; found at the edge of water.",
+  "ex": "Vapur her sabah bu iskelede duruyor.",
+  "elsewhere": [],
+  "freq": 4307,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "ofis",
+  "raws": [
+   "ofis"
+  ],
+  "n": 1,
+  "prompt": "A building where many people go to work every day, with offices and desks inside.",
+  "ex": "Her gün ofise gidiyorum.",
+  "elsewhere": [
+   "tr-a2-vocab-work-school:approved"
+  ],
+  "freq": 612,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "orman",
+  "raws": [
+   "orman"
+  ],
+  "n": 1,
+  "prompt": "A large area of land covered with trees, where animals live and people sometimes go for walks. (It is also a common destination you might travel to by bus or car.)",
+  "ex": "Otobüsle ormana gidiyoruz.",
+  "elsewhere": [
+   "tr-a2-vocab-travel-nature:approved"
+  ],
+  "freq": 913,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "otobüs durağı",
+  "raws": [
+   "otobüs durağı"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can catch a bus; passengers wait here by the side of the road for public transport to arrive.",
+  "ex": "Her sabah otobüs durağında on dakika bekliyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "sinema",
+  "raws": [
+   "sinema"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can go to watch films on a big screen.",
+  "ex": "Bugün arkadaşlarımla sinemaya gidiyoruz.",
+  "elsewhere": [],
+  "freq": 1635,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "taksi durağı",
+  "raws": [
+   "taksi durağı"
+  ],
+  "n": 2,
+  "prompt": "A place in a city where you can catch a taxi. Cars wait here to take passengers to their destination.",
+  "ex": "En yakın taksi durağı nerede?",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "tramvay",
+  "raws": [
+   "tramvay"
+  ],
+  "n": 1,
+  "prompt": "A vehicle with four wheels that carries passengers on city streets, making regular stops along a fixed route — but it runs on rails embedded in the road.",
+  "ex": "Her sabah işe tramvayla gidiyorum.",
+  "elsewhere": [],
+  "freq": 11426,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "tren garı",
+  "raws": [
+   "tren garı"
+  ],
+  "n": 1,
+  "prompt": "A place where you can buy train or bus tickets and board trains — a large building that serves as the starting or ending point of a rail journey.",
+  "ex": "Annem beni sabah erkenden tren garına bıraktı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a1-vocab-transport-places",
+  "lang": "TR",
+  "cefr": "A1",
+  "w": "vapur",
+  "raws": [
+   "vapur"
+  ],
+  "n": 1,
+  "prompt": "A vehicle that travels on water and carries people or goods from one place to another.",
+  "ex": "Her sabah işe gitmek için vapura biniyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-celebrations-traditions",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "bayram yemeği",
+  "raws": [
+   "bayram yemeği"
+  ],
+  "n": 1,
+  "prompt": "A special meal or feast shared with family and friends to mark a religious holiday or festival — the gathering itself, not the holiday's name.",
+  "ex": "Annem her yıl büyük bir bayram yemeği hazırlar ve tüm aile birlikte yer.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "alışveriş merkezi",
+  "raws": [
+   "alışveriş merkezi"
+  ],
+  "n": 1,
+  "prompt": "A large indoor place where many different shops are found under one roof — families often go there together on weekends to shop and spend time.",
+  "ex": "Annem ve kardeşim her hafta sonu alışveriş merkezine gidiyor.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "bakkal",
+  "raws": [
+   "bakkal"
+  ],
+  "n": 2,
+  "prompt": "A shop where you can buy everyday items such as food, cleaning products, and household goods — usually found in or near a neighbourhood.",
+  "ex": "Annem her sabah köşedeki bakkala gider ve taze ekmek alır.",
+  "elsewhere": [],
+  "freq": 8862,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "durak",
+  "raws": [
+   "durak"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can buy a ticket and board a bus for travel within the city or to nearby areas. It has a shelter and a sign showing which buses stop there.",
+  "ex": "Otobüs durakta beş dakika bekliyor.",
+  "elsewhere": [],
+  "freq": 2817,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "döviz bürosu",
+  "raws": [
+   "döviz bürosu"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can exchange money or use financial services, such as withdrawing cash — but this one is specifically found near tourist areas and airports, where you hand over foreign currency and receive local money in return. It is NOT a bank.",
+  "ex": "Tatilde Türkiye'ye geldiğimizde, döviz bürosuna gidip eurolarımızı liraya çevirdik.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "dükkan",
+  "raws": [
+   "dükkan"
+  ],
+  "n": 1,
+  "prompt": "A shop or stall where you can buy things like umbrellas, raincoats, or boots to protect yourself from the rain — in Turkish, the general word for a place where goods are sold.",
+  "ex": "Yağmur başlamadan önce yakındaki dükkan'dan bir şemsiye aldım.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "fırın",
+  "raws": [
+   "fırın"
+  ],
+  "n": 2,
+  "prompt": "A shop where you can buy fresh bread, pastries, and other baked goods.",
+  "ex": "Her sabah köşedeki fırından taze ekmek alıyorum.",
+  "elsewhere": [
+   "tr-a2-vocab-cooking-restaurants:approved"
+  ],
+  "freq": 2653,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "kütüphane",
+  "raws": [
+   "kütüphane"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can borrow books for free and return them later.",
+  "ex": "Bu şehirde büyük bir kütüphane var; her gün oraya gidiyorum.",
+  "elsewhere": [],
+  "freq": 2065,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "okul",
+  "raws": [
+   "okul"
+  ],
+  "n": 1,
+  "prompt": "A public building where students go to take classes and learn. It has classrooms, teachers, and a principal's office.",
+  "ex": "Bu okul çok büyük ve modern.",
+  "elsewhere": [
+   "tr-a1-vocab-transport-places:approved",
+   "tr-a2-vocab-work-school:approved",
+   "tr-b1-vocab-education-career:rejected"
+  ],
+  "freq": 318,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "otogar",
+  "raws": [
+   "otogar"
+  ],
+  "n": 3,
+  "prompt": "A place in the city where you buy tickets and board buses or coaches for long-distance journeys — not a roadside stop, but a dedicated terminal building.",
+  "ex": "Ankara'ya gitmek için otogardan bilet aldım.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "park",
+  "raws": [
+   "park"
+  ],
+  "n": 1,
+  "prompt": "A public outdoor area in a city or town with grass, trees, and paths where people go to relax or walk.",
+  "ex": "Hafta sonu ailecek parka gittik ve piknik yaptık.",
+  "elsewhere": [
+   "tr-a1-vocab-transport-places:approved"
+  ],
+  "freq": 758,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "pazar",
+  "raws": [
+   "pazar"
+  ],
+  "n": 1,
+  "prompt": "A place in a city where you can buy fresh fruits, vegetables, and flowers, often outdoors or in an open hall — not a supermarket, but a traditional open-air trading place.",
+  "ex": "Her Cumartesi sabahı annem taze sebze ve meyve almak için pazara gider.",
+  "elsewhere": [],
+  "freq": 1191,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "sağlık merkezi",
+  "raws": [
+   "sağlık merkezi"
+  ],
+  "n": 1,
+  "prompt": "A place in the city where you can see a doctor or nurse when you are sick or need a check-up — not a full hospital, but a local health centre.",
+  "ex": "Başım çok ağrıyor; bugün sağlık merkezine gidiyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "stadyum",
+  "raws": [
+   "stadyum"
+  ],
+  "n": 1,
+  "prompt": "A large indoor or outdoor area where people go to watch or play sports, with seats around the edges for spectators.",
+  "ex": "Bu şehirde çok büyük bir stadyum var; her hafta sonu maç izlemeye gidiyoruz.",
+  "elsewhere": [],
+  "freq": 6657,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "süpermarket",
+  "raws": [
+   "süpermarket"
+  ],
+  "n": 3,
+  "prompt": "A place in the city where you go to buy things, usually a large store with many different products under one roof — bigger than a corner shop but not a shopping mall.",
+  "ex": "Bugün işten sonra süpermarkete uğrayıp ekmek ve süt alacağım.",
+  "elsewhere": [],
+  "freq": 8075,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-city-shopping",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "teknoloji mağazası",
+  "raws": [
+   "teknoloji mağazası"
+  ],
+  "n": 1,
+  "prompt": "A shop where you can buy mobile phones, computers, and other electronic devices.",
+  "ex": "Yeni bir telefon almak için teknoloji mağazasına gittim.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-cooking-restaurants",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "acı",
+  "raws": [
+   "acı"
+  ],
+  "n": 3,
+  "prompt": "A taste sensation that is the opposite of sweet — like the flavour of black coffee or dark chocolate with no sugar added.",
+  "ex": "Bu kahve çok acı; içine biraz şeker koyabilir misin?",
+  "elsewhere": [
+   "tr-a1-vocab-food-drink:approved"
+  ],
+  "freq": 460,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-cooking-restaurants",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "hesap",
+  "raws": [
+   "hesap"
+  ],
+  "n": 3,
+  "prompt": "The document or slip of paper a waiter brings to your table at the end of a meal, showing how much you owe.",
+  "ex": "Yemekten sonra garson hesabı masaya getirdi.",
+  "elsewhere": [
+   "tr-a2-vocab-technology-communication:approved"
+  ],
+  "freq": 797,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-health-body",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "boyun",
+  "raws": [
+   "boyun"
+  ],
+  "n": 2,
+  "prompt": "The part of the body that connects the head to the shoulders.",
+  "ex": "Uzun süre bilgisayara baktım ve boynum ağrıyor.",
+  "elsewhere": [],
+  "freq": 1155,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-health-body",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "dil",
+  "raws": [
+   "dil"
+  ],
+  "n": 1,
+  "prompt": "The part of your body you use to taste and swallow food — it also helps you speak.",
+  "ex": "Bu yemek çok acı — dilim yanıyor!",
+  "elsewhere": [],
+  "freq": 785,
+  "pos_all": [
+   "NOUN",
+   "PROPN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-health-body",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "kalp",
+  "raws": [
+   "kalp"
+  ],
+  "n": 1,
+  "prompt": "The organ in your chest that pumps blood around your body.",
+  "ex": "Doktor benim kalbimi dinledi ve 'Çok sağlıklı!' dedi.",
+  "elsewhere": [],
+  "freq": 360,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-movement-change-verbs",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "gitmek",
+  "raws": [
+   "gitmek"
+  ],
+  "n": 1,
+  "prompt": "To go somewhere; to travel from one place to another and reach a destination — used when talking about moving toward a place (e.g. going outside when the weather is nice).",
+  "ex": "Hava çok güzel; parka gitmek istiyorum.",
+  "elsewhere": [
+   "tr-a1-vocab-transport-places:approved"
+  ],
+  "freq": 23,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-movement-change-verbs",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "iyileşmek",
+  "raws": [
+   "iyileşmek"
+  ],
+  "n": 1,
+  "prompt": "To get better or recover after being sick — what Turkish verb of change means \"to become well / to recover\"?",
+  "ex": "Doktor dedi ki birkaç gün dinlenirsen çabuk iyileşeceksin.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-technology-communication",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "göndermek",
+  "raws": [
+   "göndermek"
+  ],
+  "n": 2,
+  "prompt": "The Turkish verb meaning \"to send\" a message — what you do when you write a text and press the button to deliver it to someone.",
+  "ex": "Annem bana her gün bir mesaj gönderiyor.",
+  "elsewhere": [],
+  "freq": 322,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-time-daily-routine",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "kahvaltı",
+  "raws": [
+   "kahvaltı"
+  ],
+  "n": 1,
+  "prompt": "The first meal of the day, eaten in the morning, often including bread, cheese, eggs, and tea in Turkey.",
+  "ex": "Her sabah saat yedide kahvaltı yapıyoruz.",
+  "elsewhere": [],
+  "freq": 1173,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-time-daily-routine",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "öğleden sonra",
+  "raws": [
+   "öğleden sonra"
+  ],
+  "n": 1,
+  "prompt": "The part of the day that comes after midday and before evening — roughly from noon until around 6 p.m.",
+  "ex": "Genellikle öğleden sonra çay içerim ve biraz dinlenirim.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-travel-nature",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "ova",
+  "raws": [
+   "ova"
+  ],
+  "n": 1,
+  "prompt": "A large area of land covered with grass and few trees, often flat and open — the kind of landscape you might cross on a long trip through the countryside.",
+  "ex": "Otobüs, geniş ovadan geçerken manzara çok güzeldi.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-travel-nature",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "yolculuk",
+  "raws": [
+   "yolculuk"
+  ],
+  "n": 4,
+  "prompt": "A long trip or voyage from one place to another, often by vehicle or on foot. (Not just the road itself, but the act of travelling.)",
+  "ex": "Ankara'dan İstanbul'a olan ___ yaklaşık dört saat sürdü.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-work-school",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "doktor",
+  "raws": [
+   "doktor"
+  ],
+  "n": 2,
+  "prompt": "The person whose job is to treat sick people and diagnose illnesses — a medical professional you visit at a clinic or hospital.",
+  "ex": "Hastanenin yeni ___ her gün sabah erken çalışmaya başlıyor.",
+  "elsewhere": [
+   "tr-a2-vocab-work-school:rejected",
+   "tr-a2-vocab-health-body:approved"
+  ],
+  "freq": 259,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-a2-vocab-work-school",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "eczacı",
+  "raws": [
+   "eczacı"
+  ],
+  "n": 2,
+  "prompt": "A person whose job is to prepare and sell medicines, and who works in a pharmacy.",
+  "ex": "Eczacı bana ilacı verdi ve nasıl kullanacağımı açıkladı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-a2-vocab-work-school",
+  "lang": "TR",
+  "cefr": "A2",
+  "w": "pilot",
+  "raws": [
+   "pilot"
+  ],
+  "n": 1,
+  "prompt": "A person whose job is to fly an airplane and take passengers to their destination.",
+  "ex": "Uçağın pilotu yolcularla konuştu.",
+  "elsewhere": [],
+  "freq": 1712,
+  "pos_all": [
+   "ADJ",
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "azim",
+  "raws": [
+   "azim"
+  ],
+  "n": 1,
+  "prompt": "The quality of being patient and not giving up when something is difficult or takes a long time; the ability to keep going despite obstacles.",
+  "ex": "Başarıya ulaşmak için çok çalışmak ve azim gereklidir.",
+  "elsewhere": [],
+  "freq": 5789,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "değişkenlik",
+  "raws": [
+   "değişkenlik"
+  ],
+  "n": 1,
+  "prompt": "The state or condition of being unpredictable and constantly changing — often used to describe weather that shifts without warning and cannot be relied upon.",
+  "ex": "Havanın değişkenliği yüzünden ne giyeceğimize karar vermek çok zordu.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "doğallık",
+  "raws": [
+   "doğallık"
+  ],
+  "n": 1,
+  "prompt": "The quality of being natural and not containing artificial additives; often used to describe food or ingredients that are in their original, unprocessed state. (Hint: formed with the -lIk suffix.)",
+  "ex": "Bu ürünlerin doğallık açısından çok daha iyi olduğunu düşünüyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "güvenilirlik",
+  "raws": [
+   "güvenilirlik"
+  ],
+  "n": 1,
+  "prompt": "The quality of being responsible and trustworthy in fulfilling one's duties; the state of being relied upon by others. (Turkish abstract noun formed with -lIk)",
+  "ex": "Bir arkadaşta en çok aradığım şey güvenilirlik; her zaman yanımda olacağını bilmek istiyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "kalite",
+  "raws": [
+   "kalite"
+  ],
+  "n": 1,
+  "prompt": "The state or quality of being of high standard; the degree to which something is excellent or superior — often used when comparing products or deciding what to buy.",
+  "ex": "Bu mağazadaki ürünlerin kalitesi gerçekten çok yüksek, bu yüzden fiyatlar da biraz pahalı.",
+  "elsewhere": [],
+  "freq": 2168,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "sadakat",
+  "raws": [
+   "sadakat"
+  ],
+  "n": 1,
+  "prompt": "The quality of being loyal, devoted, and steadfast — especially within close relationships such as family or friendship. It describes the bond of trust that holds people together over time.",
+  "ex": "Annem ve babam otuz yıldır evliler; bu kadar uzun süren bir birlikteliğin sırrının sadakat olduğunu düşünüyorum.",
+  "elsewhere": [],
+  "freq": 2724,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "sağlık",
+  "raws": [
+   "sağlık"
+  ],
+  "n": 1,
+  "prompt": "The state of being well and free from illness; the general condition of a person's body or mind. (Hint: it is formed with the -lIk suffix from an adjective meaning \"healthy\".)",
+  "ex": "Düzenli egzersiz yapmak ve dengeli beslenmek, iyi bir sağlık için çok önemlidir.",
+  "elsewhere": [],
+  "freq": 748,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "sorumluluk",
+  "raws": [
+   "sorumluluk"
+  ],
+  "n": 3,
+  "prompt": "The quality of being responsible for one's actions and accepting the consequences; the state of being answerable or liable for something.",
+  "ex": "Bir lider olarak, ekibinin başarısı için büyük bir sorumluluk taşıyor.",
+  "elsewhere": [
+   "tr-b1-vocab-opinions-society:approved",
+   "tr-b2-vocab-work-professional:rejected"
+  ],
+  "freq": 1179,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "temizlik",
+  "raws": [
+   "temizlik"
+  ],
+  "n": 1,
+  "prompt": "The quality of being clean, tidy, and well-kept — a value often associated with taking care of one's home and living space.",
+  "ex": "Annem her hafta sonu evde büyük bir temizlik yapar.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-abstract-concepts",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "çalışkanlık",
+  "raws": [
+   "çalışkanlık"
+  ],
+  "n": 2,
+  "prompt": "The quality of working hard and putting in consistent effort, especially in studying or learning — the abstract noun for being hardworking or diligent.",
+  "ex": "Öğretmen, onun çalışkanlığını tüm sınıfa örnek gösterdi.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-case-governed-verbs",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "bahsetmek",
+  "raws": [
+   "bahsetmek"
+  ],
+  "n": 3,
+  "prompt": "To talk about or mention something (a topic, a product, a price) — this verb requires the ablative case (-den/-dan) on its object. For example, a salesperson might use it when bringing up a special offer.",
+  "ex": "Satış görevlisi yeni indirimlerden bahsetti ve biz hemen ilgilendik.",
+  "elsewhere": [],
+  "freq": 256,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-case-governed-verbs",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "güvenmek",
+  "raws": [
+   "güvenmek"
+  ],
+  "n": 2,
+  "prompt": "To have confidence in or rely on something or someone — used with the dative case (-e/-a). For example, a person might feel this way about a new app or a device they use every day.",
+  "ex": "Bu uygulamaya gerçekten güveniyorum; hiç sorun çıkarmadı.",
+  "elsewhere": [],
+  "freq": 461,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-case-governed-verbs",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "korkmak",
+  "raws": [
+   "korkmak"
+  ],
+  "n": 5,
+  "prompt": "To feel fear or anxiety about something; the verb that governs the ablative case (-den/-dan) on its object. For example, a person might feel this way about losing their savings or going into debt.",
+  "ex": "Birçok insan borç yapmaktan korkar, çünkü geri ödemek zor olabilir.",
+  "elsewhere": [],
+  "freq": 267,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-education-career",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "işyeri",
+  "raws": [
+   "işyeri"
+  ],
+  "n": 4,
+  "prompt": "The place where a person works every day; an office, factory, or any other setting in which one carries out their professional duties.",
+  "ex": "Her sabah sekizde işyerime gidiyorum ve akşam altıda çıkıyorum.",
+  "elsewhere": [],
+  "freq": 5659,
+  "pos_all": []
+ },
+ {
+  "topic": "tr-b1-vocab-education-career",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "mezuniyet belgesi",
+  "raws": [
+   "mezuniyet belgesi"
+  ],
+  "n": 1,
+  "prompt": "The formal document or set of documents that proves a person has successfully completed a course of study or training at a university or college.",
+  "ex": "İş başvurusu yaparken mezuniyet belgesini hazır bulundurman gerekiyor.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-emotions-relationships",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "hayal kırıklığı",
+  "raws": [
+   "hayal kırıklığı"
+  ],
+  "n": 1,
+  "prompt": "The feeling of being let down or disappointed by someone you counted on — the opposite of güven (trust).",
+  "ex": "Arkadaşım sözünü tutmadığında çok büyük bir hayal kırıklığı yaşadım.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-emotions-relationships",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "mutluluk",
+  "raws": [
+   "mutluluk"
+  ],
+  "n": 1,
+  "prompt": "The feeling of being pleased and content when something goes well or when you are with people you care about — the opposite of sadness.",
+  "ex": "Arkadaşlarımla vakit geçirmek bana büyük bir mutluluk veriyor.",
+  "elsewhere": [
+   "tr-b1-vocab-abstract-concepts:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-health-lifestyle",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "kilo vermek",
+  "raws": [
+   "kilo vermek"
+  ],
+  "n": 4,
+  "prompt": "To lose weight — what verb phrase describes the process of reducing one's body weight, often by eating healthily and exercising regularly? (Give the Turkish infinitive form.)",
+  "ex": "Doktor, daha sağlıklı beslenmem ve düzenli egzersiz yapmam gerektiğini söyledi; bu sayede kilo vermek daha kolay olacak.",
+  "elsewhere": [
+   "tr-b1-vocab-health-lifestyle:rejected"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-media-news",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "gazeteci",
+  "raws": [
+   "gazeteci"
+  ],
+  "n": 1,
+  "prompt": "A person whose job is to gather, investigate, and report news stories for a newspaper, TV channel, or online outlet.",
+  "ex": "Genç gazeteci, olayı yerinde inceleyerek kapsamlı bir haber hazırladı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-media-news",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "haberci",
+  "raws": [
+   "haberci"
+  ],
+  "n": 1,
+  "prompt": "A person whose job is to gather, write, and report news stories for a newspaper, TV channel, or online outlet — the agent form of the word for \"news\".",
+  "ex": "Televizyon kanalının habercisi, depremin olduğu bölgeden canlı yayın yaptı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-media-news",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "sunucu",
+  "raws": [
+   "sunucu"
+  ],
+  "n": 4,
+  "prompt": "A person who presents or reads the news on television or radio, introducing stories and linking segments of a programme.",
+  "ex": "Akşam haberlerinin sunucusu izleyicilere günün en önemli gelişmelerini aktardı.",
+  "elsewhere": [],
+  "freq": 4833,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-money-consumers",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "şikâyet etmek",
+  "raws": [
+   "şikâyet etmek"
+  ],
+  "n": 5,
+  "prompt": "To formally complain about something — for example, to a shop or service provider — by submitting a complaint. (Hint: this is a verb phrase; give the infinitive form.)",
+  "ex": "Elektrik faturası çok yüksek gelince, müşteri şirkete şikâyet etmek istedi.",
+  "elsewhere": [
+   "tr-b1-vocab-travel-tourism:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "değer",
+  "raws": [
+   "değer"
+  ],
+  "n": 1,
+  "prompt": "A shared view or belief held by many people in a community about what is right or important — often shaped by culture, upbringing, or lived experience. (Not the same as a passing idea or quick thought.)",
+  "ex": "Sağlık, pek çok toplumda en önemli değer olarak kabul edilir.",
+  "elsewhere": [
+   "tr-b1-vocab-opinions-society:rejected",
+   "tr-b1-vocab-abstract-concepts:approved"
+  ],
+  "freq": 432,
+  "pos_all": [
+   "NOUN",
+   "PROPN",
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "itiraz",
+  "raws": [
+   "itiraz"
+  ],
+  "n": 1,
+  "prompt": "The act of formally complaining or raising an objection about a referee's decision or a rule in a sports competition — expressing that you disagree with something and want it to be reconsidered.",
+  "ex": "Takım kaptanı hakeme itiraz etti ve kararın değiştirilmesini istedi.",
+  "elsewhere": [],
+  "freq": 1830,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "kamuoyu",
+  "raws": [
+   "kamuoyu"
+  ],
+  "n": 4,
+  "prompt": "A shared view or position held by a group of people after discussing a matter — the general feeling or stance of a community on a social issue, such as whether a new road or building should be constructed in a neighbourhood.",
+  "ex": "Yeni havalimanı projesi hakkında kamuoyu oldukça bölünmüş durumda.",
+  "elsewhere": [
+   "tr-b2-vocab-society-politics:approved"
+  ],
+  "freq": 9082,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "tartışma",
+  "raws": [
+   "tartışma"
+  ],
+  "n": 1,
+  "prompt": "The act of discussing different points of view in order to reach a shared understanding; what students and teachers do when they weigh arguments for and against an idea in class.",
+  "ex": "Öğrenciler sınıfta çevre sorunları hakkında kapsamlı bir tartışma yaptı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "uzlaşma",
+  "raws": [
+   "uzlaşma"
+  ],
+  "n": 5,
+  "prompt": "The act of reaching an agreement or coming to a shared understanding after a discussion, especially between people with different views.",
+  "ex": "Toplumda barışı korumak için uzlaşma şarttır.",
+  "elsewhere": [
+   "tr-b2-vocab-global-issues:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "yorum",
+  "raws": [
+   "yorum"
+  ],
+  "n": 1,
+  "prompt": "A piece of writing or spoken content in which someone gives their personal view or judgment on a social issue, current event, or public matter — often published in a newspaper or broadcast on TV.",
+  "ex": "Gazetedeki köşe yazarı, yeni eğitim yasası hakkında uzun bir yorum kaleme aldı.",
+  "elsewhere": [
+   "tr-b1-vocab-media-news:approved",
+   "tr-b2-vocab-culture-arts:rejected"
+  ],
+  "freq": 2302,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "çevre koruma",
+  "raws": [
+   "çevre koruma"
+  ],
+  "n": 1,
+  "prompt": "The act of protecting the natural world and its resources from damage or destruction; caring for the environment so that it is not harmed by human activity.",
+  "ex": "Gençler, çevre koruma konusunda hükümetin daha fazla önlem almasını istiyor.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "şikayet",
+  "raws": [
+   "şikayet"
+  ],
+  "n": 3,
+  "prompt": "A formal complaint or objection raised by citizens or passengers about a service — for example, when commuters write to a transport authority because trains are always late or buses are overcrowded.",
+  "ex": "Yolcular, otobüslerin sık sık geç kalması nedeniyle belediyeye şikayet ilettiler.",
+  "elsewhere": [],
+  "freq": 1498,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-opinions-society",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "şikâyet",
+  "raws": [
+   "şikâyet"
+  ],
+  "n": 2,
+  "prompt": "A formal or official complaint or objection raised by workers or employees about unfair conditions or treatment in the workplace — distinct from a general \"problem\" (sorun) in that it implies an organised, voiced dissatisfaction directed at those in authority.",
+  "ex": "İşçiler, fazla mesai ücreti ödenmediği için sendikaya şikâyet ilettiler.",
+  "elsewhere": [],
+  "freq": 3957,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b1-vocab-travel-tourism",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "kapora",
+  "raws": [
+   "kapora"
+  ],
+  "n": 1,
+  "prompt": "The amount of money you pay in advance to secure a hotel room, flight, or other service — a deposit or down payment made when booking.",
+  "ex": "Oteli rezerve etmek için 200 lira kapora ödedik.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b1-vocab-travel-tourism",
+  "lang": "TR",
+  "cefr": "B1",
+  "w": "kaçırmak",
+  "raws": [
+   "kaçırmak"
+  ],
+  "n": 1,
+  "prompt": "The act of missing a bus, train, or plane — failing to board it because you arrived too late. (Do not confuse with the verb used when you miss a person you care about.)",
+  "ex": "Sabah geç kalktığım için treni kaçırdım ve bir sonraki seferi iki saat beklemek zorunda kaldım.",
+  "elsewhere": [],
+  "freq": 445,
+  "pos_all": [
+   "VERB"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-culture-arts",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "eleştiri",
+  "raws": [
+   "eleştiri"
+  ],
+  "n": 1,
+  "prompt": "A critical written assessment of an artistic work — such as a film, novel, or exhibition — that evaluates its quality and meaning, typically published in a newspaper or magazine.",
+  "ex": "Yönetmenin yeni filmi, sanat dergilerinde çok olumlu bir eleştiri aldı.",
+  "elsewhere": [
+   "tr-b1-vocab-abstract-concepts:rejected",
+   "tr-b1-vocab-opinions-society:rejected",
+   "tr-b1-vocab-media-news:approved",
+   "tr-b2-vocab-culture-arts:rejected"
+  ],
+  "freq": 5374,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-culture-arts",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "yapıt",
+  "raws": [
+   "yapıt"
+  ],
+  "n": 2,
+  "prompt": "A creative or artistic production — such as a painting, sculpture, novel, or musical composition — made by an artist or writer. At B2 level, this word is often used in critical commentary to refer to a specific work being discussed or reviewed.",
+  "ex": "Müzedeki en çarpıcı yapıt, 19. yüzyıldan kalma büyük bir yağlıboya tablosuydu.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-formal-connectors",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "öte yandan",
+  "raws": [
+   "öte yandan"
+  ],
+  "n": 1,
+  "prompt": "A formal Turkish connector meaning \"on the other hand\" — used in argumentative or professional writing to introduce a contrasting point of view. It is a fixed two-word phrase and must always appear in this exact word order.",
+  "ex": "Proje maliyetleri beklenenden yüksek çıktı; öte yandan ekibin performansı oldukça başarılıydı.",
+  "elsewhere": [
+   "tr-b1-vocab-connectors:approved"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-global-issues",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "uluslararası göç",
+  "raws": [
+   "uluslararası göç"
+  ],
+  "n": 1,
+  "prompt": "The long-term process by which people leave their home country and settle in another, often driven by economic hardship, conflict, or the search for better living conditions — a major topic in global politics today.",
+  "ex": "Uluslararası göç, dünya genelinde milyonlarca insanı etkileyen karmaşık bir sosyal olgudur.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-psychology-behaviour",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "özgüven",
+  "raws": [
+   "özgüven"
+  ],
+  "n": 4,
+  "prompt": "A feeling of trust and certainty in your own abilities and worth; the opposite of self-doubt. Often discussed in the context of mental well-being and personal development.",
+  "ex": "Terapist, hastasının özgüvenini artırmak için çeşitli egzersizler önerdi.",
+  "elsewhere": [
+   "tr-b1-vocab-abstract-concepts:approved"
+  ],
+  "freq": 9560,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "araştırma",
+  "raws": [
+   "araştırma"
+  ],
+  "n": 2,
+  "prompt": "The systematic investigation or study carried out in order to establish new facts or reach new conclusions, often conducted at a university or laboratory.",
+  "ex": "Üniversitedeki bilim insanları, iklim değişikliğinin etkileri üzerine kapsamlı bir araştırma yürütüyor.",
+  "elsewhere": [
+   "tr-b1-vocab-media-news:rejected",
+   "tr-b1-vocab-education-career:approved",
+   "tr-b2-vocab-science-technology:rejected"
+  ],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "fermantasyon",
+  "raws": [
+   "fermantasyon"
+  ],
+  "n": 1,
+  "prompt": "A scientific or technological process in which microorganisms (such as bacteria or yeast) break down organic substances — used, for example, to produce yogurt, cheese, vinegar, or bread. (Turkish noun)",
+  "ex": "Yoğurdun oluşması için sütün fermantasyon sürecinden geçmesi gerekir.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "gelişme",
+  "raws": [
+   "gelişme"
+  ],
+  "n": 2,
+  "prompt": "The process of making something better or more advanced over time — used in Turkish to describe progress in technology or science.",
+  "ex": "Uzay araştırmalarındaki son gelişmeler, insanlığın Mars'a ulaşmasını mümkün kılabilir.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "meteoroloji",
+  "raws": [
+   "meteoroloji"
+  ],
+  "n": 1,
+  "prompt": "The process of studying and collecting data about the atmosphere, climate, and weather patterns in a systematic way — a branch of science that uses instruments and satellites to make forecasts.",
+  "ex": "Meteoroloji uzmanları, önümüzdeki hafta şiddetli fırtına bekleniyor olduğunu açıkladı.",
+  "elsewhere": [],
+  "freq": 10595,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "otomasyon",
+  "raws": [
+   "otomasyon"
+  ],
+  "n": 1,
+  "prompt": "The process by which a device, system, or appliance is made to work automatically — often through a control system — so that it no longer requires constant human operation. Commonly discussed when talking about smart home systems or factory equipment.",
+  "ex": "Ev otomasyon sistemleri sayesinde ışıkları ve ısıtmayı telefonumdan kontrol edebiliyorum.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-science-technology",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "yatırım",
+  "raws": [
+   "yatırım"
+  ],
+  "n": 1,
+  "prompt": "The process of putting money into a project, company, or technology with the expectation of gaining a financial return — a key concept in funding scientific or technological development.",
+  "ex": "Hükümet, yenilenebilir enerji teknolojilerine büyük bir yatırım yaptı.",
+  "elsewhere": [
+   "tr-b2-vocab-economy-business:approved"
+  ],
+  "freq": 1992,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "başvuru",
+  "raws": [
+   "başvuru"
+  ],
+  "n": 1,
+  "prompt": "The formal process of applying for a job at a company — submitting your documents and going through selection steps — often the first stage of building a career in a new field. (Think: what a job-seeker does before getting an interview.)",
+  "ex": "Yurt dışındaki şirkete iş başvurusu yaptıktan sonra röportaj için davet aldı.",
+  "elsewhere": [
+   "tr-b1-vocab-education-career:approved",
+   "tr-b2-vocab-work-professional:rejected"
+  ],
+  "freq": 3561,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "değerlendirme",
+  "raws": [
+   "değerlendirme"
+  ],
+  "n": 2,
+  "prompt": "The process by which an employee's output, results, or quality of work are regularly reviewed and evaluated by a manager — often leading to decisions about raises or promotion.",
+  "ex": "Yıllık performans değerlendirmesi sonucunda birçok çalışan terfi aldı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "değerlendirme görüşmesi",
+  "raws": [
+   "değerlendirme görüşmesi"
+  ],
+  "n": 1,
+  "prompt": "The formal process of assessing an employee's job performance over a set period — typically involving a meeting with a manager to discuss achievements, weaknesses, and future goals.",
+  "ex": "Yıllık değerlendirme görüşmesinde müdürüm benim güçlü yönlerimi ve gelişmem gereken alanları ele aldı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "emeklilik",
+  "raws": [
+   "emeklilik"
+  ],
+  "n": 3,
+  "prompt": "The process of leaving a job permanently, typically after reaching a certain age or after a long career, often accompanied by a pension or retirement benefits.",
+  "ex": "Şirketin en deneyimli çalışanı, kırk yıllık hizmetinin ardından emeklilik töreninde duygusal bir konuşma yaptı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "görev dağılımı",
+  "raws": [
+   "görev dağılımı"
+  ],
+  "n": 1,
+  "prompt": "The formal process of assigning tasks and responsibilities to employees, organizing who does what within a company or project — often discussed when a manager distributes work among team members before a business trip or client visit.",
+  "ex": "Proje başlamadan önce müdür, ekip içindeki görev dağılımını netleştirdi.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "iş değerlendirmesi",
+  "raws": [
+   "iş değerlendirmesi"
+  ],
+  "n": 1,
+  "prompt": "The process of assessing and reviewing an employee's job performance over a set period, often used to decide on salary increases or promotions — distinct from a general \"assessment\" in that it specifically concerns how well someone carries out their professional duties.",
+  "ex": "Yıl sonu iş değerlendirmesi sırasında müdürüm benim verimli çalıştığımı ve terfi için hazır olduğumu söyledi.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "iş sözleşmesi",
+  "raws": [
+   "iş sözleşmesi"
+  ],
+  "n": 2,
+  "prompt": "The official document or written agreement that sets out the terms and conditions between an employer and an employee, establishing the rights and obligations of both parties in a professional relationship.",
+  "ex": "Yeni pozisyon için iş sözleşmesini imzalamadan önce tüm maddeleri dikkatlice okumanızı tavsiye ederiz.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "işe alım",
+  "raws": [
+   "işe alım"
+  ],
+  "n": 4,
+  "prompt": "The formal process by which a company or organisation hires a new employee, often involving applications, interviews, and selection rounds.",
+  "ex": "Şirketin işe alım süreci genellikle üç aşamadan oluşur: ön eleme, mülakat ve teklif.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "işe alım süreci",
+  "raws": [
+   "işe alım süreci"
+  ],
+  "n": 1,
+  "prompt": "The formal process by which a company or organization hires new employees — reviewing applications, conducting interviews, and selecting candidates to fill open positions.",
+  "ex": "Şirketimiz bu yıl genişlediği için işe alım süreci oldukça yoğun geçti.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "işten çıkarma",
+  "raws": [
+   "işten çıkarma"
+  ],
+  "n": 4,
+  "prompt": "The formal process of ending someone's employment contract, often due to poor performance or organisational changes — a key HR decision that managers must handle carefully.",
+  "ex": "Şirket, bütçe kesintileri nedeniyle on çalışanın işten çıkarma sürecini başlattı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "performans değerlendirmesi",
+  "raws": [
+   "performans değerlendirmesi"
+  ],
+  "n": 4,
+  "prompt": "The formal process by which a company periodically reviews and judges an employee's work quality, progress, and overall contribution — often resulting in feedback, a raise, or a promotion decision.",
+  "ex": "Yıllık performans değerlendirmesi sırasında yöneticim güçlü yönlerimi ve geliştirilmesi gereken alanları benimle paylaştı.",
+  "elsewhere": [],
+  "freq": null,
+  "pos_all": null
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "personel",
+  "raws": [
+   "personel"
+  ],
+  "n": 3,
+  "prompt": "The collective noun for all the people employed by a company or organisation — the workforce as a whole, often used in phrases like \"reducing ___\" or \"___ training\".",
+  "ex": "Şirket, yeni projeyi hayata geçirebilmek için ek personel almaya karar verdi.",
+  "elsewhere": [],
+  "freq": 2119,
+  "pos_all": [
+   "NOUN"
+  ]
+ },
+ {
+  "topic": "tr-b2-vocab-work-professional",
+  "lang": "TR",
+  "cefr": "B2",
+  "w": "terfi",
+  "raws": [
+   "terfi"
+  ],
+  "n": 4,
+  "prompt": "The process by which an employee moves to a higher position or rank within a company, usually as a result of good performance or seniority.",
+  "ex": "Geçen yıl çok çalıştı ve sonunda beklediği terfiyi aldı.",
+  "elsewhere": [
+   "tr-b1-vocab-education-career:approved",
+   "tr-b2-vocab-work-professional:rejected"
+  ],
+  "freq": 2467,
+  "pos_all": [
+   "NOUN"
+  ]
+ }
+]

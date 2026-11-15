@@ -69,8 +69,10 @@ vi.mock('@language-drill/db', () => ({
 }));
 
 // Mock the review-status filter to avoid the real inArray() call.
+const mockInCurriculumSql = vi.fn((column: string) => ({ __mockToken: 'in-curriculum-sql', column }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
+  inCurriculumSql: (column: string) => mockInCurriculumSql(column),
   approvedStatusFilter: (table: unknown) => ({
     __mockToken: 'approved-status-filter',
     table,
@@ -192,6 +194,8 @@ describe('POST /fluency/session', () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as AnyJson;
     expect(body.exercises).toHaveLength(5);
+    // The eligibility query skips rows whose grammar point left the curriculum.
+    expect(mockInCurriculumSql).toHaveBeenCalledWith('e.grammar_point_key');
   });
 
   it('accepts a conjugation-only types filter and returns 200', async () => {

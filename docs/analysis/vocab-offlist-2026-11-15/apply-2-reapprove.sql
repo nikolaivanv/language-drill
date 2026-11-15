@@ -1,0 +1,1 @@
+update vocab_target set status='approved' where status='rejected' and ((language='DE' and umbrella_key='de-a1-vocab-time-calendar' and lemma='Mittag') or (language='TR' and umbrella_key='tr-b1-vocab-health-lifestyle' and lemma='kilo vermek')) returning id, lemma;

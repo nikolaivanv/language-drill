@@ -49,7 +49,12 @@ import {
   WORD_HINT_MAX_RETRIES,
 } from '@language-drill/ai';
 import { db } from '../db';
-import { approvedStatusFilter, audioReadyFilter, freshFirstOrderBy } from '../lib/exercise-filters';
+import {
+  approvedStatusFilter,
+  audioReadyFilter,
+  freshFirstOrderBy,
+  inCurriculumFilter,
+} from '../lib/exercise-filters';
 import { resolveTargetedDifficulty } from '../lib/targeted-difficulty';
 import { resolveWordHints, evidenceWeightFromHints } from '../lib/word-hints';
 import {
@@ -212,6 +217,8 @@ exercises.get('/exercises', async (c) => {
     approvedStatusFilter(exercisesTable),
     // Never serve a dictation row whose audio hasn't been synthesized yet.
     audioReadyFilter(exercisesTable),
+    // Never draw a row whose grammar point was removed from the curriculum.
+    inCurriculumFilter(exercisesTable),
   ];
 
   if (type) {
@@ -295,6 +302,7 @@ exercises.get('/exercises/set', async (c) => {
     eq(exercisesTable.difficulty, difficulty),
     approvedStatusFilter(exercisesTable),
     audioReadyFilter(exercisesTable),
+    inCurriculumFilter(exercisesTable),
   ];
 
   if (type) {

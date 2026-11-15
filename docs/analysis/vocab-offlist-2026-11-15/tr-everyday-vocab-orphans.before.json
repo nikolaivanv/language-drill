@@ -1,0 +1,517 @@
+[
+ {
+  "id": "879bb7ce-2c70-5e36-9664-24fa001303a7",
+  "prior_grammar_point_key": "tr-a1-everyday-vocab",
+  "prior_difficulty": "A1",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "Cuma",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "839bb182-1f18-58fa-a264-385604857aeb",
+  "prior_grammar_point_key": "tr-a1-everyday-vocab",
+  "prior_difficulty": "A1",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "Salı",
+  "action": "rehome",
+  "new_grammar_point_key": "tr-a2-vocab-time-daily-routine",
+  "new_difficulty": "A2"
+ },
+ {
+  "id": "b4923866-dc68-50d2-8246-03fe8ffbbd2b",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "aile",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "bf9f32cf-4af1-5679-8106-36c5021f7dfc",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "akşam yemeği",
+  "action": "rehome",
+  "new_grammar_point_key": "tr-a2-vocab-time-daily-routine",
+  "new_difficulty": "A2"
+ },
+ {
+  "id": "a361b744-56a9-5896-aacb-a4ba1fec12db",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "anne",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "d7409820-ebed-5e04-a122-e1288439444d",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "araba",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "c19f35f5-4d2a-5203-8306-39ff0458b99e",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "bal",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "41e8ceba-5222-58f2-8b61-29fe8ff4720b",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "bisiklet",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "12936415-8296-5655-a810-7df97a96344c",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "büyükanne",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "11936282-0179-5890-a710-7c5cfbb2d21d",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "büyükbaba",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "1a97eddb-63af-509b-9815-ac17cf4f3a8a",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "dayı",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3f369a8d-a985-5b53-90a7-93cf6a9b169e",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "dolap",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "1495a5d2-f55b-5702-9e13-790e34bd850b",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "domates",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "80ed6830-40f0-594a-a993-67160a945437",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "durak",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "2ee433a3-ff7d-51ad-905b-ea213b1650b0",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "iskemle",
+  "action": "demote",
+  "why": "dated synonym of sandalye (already covered)"
+ },
+ {
+  "id": "1ea2fff0-c1b2-50c2-ae00-db5ec63c2d9f",
+  "prior_grammar_point_key": "tr-a1-everyday-vocab",
+  "prior_difficulty": "A1",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kahvaltı",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "8ced7b14-4e47-5e86-9d93-53ba0f06cb7b",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kahvaltı",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "74e4471b-655b-5db7-ab7a-81fbbcb53bae",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kahve",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "aeebb8e8-3674-569e-8c64-36d2a2bdd6d3",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kanepe",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "be9f313c-c9d4-58b4-8006-3528833c1bcd",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kar",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "5a7fe4b9-1b6c-5adb-9506-9197c95e3bbe",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "kütüphane",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "0e959c60-f795-528c-9813-6f6036f6c0ad",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "limon",
+  "action": "rehome",
+  "new_grammar_point_key": "tr-a1-vocab-food-drink",
+  "new_difficulty": "A1"
+ },
+ {
+  "id": "c39f391b-4f63-5d8d-bd06-3051f4c81830",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "muz",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3936911b-a2d9-58b5-92a7-970963ef63b8",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "otobüs",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3c3695d4-262f-5204-8da7-8ef8e97e78cd",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "sandalye",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3b369441-a512-543f-94a7-9a4366289f5a",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "su",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "acebb5c2-38ad-5228-8664-2d24addc00fd",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "süpürge",
+  "action": "rehome",
+  "new_grammar_point_key": "tr-a1-vocab-home-objects",
+  "new_difficulty": "A1"
+ },
+ {
+  "id": "3a3692ae-23f6-567a-93a7-98a6e7453d2b",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "süt",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "2de43210-7e61-53e8-8f5b-e884bc32ee81",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "tabak",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "1195a119-7aea-5bdb-9b13-7437b8135e7e",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "teyze",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "4114e609-06f2-58a7-8097-aa5b0561b5fa",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "tren",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3d369767-a74b-5fc9-8ea7-90956861dafc",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "yatak",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "6db69ecd-f49e-53f3-baa7-d6ef5cd76c3e",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "yağmur",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "38368f88-21bc-5af0-91a7-956ce50c0189",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "çay",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "3e3698fa-2868-5d8e-8fa7-9232ebb7b46f",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "çorap",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "bd9f2fa9-48b8-5aef-8706-4073ffe6425a",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "öğle yemeği",
+  "action": "rehome",
+  "new_grammar_point_key": "tr-a2-vocab-time-daily-routine",
+  "new_difficulty": "A2"
+ },
+ {
+  "id": "40e8cd27-d105-5b2d-8a61-28610c9e9898",
+  "prior_grammar_point_key": "tr-a2-everyday-vocab",
+  "prior_difficulty": "A2",
+  "prior_review_status": "auto-approved",
+  "prior_demotion_reason": null,
+  "word": "şapka",
+  "action": "demote",
+  "why": "word already approved + exercised in a themed topic"
+ },
+ {
+  "id": "22ded6b8-9ebe-54e0-99a6-604c8f0712e1",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "1fa30183-42ce-5e87-af00-dcfb451f8fce",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "20a30316-bf79-5538-ac00-d824c402f1fd",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "23a307cf-4741-559b-ab00-d68740ad188a",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "24a30962-c3eb-5c4c-a800-d1b0bf907ab9",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "707cb052-d6d0-53ec-8aef-7360ea379139",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "829bafef-9dfc-5b35-a164-36b9812fa178",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "3f14e2e3-04b8-5d1d-be97-a72103287a58",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "c60f3ca3-abb8-50bd-b3a4-a89141719bb8",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "4014e476-85d5-5ae2-bf97-a8be867e53cb",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "4214e79c-880e-566c-b997-9f1088b78f6d",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "54663aa1-e582-590d-8e37-cb2189055b0c",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "3e14e150-839c-5f58-bd97-a58484451829",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "88ed74c8-49d5-5772-a193-5a2e137942bf",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "1a764948-534e-5e8e-929f-9a829eab773b",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "31368483-abbe-56dd-8aa7-8a215b0a7530",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "4414eac2-8a47-51f6-bb97-a24a8af0cb0f",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "52473af0-2c32-5e84-9c66-fb28b1542485",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "6ab69a14-7148-5aa4-b7a7-d218dbbace6d",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ },
+ {
+  "id": "b47c49da-4033-52c0-bcc5-a0ec478f2f9d",
+  "prior_review_status": "flagged",
+  "prior_demotion_reason": null,
+  "action": "reject-flagged",
+  "why": "orphan duplicate / ambiguous; was in review queue"
+ }
+]
