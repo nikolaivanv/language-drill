@@ -8,7 +8,7 @@ import {
 } from '@language-drill/db';
 import { resolveTheoryCategory, parseTheoryTopicJson } from '@language-drill/shared';
 import { db } from '../db';
-import { approvedStatusFilter, audioReadyFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, audioReadyFilter, inCurriculumFilter } from '../lib/exercise-filters';
 import {
   conjugationSignature,
   dedupeBySignature,
@@ -206,6 +206,9 @@ publicRoutes.get('/public/conjugation/set', async (c) => {
             // other serve paths and so it takes effect automatically if this
             // router is ever extended to a dictation-adjacent public type.
             audioReadyFilter(exercisesTable),
+            // The untargeted set (no grammarPoint) would otherwise draw rows of
+            // a point that was removed from the curriculum.
+            inCurriculumFilter(exercisesTable),
           ),
         )
         .limit(CONJUGATION_SET_FETCH_CAP),

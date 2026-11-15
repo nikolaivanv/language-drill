@@ -185,9 +185,11 @@ const mockAudioReadyFilter = vi.fn((table: unknown) => ({
   __mockToken: 'audio-ready-filter',
   table,
 }));
+const mockInCurriculumFilter = vi.fn((table: unknown) => ({ __mockToken: 'in-curriculum-filter', table }));
 vi.mock('../lib/exercise-filters', () => ({
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
+  inCurriculumFilter: (table: unknown) => mockInCurriculumFilter(table),
   freshFirstOrderBy: (userId: string) => mockFreshFirstOrderBy(userId),
   audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
 }));
@@ -1518,6 +1520,8 @@ describe('audio-ready filter', () => {
     expect(mockAudioReadyFilter).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'type', audioS3Key: 'audio_s3_key' }),
     );
+    // A random draw must skip rows whose grammar point left the curriculum.
+    expect(mockInCurriculumFilter).toHaveBeenCalledTimes(1);
   });
 
   // -- GET /exercises/:id (direct fetch) -----------------------------------
@@ -1528,6 +1532,9 @@ describe('audio-ready filter', () => {
     const res = await app.request(`/exercises/${audioReadyDictation.id}`, undefined, authEnv);
 
     expect(res.status).toBe(200);
+    // Direct fetch is NOT curriculum-gated: an exercise already in a learner's
+    // session must stay playable after its point is removed.
+    expect(mockInCurriculumFilter).not.toHaveBeenCalled();
     expect(mockAudioReadyFilter).toHaveBeenCalledTimes(1);
     expect(mockAudioReadyFilter).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'type', audioS3Key: 'audio_s3_key' }),

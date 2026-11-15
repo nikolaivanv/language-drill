@@ -87,6 +87,7 @@ vi.mock('../usage/global-capacity', () => ({
 vi.mock('../lib/exercise-filters', () => ({
   approvedStatusFilter: () => undefined,
   freshFirstOrderBy: () => undefined,
+  inCurriculumFilter: () => undefined,
 }));
 
 const authEnv = { event: { requestContext: { authorizer: { jwt: { claims: { sub: 'user_123' } } } } } };

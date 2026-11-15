@@ -15,7 +15,7 @@ import {
 } from '@language-drill/shared';
 import { exercises as exercisesTable, fluencyAttempts } from '@language-drill/db';
 import { db } from '../db';
-import { approvedStatusFilter } from '../lib/exercise-filters';
+import { approvedStatusFilter, inCurriculumSql } from '../lib/exercise-filters';
 import { authMiddleware } from '../middleware/auth';
 import type { Bindings, Variables } from '../middleware/auth';
 import { composeFluencySession, resolveFluencyTypes, type EligibleExercise } from '../lib/fluency-session';
@@ -88,6 +88,7 @@ fluency.post('/fluency/session', async (c) => {
     WHERE e.language = ${language}
       AND e.type IN (${typesInList})
       AND e.review_status IN ('auto-approved', 'manual-approved')
+      AND ${inCurriculumSql('e.grammar_point_key')}
       AND h.score >= ${FLUENCY_MASTERY_THRESHOLD}
   `);
 

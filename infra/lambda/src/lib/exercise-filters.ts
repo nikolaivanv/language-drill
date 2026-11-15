@@ -1,9 +1,10 @@
 import {
+  ALL_CURRICULA,
   exercises as exercisesTable,
   userExerciseHistory,
   scoringEvidenceFilter,
 } from '@language-drill/db';
-import { inArray, sql } from 'drizzle-orm';
+import { inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 
 /**
  * Review statuses that are eligible to be served via pool-discovery and
@@ -50,6 +51,66 @@ export function approvedStatusFilter(table: typeof exercisesTable) {
  */
 export function audioReadyFilter(table: typeof exercisesTable) {
   return sql`(${table.type} <> 'dictation' OR ${table.audioS3Key} IS NOT NULL)`;
+}
+
+/**
+ * Every grammar-point key in the shipped curriculum. Read lazily, not at module
+ * scope: route tests mock `@language-drill/db` and most mocks do not define
+ * `ALL_CURRICULA`, so touching it at import time would break every one of them.
+ */
+function curriculumKeys(): string[] {
+  return ALL_CURRICULA.map((p) => p.key);
+}
+
+/**
+ * Pool-discovery predicate: keep rows whose `grammar_point_key` is NULL
+ * (untagged seed rows) or names a point that still exists in the curriculum.
+ *
+ * Why: removing a point from the curriculum does not touch its exercises. Their
+ * dead key does not stop them being served, because the pool draws filter only
+ * on language/level/type/status. `tr-a1-everyday-vocab` / `tr-a2-everyday-vocab`
+ * were removed on 2026-06-07 and kept serving 37 approved rows in daily plans
+ * until a manual cleanup on 2026-11-15
+ * (docs/analysis/vocab-offlist-2026-11-15/README.md). With this predicate,
+ * removing a point retires its exercises from every pool at once.
+ *
+ * Applied at pool-discovery sites only (the random draws, sampled into a
+ * session or plan). Fetch-by-id surfaces (GET /exercises/:id, submit, manifest
+ * hydration) intentionally do NOT apply it, so an exercise already in a learner's
+ * session stays playable and submittable.
+ *
+ * Filtered call sites (Drizzle form, `inCurriculumFilter`):
+ *   - routes/exercises.ts: GET /exercises, GET /exercises/conjugation-set
+ *   - routes/sessions.ts:  POST /sessions (targeted, single-type and top-up pulls)
+ *   - routes/public.ts:    GET /public/conjugation/set
+ * Raw-SQL call sites (`inCurriculumSql`):
+ *   - routes/sessions.ts:  sampleFreshPool (daily plan / untargeted POST /sessions)
+ *   - routes/fluency.ts:   POST /fluency/session eligibility
+ */
+export function inCurriculumFilter(table: typeof exercisesTable): SQL {
+  const keys = curriculumKeys();
+  // An empty list would turn `inArray` into FALSE and empty every pool; the
+  // curriculum is never empty in production, so fail open rather than closed.
+  if (keys.length === 0) return sql`TRUE`;
+  return or(isNull(table.grammarPointKey), inArray(table.grammarPointKey, keys)) as SQL;
+}
+
+/**
+ * Raw-SQL twin of `inCurriculumFilter`, for queries written with `sql`...``
+ * rather than the query builder. `column` is a trusted, hard-coded column
+ * reference (`grammar_point_key`, `e.grammar_point_key`), never user input.
+ * Keys are bound one parameter each (the `IN (...)` form already used for CEFR
+ * levels in sampleFreshPool), not a bound array passed to `ANY(...)`, which
+ * typechecks and passes mocked tests but breaks against real Postgres.
+ */
+export function inCurriculumSql(column: string): SQL {
+  const keys = curriculumKeys();
+  if (keys.length === 0) return sql`TRUE`;
+  const col = sql.raw(column);
+  return sql`(${col} IS NULL OR ${col} IN (${sql.join(
+    keys.map((k) => sql`${k}`),
+    sql`, `,
+  )}))`;
 }
 
 /**

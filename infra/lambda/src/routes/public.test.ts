@@ -73,6 +73,8 @@ vi.mock('@language-drill/db', () => ({
     audioS3Key: 'audio_s3_key',
   },
   getGrammarPoint: (key: string) => CURRICULUM[key],
+  // Read by inCurriculumFilter (lib/exercise-filters.ts), which stays real here.
+  ALL_CURRICULA: Object.entries(CURRICULUM).map(([key, point]) => ({ key, ...point })),
   curriculumOrderOf: (key: string) => Object.keys(CURRICULUM).indexOf(key) + 1,
 }));
 

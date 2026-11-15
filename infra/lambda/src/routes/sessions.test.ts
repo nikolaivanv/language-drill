@@ -173,7 +173,11 @@ const mockAudioReadyFilter = vi.fn((table: unknown) => ({
 }));
 const mockFreshFirstOrderBy = vi.fn((userId: string) => ({ __mockToken: 'fresh-first-order-by', userId }));
 const mockScoringEvidenceFilter = vi.fn((table: unknown) => ({ __mockToken: 'scoring-evidence-filter', table }));
+const mockInCurriculumFilter = vi.fn((table: unknown) => ({ __mockToken: 'in-curriculum-filter', table }));
+const mockInCurriculumSql = vi.fn((column: string) => ({ __mockToken: 'in-curriculum-sql', column }));
 vi.mock('../lib/exercise-filters', () => ({
+  inCurriculumFilter: (table: unknown) => mockInCurriculumFilter(table),
+  inCurriculumSql: (column: string) => mockInCurriculumSql(column),
   APPROVED_STATUSES: ['auto-approved', 'manual-approved'] as const,
   approvedStatusFilter: (table: unknown) => mockApprovedStatusFilter(table),
   audioReadyFilter: (table: unknown) => mockAudioReadyFilter(table),
@@ -793,6 +797,11 @@ describe('POST /sessions', () => {
     // The persisted session row stores the derived difficulty, not the request's B1.
     expect(mockValues).toHaveBeenCalledWith(
       expect.objectContaining({ difficulty: 'A2' }),
+    );
+    // Rows of a point removed from the curriculum must not reach the targeted
+    // pull (nor its top-up, which shares the same base predicates).
+    expect(mockInCurriculumFilter).toHaveBeenCalledWith(
+      expect.objectContaining({ grammarPointKey: 'grammar_point_key' }),
     );
   });
 
@@ -3186,6 +3195,9 @@ describe('review_status filter — POST /sessions', () => {
     // Path B), not via the approvedStatusFilter helper.
     expect(mockApprovedStatusFilter).not.toHaveBeenCalled();
     expect(mockExecute).toHaveBeenCalledTimes(100);
+    // The UNION-ALL also inlines the curriculum-membership predicate, so a row
+    // of a removed grammar point can never be sampled into a plan.
+    expect(mockInCurriculumSql).toHaveBeenCalledWith('grammar_point_key');
   });
 });
 
