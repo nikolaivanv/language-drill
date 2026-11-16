@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { exercises as exercisesTable } from '@language-drill/db';
+import { describeDbError, exercises as exercisesTable } from '@language-drill/db';
 import { PUBLIC_LEVELS_BY_LANGUAGE, type PublicLanguage } from '@language-drill/shared';
 import { db } from '../db';
 import { approvedStatusFilter } from './exercise-filters';
@@ -50,7 +50,7 @@ export async function fetchConjugationDrillKeys(
     }
     return keys;
   } catch (dbError) {
-    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    const message = describeDbError(dbError);
     console.warn(`public theory: conjugation-availability query failed for ${lang}: ${message}`);
     return new Set();
   }
@@ -97,7 +97,7 @@ export async function fetchQuickCheck(
       .orderBy(exercisesTable.id)
       .limit(QUICK_CHECK_SIZE * 2);
   } catch (dbError) {
-    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    const message = describeDbError(dbError);
     console.warn(
       `public theory: quick-check query failed for ${lang}/${grammarPointKey}: ${message}`,
     );
