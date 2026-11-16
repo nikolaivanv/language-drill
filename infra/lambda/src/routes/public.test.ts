@@ -62,6 +62,7 @@ const CURRICULUM: Record<string, { name: string; language: string; cefrLevel: st
 };
 
 vi.mock('@language-drill/db', () => ({
+  describeDbError: (e: unknown) => (e instanceof Error ? e.message : String(e)),
   exercises: {
     id: 'id',
     type: 'type',

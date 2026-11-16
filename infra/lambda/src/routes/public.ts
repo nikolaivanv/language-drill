@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { and, count, eq } from 'drizzle-orm';
 import {
+  describeDbError,
   exercises as exercisesTable,
   getGrammarPoint,
   curriculumOrderOf,
@@ -364,7 +365,7 @@ publicRoutes.get('/public/theory/:lang', async (c) => {
 
     return c.json({ topics });
   } catch (dbError) {
-    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    const message = describeDbError(dbError);
     console.error(`public theory: list query failed for ${lang}: ${message}`);
     return c.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, 500);
   }
@@ -386,7 +387,7 @@ publicRoutes.get('/public/theory/:lang/:topicId', async (c) => {
   try {
     row = await fetchApprovedTopicContent(lang, topicId);
   } catch (dbError) {
-    const message = dbError instanceof Error ? dbError.message : String(dbError);
+    const message = describeDbError(dbError);
     console.error(`public theory: query failed for (${lang}, ${topicId}): ${message}`);
     return c.json({ error: 'Internal error', code: 'INTERNAL_ERROR' }, 500);
   }
