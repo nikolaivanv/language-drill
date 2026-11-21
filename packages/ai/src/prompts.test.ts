@@ -26,7 +26,7 @@ describe("attribution prompt wiring", () => {
   });
 
   it("version is bumped to today", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-11");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-21");
   });
 
   // 2026-09-22 — a cloze meaning verdict must be made on the sentence with the
@@ -272,7 +272,7 @@ describe("vocab_recall citation-form rule (evaluate@2026-10-17a)", () => {
   });
 
   it("pins the evaluator version", () => {
-    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-11");
+    expect(EVALUATION_SYSTEM_PROMPT_VERSION).toBe("evaluate@2026-11-21");
   });
 });
 
@@ -295,5 +295,49 @@ describe("TR possessor agreement (evaluate@2026-11-11)", () => {
     expect(EVALUATION_SYSTEM_PROMPT).toContain(
       'Only without an overt possessor does "their X" require -lArI',
     );
+  });
+});
+
+describe("TR predicate plural agreement (evaluate@2026-11-21)", () => {
+  it("makes 3pl -lAr optional when the plural subject is overt", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain("**Predicate plural agreement.**");
+    expect(EVALUATION_SYSTEM_PROMPT).toContain(
+      '"Onlar odayı temizlemiyor" and "Onlar odayı temizlemiyorlar" are both correct standard Turkish',
+    );
+    expect(EVALUATION_SYSTEM_PROMPT).toContain(
+      "An overt plural subject does NOT force -lAr — it is what licenses dropping it.",
+    );
+  });
+
+  it("keeps -lAr obligatory when the subject is dropped", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain(
+      "The 3rd person plural marker -lAr on a PREDICATE is obligatory only when the plural subject is NOT expressed",
+    );
+  });
+
+  it("keeps the unmarked predicate right for non-human plural subjects", () => {
+    expect(EVALUATION_SYSTEM_PROMPT).toContain('"Kediler küçük", not "Kediler küçükler"');
+  });
+
+  it("lists -lAr among the optional elements in the translation prompt", () => {
+    const prompt = buildUserPrompt(
+      {
+        type: ExerciseType.TRANSLATION,
+        instructions: "Translate the sentence into Turkish.",
+        sourceText: "They are not cleaning the room.",
+        sourceLanguage: Language.EN,
+        targetLanguage: Language.TR,
+        referenceTranslation: "Onlar odayı temizlemiyorlar.",
+      } satisfies TranslationContent,
+      "Onlar odayı temizlemiyor.",
+      Language.TR,
+      CefrLevel.A1,
+    );
+
+    expect(prompt).toContain(
+      "the Turkish 3rd person plural predicate suffix -lAr whenever the plural subject is overt",
+    );
+    // The pro-drop list must cover `onlar`, the pronoun this exercise supplies.
+    expect(prompt).toContain("Turkish ben/sen/o/biz/siz/onlar");
   });
 });
