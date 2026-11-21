@@ -278,6 +278,31 @@ describe("buildGenerationSystemPrompt", () => {
     expect(prompt).toContain("acceptableAnswers"); // human-3pl enumeration
   });
 
+  it("pins the Turkish 3pl predicate-determinacy rule beyond the copular point (2026-11-21)", async () => {
+    // The rule above is scoped to tr-a1-personal-suffixes, so every VERBAL
+    // point shipped -lAr-only keys: 35 approved cloze rows and 21
+    // translations had to be patched by hand in the #818 repair. This is the
+    // general statement — G&K §12.2.1-2, mirrored by validate@2026-11-21.
+    const prompt = await buildGenerationSystemPrompt(baseInputs, []);
+
+    expect(prompt).toContain("Turkish 3pl predicate determinacy");
+    expect(prompt).toContain("obligatory only when the plural subject is **not expressed**");
+    expect(prompt).toContain("`Onlar odayı temizlemiyor` and `Onlar odayı temizlemiyorlar` are both correct");
+    // Preferred cure first: no overt subject makes -lAr the only correct form,
+    // so the blank is determinate WITHOUT an enumeration.
+    expect(prompt).toContain("**drop the subject**");
+    // Enumeration is the fallback cure — and, unlike the tense/polarity
+    // determinacy rules, it is legitimate here because the set is closed.
+    expect(prompt).toContain("**Enumeration IS a cure here**");
+    expect(prompt).toContain('`acceptableAnswers: ["temizlemiyor"]`');
+    // Must not over-fire: a non-human plural subject is already determinate,
+    // and -lAr on a nominal predicate there is an error, not an alternative.
+    expect(prompt).toContain("HUMAN plural subjects only");
+    expect(prompt).toContain("never `*Kediler küçükler`");
+    // Translations are in scope too — that half was 21 of the 56 patched rows.
+    expect(prompt).toContain("The same holds for a translation whose reference carries `-lAr`");
+  });
+
   it("carries a bumped, correctly-formatted GENERATION_PROMPT_VERSION", () => {
     // R1.7 / R2.6 / R7.4 — the coordinated prompt edit must ship a
     // `generate@YYYY-MM-DD` version so Langfuse cohorts old vs new traces.
@@ -359,7 +384,7 @@ describe("buildGenerationSystemPrompt", () => {
     // 14 polarity-slot rows in the live es-b1-superlatives-comparisons pool were
     // undetermined this way. Cure is an in-stem evaluative anchor, never
     // enumeration (más/menos are antonyms, not alternants).
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-11-21");
     // Polarity-determinacy rule pinned in the cached template prefix.
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain(
       "Polarity determinacy on comparative/superlative blanks",
@@ -533,7 +558,7 @@ describe("buildGenerationSystemPrompt", () => {
   it("bumps the generation prompt version to 2026-10-20", () => {
     // 2026-10-07: cell-history ("Already in this cell") prompt section for
     // cloze / translation / sentence_construction. Prompt edit → Langfuse push per env.
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-11-21");
   });
 
   it("pins the substitute-back rule in the cached template prefix", () => {
@@ -1920,7 +1945,7 @@ describe("historyStem", () => {
 
 describe("vocab_recall citation forms (2026-10-17)", () => {
   it("teaches vocab_recall citation forms for non-nouns", () => {
-    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-10-20");
+    expect(GENERATION_PROMPT_VERSION).toBe("generate@2026-11-21");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("vocab_recall citation forms");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toContain("acordarse de");
     expect(GENERATION_SYSTEM_PROMPT_TEMPLATE).toMatch(/feminine.*acceptableAnswers/);

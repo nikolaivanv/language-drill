@@ -1,0 +1,6 @@
+[
+  { "language": "TR", "cefrLevel": "A1", "exerciseType": "cloze", "grammarPointKey": "tr-a1-negation" },
+  { "language": "TR", "cefrLevel": "A1", "exerciseType": "cloze", "grammarPointKey": "tr-a1-present-continuous" },
+  { "language": "TR", "cefrLevel": "A1", "exerciseType": "translation", "grammarPointKey": "tr-a1-dili-past" },
+  { "language": "TR", "cefrLevel": "B1", "exerciseType": "cloze", "grammarPointKey": "tr-b1-past-continuous-iyordu" }
+]

@@ -190,7 +190,7 @@ describe("buildValidationSystemPrompt", () => {
     // grew a sub-bullet clarifying that ANY construction described in the
     // point's description is on-target (see the dedicated describe block
     // below for the exact prose assertions).
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-11-21");
 
     // R3.A — the three contextSpoilsAnswer triples added in task 8.
     expect(prompt).toContain("çocuk");
@@ -250,6 +250,25 @@ describe("buildValidationSystemPrompt", () => {
     expect(prompt).toContain("PREVERBAL / left-dislocated");
     expect(prompt).toContain("es-a2-indirect-object-pronouns-se");
     expect(prompt).toContain("accusative doubling is not free");
+  });
+
+  it("carries the Turkish 3pl-predicate-determinacy rule (2026-11-21)", async () => {
+    // Mirror of generate@2026-11-21, shaped on the clitic-doubling bullet
+    // above: a CLOSED two-member rival set, so a two-entry acceptableAnswers
+    // IS the fix and the judge flags only its absence.
+    const prompt = await buildValidationSystemPrompt(baseSpec);
+
+    expect(prompt).toContain("Turkish 3pl-predicate-determinacy (cloze, translation)");
+    expect(prompt).toContain("overt plural HUMAN subject");
+    expect(prompt).toContain("UNLESS `acceptableAnswers` already lists the counterpart");
+    // The worked example is the exact shape that shipped 35 times.
+    expect(prompt).toContain('`correctAnswer: "yemiyorlar"` IS ambiguous with an empty list');
+    // Two carve-outs where the draft is already determinate.
+    expect(prompt).toContain("no overt subject");
+    expect(prompt).toContain("never `*Kediler küçükler`");
+    // It is an ambiguity flag, not a grammar verdict — both forms are correct,
+    // so the draft must not be failed for picking one.
+    expect(prompt).toContain("do NOT set `grammarPointMatch = false`");
   });
 
   it("tells the validator the MC options array never resolves ambiguity (2026-09-21)", async () => {
@@ -373,7 +392,15 @@ describe("buildValidationSystemPrompt", () => {
     // doubling-drilling points, accusative `a`) (~1.4KB, mirrors
     // generate@2026-09-22). Ceiling raised to 21000 (~1.1KB headroom over the
     // 19,900-byte body) per the concurrent-edit note below.
-    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(21000);
+    //
+    // validate@2026-11-21 added the Turkish 3pl-predicate-determinacy
+    // sub-bullet (~730 bytes, mirrors generate@2026-11-21), which tripped this
+    // at 21,959. The bullet was first CUT to ~730 bytes — one worked example
+    // instead of three, carve-outs compressed — and only then was the ceiling
+    // raised, to 22750 (~1.1KB headroom over the 21,638-byte body), keeping
+    // the convention above: trim first, then leave headroom for the next
+    // concurrent pair rather than taking the minimum that passes.
+    expect(VALIDATION_SYSTEM_PROMPT_TEMPLATE.length).toBeLessThanOrEqual(22750);
   });
 
   it("instructs cloze validation to fill candidateFillers before deciding ambiguous", () => {
@@ -401,7 +428,7 @@ describe("buildValidationSystemPrompt", () => {
   });
 
   it("pins the bumped validation prompt version", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-11-21");
   });
 });
 
@@ -758,7 +785,7 @@ describe("self-revealing / vocab_recall scoring notes", () => {
   });
 
   it("accepts word-class groups and citation-form variants for vocab_recall (2026-10-17)", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-11-21");
     const vocabSpec: GenerationSpec = {
       ...baseSpec,
       grammarPoint: { ...baseSpec.grammarPoint, kind: "vocab" as const },
@@ -1103,7 +1130,7 @@ describe("multi-construction grammarPointMatch guidance", () => {
   });
 
   it("bumps the prompt version to today", () => {
-    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-10-17");
+    expect(VALIDATION_PROMPT_VERSION).toBe("validate@2026-11-21");
   });
 });
 
