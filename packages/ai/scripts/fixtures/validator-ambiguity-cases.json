@@ -1339,5 +1339,92 @@
       "acceptableAnswers": []
     },
     "why": "'todavía' pins the action as still ongoing at the moment of entering, which the infinitive's completed-event reading cannot express; only the gerund 'jugando' fits."
+  },
+  {
+    "id": "tr-a1-negation-3pl-onlar-kahvalti-uncured",
+    "label": "ambiguous",
+    "provenance": "PR #818 repair, row 4e930a2c-c1cf-5a16-afb1-58da0700c863 (pre-repair state)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-negation",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu parantezdeki fiilin doğru biçimiyle doldurun.",
+      "sentence": "Onlar her sabah kahvaltı ___ . (ye-)",
+      "glossEn": "They are not eating breakfast every morning.",
+      "correctAnswer": "yemiyorlar",
+      "acceptableAnswers": []
+    },
+    "why": "With the overt plural subject `Onlar`, 3pl -lAr on the predicate is OPTIONAL (G&K 12.2.2.1), so `yemiyor` is equally correct and is not listed. Keying only `yemiyorlar` is a false-negative trap."
+  },
+  {
+    "id": "tr-a1-present-continuous-3pl-ogrenciler-dinle-uncured",
+    "label": "ambiguous",
+    "provenance": "PR #818 repair, row 2e1c73ad-3907-57b3-b547-a85f54c97976 (pre-repair state)",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-present-continuous",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu parantezdeki fiilin doğru biçimiyle doldurun.",
+      "sentence": "Öğrenciler sınıfta ___ . (dinle-)",
+      "glossEn": "The students are not listening in class.",
+      "correctAnswer": "dinlemiyorlar",
+      "acceptableAnswers": []
+    },
+    "why": "Same defect with a plural HUMAN noun phrase rather than the pronoun: `Öğrenciler ... dinlemiyor` is equally correct and unlisted."
+  },
+  {
+    "id": "tr-a1-negation-3pl-onlar-kahvalti-cured",
+    "label": "clean",
+    "provenance": "PR #818 repair, row 4e930a2c-... as repaired — the cure, so the rule must NOT fire",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-negation",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu parantezdeki fiilin doğru biçimiyle doldurun.",
+      "sentence": "Onlar her sabah kahvaltı ___ . (ye-)",
+      "glossEn": "They are not eating breakfast every morning.",
+      "correctAnswer": "yemiyorlar",
+      "acceptableAnswers": [
+        "yemiyor"
+      ]
+    },
+    "why": "The closed two-member rival set is enumerated, which IS the cure; flagging this would make the fix unreachable."
+  },
+  {
+    "id": "tr-a1-dili-past-3pl-no-overt-subject-clean",
+    "label": "clean",
+    "provenance": "PR #818 — the preferred cure: drop the subject and -lAr becomes obligatory",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-dili-past",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu parantezdeki fiilin doğru biçimiyle doldurun.",
+      "sentence": "Dün okula zamanında ___ . (gelmek)",
+      "glossEn": "They did not arrive at school on time yesterday.",
+      "correctAnswer": "gelmediler",
+      "acceptableAnswers": []
+    },
+    "why": "No overt subject, so G&K 12.2.1 makes -lAr obligatory: `gelmedi` would read as 3sg and contradict the gloss. Determinate with an empty list."
+  },
+  {
+    "id": "tr-a1-personal-suffixes-3pl-nonhuman-kediler-clean",
+    "label": "clean",
+    "provenance": "PR #818 — non-human plural subject, where -lAr on a nominal predicate is WRONG, not optional",
+    "language": "tr",
+    "cefrLevel": "A1",
+    "grammarPointKey": "tr-a1-personal-suffixes",
+    "content": {
+      "type": "cloze",
+      "instructions": "Boşluğu parantezdeki kelimenin doğru biçimiyle doldurun.",
+      "sentence": "Kediler çok ___ . (küçük)",
+      "glossEn": "The cats are very small.",
+      "correctAnswer": "küçük",
+      "acceptableAnswers": []
+    },
+    "why": "Copular -lAr is human-only, so `*Kediler küçükler` is an error rather than an equally-correct rival; the bare predicate is the only natural form and no enumeration is owed."
   }
 ]
